@@ -1,0 +1,161 @@
+{
+  "nav": {
+    "browsePG": "Browse PG",
+    "rentalHomes": "Rental Homes",
+    "postProperty": "Post Property",
+    "about": "About",
+    "login": "Login",
+    "signup": "Sign Up",
+    "language": "Language",
+    "listProperty": "List Your Property"
+  },
+  "home": {
+    "title": "Welcome to StayBuddy",
+    "subtitle": "Find your perfect PG or rental home with ease. Premium listings, verified properties, and seamless booking experience.",
+    "getStarted": "Get Started",
+    "browseListing": "Browse Listings",
+    "feature1": {
+      "title": "Easy Search",
+      "desc": "Find your perfect stay with advanced filters and search options"
+    },
+    "feature2": {
+      "title": "Verified Listings",
+      "desc": "All properties are verified for authenticity and quality"
+    },
+    "feature3": {
+      "title": "Wide Selection",
+      "desc": "Choose from thousands of PG and rental home listings"
+    },
+    "feature4": {
+      "title": "Trusted Community",
+      "desc": "Join thousands of happy tenants and property owners"
+    }
+  },
+  "login": {
+    "title": "Welcome Back",
+    "subtitle": "Login to your StayBuddy account",
+    "email": "Email",
+    "password": "Password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "button": "Login",
+    "orContinue": "Or continue with",
+    "noAccount": "Don't have an account?",
+    "signupLink": "Sign Up"
+  },
+  "signup": {
+    "title": "Join StayBuddy",
+    "subtitle": "Create your account to get started",
+    "iAm": "I am a",
+    "tenant": "Renter",
+    "owner": "Landlord",
+    "tenantDesc": "Looking for a place",
+    "ownerDesc": "List your property",
+    "fullName": "Full Name",
+    "email": "Email",
+    "phone": "Phone Number",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "button": "Create Account",
+    "haveAccount": "Already have an account?",
+    "loginLink": "Login"
+  },
+  "forgot": {
+    "title": "Forgot Password?",
+    "subtitle": "Enter your email and we'll send you a reset link",
+    "backToLogin": "Back to Login",
+    "email": "Email",
+    "button": "Send Reset Link"
+  },
+  "browsePG": {
+    "title": "Browse PG",
+    "subtitle": "Find your perfect paying guest accommodation."
+  },
+  "rentalHomes": {
+    "title": "Rental Homes",
+    "subtitle": "Discover rental homes that match your needs."
+  },
+  "postProperty": {
+    "title": "Post Property",
+    "subtitle": "List your property and reach thousands of tenants."
+  },
+  "about": {
+    "title": "About StayBuddy",
+    "subtitle": "StayBuddy is your trusted platform for finding and listing rental properties. We connect tenants with property owners, making the rental process seamless and transparent."
+  },
+  "validation": {
+    "nameMin": "Name must be at least 2 characters",
+    "emailInvalid": "Invalid email address",
+    "phoneMin": "Phone number must be at least 10 digits",
+    "passwordMin": "Password must be at least 6 characters",
+    "passwordMatch": "Passwords don't match"
+  },
+  "placeholder": {
+    "email": "your@email.com",
+    "fullName": "Enter your full name",
+    "phone": "+1 (555) 000-0000",
+    "password": "••••••••"
+  },
+  "currency": {
+    "symbol": "₹",
+    "name": "Rupees",
+    "perMonth": "month"
+  },
+  "common": {
+    "continue": "Continue",
+    "back": "Back",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "filters": {
+    "category": "Category",
+    "location": "Enter city, area, or landmark",
+    "moreFilters": "More Filters",
+    "min": "MIN",
+    "max": "MAX",
+    "range": "Range",
+    "searchProperties": "Search Properties",
+    "pgFor": "PG For",
+    "preferredTenants": "Preferred Tenants",
+    "occupancy": "Occupancy",
+    "propertyType": "Property Type",
+    "girls": "Girls",
+    "boys": "Boys",
+    "both": "Both",
+    "student": "Student",
+    "professional": "Professional",
+    "single": "Single",
+    "double": "Double",
+    "triple": "Triple",
+    "four": "Four",
+    "flat": "Flat",
+    "house": "House",
+    "pg": "PG",
+    "rent": "Rent",
+    "tenant": "Tenant"
+  },
+  "properties": {
+    "featured": "Featured Properties",
+    "subtitle": "Discover our handpicked selection of premium rentals",
+    "allProperties": "All Properties",
+    "viewAll": "View All Properties"
+  },
+  "cityExplorer": {
+    "title": "PG For You",
+    "subtitle": "Based on your view history",
+    "property": "Property",
+    "properties": "Properties",
+    "trending": "Trending",
+    "exploreNow": "Explore Now",
+    "viewAllCities": "View All Cities"
+  }
+}

@@ -1,0 +1,161 @@
+{
+  "nav": {
+    "browsePG": "Parcourir PG",
+    "rentalHomes": "Maisons à Louer",
+    "postProperty": "Publier une Propriété",
+    "about": "À Propos",
+    "login": "Connexion",
+    "signup": "S'inscrire",
+    "language": "Langue",
+    "listProperty": "Publier Votre Propriété"
+  },
+  "home": {
+    "title": "Bienvenue sur StayBuddy",
+    "subtitle": "Trouvez facilement votre PG ou maison de location parfaite. Annonces premium, propriétés vérifiées et expérience de réservation fluide.",
+    "getStarted": "Commencer",
+    "browseListing": "Parcourir les Annonces",
+    "feature1": {
+      "title": "Recherche Facile",
+      "desc": "Trouvez votre séjour parfait avec des filtres et options de recherche avancés"
+    },
+    "feature2": {
+      "title": "Annonces Vérifiées",
+      "desc": "Toutes les propriétés sont vérifiées pour leur authenticité et qualité"
+    },
+    "feature3": {
+      "title": "Large Sélection",
+      "desc": "Choisissez parmi des milliers d'annonces de PG et maisons de location"
+    },
+    "feature4": {
+      "title": "Communauté de Confiance",
+      "desc": "Rejoignez des milliers de locataires et propriétaires satisfaits"
+    }
+  },
+  "login": {
+    "title": "Bon Retour",
+    "subtitle": "Connectez-vous à votre compte StayBuddy",
+    "email": "Email",
+    "password": "Mot de Passe",
+    "rememberMe": "Se souvenir de moi",
+    "forgotPassword": "Mot de passe oublié?",
+    "button": "Connexion",
+    "orContinue": "Ou continuer avec",
+    "noAccount": "Vous n'avez pas de compte?",
+    "signupLink": "S'inscrire"
+  },
+  "signup": {
+    "title": "Rejoindre StayBuddy",
+    "subtitle": "Créez votre compte pour commencer",
+    "iAm": "Je suis un",
+    "tenant": "Locataire",
+    "owner": "Propriétaire",
+    "tenantDesc": "Cherche un logement",
+    "ownerDesc": "Publier ma propriété",
+    "fullName": "Nom Complet",
+    "email": "Email",
+    "phone": "Numéro de Téléphone",
+    "password": "Mot de Passe",
+    "confirmPassword": "Confirmer le Mot de Passe",
+    "button": "Créer un Compte",
+    "haveAccount": "Vous avez déjà un compte?",
+    "loginLink": "Connexion"
+  },
+  "forgot": {
+    "title": "Mot de Passe Oublié?",
+    "subtitle": "Entrez votre email et nous vous enverrons un lien de réinitialisation",
+    "backToLogin": "Retour à la Connexion",
+    "email": "Email",
+    "button": "Envoyer le Lien"
+  },
+  "browsePG": {
+    "title": "Parcourir PG",
+    "subtitle": "Trouvez votre hébergement parfait en pension."
+  },
+  "rentalHomes": {
+    "title": "Maisons à Louer",
+    "subtitle": "Découvrez des maisons de location qui correspondent à vos besoins."
+  },
+  "postProperty": {
+    "title": "Publier une Propriété",
+    "subtitle": "Listez votre propriété et atteignez des milliers de locataires."
+  },
+  "about": {
+    "title": "À Propos de StayBuddy",
+    "subtitle": "StayBuddy est votre plateforme de confiance pour trouver et lister des propriétés locatives. Nous connectons les locataires avec les propriétaires, rendant le processus de location fluide et transparent."
+  },
+  "validation": {
+    "nameMin": "Le nom doit contenir au moins 2 caractères",
+    "emailInvalid": "Adresse email invalide",
+    "phoneMin": "Le numéro de téléphone doit contenir au moins 10 chiffres",
+    "passwordMin": "Le mot de passe doit contenir au moins 6 caractères",
+    "passwordMatch": "Les mots de passe ne correspondent pas"
+  },
+  "placeholder": {
+    "email": "votre@email.com",
+    "fullName": "Entrez votre nom complet",
+    "phone": "+33 6 12 34 56 78",
+    "password": "••••••••"
+  },
+  "currency": {
+    "symbol": "€",
+    "name": "Euro",
+    "perMonth": "mois"
+  },
+  "common": {
+    "continue": "Continuer",
+    "back": "Retour",
+    "submit": "Soumettre",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès"
+  },
+  "filters": {
+    "category": "Catégorie",
+    "location": "Entrez la ville, le quartier ou le point de repère",
+    "moreFilters": "Plus de Filtres",
+    "min": "MIN",
+    "max": "MAX",
+    "range": "Plage",
+    "searchProperties": "Rechercher des Propriétés",
+    "pgFor": "PG Pour",
+    "preferredTenants": "Locataires Préférés",
+    "occupancy": "Occupation",
+    "propertyType": "Type de Propriété",
+    "girls": "Filles",
+    "boys": "Garçons",
+    "both": "Les Deux",
+    "student": "Étudiant",
+    "professional": "Professionnel",
+    "single": "Simple",
+    "double": "Double",
+    "triple": "Triple",
+    "four": "Quatre",
+    "flat": "Appartement",
+    "house": "Maison",
+    "pg": "PG",
+    "rent": "Louer",
+    "tenant": "Locataire"
+  },
+  "properties": {
+    "featured": "Propriétés en Vedette",
+    "subtitle": "Découvrez notre sélection de locations premium",
+    "allProperties": "Toutes les Propriétés",
+    "viewAll": "Voir Toutes les Propriétés"
+  },
+  "cityExplorer": {
+    "title": "PG Pour Vous",
+    "subtitle": "Basé sur votre historique de consultation",
+    "property": "Propriété",
+    "properties": "Propriétés",
+    "trending": "Tendance",
+    "exploreNow": "Explorer Maintenant",
+    "viewAllCities": "Voir Toutes les Villes"
+  }
+}
