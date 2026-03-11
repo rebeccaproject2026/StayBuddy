@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Image from "next/image";
@@ -62,6 +62,7 @@ const defaultRatingStats = {
 const propertyData: { [key: string]: any } = {
   "1": {
     id: "1",
+    country: "france",
     title: "Beautiful Apartment with Balcony",
     location: "10 Rue Georges Pompidou, Talence, France",
     fullAddress: "10 Rue Georges Pompidou, Talence, France",
@@ -149,6 +150,7 @@ const propertyData: { [key: string]: any } = {
   // India properties
   "101": {
     id: "101",
+    country: "india",
     title: "Premium PG in Navrangpura",
     location: "Navrangpura, Ahmedabad, Gujarat",
     fullAddress: "Navrangpura, Ahmedabad, Gujarat, India",
@@ -190,6 +192,7 @@ const propertyData: { [key: string]: any } = {
   },
   "102": {
     id: "102",
+    country: "india",
     title: "Cozy 2BHK Apartment",
     location: "Info City, Gandhinagar, Gujarat",
     fullAddress: "Info City, Gandhinagar, Gujarat, India",
@@ -217,6 +220,7 @@ const propertyData: { [key: string]: any } = {
   },
   "103": {
     id: "103",
+    country: "india",
     title: "Student-Friendly PG",
     location: "Vesu, Surat, Gujarat",
     fullAddress: "Vesu, Surat, Gujarat, India",
@@ -250,6 +254,7 @@ const propertyData: { [key: string]: any } = {
   },
   "104": {
     id: "104",
+    country: "india",
     title: "Luxury Independent House",
     location: "Alkapuri, Vadodara, Gujarat",
     fullAddress: "Alkapuri, Vadodara, Gujarat, India",
@@ -277,9 +282,10 @@ const propertyData: { [key: string]: any } = {
   },
   "202": {
     id: "202",
+    country: "india",
     title: "Spacious Studio Apartment",
-    location: "Rue du Dépôt, 60280 Venette, France",
-    fullAddress: "Rue du Dépôt, 60280 Venette, France",
+    location: "Sector 15, Navrangpura, Ahmedabad, Gujarat, India",
+    fullAddress: "Sector 15, Navrangpura, Ahmedabad, Gujarat, India",
     price: 695,
     deposit: 1390,
     rooms: 1,
@@ -382,6 +388,7 @@ const propertyData: { [key: string]: any } = {
   },
   "3": {
     id: "3",
+    country: "france",
     title: "Modern Apartment with Garden View",
     location: "Aix-en-Provence, Bouches-du-Rhône",
     fullAddress: "Aix-en-Provence, Bouches-du-Rhône, France",
@@ -456,6 +463,7 @@ const propertyData: { [key: string]: any } = {
   },
   "4": {
     id: "4",
+    country: "france",
     title: "Cozy One Room Apartment",
     location: "Bitic-Etables-sur-Mer, Côtes-d'Armor",
     fullAddress: "Bitic-Etables-sur-Mer, Côtes-d'Armor, France",
@@ -520,6 +528,7 @@ const propertyData: { [key: string]: any } = {
   },
   "5": {
     id: "5",
+    country: "france",
     title: "Luxury Penthouse",
     location: "Paris 16th, Île-de-France",
     fullAddress: "Paris 16th, Île-de-France, France",
@@ -611,9 +620,10 @@ const propertyData: { [key: string]: any } = {
   },
   "206": {
     id: "206",
+    country: "india",
     title: "Student-Friendly PG",
-    location: "Lyon 7th, Rhône-Alpes, France",
-    fullAddress: "Lyon 7th, Rhône-Alpes, France",
+    location: "Koregaon Park, Pune, Maharashtra, India",
+    fullAddress: "Koregaon Park, Pune, Maharashtra, India",
     price: 850,
     deposit: 1700,
     rooms: 2,
@@ -675,9 +685,10 @@ const propertyData: { [key: string]: any } = {
   },
   "208": {
     id: "208",
+    country: "india",
     title: "Renovated Studio",
-    location: "Toulouse Centre, Haute-Garonne, France",
-    fullAddress: "Toulouse Centre, Haute-Garonne, France",
+    location: "Indiranagar, Bangalore, Karnataka, India",
+    fullAddress: "Indiranagar, Bangalore, Karnataka, India",
     price: 650,
     deposit: 1300,
     rooms: 1,
@@ -732,9 +743,10 @@ const propertyData: { [key: string]: any } = {
   },
   "204": {
     id: "204",
+    country: "india",
     title: "Cozy Studio Near University",
-    location: "Montpellier Centre, Hérault, France",
-    fullAddress: "Montpellier Centre, Hérault, France",
+    location: "Malviya Nagar, Jaipur, Rajasthan, India",
+    fullAddress: "Malviya Nagar, Jaipur, Rajasthan, India",
     price: 580,
     deposit: 1160,
     rooms: 1,
@@ -823,8 +835,33 @@ export default function PropertyDetailsPage() {
   const country = params.country as string;
   const property = propertyData[propertyId] || propertyData["1"];
   
-  // Check if country is India (route uses "in"), but allow full name just in case
+  // Check if country is India (route uses "in" for India, "fr" for France)
   const isIndia = country?.toLowerCase() === 'in' || country?.toLowerCase() === 'india';
+
+  // Reset state when property changes
+  useEffect(() => {
+    setCurrentImageIndex(0);
+    setSelectedSpaceType("rooms");
+    setIsFavorite(false);
+    setShowContactForm(false);
+    setShowShareModal(false);
+    setCopySuccess(false);
+    // Scroll to top when property changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [propertyId]);
+
+  // Get related properties from the same country
+  const getRelatedProperties = () => {
+    const currentPropertyCountry = property.country || 'france';
+    return Object.values(propertyData)
+      .filter((prop: any) => 
+        prop.id !== propertyId && // Exclude current property
+        prop.country === currentPropertyCountry // Same country
+      )
+      .slice(0, 3); // Get first 3 properties
+  };
+
+  const relatedProperties = getRelatedProperties();
 
   const content = {
     en: {
@@ -1527,91 +1564,50 @@ export default function PropertyDetailsPage() {
             {/* Related Listings Section */}
             <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 md:p-6">
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">
-                {t.relatedListings} {property.location.split(',')[0]}
+                {t.relatedListings}
               </h3>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
-                {/* Related Property 1 */}
-                <Link href="/property/2" className="group">
-                  <div className="relative h-48 rounded-lg overflow-hidden mb-3">
-                    <Image
-                      src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=2080&auto=format&fit=crop"
-                      alt="Related property"
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-300"
-                    />
-                    <button className="absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors">
-                      <Heart className="w-4 h-4 text-gray-700" />
-                    </button>
-                  </div>
-                  <h4 className="font-semibold text-gray-900 mb-1 group-hover:text-primary transition-colors">
-                    1 room apartment of 30m²
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-2">
-                    60280 {property.location.split(',')[0]}, France
-                  </p>
-                  <p className="text-lg font-bold text-primary">
-                    {currencySymbol} 560 <span className="text-sm font-normal text-gray-600">/ {monthText}</span>
-                  </p>
-                </Link>
-
-                {/* Related Property 2 */}
-                <Link href="/property/3" className="group">
-                  <div className="relative h-48 rounded-lg overflow-hidden mb-3">
-                    <Image
-                      src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop"
-                      alt="Related property"
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-300"
-                    />
-                    <button className="absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors">
-                      <Heart className="w-4 h-4 text-gray-700" />
-                    </button>
-                  </div>
-                  <h4 className="font-semibold text-gray-900 mb-1 group-hover:text-primary transition-colors">
-                    2 rooms apartment of 42m²
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-2">
-                    60280 {property.location.split(',')[0]}, France
-                  </p>
-                  <p className="text-lg font-bold text-primary">
-                    {currencySymbol} 618 <span className="text-sm font-normal text-gray-600">/ {monthText}</span>
-                  </p>
-                </Link>
-
-                {/* Related Property 3 */}
-                <Link href="/property/4" className="group">
-                  <div className="relative h-48 rounded-lg overflow-hidden mb-3">
-                    <Image
-                      src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop"
-                      alt="Related property"
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-300"
-                    />
-                    <button className="absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors">
-                      <Heart className="w-4 h-4 text-gray-700" />
-                    </button>
-                  </div>
-                  <h4 className="font-semibold text-gray-900 mb-1 group-hover:text-primary transition-colors">
-                    1 room apartment of 39m²
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-2">
-                    60000 Compiègne, France
-                  </p>
-                  <p className="text-lg font-bold text-primary">
-                    {currencySymbol} 622 <span className="text-sm font-normal text-gray-600">/ {monthText}</span>
-                  </p>
-                </Link>
+                {relatedProperties.map((relatedProp: any) => (
+                  <Link key={relatedProp.id} href={`/property/${relatedProp.id}`} className="group">
+                    <div className="relative h-48 rounded-lg overflow-hidden mb-3">
+                      <Image
+                        src={relatedProp.images[0]}
+                        alt={relatedProp.title}
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                      <button className="absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors">
+                        <Heart className="w-4 h-4 text-gray-700" />
+                      </button>
+                      {relatedProp.propertyType && (
+                        <span className={`absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-semibold ${
+                          relatedProp.propertyType === "PG" 
+                            ? "bg-blue-600 text-white" 
+                            : "bg-green-600 text-white"
+                        }`}>
+                          {relatedProp.propertyType}
+                        </span>
+                      )}
+                    </div>
+                    <h4 className="font-semibold text-gray-900 mb-1 group-hover:text-primary transition-colors line-clamp-1">
+                      {relatedProp.title}
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-2 line-clamp-1">
+                      {relatedProp.location}
+                    </p>
+                    <p className="text-lg font-bold text-primary">
+                      {currencySymbol} {relatedProp.price} <span className="text-sm font-normal text-gray-600">/ {monthText}</span>
+                    </p>
+                  </Link>
+                ))}
               </div>
 
-              {/* View More Button */}
-              <div className="text-center">
-                <Link href="/properties">
-                  <button className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors">
-                    {t.viewMore}
-                  </button>
-                </Link>
-              </div>
+              <Link href={`/properties`}>
+                <button className="w-full py-3 border-2 border-primary text-primary rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300">
+                  {t.viewMore}
+                </button>
+              </Link>
             </div>
           </div>
 
