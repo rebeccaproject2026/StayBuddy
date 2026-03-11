@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 import { MapPin, TrendingUp, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface CityCardProps {
   name: string;
@@ -12,10 +13,18 @@ interface CityCardProps {
   image: string;
   size?: "large" | "medium" | "small";
   trending?: boolean;
+  country?: string;
 }
 
-const CityCard = ({ name, propertyCount, image, size = "medium", trending }: CityCardProps) => {
+const CityCard = ({ name, propertyCount, image, size = "medium", trending, country }: CityCardProps) => {
   const { t } = useLanguage();
+  const router = useRouter();
+
+  const handleCityClick = () => {
+    // Navigate to properties page with city filter, including country in path
+    const countryPath = country || 'in';
+    router.push(`/${countryPath}/properties?city=${encodeURIComponent(name)}`);
+  };
 
   const sizeClasses = {
     large: "col-span-1 md:col-span-2 row-span-1 md:row-span-2 h-[280px] md:h-[420px]",
@@ -27,6 +36,7 @@ const CityCard = ({ name, propertyCount, image, size = "medium", trending }: Cit
     <motion.div
       whileHover={{ scale: 1.02, y: -8 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
+      onClick={handleCityClick}
       className={`relative ${sizeClasses[size]} rounded-2xl overflow-hidden cursor-pointer group shadow-md hover:shadow-2xl transition-shadow duration-300`}
     >
       {/* Background Image */}
@@ -98,6 +108,7 @@ const CityCard = ({ name, propertyCount, image, size = "medium", trending }: Cit
 export default function CityExplorer() {
   const { t } = useLanguage();
   const params = useParams();
+  const router = useRouter();
   const country = params?.country as string;
 
   const indianCities = [
@@ -210,7 +221,7 @@ export default function CityExplorer() {
                     : "md:col-span-1 md:row-span-1"
               }
             >
-              <CityCard {...city} />
+              <CityCard {...city} country={country} />
             </motion.div>
           ))}
         </div>
@@ -226,6 +237,7 @@ export default function CityExplorer() {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.98 }}
+            onClick={() => router.push(`/${country}/properties`)}
             className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-white rounded-xl font-semibold shadow-lg hover:bg-primary-dark hover:shadow-xl transition-all duration-300"
           >
             <span>{t("cityExplorer.viewAllCities")}</span>

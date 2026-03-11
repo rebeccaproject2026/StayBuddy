@@ -531,9 +531,14 @@ function PropertiesPageContent() {
     allProperties.forEach((property) => {
       const propCountry = property.id.startsWith("2") ? "fr" : "in";
       if (propCountry === propertyCountry) {
-        // Extract city from location (usually first part before comma)
-        const city = property.location.split(',')[0].trim();
-        citiesSet.add(city);
+        // Extract all parts of location and add them as potential cities
+        const locationParts = property.location.split(',').map(part => part.trim());
+        locationParts.forEach(part => {
+          // Skip state/country names (usually last parts)
+          if (part && !part.includes('Gujarat') && !part.includes('France') && !part.includes('India')) {
+            citiesSet.add(part);
+          }
+        });
       }
     });
     
@@ -583,10 +588,12 @@ function PropertiesPageContent() {
                        (activeTab === "pg" && property.type === "PG") ||
                        (activeTab === "tenant" && property.type === "Tenant");
     
-    // City filter
+    // City filter - matches both exact city name and if city is part of location
     const matchesCity = selectedCities.length === 0 || selectedCities.some(city => {
-      const propertyCity = property.location.split(',')[0].trim();
-      return propertyCity === city;
+      const propertyLocation = property.location.toLowerCase();
+      const cityLower = city.toLowerCase();
+      // Check if the selected city matches the first part (exact match) or is contained in the location
+      return propertyLocation.includes(cityLower);
     });
     
     // Verified filter
