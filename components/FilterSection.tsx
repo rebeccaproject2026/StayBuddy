@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, MapPin, Search, SlidersHorizontal } from "lucide-react";
 import { Menu } from "@headlessui/react";
@@ -16,11 +16,14 @@ interface FilterState {
   tenant: "Student" | "Professional" | "Both" | null;
   occupancy: "Single" | "Double" | "Triple" | "Four" | null;
   propertyType: "Flat" | "House" | "1BHK" | "2BHK" | "3BHK" | "4BHK" | null;
+  city: string | null;
 }
 
 export default function FilterSection() {
   const { t } = useLanguage();
   const router = useRouter();
+  const params = useParams();
+  const country = params?.country as string || 'in';
   
   const [filters, setFilters] = useState<FilterState>({
     category: "PG",
@@ -31,6 +34,7 @@ export default function FilterSection() {
     tenant: null,
     occupancy: null,
     propertyType: null,
+    city: null,
   });
 
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -47,6 +51,32 @@ export default function FilterSection() {
     "3BHK",
     "4BHK",
   ] as const;
+
+  // City options based on country
+  const indiaCities = [
+    "Navrangpura",
+    "Vastrapur",
+    "Satellite",
+    "Vesu",
+    "Adajan",
+    "Alkapuri",
+    "Info City",
+    "Sector 21",
+  ] as const;
+
+  const franceCities = [
+    "Talence",
+    "Venette",
+    "Aix-en-Provence",
+    "Montpellier Centre",
+    "Paris 16th",
+    "Lyon 7th",
+    "Marseille 8th",
+    "Toulouse Centre",
+  ] as const;
+
+  // Get cities based on current country
+  const cityOptions = country === 'in' || country === 'india' ? indiaCities : franceCities;
 
   const getTranslatedOption = (option: string): string => {
     const key = option.toLowerCase();
@@ -91,6 +121,11 @@ export default function FilterSection() {
     // Add property type
     if (filters.propertyType) {
       params.set("propertyType", filters.propertyType);
+    }
+    
+    // Add city
+    if (filters.city) {
+      params.set("city", filters.city);
     }
     
     // Navigate to properties page with filters
@@ -234,7 +269,7 @@ export default function FilterSection() {
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                   onClick={handleSearch}
-                  className="flex items-center w-full justify-center space-x-2 px-8 py-2.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="flex items-center w-full justify-center space-x-2 px-6 py-2.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   <Search className="w-5 h-5" />
                   <span>{t("filters.searchProperties")}</span>
@@ -378,6 +413,35 @@ export default function FilterSection() {
                     </div>
                   </div>
                 )}
+
+                {/* City Filter */}
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                    {"City"}
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {cityOptions.map((option) => (
+                      <motion.button
+                        key={option}
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() =>
+                          setFilters({
+                            ...filters,
+                            city: filters.city === option ? null : option,
+                          })
+                        }
+                        className={`px-4 py-2 rounded-lg border transition-all duration-300 ${
+                          filters.city === option
+                            ? "bg-primary text-white border-primary"
+                            : "bg-white text-gray-700 border-gray-200 hover:bg-primary-light"
+                        }`}
+                      >
+                        {option}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}

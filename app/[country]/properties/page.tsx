@@ -315,6 +315,7 @@ function PropertiesPageContent() {
   const [preferredTenants, setPreferredTenants] = useState<string[]>([]);
   const [tenantExperience, setTenantExperience] = useState<string[]>([]);
   const [verifiedPG, setVerifiedPG] = useState(false);
+  const [selectedCities, setSelectedCities] = useState<string[]>([]);
 
   // Temporary filter states (used in the drawer before applying)
   const [tempOccupancy, setTempOccupancy] = useState<string[]>([]);
@@ -325,6 +326,7 @@ function PropertiesPageContent() {
   const [tempPreferredTenants, setTempPreferredTenants] = useState<string[]>([]);
   const [tempTenantExperience, setTempTenantExperience] = useState<string[]>([]);
   const [tempVerifiedPG, setTempVerifiedPG] = useState(false);
+  const [tempSelectedCities, setTempSelectedCities] = useState<string[]>([]);
 
   // Apply URL parameters on mount
   useEffect(() => {
@@ -335,6 +337,7 @@ function PropertiesPageContent() {
     const pgForParam = searchParams.get("pgFor");
     const tenantParam = searchParams.get("tenant");
     const occupancyParam = searchParams.get("occupancy");
+    const cityParam = searchParams.get("city");
     
     // Apply tab filter
     if (tab === "pg" || tab === "tenant") {
@@ -371,6 +374,12 @@ function PropertiesPageContent() {
       setOccupancy([occupancyParam]);
       setTempOccupancy([occupancyParam]);
     }
+    
+    // Apply City filter
+    if (cityParam) {
+      setSelectedCities([cityParam]);
+      setTempSelectedCities([cityParam]);
+    }
   }, [searchParams]);
 
   const content = {
@@ -403,7 +412,8 @@ function PropertiesPageContent() {
         foodProvided: "Food Provided",
         preferredTenants: "Preferred Tenants",
         tenantExperience: "Tenant Experience",
-        verifiedPG: "Verified PG"
+        verifiedPG: "Verified PG",
+        city: "City"
       },
       occupancyOptions: ["Single", "Double", "Triple", "Four", "Other"],
       pgForOptions: ["Girls", "Boys", "Both"],
@@ -441,7 +451,8 @@ function PropertiesPageContent() {
         foodProvided: "Nourriture fournie",
         preferredTenants: "Locataires préférés",
         tenantExperience: "Expérience locataire",
-        verifiedPG: "PG vérifié"
+        verifiedPG: "PG vérifié",
+        city: "Ville"
       },
       occupancyOptions: ["Simple", "Double", "Triple", "Quatre", "Autre"],
       pgForOptions: ["Filles", "Garçons", "Les deux"],
@@ -478,6 +489,7 @@ function PropertiesPageContent() {
     setTempPreferredTenants(preferredTenants);
     setTempTenantExperience(tenantExperience);
     setTempVerifiedPG(verifiedPG);
+    setTempSelectedCities(selectedCities);
     setShowFilters(true);
   };
 
@@ -491,6 +503,7 @@ function PropertiesPageContent() {
     setPreferredTenants(tempPreferredTenants);
     setTenantExperience(tempTenantExperience);
     setVerifiedPG(tempVerifiedPG);
+    setSelectedCities(tempSelectedCities);
     setShowFilters(false);
   };
 
@@ -503,11 +516,31 @@ function PropertiesPageContent() {
     setTempPreferredTenants([]);
     setTempTenantExperience([]);
     setTempVerifiedPG(false);
+    setTempSelectedCities([]);
   };
 
   // Filter and sort properties
   const params = useParams();
   const country = params?.country as string || 'in';
+
+  // Get unique cities from properties based on country
+  const getUniqueCities = () => {
+    const propertyCountry = country;
+    const citiesSet = new Set<string>();
+    
+    allProperties.forEach((property) => {
+      const propCountry = property.id.startsWith("2") ? "fr" : "in";
+      if (propCountry === propertyCountry) {
+        // Extract city from location (usually first part before comma)
+        const city = property.location.split(',')[0].trim();
+        citiesSet.add(city);
+      }
+    });
+    
+    return Array.from(citiesSet).sort();
+  };
+
+  const availableCities = getUniqueCities();
 
   let filteredProperties = allProperties.filter((property) => {
     // The mock data is generated such that Indian IDs begin with "1" and French IDs begin with "2"
@@ -550,7 +583,16 @@ function PropertiesPageContent() {
                        (activeTab === "pg" && property.type === "PG") ||
                        (activeTab === "tenant" && property.type === "Tenant");
     
-    return matchesSearch && matchesPrice && matchesOccupancy && matchesType;
+    // City filter
+    const matchesCity = selectedCities.length === 0 || selectedCities.some(city => {
+      const propertyCity = property.location.split(',')[0].trim();
+      return propertyCity === city;
+    });
+    
+    // Verified filter
+    const matchesVerified = !verifiedPG || property.verified === true;
+    
+    return matchesSearch && matchesPrice && matchesOccupancy && matchesType && matchesCity && matchesVerified;
   });
 
   // Sort properties
@@ -660,9 +702,9 @@ function PropertiesPageContent() {
               <SlidersHorizontal className="w-5 h-5" />
               {t.filters}
               {/* Active filters count badge */}
-              {(occupancy.length + pgFor.length + amenities.length + foodProvided.length + preferredTenants.length + tenantExperience.length + (verifiedPG ? 1 : 0)) > 0 && (
+              {(occupancy.length + pgFor.length + amenities.length + foodProvided.length + preferredTenants.length + tenantExperience.length + selectedCities.length + (verifiedPG ? 1 : 0)) > 0 && (
                 <span className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                  {occupancy.length + pgFor.length + amenities.length + foodProvided.length + preferredTenants.length + tenantExperience.length + (verifiedPG ? 1 : 0)}
+                  {occupancy.length + pgFor.length + amenities.length + foodProvided.length + preferredTenants.length + tenantExperience.length + selectedCities.length + (verifiedPG ? 1 : 0)}
                 </span>
               )}
             </button>
@@ -866,6 +908,26 @@ function PropertiesPageContent() {
                 >
                   verified PG
                 </button>
+              </div>
+
+              {/* City Filter */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-700 mb-3">{t.filterSections.city}</h3>
+                <div className="flex flex-wrap gap-2">
+                  {availableCities.map((city) => (
+                    <button
+                      key={city}
+                      onClick={() => toggleFilter(tempSelectedCities, setTempSelectedCities, city)}
+                      className={`px-4 py-2 rounded-lg border-2 transition-colors ${
+                        tempSelectedCities.includes(city)
+                          ? "bg-primary text-white border-primary"
+                          : "bg-white text-gray-700 border-gray-300 hover:border-primary"
+                      }`}
+                    >
+                      {city}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Apply Button */}
