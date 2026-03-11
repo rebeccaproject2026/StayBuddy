@@ -822,7 +822,7 @@ export default function OwnerDashboard() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">{tc.type}</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Property Type</label>
                     <select
                       value={editForm.type}
                       onChange={(e) => setEditForm((p) => ({ ...p, type: e.target.value as Listing["type"] }))}
@@ -834,7 +834,7 @@ export default function OwnerDashboard() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">{tc.rent}</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Rent ({currencySymbol})</label>
                     <input
                       value={editForm.rent}
                       onChange={(e) => setEditForm((p) => ({ ...p, rent: e.target.value }))}
@@ -844,7 +844,7 @@ export default function OwnerDashboard() {
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">{tc.location}</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
                     <input
                       value={editForm.location}
                       onChange={(e) => setEditForm((p) => ({ ...p, location: e.target.value }))}
