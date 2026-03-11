@@ -293,7 +293,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-[1500px] mx-auto px-6">
+        <div className="max-w-[1500px] mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
             <h1 className="text-2xl font-bold text-primary">{tc.dashboard}</h1>
             <Link
@@ -307,7 +307,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="max-w-[1500px] mx-auto px-6 py-8">
+      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 py-8">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar */}
           <div className="lg:w-80 flex-shrink-0">
@@ -358,7 +358,7 @@ export default function AdminDashboard() {
           {/* Main Content */}
           <div className="flex-1">
             {/* Stats Cards */}
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
               <div className="bg-white rounded-2xl shadow-md p-6">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-gray-600 text-sm font-medium">{tc.totalListings}</h3>
@@ -396,14 +396,14 @@ export default function AdminDashboard() {
             {/* Listings Management */}
             {activeTab === "listings" && (
               <div className="space-y-6">
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
                   <h2 className="text-2xl font-bold text-gray-900">{tc.listingsManagement}</h2>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
                     <Filter className="w-5 h-5 text-gray-600" />
                     <select
                       value={listingFilter}
                       onChange={(e) => setListingFilter(e.target.value)}
-                      className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option value="all">{tc.all}</option>
                       <option value="pending">{tc.pending}</option>
@@ -417,8 +417,8 @@ export default function AdminDashboard() {
                   <div className="space-y-4">
                     {filteredListings.map((listing) => (
                       <div key={listing.id} className="bg-white rounded-2xl shadow-md p-6">
-                        <div className="flex gap-6">
-                          <div className="relative w-48 h-32 flex-shrink-0">
+                        <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+                          <div className="relative w-full h-48 md:w-48 md:h-32 flex-shrink-0">
                             <Image
                               src={listing.image}
                               alt={listing.name}
@@ -461,7 +461,7 @@ export default function AdminDashboard() {
                               </div>
                             </div>
 
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap gap-2">
                               {listing.status === "Pending" && (
                                 <>
                                   <button className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
@@ -504,14 +504,14 @@ export default function AdminDashboard() {
             {/* User Management */}
             {activeTab === "users" && (
               <div className="space-y-6">
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
                   <h2 className="text-2xl font-bold text-gray-900">{tc.userManagement}</h2>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
                     <Filter className="w-5 h-5 text-gray-600" />
                     <select
                       value={userFilter}
                       onChange={(e) => setUserFilter(e.target.value)}
-                      className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option value="all">{tc.all}</option>
                       <option value="owners">{tc.owners}</option>
@@ -608,14 +608,14 @@ export default function AdminDashboard() {
             {/* Reports & Moderation */}
             {activeTab === "reports" && (
               <div className="space-y-6">
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
                   <h2 className="text-2xl font-bold text-gray-900">{tc.reportsModeration}</h2>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
                     <Filter className="w-5 h-5 text-gray-600" />
                     <select
                       value={reportFilter}
                       onChange={(e) => setReportFilter(e.target.value)}
-                      className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option value="all">{tc.all}</option>
                       <option value="pending">{tc.pending}</option>
@@ -655,7 +655,7 @@ export default function AdminDashboard() {
                           <p className="text-gray-800">{report.description}</p>
                         </div>
 
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
                             <Eye className="w-4 h-4" />
                             {tc.viewDetails}

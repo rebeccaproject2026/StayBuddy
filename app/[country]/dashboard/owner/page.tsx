@@ -20,6 +20,22 @@ import {
   Eye,
 } from "lucide-react";
 
+type Listing = {
+  id: number;
+  name: string;
+  type: "PG" | "Tenant";
+  image: string;
+  rent: number;
+  location: string;
+  address: string;
+  rooms: number;
+  occupied: number;
+  status: string;
+  verificationStatus: string;
+  views: number;
+  inquiries: number;
+};
+
 export default function OwnerDashboard() {
   const { language, t } = useLanguage();
   const [activeTab, setActiveTab] = useState("listings");
@@ -27,7 +43,7 @@ export default function OwnerDashboard() {
   const currencySymbol = t("currency.symbol");
 
   // Mock data - in real app, this would come from API
-  const myListings = [
+  const [myListings, setMyListings] = useState<Listing[]>([
     {
       id: 1,
       name: "Sunshine PG",
@@ -73,7 +89,19 @@ export default function OwnerDashboard() {
       views: 0,
       inquiries: 0,
     },
-  ];
+  ]);
+
+  const [editingListing, setEditingListing] = useState<Listing | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    type: "PG" as Listing["type"],
+    rent: "",
+    location: "",
+    address: "",
+    rooms: "",
+    occupied: "",
+  });
+  const [editPhotoPreviewUrl, setEditPhotoPreviewUrl] = useState<string | null>(null);
 
   const bookingRequests = [
     {
@@ -218,11 +246,75 @@ export default function OwnerDashboard() {
     }
   };
 
+  const openEdit = (listing: Listing) => {
+    setEditingListing(listing);
+    setEditForm({
+      name: listing.name,
+      type: listing.type,
+      rent: String(listing.rent),
+      location: listing.location,
+      address: listing.address,
+      rooms: String(listing.rooms),
+      occupied: String(listing.occupied),
+    });
+    setEditPhotoPreviewUrl(null);
+  };
+
+  const closeEdit = () => {
+    if (editPhotoPreviewUrl) URL.revokeObjectURL(editPhotoPreviewUrl);
+    setEditPhotoPreviewUrl(null);
+    setEditingListing(null);
+  };
+
+  const saveEdit = () => {
+    if (!editingListing) return;
+
+    const rent = Number(editForm.rent);
+    const rooms = Math.max(0, Number(editForm.rooms));
+    const occupied = Math.min(Math.max(0, Number(editForm.occupied)), rooms);
+
+    setMyListings((prev) =>
+      prev.map((l) =>
+        l.id === editingListing.id
+          ? {
+              ...l,
+              name: editForm.name.trim() || l.name,
+              type: editForm.type,
+              rent: Number.isFinite(rent) ? rent : l.rent,
+              location: editForm.location.trim() || l.location,
+              address: editForm.address.trim() || l.address,
+              rooms: Number.isFinite(rooms) ? rooms : l.rooms,
+              occupied: Number.isFinite(occupied) ? occupied : l.occupied,
+              image: editPhotoPreviewUrl ?? l.image,
+            }
+          : l
+      )
+    );
+
+    closeEdit();
+  };
+
+  const deleteListing = (id: number) => {
+    setMyListings((prev) => prev.filter((l) => l.id !== id));
+    if (editingListing?.id === id) closeEdit();
+  };
+
+  const bumpRooms = (id: number, delta: number) => {
+    setMyListings((prev) =>
+      prev.map((l) => {
+        if (l.id !== id) return l;
+        const rooms = Math.max(0, l.rooms + delta);
+        const occupied = Math.min(l.occupied, rooms);
+        return { ...l, rooms, occupied };
+      })
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-[1500px] mx-auto px-6">
+        <div className="max-w-[1500px] mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
             <h1 className="text-2xl font-bold text-primary">{tc.dashboard}</h1>
             <Link
@@ -236,7 +328,7 @@ export default function OwnerDashboard() {
         </div>
       </div>
 
-      <div className="max-w-[1500px] mx-auto px-6 py-8">
+      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 py-8">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar */}
           <div className="lg:w-64 flex-shrink-0">
@@ -300,11 +392,11 @@ export default function OwnerDashboard() {
             {/* My Listings */}
             {activeTab === "listings" && (
               <div className="space-y-6">
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
                   <h2 className="text-2xl font-bold text-gray-900">{tc.myListings}</h2>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
                     {/* View Toggle */}
-                    <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                    <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-fit">
                       <button
                         onClick={() => setViewMode("grid")}
                         className={`p-2 rounded-md transition-colors ${
@@ -330,7 +422,7 @@ export default function OwnerDashboard() {
                     </div>
                     <Link
                       href="/post-property"
-                      className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                      className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
                     >
                       <Plus className="w-5 h-5" />
                       {tc.addNewListing}
@@ -393,11 +485,18 @@ export default function OwnerDashboard() {
                                   {tc.viewDetails}
                                 </Link>
                                 <div className="flex gap-2">
-                                  <button className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+                                  <button
+                                    onClick={() => openEdit(listing)}
+                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                                  >
                                     <Edit className="w-4 h-4" />
                                     {tc.edit}
                                   </button>
-                                  <button className="flex items-center justify-center gap-2 px-3 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition-colors text-sm">
+                                  <button
+                                    onClick={() => deleteListing(listing.id)}
+                                    className="flex items-center justify-center gap-2 px-3 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition-colors text-sm"
+                                    aria-label={tc.delete}
+                                  >
                                     <Trash2 className="w-4 h-4" />
                                   </button>
                                 </div>
@@ -413,8 +512,8 @@ export default function OwnerDashboard() {
                       <div className="space-y-4">
                         {myListings.map((listing) => (
                           <div key={listing.id} className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow">
-                            <div className="flex gap-6">
-                              <div className="relative w-48 h-32 flex-shrink-0">
+                            <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+                              <div className="relative w-full h-48 md:w-48 md:h-32 flex-shrink-0">
                                 <Image
                                   src={listing.image}
                                   alt={listing.name}
@@ -429,7 +528,7 @@ export default function OwnerDashboard() {
                               </div>
 
                               <div className="flex-1">
-                                <div className="flex items-start justify-between mb-3">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-3">
                                   <div>
                                     <h3 className="text-xl font-bold text-gray-900 mb-1">{listing.name}</h3>
                                     <div className="flex items-center gap-2 text-gray-600 mb-2">
@@ -438,7 +537,7 @@ export default function OwnerDashboard() {
                                     </div>
                                     <p className="text-sm text-gray-500">{listing.address}</p>
                                   </div>
-                                  <span className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(listing.verificationStatus)}`}>
+                                  <span className={`self-start px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(listing.verificationStatus)}`}>
                                     {listing.verificationStatus === "Approved" ? tc.approved : listing.verificationStatus === "Pending" ? tc.pendingApproval : tc.rejected}
                                   </span>
                                 </div>
@@ -450,7 +549,7 @@ export default function OwnerDashboard() {
                                   <span className="text-gray-600 text-sm">/month</span>
                                 </div>
 
-                                <div className="grid grid-cols-4 gap-4 mb-4">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
                                   <div className="p-3 bg-gray-50 rounded-lg">
                                     <p className="text-sm text-gray-600">{tc.rooms}</p>
                                     <p className="font-bold text-gray-900">{listing.rooms}</p>
@@ -474,11 +573,17 @@ export default function OwnerDashboard() {
                                     <Eye className="w-4 h-4" />
                                     {tc.viewDetails}
                                   </Link>
-                                  <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base">
+                                  <button
+                                    onClick={() => openEdit(listing)}
+                                    className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
+                                  >
                                     <Edit className="w-4 h-4" />
                                     {tc.edit}
                                   </button>
-                                  <button className="flex items-center gap-2 px-4 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition-colors text-sm sm:text-base">
+                                  <button
+                                    onClick={() => deleteListing(listing.id)}
+                                    className="flex items-center gap-2 px-4 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition-colors text-sm sm:text-base"
+                                  >
                                     <Trash2 className="w-4 h-4" />
                                     {tc.delete}
                                   </button>
@@ -520,7 +625,7 @@ export default function OwnerDashboard() {
                           <span className="text-xs text-gray-500">{message.time}</span>
                         </div>
                         <p className="text-gray-800 mb-4">{message.lastMessage}</p>
-                        <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
+                        <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
                           <Send className="w-4 h-4" />
                           {tc.reply}
                         </button>
@@ -544,7 +649,7 @@ export default function OwnerDashboard() {
                   <div className="space-y-4">
                     {bookingRequests.map((request) => (
                       <div key={request.id} className="bg-white rounded-2xl shadow-md p-6">
-                        <div className="flex items-start justify-between mb-4">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
                           <div className="flex-1">
                             <h3 className="text-lg font-bold text-gray-900 mb-1">{request.tenantName}</h3>
                             <p className="text-sm text-gray-600 mb-2">
@@ -552,11 +657,11 @@ export default function OwnerDashboard() {
                             </p>
                             <p className="text-sm text-gray-500">Date: {request.date}</p>
                           </div>
-                          <span className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(request.status)}`}>
+                          <span className={`self-start px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(request.status)}`}>
                             {request.status === "Pending" ? tc.pending : request.status === "Approved" ? tc.approved : tc.rejected}
                           </span>
                         </div>
-                        <div className="grid md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg mb-4">
+                        <div className="grid sm:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg mb-4">
                           <div>
                             <p className="text-sm text-gray-600">{tc.roomType}</p>
                             <p className="font-semibold text-gray-900">{request.roomType}</p>
@@ -571,7 +676,7 @@ export default function OwnerDashboard() {
                           <p className="text-gray-800">{request.message}</p>
                         </div>
                         {request.status === "Pending" && (
-                          <div className="flex gap-2">
+                          <div className="flex flex-col sm:flex-row gap-2">
                             <button className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
                               {tc.approve}
                             </button>
@@ -685,6 +790,166 @@ export default function OwnerDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Edit Listing Modal */}
+      {editingListing && (
+        <div className="fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/40" onClick={closeEdit} />
+          <div className="absolute inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center p-3 sm:p-6">
+            <div className="w-full sm:max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden">
+              <div className="p-5 sm:p-6 border-b border-gray-200 flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900">Edit Listing</h3>
+                  <p className="text-sm text-gray-600 mt-1">{editingListing.name}</p>
+                </div>
+                <button
+                  onClick={closeEdit}
+                  className="px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="p-5 sm:p-6 max-h-[75vh] overflow-y-auto">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Property name</label>
+                    <input
+                      value={editForm.name}
+                      onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{tc.type}</label>
+                    <select
+                      value={editForm.type}
+                      onChange={(e) => setEditForm((p) => ({ ...p, type: e.target.value as Listing["type"] }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="PG">PG</option>
+                      <option value="Tenant">Tenant</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{tc.rent}</label>
+                    <input
+                      value={editForm.rent}
+                      onChange={(e) => setEditForm((p) => ({ ...p, rent: e.target.value }))}
+                      inputMode="numeric"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{tc.location}</label>
+                    <input
+                      value={editForm.location}
+                      onChange={(e) => setEditForm((p) => ({ ...p, location: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                    <input
+                      value={editForm.address}
+                      onChange={(e) => setEditForm((p) => ({ ...p, address: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{tc.rooms}</label>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => bumpRooms(editingListing.id, -1)}
+                        className="px-3 py-3 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                        type="button"
+                      >
+                        -
+                      </button>
+                      <input
+                        value={editForm.rooms}
+                        onChange={(e) => setEditForm((p) => ({ ...p, rooms: e.target.value }))}
+                        inputMode="numeric"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                      <button
+                        onClick={() => bumpRooms(editingListing.id, 1)}
+                        className="px-3 py-3 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                        type="button"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">Add or remove rooms with +/-</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{tc.occupied}</label>
+                    <input
+                      value={editForm.occupied}
+                      onChange={(e) => setEditForm((p) => ({ ...p, occupied: e.target.value }))}
+                      inputMode="numeric"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <p className="text-xs text-gray-500 mt-2">Update room availability by changing occupied rooms.</p>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Upload new photo</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (editPhotoPreviewUrl) URL.revokeObjectURL(editPhotoPreviewUrl);
+                        setEditPhotoPreviewUrl(URL.createObjectURL(file));
+                      }}
+                      className="w-full"
+                    />
+                    <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      <div className="relative aspect-video rounded-lg overflow-hidden border border-gray-200">
+                        <Image
+                          src={editPhotoPreviewUrl ?? editingListing.image}
+                          alt="Listing preview"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-5 sm:p-6 border-t border-gray-200 flex flex-col sm:flex-row gap-2 sm:justify-end">
+                <button
+                  onClick={() => deleteListing(editingListing.id)}
+                  className="w-full sm:w-auto px-4 py-3 rounded-lg border border-red-500 text-red-500 hover:bg-red-50"
+                >
+                  {tc.delete} Listing
+                </button>
+                <button
+                  onClick={closeEdit}
+                  className="w-full sm:w-auto px-4 py-3 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={saveEdit}
+                  className="w-full sm:w-auto px-4 py-3 rounded-lg bg-primary text-white hover:bg-primary-dark"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

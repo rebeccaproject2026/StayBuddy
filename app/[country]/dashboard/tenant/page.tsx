@@ -258,7 +258,7 @@ export default function TenantDashboard() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-[1500px] mx-auto px-6 ">
+        <div className="max-w-[1500px] mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
             <h1 className="text-2xl font-bold text-primary">{tc.dashboard}</h1>
             <Link
@@ -272,7 +272,7 @@ export default function TenantDashboard() {
         </div>
       </div>
 
-      <div className="max-w-[1500px] mx-auto px-6 py-8">
+      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 py-8">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar */}
           <div className="lg:w-80 flex-shrink-0">
@@ -349,7 +349,7 @@ export default function TenantDashboard() {
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">{tc.savedProperties}</h2>
                 {savedProperties.length > 0 ? (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {savedProperties.map((property) => (
                       <div key={property.id} className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                         <div className="relative h-48">
@@ -384,15 +384,15 @@ export default function TenantDashboard() {
                               </span>
                             ))}
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex flex-col sm:flex-row gap-2">
                             <Link
                               href={`/property/${property.id}`}
-                              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                              className="w-full sm:flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
                             >
                               <Eye className="w-4 h-4" />
                               {tc.viewDetails}
                             </Link>
-                            <button className="flex items-center justify-center gap-2 px-4 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition-colors">
+                            <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition-colors">
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
@@ -417,7 +417,7 @@ export default function TenantDashboard() {
                   <div className="space-y-4">
                     {myRequests.map((request) => (
                       <div key={request.id} className="bg-white rounded-2xl shadow-md p-6">
-                        <div className="flex items-start justify-between mb-4">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
                           <div className="flex-1">
                             <h3 className="text-lg font-bold text-gray-900 mb-1">{request.pgName}</h3>
                             <p className="text-sm text-gray-600 mb-2">
@@ -425,7 +425,7 @@ export default function TenantDashboard() {
                             </p>
                             <p className="text-sm text-gray-500">{tc.date}: {request.date}</p>
                           </div>
-                          <span className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(request.status)}`}>
+                          <span className={`self-start px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(request.status)}`}>
                             {request.status === "Pending" ? tc.pending : request.status === "Replied" ? tc.replied : tc.closed}
                           </span>
                         </div>
@@ -453,7 +453,7 @@ export default function TenantDashboard() {
                   <div className="space-y-4">
                     {myBookings.map((booking) => (
                       <div key={booking.id} className="bg-white rounded-2xl shadow-md p-6">
-                        <div className="flex items-start justify-between mb-4">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
                           <div className="flex-1">
                             <h3 className="text-xl font-bold text-gray-900 mb-2">{booking.pgName}</h3>
                             <p className="text-sm text-gray-600 mb-1">
@@ -461,11 +461,11 @@ export default function TenantDashboard() {
                             </p>
                             <p className="text-sm text-gray-600">{booking.address}</p>
                           </div>
-                          <span className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
+                          <span className={`self-start px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
                             {booking.status === "Confirmed" ? tc.confirmed : booking.status === "Pending" ? tc.pending : tc.cancelled}
                           </span>
                         </div>
-                        <div className="grid md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
                           <div>
                             <p className="text-sm text-gray-600 mb-1">{tc.roomType}</p>
                             <p className="font-semibold text-gray-900">{booking.roomType}</p>
@@ -512,7 +512,7 @@ export default function TenantDashboard() {
                           <span className="text-xs text-gray-500">{message.time}</span>
                         </div>
                         <p className="text-gray-800 mb-4">{message.lastMessage}</p>
-                        <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
+                        <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
                           <Send className="w-4 h-4" />
                           {tc.reply}
                         </button>
@@ -534,7 +534,7 @@ export default function TenantDashboard() {
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">{tc.profileSettings}</h2>
                 
                 <div className="bg-white rounded-2xl shadow-md p-6">
-                  <div className="flex items-center gap-6 mb-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-6">
                     <div className="relative">
                       <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center">
                         <User className="w-12 h-12 text-gray-400" />

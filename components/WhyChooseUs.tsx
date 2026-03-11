@@ -76,44 +76,44 @@ const WhyChooseUs = () => {
   const currentContent = content[language as keyof typeof content] || content.en;
 
   return (
-    <section className="py-8 px-4 bg-gradient-to-b from-gray-50 to-white">
+    <section className="py-6 sm:py-8 lg:py-12 px-3 sm:px-4 bg-gradient-to-b from-gray-50 to-white">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-3">
+        <div className="text-center mb-8 sm:mb-10 lg:mb-12">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-2 sm:mb-3 px-2">
             {currentContent.heading}
           </h2>
-          <p className="text-gray-600 text-lg">
+          <p className="text-gray-600 text-base sm:text-lg px-4 sm:px-0">
             {currentContent.subheading}
           </p>
         </div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
           {currentFeatures.map((feature, index) => {
             const Icon = feature.icon;
             return (
               <div
                 key={index}
-                className="group relative bg-white rounded-xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-gray-200"
+                className="group relative bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-gray-200"
               >
                 {/* Icon */}
-                <div className="mb-4 relative">
-                  <div className={`w-16 h-16 ${feature.color} rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className="w-8 h-8" />
+                <div className="mb-3 sm:mb-4 relative">
+                  <div className={`w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 ${feature.color} rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                    <Icon className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8" />
                   </div>
                 </div>
 
                 {/* Content */}
-                <h3 className="text-xl font-semibold text-gray-800 mb-3">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2 sm:mb-3">
                   {feature.title}
                 </h3>
-                <p className="text-gray-600 leading-relaxed text-sm">
+                <p className="text-gray-600 leading-relaxed text-sm sm:text-sm lg:text-base">
                   {feature.description}
                 </p>
 
                 {/* Hover Effect Border */}
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/5 transition-all duration-300 pointer-events-none" />
+                <div className="absolute inset-0 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/5 transition-all duration-300 pointer-events-none" />
               </div>
             );
           })}

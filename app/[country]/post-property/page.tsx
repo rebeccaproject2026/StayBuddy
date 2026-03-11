@@ -109,47 +109,63 @@ export default function PostPropertyPage() {
   const [error, setError] = useState("");
 
   const roomFacilities = [
-    { id: "bed", label: "Bed", icon: "🛏️" },
-    { id: "washroom", label: "Attached Washroom", icon: "🚿" },
-    { id: "cupboard", label: "Cupboard", icon: "🗄️" },
-    { id: "table", label: "Table", icon: "🪑" },
-    { id: "tv", label: "TV", icon: "📺" },
-    { id: "wifi", label: "Wi-Fi", icon: "📶" },
-    { id: "mattress", label: "Mattress", icon: "🛏️" },
-    { id: "aircooler", label: "Air Cooler", icon: "❄️" }
+    { id: "bed", label: "Bed" },
+    { id: "washroom", label: "Attached Washroom" },
+    { id: "cupboard", label: "Cupboard" },
+    { id: "table", label: "Table" },
+    { id: "tv", label: "TV" },
+    { id: "wifi", label: "Wi-Fi" },
+    { id: "mattress", label: "Mattress" },
+    { id: "aircooler", label: "Air Cooler" }
   ];
 
   const pgRulesOptions = [
-    { id: "guardian", label: "Guardian not allowed", icon: "👨‍👩‍👧" },
-    { id: "nonveg", label: "Non-Veg Food", icon: "🍗" },
-    { id: "gender", label: "Opposite Gender", icon: "⚥" },
-    { id: "alcohol", label: "Alcohol", icon: "🍺" },
-    { id: "smoking", label: "Smoking", icon: "🚬" }
+    { id: "guardian", label: "Guardian not allowed" },
+    { id: "nonveg", label: "Non-Veg Food" },
+    { id: "gender", label: "Opposite Gender" },
+    { id: "alcohol", label: "Alcohol" },
+    { id: "smoking", label: "Smoking" }
   ];
 
   const servicesOptions = [
-    { id: "laundry", label: "Laundry", icon: "🧺" },
-    { id: "cleaning", label: "Room Cleaning", icon: "🧹" },
-    { id: "warden", label: "Warden", icon: "👔" }
+    { id: "laundry", label: "Laundry" },
+    { id: "cleaning", label: "Room Cleaning" },
+    { id: "warden", label: "Warden" }
   ];
 
   const commonAmenitiesOptions = [
-    { id: "fridge", label: "Fridge", icon: "🧊" },
-    { id: "kitchen", label: "Kitchen for Self-cooking", icon: "🍳" },
-    { id: "water", label: "RO Water", icon: "💧" },
-    { id: "wifi", label: "Wi-Fi", icon: "📶" },
-    { id: "tv", label: "TV", icon: "📺" },
-    { id: "powerbackup", label: "Power Backup", icon: "🔋" },
-    { id: "cctv", label: "CCTV", icon: "📹" },
-    { id: "gym", label: "Gymnasium", icon: "🏋️" }
+    { id: "fridge", label: "Fridge" },
+    { id: "kitchen", label: "Kitchen for Self-cooking" },
+    { id: "water", label: "RO Water" },
+    { id: "wifi", label: "Wi-Fi" },
+    { id: "tv", label: "TV" },
+    { id: "powerbackup", label: "Power Backup" },
+    { id: "cctv", label: "CCTV" },
+    { id: "gym", label: "Gymnasium" }
   ];
 
+  // Indian cities used for location suggestions in the city field
   const cities = [
     "Ahmedabad, Gujarat",
-    "Ahmednagar, Lucknow",
-    "Ahmed Nagar, Bangalor",
-    "Ahmedpur, Bhopal",
-    "Ahmednagar"
+    "Bengaluru, Karnataka",
+    "Chennai, Tamil Nadu",
+    "Delhi",
+    "Gurugram, Haryana",
+    "Hyderabad, Telangana",
+    "Jaipur, Rajasthan",
+    "Kolkata, West Bengal",
+    "Mumbai, Maharashtra",
+    "Nagpur, Maharashtra",
+    "Noida, Uttar Pradesh",
+    "Pune, Maharashtra",
+    "Surat, Gujarat",
+    "Vadodara, Gujarat",
+    "Indore, Madhya Pradesh",
+    "Bhopal, Madhya Pradesh",
+    "Chandigarh",
+    "Lucknow, Uttar Pradesh",
+    "Kanpur, Uttar Pradesh",
+    "Patna, Bihar"
   ];
 
   const content = {
@@ -742,7 +758,11 @@ export default function PostPropertyPage() {
     }));
   };
 
-  const updateRoomDetail = (category: RoomCategory, field: keyof RoomDetails, value: string) => {
+  const updateRoomDetail = (
+    category: RoomCategory,
+    field: keyof RoomDetails,
+    value: string | string[]
+  ) => {
     setRoomDetails(prev => ({
       ...prev,
       [category]: {
@@ -1121,10 +1141,14 @@ export default function PostPropertyPage() {
                         {t.pincodeLabel}<span className="text-red-500">*</span>
                       </label>
                       <input 
-                        type="text" 
-                        value={pincode} 
-                        onChange={(e) => setPincode(e.target.value)} 
-                        placeholder={t.pincodePlaceholder} 
+                        type="text"
+                        inputMode="numeric"
+                        value={pincode}
+                        onChange={(e) => {
+                          const onlyDigits = e.target.value.replace(/\D/g, "");
+                          setPincode(onlyDigits);
+                        }}
+                        placeholder={t.pincodePlaceholder}
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
                       />
                     </div>
@@ -1245,10 +1269,14 @@ export default function PostPropertyPage() {
                             {t.numberOfRooms}<span className="text-red-500">*</span>
                           </label>
                           <input 
-                            type="text" 
-                            value={roomDetails[category].numberOfRooms} 
-                            onChange={(e) => updateRoomDetail(category, 'numberOfRooms', e.target.value)} 
-                            placeholder={t.numberOfRoomsPlaceholder} 
+                            type="text"
+                            inputMode="numeric"
+                            value={roomDetails[category].numberOfRooms}
+                            onChange={(e) => {
+                              const onlyDigits = e.target.value.replace(/\D/g, "");
+                              updateRoomDetail(category, 'numberOfRooms', onlyDigits);
+                            }}
+                            placeholder={t.numberOfRoomsPlaceholder}
                             className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
                           />
                         </div>
@@ -1260,10 +1288,14 @@ export default function PostPropertyPage() {
                             <div className="relative">
                               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">{currencySymbol}</span>
                               <input 
-                                type="text" 
-                                value={roomDetails[category].monthlyRent} 
-                                onChange={(e) => updateRoomDetail(category, 'monthlyRent', e.target.value)} 
-                                placeholder={t.monthlyRentPlaceholder} 
+                                type="text"
+                                inputMode="numeric"
+                                value={roomDetails[category].monthlyRent}
+                                onChange={(e) => {
+                                  const onlyDigits = e.target.value.replace(/\D/g, "");
+                                  updateRoomDetail(category, 'monthlyRent', onlyDigits);
+                                }}
+                                placeholder={t.monthlyRentPlaceholder}
                                 className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
                               />
                             </div>
@@ -1275,10 +1307,14 @@ export default function PostPropertyPage() {
                             <div className="relative">
                               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">{currencySymbol}</span>
                               <input 
-                                type="text" 
-                                value={roomDetails[category].securityDeposit} 
-                                onChange={(e) => updateRoomDetail(category, 'securityDeposit', e.target.value)} 
-                                placeholder={t.securityDepositPlaceholder} 
+                                type="text"
+                                inputMode="numeric"
+                                value={roomDetails[category].securityDeposit}
+                                onChange={(e) => {
+                                  const onlyDigits = e.target.value.replace(/\D/g, "");
+                                  updateRoomDetail(category, 'securityDeposit', onlyDigits);
+                                }}
+                                placeholder={t.securityDepositPlaceholder}
                                 className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
                               />
                             </div>
@@ -1287,7 +1323,12 @@ export default function PostPropertyPage() {
                         <div>
                           <label className="block text-gray-700 font-medium mb-3">{t.roomFacilities}</label>
                           <div className="grid grid-cols-1 esm:grid-cols-2 gap-2">
-                            {roomFacilities.map((facility) => (
+                            {[ 
+                              ...roomFacilities,
+                              ...roomDetails[category].facilities
+                                .filter((f) => !roomFacilities.some((rf) => rf.id === f))
+                                .map((f) => ({ id: f, label: f }))
+                            ].map((facility) => (
                               <button
                                 key={facility.id}
                                 onClick={() => toggleFacility(category, facility.id)}
@@ -1297,10 +1338,7 @@ export default function PostPropertyPage() {
                                     : 'border-gray-200 bg-white hover:border-gray-300'
                                 }`}
                               >
-                                <span className="flex items-center gap-2">
-                                  <span>{facility.icon}</span>
-                                  <span className="text-sm text-gray-700">{facility.label}</span>
-                                </span>
+                                <span className="text-sm text-gray-700">{facility.label}</span>
                                 <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
                                   roomDetails[category].facilities.includes(facility.id) ? 'border-primary bg-primary' : 'border-gray-300'
                                 }`}>
@@ -1308,6 +1346,51 @@ export default function PostPropertyPage() {
                                 </div>
                               </button>
                             ))}
+                          </div>
+                          <div className="mt-3 space-y-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                              Add extra facilities
+                            </label>
+                            <div className="flex flex-col sm:flex-row gap-2">
+                              <input
+                                type="text"
+                                placeholder="e.g. Study table, Balcony access"
+                                className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors text-sm"
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    const value = (e.target as HTMLInputElement).value.trim();
+                                    if (!value) return;
+                                    if (!roomDetails[category].facilities.includes(value)) {
+                                      updateRoomDetail(category, "facilities", [
+                                        ...roomDetails[category].facilities,
+                                        value,
+                                      ]);
+                                    }
+                                    (e.target as HTMLInputElement).value = "";
+                                  }
+                                }}
+                              />
+                              <button
+                                type="button"
+                                className="px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-dark transition-colors"
+                                onClick={(e) => {
+                                  const input = (e.currentTarget.parentElement?.querySelector("input") as HTMLInputElement | null);
+                                  if (!input) return;
+                                  const value = input.value.trim();
+                                  if (!value) return;
+                                  if (!roomDetails[category].facilities.includes(value)) {
+                                    updateRoomDetail(category, "facilities", [
+                                      ...roomDetails[category].facilities,
+                                      value,
+                                    ]);
+                                  }
+                                  input.value = "";
+                                }}
+                              >
+                                Add
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1547,27 +1630,72 @@ export default function PostPropertyPage() {
                     <div className="space-y-4 pb-4 border-b border-gray-200">
                       <h3 className="text-lg font-bold text-gray-800">{t.pgRulesTitle}</h3>
                       <div className="space-y-2">
-                        {pgRulesOptions.map((rule) => (
+                        {[
+                          ...pgRulesOptions,
+                          ...pgRules
+                            .filter((r) => !pgRulesOptions.some((opt) => opt.id === r))
+                            .map((r) => ({ id: r, label: r })),
+                        ].map((rule) => (
                           <button
                             key={rule.id}
                             onClick={() => togglePGRule(rule.id)}
                             className={`w-full flex items-center justify-between p-3 border-2 rounded-xl transition-all ${
                               pgRules.includes(rule.id)
-                                ? 'border-primary bg-primary/10'
-                                : 'border-gray-200 bg-white hover:border-gray-300'
+                                ? "border-primary bg-primary/10"
+                                : "border-gray-200 bg-white hover:border-gray-300"
                             }`}
                           >
-                            <span className="flex items-center gap-2">
-                              <span>{rule.icon}</span>
-                              <span className="text-gray-700">{rule.label}</span>
-                            </span>
-                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                              pgRules.includes(rule.id) ? 'border-primary bg-primary' : 'border-gray-300'
-                            }`}>
+                            <span className="text-gray-700 text-sm">{rule.label}</span>
+                            <div
+                              className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                                pgRules.includes(rule.id) ? "border-primary bg-primary" : "border-gray-300"
+                              }`}
+                            >
                               {pgRules.includes(rule.id) && <Check className="w-3 h-3 text-white" />}
                             </div>
                           </button>
                         ))}
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Add extra PG rules
+                        </label>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <input
+                            type="text"
+                            placeholder="e.g. No loud music after 10 PM"
+                            className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors text-sm"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                const value = (e.target as HTMLInputElement).value.trim();
+                                if (!value) return;
+                                if (!pgRules.includes(value)) {
+                                  togglePGRule(value);
+                                }
+                                (e.target as HTMLInputElement).value = "";
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-dark transition-colors"
+                            onClick={(e) => {
+                              const input = e.currentTarget.parentElement?.querySelector(
+                                "input"
+                              ) as HTMLInputElement | null;
+                              if (!input) return;
+                              const value = input.value.trim();
+                              if (!value) return;
+                              if (!pgRules.includes(value)) {
+                                togglePGRule(value);
+                              }
+                              input.value = "";
+                            }}
+                          >
+                            Add
+                          </button>
+                        </div>
                       </div>
                       <div className="grid grid-cols-1 esm:grid-cols-2 gap-3 mt-4">
                         <div>
@@ -1600,27 +1728,72 @@ export default function PostPropertyPage() {
                     <div className="space-y-4 pb-4 border-b border-gray-200">
                       <h3 className="text-lg font-bold text-gray-800">{t.servicesTitle}</h3>
                       <div className="space-y-2">
-                        {servicesOptions.map((service) => (
+                        {[
+                          ...servicesOptions,
+                          ...services
+                            .filter((s) => !servicesOptions.some((opt) => opt.id === s))
+                            .map((s) => ({ id: s, label: s })),
+                        ].map((service) => (
                           <button
                             key={service.id}
                             onClick={() => toggleService(service.id)}
                             className={`w-full flex items-center justify-between p-3 border-2 rounded-xl transition-all ${
                               services.includes(service.id)
-                                ? 'border-primary bg-primary/10'
-                                : 'border-gray-200 bg-white hover:border-gray-300'
+                                ? "border-primary bg-primary/10"
+                                : "border-gray-200 bg-white hover:border-gray-300"
                             }`}
                           >
-                            <span className="flex items-center gap-2">
-                              <span>{service.icon}</span>
-                              <span className="text-gray-700">{service.label}</span>
-                            </span>
-                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                              services.includes(service.id) ? 'border-primary bg-primary' : 'border-gray-300'
-                            }`}>
+                            <span className="text-gray-700 text-sm">{service.label}</span>
+                            <div
+                              className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                                services.includes(service.id) ? "border-primary bg-primary" : "border-gray-300"
+                              }`}
+                            >
                               {services.includes(service.id) && <Check className="w-3 h-3 text-white" />}
                             </div>
                           </button>
                         ))}
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Add extra services
+                        </label>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <input
+                            type="text"
+                            placeholder="e.g. 24x7 Security, Cab service"
+                            className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors text-sm"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                const value = (e.target as HTMLInputElement).value.trim();
+                                if (!value) return;
+                                if (!services.includes(value)) {
+                                  toggleService(value);
+                                }
+                                (e.target as HTMLInputElement).value = "";
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-dark transition-colors"
+                            onClick={(e) => {
+                              const input = e.currentTarget.parentElement?.querySelector(
+                                "input"
+                              ) as HTMLInputElement | null;
+                              if (!input) return;
+                              const value = input.value.trim();
+                              if (!value) return;
+                              if (!services.includes(value)) {
+                                toggleService(value);
+                              }
+                              input.value = "";
+                            }}
+                          >
+                            Add
+                          </button>
+                        </div>
                       </div>
                       <div className="mt-4">
                         <label className="flex items-center gap-3 cursor-pointer">
@@ -1691,27 +1864,72 @@ export default function PostPropertyPage() {
                     <div className="space-y-4 pb-4 border-b border-gray-200">
                       <h3 className="text-lg font-bold text-gray-800">{t.commonAreaTitle}</h3>
                       <div className="grid grid-cols-1 esm:grid-cols-2 gap-2">
-                        {commonAmenitiesOptions.map((amenity) => (
+                        {[
+                          ...commonAmenitiesOptions,
+                          ...commonAmenities
+                            .filter((a) => !commonAmenitiesOptions.some((opt) => opt.id === a))
+                            .map((a) => ({ id: a, label: a })),
+                        ].map((amenity) => (
                           <button
                             key={amenity.id}
                             onClick={() => toggleCommonAmenity(amenity.id)}
                             className={`flex items-center justify-between p-3 border-2 rounded-xl transition-all ${
                               commonAmenities.includes(amenity.id)
-                                ? 'border-primary bg-primary/10'
-                                : 'border-gray-200 bg-white hover:border-gray-300'
+                                ? "border-primary bg-primary/10"
+                                : "border-gray-200 bg-white hover:border-gray-300"
                             }`}
                           >
-                            <span className="flex items-center gap-2">
-                              <span>{amenity.icon}</span>
-                              <span className="text-sm text-gray-700">{amenity.label}</span>
-                            </span>
-                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                              commonAmenities.includes(amenity.id) ? 'border-primary bg-primary' : 'border-gray-300'
-                            }`}>
+                            <span className="text-sm text-gray-700">{amenity.label}</span>
+                            <div
+                              className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                                commonAmenities.includes(amenity.id) ? "border-primary bg-primary" : "border-gray-300"
+                              }`}
+                            >
                               {commonAmenities.includes(amenity.id) && <Check className="w-3 h-3 text-white" />}
                             </div>
                           </button>
                         ))}
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Add extra common area amenities
+                        </label>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <input
+                            type="text"
+                            placeholder="e.g. Terrace garden, Library room"
+                            className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors text-sm"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                const value = (e.target as HTMLInputElement).value.trim();
+                                if (!value) return;
+                                if (!commonAmenities.includes(value)) {
+                                  toggleCommonAmenity(value);
+                                }
+                                (e.target as HTMLInputElement).value = "";
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-dark transition-colors"
+                            onClick={(e) => {
+                              const input = e.currentTarget.parentElement?.querySelector(
+                                "input"
+                              ) as HTMLInputElement | null;
+                              if (!input) return;
+                              const value = input.value.trim();
+                              if (!value) return;
+                              if (!commonAmenities.includes(value)) {
+                                toggleCommonAmenity(value);
+                              }
+                              input.value = "";
+                            }}
+                          >
+                            Add
+                          </button>
+                        </div>
                       </div>
                       <div className="mt-4">
                         <label className="flex items-center gap-3 cursor-pointer">
