@@ -55,26 +55,26 @@ export default function Footer() {
   const t = content[language];
 
   return (
-    <footer className="bg-gradient-to-b from-gray-50 to-gray-100 border-t border-gray-200 px-4">
-      <div className="max-w-7xl mx-auto py-12">
+    <footer className="bg-gradient-to-b from-gray-50 to-gray-100 border-t border-gray-200 px-4 sm:px-6 md:px-4">
+      <div className="max-w-7xl mx-auto py-10 sm:py-12 md:py-12">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 esm:gap-8 lg:gap-12 mb-8">
           {/* Logo & About Section */}
           <div className="lg:col-span-1">
             {/* Logo */}
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-4 justify-center md:justify-start">
               <Image src="/logo.png" alt="StayBuddy Logo" width={160} height={160} />
             </div>
             
             {/* About Text */}
-            <p className="text-gray-600 text-sm text-justify leading-relaxed mb-3">
+            <p className="text-gray-600 text-sm text-justify leading-relaxed mb-3 max-w-prose mx-auto md:mx-0">
               {t.about}
             </p>
 
             {/* Social Media */}
-            <div>
+            <div className="text-center md:text-left">
               <p className="text-gray-700 font-semibold text-sm mb-2">{t.social}</p>
-              <div className="flex gap-4">
+              <div className="flex gap-4 justify-center md:justify-start">
                 {/* Facebook */}
                 <div className="relative group">
                   <Link href="#" className="flex items-center justify-center text-gray-600 hover:text-blue-600 transition-all duration-200">
@@ -116,7 +116,7 @@ export default function Footer() {
 
           {/* Discover */}
           <div>
-            <h4 className="font-bold text-gray-800 mb-6 text-xl">{t.discover.title}</h4>
+            <h4 className="font-bold text-gray-800 mb-4 esm:mb-6 text-lg esm:text-xl md:text-xl">{t.discover.title}</h4>
             <ul className="space-y-2">
               <li>
                 <Link href="/properties?tab=pg&pgFor=Girls" className="text-gray-600 hover:text-blue-600 transition-colors duration-200">
@@ -148,7 +148,7 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-bold text-gray-800 mb-6 text-xl">{t.quickLinks.title}</h4>
+            <h4 className="font-bold text-gray-800 mb-4 esm:mb-6 text-lg esm:text-xl md:text-xl">{t.quickLinks.title}</h4>
             <ul className="space-y-2">
               <li>
                 <Link href="/about" className="text-gray-600 hover:text-blue-600 transition-colors duration-200">
@@ -175,7 +175,7 @@ export default function Footer() {
 
           {/* Contact Us */}
           <div>
-            <h4 className="font-bold text-gray-800 mb-6 text-xl">{t.contact.title}</h4>
+            <h4 className="font-bold text-gray-800 mb-4 esm:mb-6 text-lg esm:text-xl md:text-xl">{t.contact.title}</h4>
             <div className="space-y-2">
               {/* Email */}
               <div className="flex items-center gap-1.5">
@@ -225,9 +225,9 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="border-t border-gray-300 pt-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-600">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-3 esm:gap-4 text-xs esm:text-sm md:text-sm text-gray-600 text-center md:text-left">
             <p>{t.copyright}</p>
-            <div className="flex gap-6">
+            <div className="flex flex-col esm:flex-row gap-2 esm:gap-6">
               <Link href="/terms" className="hover:text-blue-600 transition-colors duration-200">
                 {t.terms}
               </Link>

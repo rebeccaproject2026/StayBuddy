@@ -915,7 +915,7 @@ export default function PostPropertyPage() {
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-green-500/5 rounded-full blur-3xl"></div>
 
-      <div className="relative max-w-7xl mx-auto px-6 py-12 min-h-screen">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 md:px-6 py-10 sm:py-12 md:py-12 min-h-screen">
         {/* Progress Indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-center gap-2">
@@ -927,7 +927,7 @@ export default function PostPropertyPage() {
                 }`}>
                   {step > s ? <Check className="w-5 h-5" /> : s}
                 </div>
-                {s < 4 && <div className={`w-12 h-1 ${step > s ? 'bg-green-500' : 'bg-gray-200'}`}></div>}
+                {s < 4 && <div className={`w-7 esm:w-10 md:w-12 h-1 ${step > s ? 'bg-green-500' : 'bg-gray-200'}`}></div>}
               </div>
             ))}
           </div>
@@ -949,7 +949,7 @@ export default function PostPropertyPage() {
                 {/* Property Type */}
                 <div>
                   <label className="block text-gray-700 font-semibold mb-3">{t.postingFor}</label>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 esm:grid-cols-2 gap-4">
                     {['PG', 'Tenant'].map((type) => (
                       <label key={type} className={`flex items-center justify-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all hover:border-primary hover:bg-primary/5 ${
                         propertyType === type ? 'border-primary bg-primary/10' : 'border-gray-200'
@@ -1000,7 +1000,7 @@ export default function PostPropertyPage() {
                 {propertyType === "Tenant" && posterType && (
                   <div>
                     <label className="block text-gray-700 font-semibold mb-3">{t.propertyCategory}</label>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
                       {['Villa', 'Flat', 'House', 'Penthouse'].map((category) => (
                         <label key={category} className={`flex items-center justify-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all hover:border-primary hover:bg-primary/5 ${
                           propertyCategory === category ? 'border-primary bg-primary/10' : 'border-gray-200'
@@ -1115,7 +1115,7 @@ export default function PostPropertyPage() {
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-gray-700 font-medium mb-2">
                         {t.pincodeLabel}<span className="text-red-500">*</span>
@@ -1219,7 +1219,7 @@ export default function PostPropertyPage() {
                     <div className="space-y-4 pb-4 border-b border-gray-200">
                       <h3 className="text-lg font-bold text-gray-800">{t.roomCategoriesTitle}</h3>
                       <p className="text-sm text-gray-600">{t.roomCategoriesSubtitle}</p>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 esm:grid-cols-2 md:grid-cols-3 gap-3">
                         {(['Single', 'Double', 'Triple', 'Four', 'Other'] as RoomCategory[]).map((category) => (
                           <button
                             key={category}
@@ -1252,7 +1252,7 @@ export default function PostPropertyPage() {
                             className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
                           />
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
                           <div>
                             <label className="block text-gray-700 font-medium mb-2">
                               {t.monthlyRent}<span className="text-red-500">*</span>
@@ -1286,7 +1286,7 @@ export default function PostPropertyPage() {
                         </div>
                         <div>
                           <label className="block text-gray-700 font-medium mb-3">{t.roomFacilities}</label>
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="grid grid-cols-1 esm:grid-cols-2 gap-2">
                             {roomFacilities.map((facility) => (
                               <button
                                 key={facility.id}
@@ -1321,7 +1321,7 @@ export default function PostPropertyPage() {
                     <div className="space-y-4 pb-4 border-b border-gray-200">
                       <div>
                         <label className="block text-gray-700 font-medium mb-3">{t.flatsInProject}</label>
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 esm:grid-cols-2 md:grid-cols-3 gap-3">
                           {['<50', '50-100', '>100'].map((option) => (
                             <button
                               key={option}
@@ -1339,7 +1339,7 @@ export default function PostPropertyPage() {
                       </div>
                       <div>
                         <label className="block text-gray-700 font-medium mb-3">{t.bedroom}</label>
-                        <div className="grid grid-cols-5 gap-2">
+                        <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-5 gap-2">
                           {['All', '1+', '2+', '3+', '4+'].map((option) => (
                             <button
                               key={option}
@@ -1357,7 +1357,7 @@ export default function PostPropertyPage() {
                       </div>
                       <div>
                         <label className="block text-gray-700 font-medium mb-3">{t.bathroom}</label>
-                        <div className="grid grid-cols-5 gap-2">
+                        <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-5 gap-2">
                           {['All', '1+', '2+', '3+', '4+'].map((option) => (
                             <button
                               key={option}
@@ -1375,7 +1375,7 @@ export default function PostPropertyPage() {
                       </div>
                       <div>
                         <label className="block text-gray-700 font-medium mb-3">{t.balconyOptional}</label>
-                        <div className="grid grid-cols-5 gap-2">
+                        <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-5 gap-2">
                           {['All', '1+', '2+', '3+', '4+'].map((option) => (
                             <button
                               key={option}
@@ -1391,7 +1391,7 @@ export default function PostPropertyPage() {
                           ))}
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
                         <div>
                           <label className="block text-gray-700 font-medium mb-2">{t.totalFloorsInBuilding}</label>
                           <select 
@@ -1444,7 +1444,7 @@ export default function PostPropertyPage() {
                       </div>
                       <div>
                         <label className="block text-gray-700 font-medium mb-2">{t.areaLabel}</label>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
                           <div>
                             <label className="block text-sm text-gray-600 mb-1">{t.min}</label>
                             <input 
@@ -1508,7 +1508,7 @@ export default function PostPropertyPage() {
                   <>
                     <div className="space-y-4 pb-4 border-b border-gray-200">
                       <h3 className="text-lg font-bold text-gray-800">{t.preferredGenderTitle}</h3>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 esm:grid-cols-2 md:grid-cols-3 gap-3">
                         {(['Male', 'Female', 'Both'] as PreferredGender[]).map((gender) => (
                           <button
                             key={gender}
@@ -1527,7 +1527,7 @@ export default function PostPropertyPage() {
 
                     <div className="space-y-4 pb-4 border-b border-gray-200">
                       <h3 className="text-lg font-bold text-gray-800">{t.tenantPreferencesTitle}</h3>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 esm:grid-cols-2 md:grid-cols-3 gap-3">
                         {(['Professionals', 'Students', 'Both'] as TenantPreference[]).map((pref) => (
                           <button
                             key={pref}
@@ -1569,7 +1569,7 @@ export default function PostPropertyPage() {
                           </button>
                         ))}
                       </div>
-                      <div className="grid grid-cols-2 gap-3 mt-4">
+                      <div className="grid grid-cols-1 esm:grid-cols-2 gap-3 mt-4">
                         <div>
                           <label className="block text-gray-700 font-medium mb-2">{t.noticePeriodTitle}</label>
                           <select 
@@ -1637,7 +1637,7 @@ export default function PostPropertyPage() {
                         <div className="space-y-3 mt-3 pl-8">
                           <div>
                             <label className="block text-gray-700 font-medium mb-2">Meals</label>
-                            <div className="grid grid-cols-3 gap-2">
+                            <div className="grid grid-cols-1 esm:grid-cols-2 md:grid-cols-3 gap-2">
                               {['Breakfast', 'Lunch', 'Dinner'].map((meal) => (
                                 <button
                                   key={meal}
@@ -1655,7 +1655,7 @@ export default function PostPropertyPage() {
                           </div>
                           <div>
                             <label className="block text-gray-700 font-medium mb-2">{t.vegNonVegLabel}</label>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-1 esm:grid-cols-2 gap-2">
                               {['Veg', 'Veg & Non Veg'].map((option) => (
                                 <button
                                   key={option}
@@ -1690,7 +1690,7 @@ export default function PostPropertyPage() {
 
                     <div className="space-y-4 pb-4 border-b border-gray-200">
                       <h3 className="text-lg font-bold text-gray-800">{t.commonAreaTitle}</h3>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 esm:grid-cols-2 gap-2">
                         {commonAmenitiesOptions.map((amenity) => (
                           <button
                             key={amenity.id}
@@ -1726,7 +1726,7 @@ export default function PostPropertyPage() {
                       </div>
                       {parkingAvailable && (
                         <div className="pl-8">
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="grid grid-cols-1 esm:grid-cols-2 gap-2">
                             {['2-Wheeler', 'Car Parking'].map((option) => (
                               <button
                                 key={option}
@@ -1782,7 +1782,7 @@ export default function PostPropertyPage() {
                       </div>
                       <div>
                         <label className="block text-gray-700 font-medium mb-2">{t.maintenanceChargesOptional}</label>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
                           <div className="relative">
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">{currencySymbol}</span>
                             <input 
@@ -1810,7 +1810,7 @@ export default function PostPropertyPage() {
                       <h3 className="text-lg font-bold text-gray-800">{t.statusOfProperty}</h3>
                       <div>
                         <label className="block text-gray-700 font-medium mb-3">{t.availableFrom}</label>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
                           {['Selected Date', 'Immediately'].map((option) => (
                             <button
                               key={option}
@@ -1898,7 +1898,7 @@ export default function PostPropertyPage() {
                       </div>
                       <div>
                         <label className="block text-gray-700 font-medium mb-2">{t.facingLabel}</label>
-                        <div className="grid grid-cols-4 gap-2">
+                        <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-4 gap-2">
                           {['East', 'North', 'North-East', 'North-West', 'South', 'South-East', 'South-West', 'West'].map((direction) => (
                             <button
                               key={direction}
@@ -1916,7 +1916,7 @@ export default function PostPropertyPage() {
                       </div>
                       <div>
                         <label className="block text-gray-700 font-medium mb-2">{t.societyAmenitiesLabel}</label>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 esm:grid-cols-2 md:grid-cols-2 gap-2">
                           {[
                             'Maintenance Staff', 'Air Conditioned', 'Outdoor Tennis Courts', 'Banquet Hall',
                             'Park', 'Bar/Lounge', 'Piped Gas', 'Cafeteria/Food Court', 'Power Back Up',
@@ -2212,7 +2212,7 @@ export default function PostPropertyPage() {
                           </label>
                         </div>
                         {kitchenImages.length > 0 && (
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-3 gap-2">
                             {kitchenImages.map((file, index) => (
                               <div key={index} className="relative h-24 rounded-lg overflow-hidden group">
                                 <img src={URL.createObjectURL(file)} alt={`Kitchen ${index + 1}`} className="w-full h-full object-cover" />
@@ -2257,7 +2257,7 @@ export default function PostPropertyPage() {
                           </label>
                         </div>
                         {washroomImages.length > 0 && (
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-3 gap-2">
                             {washroomImages.map((file, index) => (
                               <div key={index} className="relative h-24 rounded-lg overflow-hidden group">
                                 <img src={URL.createObjectURL(file)} alt={`Washroom ${index + 1}`} className="w-full h-full object-cover" />
@@ -2302,7 +2302,7 @@ export default function PostPropertyPage() {
                           </label>
                         </div>
                         {commonAreaImages.length > 0 && (
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-3 gap-2">
                             {commonAreaImages.map((file, index) => (
                               <div key={index} className="relative h-24 rounded-lg overflow-hidden group">
                                 <img src={URL.createObjectURL(file)} alt={`Common Area ${index + 1}`} className="w-full h-full object-cover" />
@@ -2442,7 +2442,7 @@ export default function PostPropertyPage() {
                           </label>
                         </div>
                         {tenantKitchenImages.length > 0 && (
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-3 gap-2">
                             {tenantKitchenImages.map((file, index) => (
                               <div key={index} className="relative h-24 rounded-lg overflow-hidden group">
                                 <img src={URL.createObjectURL(file)} alt={`Kitchen ${index + 1}`} className="w-full h-full object-cover" />
@@ -2487,7 +2487,7 @@ export default function PostPropertyPage() {
                           </label>
                         </div>
                         {tenantWashroomImages.length > 0 && (
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-3 gap-2">
                             {tenantWashroomImages.map((file, index) => (
                               <div key={index} className="relative h-24 rounded-lg overflow-hidden group">
                                 <img src={URL.createObjectURL(file)} alt={`Washroom ${index + 1}`} className="w-full h-full object-cover" />
@@ -2532,7 +2532,7 @@ export default function PostPropertyPage() {
                           </label>
                         </div>
                         {tenantCommonAreaImages.length > 0 && (
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-3 gap-2">
                             {tenantCommonAreaImages.map((file, index) => (
                               <div key={index} className="relative h-24 rounded-lg overflow-hidden group">
                                 <img src={URL.createObjectURL(file)} alt={`Common Area ${index + 1}`} className="w-full h-full object-cover" />

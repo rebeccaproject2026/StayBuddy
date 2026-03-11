@@ -1,4 +1,3 @@
-"use client";
 
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
@@ -140,25 +139,25 @@ export default function FilterSection() {
   };
 
   return (
-    <div className="px-4">
-    <div className="w-full max-w-7xl mx-auto -mt-12 relative z-10">
+    <div className="px-3 sm:px-4">
+    <div className="w-full max-w-7xl mx-auto -mt-8 sm:-mt-12 relative z-10">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white rounded-2xl border border-gray-200 shadow-xl p-6"
+        className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-xl p-4 sm:p-6"
       >
         {/* Top Row Filters */}
-        <div className="grid md:grid-cols-12 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 sm:gap-4 mb-4 sm:mb-6">
           {/* Category Dropdown */}
-          <div className="md:col-span-1">
+          <div className="sm:col-span-2 lg:col-span-1">
             <Menu as="div" className="relative">
-              <Menu.Button className="w-full flex items-center justify-between px-4 py-3 border-2 border-primary text-primary rounded-xl font-semibold hover:bg-primary-light transition-all duration-300">
+              <Menu.Button className="w-full flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-primary text-primary rounded-xl text-sm sm:text-base font-semibold hover:bg-primary-light transition-all duration-300">
                 <span>{getTranslatedOption(filters.category)}</span>
-                <ChevronDown className="w-5 h-5" />
+                <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 ml-1" />
               </Menu.Button>
               <AnimatePresence>
-                <Menu.Items className="absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50">
+                <Menu.Items className="absolute top-full left-0 mt-2 w-full min-w-[120px] bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50">
                   {categories.map((cat) => (
                     <Menu.Item key={cat}>
                       {({ active }) => (
@@ -166,7 +165,7 @@ export default function FilterSection() {
                           onClick={() =>
                             setFilters({ ...filters, category: cat })
                           }
-                          className={`w-full text-left px-4 py-3 transition-colors ${
+                          className={`w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base transition-colors ${
                             active ? "bg-primary-light" : ""
                           } ${filters.category === cat ? "bg-primary text-white" : ""}`}
                         >
@@ -181,9 +180,9 @@ export default function FilterSection() {
           </div>
 
           {/* Location Input */}
-          <div className="md:col-span-8">
+          <div className="col-span-1 sm:col-span-2 lg:col-span-8">
             <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
               <input
                 type="text"
                 value={filters.location}
@@ -191,34 +190,35 @@ export default function FilterSection() {
                   setFilters({ ...filters, location: e.target.value })
                 }
                 placeholder={t("filters.location")}
-                className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 outline-none"
+                className="w-full pl-9 sm:pl-11 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 outline-none"
               />
             </div>
           </div>
 
           {/* Advanced Filter Button */}
-          <div className="md:col-span-3">
+          <div className="col-span-1 sm:col-span-2 lg:col-span-3">
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className={`w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl font-semibold transition-all duration-300 ${
+              className={`w-full flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base rounded-xl font-semibold transition-all duration-300 ${
                 showAdvanced
                   ? "bg-primary text-white"
                   : "border border-gray-300 text-gray-700 hover:bg-gray-50"
               }`}
             >
-              <SlidersHorizontal className="w-5 h-5" />
-              <span>{t("filters.moreFilters")}</span>
+              <SlidersHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="whitespace-nowrap">{t("filters.moreFilters")}</span>
             </motion.button>
           </div>
         </div>
 
         {/* Price Range Section */}
         <div className="mb-2">
-          <div className="flex items-center gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:items-center gap-3 sm:gap-4">
+            {/* Min Price */}
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                 {t("filters.min")}
               </label>
               <input
@@ -227,15 +227,16 @@ export default function FilterSection() {
                 onChange={(e) =>
                   handlePriceChange("min", Number(e.target.value))
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
               />
             </div>
 
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            {/* Price Range Slider */}
+            <div className="flex-1 col-span-1 sm:col-span-2 lg:col-span-1">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                 {t("filters.range")}
               </label>
-              <div className="relative pt-2">
+              <div className="relative pt-1 sm:pt-2">
                 <input
                   type="range"
                   min="0"
@@ -249,8 +250,9 @@ export default function FilterSection() {
               </div>
             </div>
 
+            {/* Max Price */}
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                 {t("filters.max")}
               </label>
               <input
@@ -259,20 +261,21 @@ export default function FilterSection() {
                 onChange={(e) =>
                   handlePriceChange("max", Number(e.target.value))
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
               />
             </div>
-            <div className="flex-1">
-              {/* Search Button */}
-              <div className="mt-6 flex justify-end">
+
+            {/* Search Button */}
+            <div className="flex-1 col-span-1 sm:col-span-2 lg:col-span-1">
+              <div className="lg:mt-6">
                 <motion.button
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                   onClick={handleSearch}
-                  className="flex items-center w-full justify-center space-x-2 px-6 py-2.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="flex items-center w-full justify-center space-x-2 px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark shadow-lg hover:shadow-xl transition-all duration-300"
                 >
-                  <Search className="w-5 h-5" />
-                  <span>{t("filters.searchProperties")}</span>
+                  <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="whitespace-nowrap">{t("filters.searchProperties")}</span>
                 </motion.button>
               </div>
             </div>
@@ -289,14 +292,14 @@ export default function FilterSection() {
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className="overflow-hidden"
             >
-              <div className="border-t border-gray-200 pt-6 space-y-6">
+              <div className="border-t border-gray-200 pt-4 sm:pt-6 space-y-4 sm:space-y-6">
                 {/* PG For */}
                 {filters.category === "PG" && (
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                    <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">
                       {t("filters.pgFor")}
                     </h3>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       {pgForOptions.map((option) => (
                         <motion.button
                           key={option}
@@ -308,7 +311,7 @@ export default function FilterSection() {
                               pgFor: filters.pgFor === option ? null : option,
                             })
                           }
-                          className={`px-4 py-2 rounded-lg border transition-all duration-300 ${
+                          className={`px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg border transition-all duration-300 ${
                             filters.pgFor === option
                               ? "bg-primary text-white border-primary"
                               : "bg-white text-gray-700 border-gray-200 hover:bg-primary-light"
@@ -323,10 +326,10 @@ export default function FilterSection() {
 
                 {/* Preferred Tenants */}
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                  <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">
                     {t("filters.preferredTenants")}
                   </h3>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {tenantOptions.map((option) => (
                       <motion.button
                         key={option}
@@ -338,7 +341,7 @@ export default function FilterSection() {
                             tenant: filters.tenant === option ? null : option,
                           })
                         }
-                        className={`px-4 py-2 rounded-lg border transition-all duration-300 ${
+                        className={`px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg border transition-all duration-300 ${
                           filters.tenant === option
                             ? "bg-primary text-white border-primary"
                             : "bg-white text-gray-700 border-gray-200 hover:bg-primary-light"
@@ -353,10 +356,10 @@ export default function FilterSection() {
                 {/* Occupancy */}
                 {filters.category === "PG" && (
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                    <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">
                       {t("filters.occupancy")}
                     </h3>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       {occupancyOptions.map((option) => (
                         <motion.button
                           key={option}
@@ -369,7 +372,7 @@ export default function FilterSection() {
                                 filters.occupancy === option ? null : option,
                             })
                           }
-                          className={`px-4 py-2 rounded-lg border transition-all duration-300 ${
+                          className={`px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg border transition-all duration-300 ${
                             filters.occupancy === option
                               ? "bg-primary text-white border-primary"
                               : "bg-white text-gray-700 border-gray-200 hover:bg-primary-light"
@@ -385,10 +388,10 @@ export default function FilterSection() {
                 {/* Property Type */}
                 {filters.category === "Tenant" && (
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                    <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">
                       {t("filters.propertyType")}
                     </h3>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       {propertyTypes.map((option) => (
                         <motion.button
                           key={option}
@@ -401,7 +404,7 @@ export default function FilterSection() {
                                 filters.propertyType === option ? null : option,
                             })
                           }
-                          className={`px-4 py-2 rounded-lg border transition-all duration-300 ${
+                          className={`px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg border transition-all duration-300 ${
                             filters.propertyType === option
                               ? "bg-primary text-white border-primary"
                               : "bg-white text-gray-700 border-gray-200 hover:bg-primary-light"
@@ -416,10 +419,10 @@ export default function FilterSection() {
 
                 {/* City Filter */}
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                  <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">
                     {"City"}
                   </h3>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {cityOptions.map((option) => (
                       <motion.button
                         key={option}
@@ -431,7 +434,7 @@ export default function FilterSection() {
                             city: filters.city === option ? null : option,
                           })
                         }
-                        className={`px-4 py-2 rounded-lg border transition-all duration-300 ${
+                        className={`px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg border transition-all duration-300 ${
                           filters.city === option
                             ? "bg-primary text-white border-primary"
                             : "bg-white text-gray-700 border-gray-200 hover:bg-primary-light"

@@ -35,23 +35,23 @@ export default function CallToActionCards() {
   const t = content[language];
 
   return (
-    <section className="py-8 px-4">
+    <section className="py-10 md:py-8 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
+        <div className="grid md:grid-cols-2 gap-4 esm:gap-6 lg:gap-8">
           {/* Looking For Home Card */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 md:p-10 hover:shadow-xl transition-shadow duration-300">
-            <h3 className="text-2xl md:text-3xl font-bold text-gray-700 mb-4">
+          <div className="bg-white rounded-2xl shadow-lg p-5 esm:p-6 md:p-10 hover:shadow-xl transition-shadow duration-300">
+            <h3 className="text-xl esm:text-2xl md:text-3xl font-bold text-gray-700 mb-3 md:mb-4">
               {t.findHome.title}
             </h3>
             
-            <p className="text-gray-500 text-sm md:text-base mb-8 leading-relaxed">
+            <p className="text-gray-500 text-sm esm:text-sm md:text-base mb-6 esm:mb-7 md:mb-8 leading-relaxed">
               {t.findHome.description}
             </p>
 
-            <button className="inline-flex items-center gap-2 px-6 py-3 border-2 border-gray-400 text-gray-600 rounded-lg hover:border-blue-600 hover:text-blue-600 transition-all duration-300 font-medium">
+            <button className="inline-flex items-center justify-center gap-2 px-5 esm:px-6 py-2.5 md:py-3 border-2 border-gray-400 text-gray-600 rounded-lg hover:border-blue-600 hover:text-blue-600 transition-all duration-300 font-medium w-full esm:w-fit">
               {t.findHome.button}
               <svg 
-                className="w-5 h-5" 
+                className="w-4 h-4 esm:w-5 esm:h-5" 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
@@ -67,19 +67,19 @@ export default function CallToActionCards() {
           </div>
 
           {/* Want To Rent Card */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 md:p-10 hover:shadow-xl transition-shadow duration-300">
-            <h3 className="text-2xl md:text-3xl font-bold text-gray-700 mb-4">
+          <div className="bg-white rounded-2xl shadow-lg p-5 esm:p-6 md:p-10 hover:shadow-xl transition-shadow duration-300">
+            <h3 className="text-xl esm:text-2xl md:text-3xl font-bold text-gray-700 mb-3 md:mb-4">
               {t.rentHome.title}
             </h3>
             
-            <p className="text-gray-500 text-sm md:text-base mb-8 leading-relaxed">
+            <p className="text-gray-500 text-sm esm:text-sm md:text-base mb-6 esm:mb-7 md:mb-8 leading-relaxed">
               {t.rentHome.description}
             </p>
 
-            <button className="inline-flex items-center gap-2 px-6 py-3 border-2 border-gray-400 text-gray-600 rounded-lg hover:border-blue-600 hover:text-blue-600 transition-all duration-300 font-medium">
+            <button className="inline-flex items-center justify-center gap-2 px-5 esm:px-6 py-2.5 md:py-3 border-2 border-gray-400 text-gray-600 rounded-lg hover:border-blue-600 hover:text-blue-600 transition-all duration-300 font-medium w-full esm:w-fit">
               {t.rentHome.button}
               <svg 
-                className="w-5 h-5" 
+                className="w-4 h-4 esm:w-5 esm:h-5" 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"

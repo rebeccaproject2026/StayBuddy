@@ -99,7 +99,7 @@ export default function SubscribeSection() {
   };
 
   return (
-    <section className="relative px-4 py-10 overflow-hidden">
+    <section className="relative px-4 sm:px-6 md:px-4 py-8 sm:py-10 md:py-10 overflow-hidden">
       <div className="relative max-w-7xl mx-auto">
         <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
           <div className="grid md:grid-cols-5 gap-0">
@@ -110,11 +110,11 @@ export default function SubscribeSection() {
                 <span className="text-xs font-semibold">{t.badge}</span>
               </div>
 
-              <h2 className="text-2xl sm:text-3xl font-bold mb-3 leading-tight">
+              <h2 className="text-xl esm:text-2xl sm:text-3xl md:text-3xl font-bold mb-3 leading-tight">
                 {t.title}
               </h2>
 
-              <p className="text-white/90 text-sm sm:text-base mb-6 leading-relaxed">
+              <p className="text-white/90 text-xs esm:text-sm sm:text-base md:text-base mb-5 esm:mb-6 md:mb-6 leading-relaxed">
                 {t.subtitle}
               </p>
 
@@ -122,10 +122,10 @@ export default function SubscribeSection() {
               <div className="space-y-2.5">
                 {t.features.map((feature, index) => (
                   <div key={index} className="flex items-center gap-2.5">
-                    <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                      <CheckCircle className="w-3.5 h-3.5 text-white" />
+                    <div className="w-4 h-4 esm:w-5 esm:h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                      <CheckCircle className="w-3 h-3 esm:w-3.5 esm:h-3.5 text-white" />
                     </div>
-                    <span className="text-sm text-white/95">{feature}</span>
+                    <span className="text-xs esm:text-sm sm:text-sm md:text-sm text-white/95">{feature}</span>
                   </div>
                 ))}
               </div>
@@ -133,15 +133,15 @@ export default function SubscribeSection() {
 
             {/* Right Side - Form */}
             <div className="md:col-span-3 p-6 sm:p-8 md:p-10 flex flex-col justify-center">
-              <div className="mb-4 flex items-start gap-4">
-                <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
-                  <Bell className="w-7 h-7 text-primary" />
+              <div className="mb-4 flex items-start gap-3 esm:gap-4">
+                <div className="w-12 h-12 esm:w-14 esm:h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 flex-shrink-0">
+                  <Bell className="w-6 h-6 esm:w-7 esm:h-7 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 ">
+                  <h3 className="text-lg esm:text-xl sm:text-2xl md:text-2xl font-bold text-gray-900">
                     Subscribe for Updates
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-xs esm:text-sm md:text-sm text-gray-600">
                     Join our community and never miss an opportunity
                   </p>
                 </div>
@@ -156,7 +156,7 @@ export default function SubscribeSection() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder={t.emailPlaceholder}
                     disabled={isSubmitting || submitStatus === "success"}
-                    className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed text-sm sm:text-base"
+                    className="w-full pl-11 esm:pl-12 pr-4 py-3 esm:py-3.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed text-sm sm:text-base"
                     required
                   />
                 </div>
@@ -164,7 +164,7 @@ export default function SubscribeSection() {
                 <button
                   type="submit"
                   disabled={isSubmitting || submitStatus === "success"}
-                  className="w-full py-3.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
+                  className="w-full py-3 esm:py-3.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
                   {isSubmitting ? (
                     <>

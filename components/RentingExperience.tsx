@@ -67,46 +67,46 @@ const RentingExperience = () => {
   const currentContent = content[language as keyof typeof content] || content.en;
 
   return (
-    <section className="py-8 px-4 bg-gradient-to-b from-gray-50 to-white">
+    <section className="py-10 md:py-8 px-4 sm:px-6 bg-gradient-to-b from-gray-50 to-white">
       <div className="max-w-7xl mx-auto">
         {/* Main Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+        <div className="text-center mb-10 esm:mb-12 md:mb-16">
+          <h2 className="text-2xl esm:text-3xl md:text-4xl font-bold text-gray-800 mb-3 md:mb-4">
             {currentContent.mainTitle}
           </h2>
-          <p className="text-gray-600 text-base md:text-lg max-w-5xl mx-auto leading-relaxed">
+          <p className="text-gray-600 text-sm esm:text-base md:text-lg max-w-5xl mx-auto leading-relaxed">
             {currentContent.mainDescription}
           </p>
         </div>
 
         {/* Two Column Layout */}
-        <div className="grid lg:grid-cols-2 gap-12">
+        <div className="grid lg:grid-cols-2 gap-8 esm:gap-10 md:gap-12">
           {/* Left Column - Renting Procedure */}
-          <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-            <h3 className="text-2xl font-bold text-gray-800 mb-3">
+          <div className="bg-white rounded-2xl p-5 esm:p-6 md:p-8 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+            <h3 className="text-xl esm:text-2xl md:text-2xl font-bold text-gray-800 mb-2 md:mb-3">
               {currentContent.leftTitle}
             </h3>
-            <p className="text-gray-600 mb-8 leading-relaxed">
+            <p className="text-gray-600 text-sm esm:text-base md:text-base mb-6 esm:mb-7 md:mb-8 leading-relaxed">
               {currentContent.leftDescription}
             </p>
 
-            <div className="space-y-4">
+            <div className="space-y-3 esm:space-y-4">
               {currentContent.leftSteps.map((step, index) => {
                 const Icon = leftIcons[index];
                 return (
                   <div
                     key={index}
-                    className="flex items-center gap-4 group hover:translate-x-2 transition-transform duration-300"
+                    className="flex items-center gap-3 esm:gap-4 group sm:hover:translate-x-2 transition-transform duration-300"
                   >
                     <div className="relative flex-shrink-0">
-                      <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
-                        <Icon className="w-6 h-6 text-white" />
+                      <div className="w-10 h-10 esm:w-11 esm:h-11 md:w-12 md:h-12 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
+                        <Icon className="w-5 h-5 md:w-6 md:h-6 text-white" />
                       </div>
                       {index < currentContent.leftSteps.length - 1 && (
-                        <div className="absolute left-1/2 top-12 w-0.5 h-4 bg-gradient-to-b from-primary/40 to-transparent -translate-x-1/2" />
+                        <div className="absolute left-1/2 top-10 esm:top-11 md:top-12 w-0.5 h-4 bg-gradient-to-b from-primary/40 to-transparent -translate-x-1/2" />
                       )}
                     </div>
-                    <p className="text-gray-700 font-medium group-hover:text-primary transition-colors">
+                    <p className="text-gray-700 text-sm esm:text-base md:text-base font-medium group-hover:text-primary transition-colors">
                       {step}
                     </p>
                   </div>
@@ -116,31 +116,31 @@ const RentingExperience = () => {
           </div>
 
           {/* Right Column - Rental Experience Stages */}
-          <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-            <h3 className="text-2xl font-bold text-gray-800 mb-3">
+          <div className="bg-white rounded-2xl p-5 esm:p-6 md:p-8 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+            <h3 className="text-xl esm:text-2xl md:text-2xl font-bold text-gray-800 mb-2 md:mb-3">
               {currentContent.rightTitle}
             </h3>
-            <p className="text-gray-600 mb-8 leading-relaxed">
+            <p className="text-gray-600 text-sm esm:text-base md:text-base mb-6 esm:mb-7 md:mb-8 leading-relaxed">
               {currentContent.rightDescription}
             </p>
 
-            <div className="space-y-4">
+            <div className="space-y-3 esm:space-y-4">
               {currentContent.rightSteps.map((step, index) => {
                 const Icon = rightIcons[index];
                 return (
                   <div
                     key={index}
-                    className="flex items-center gap-4 group hover:translate-x-2 transition-transform duration-300"
+                    className="flex items-center gap-3 esm:gap-4 group sm:hover:translate-x-2 transition-transform duration-300"
                   >
                     <div className="relative flex-shrink-0">
-                      <div className="w-12 h-12 bg-gradient-to-br from-accent to-accent-hover rounded-full flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
-                        <Icon className="w-6 h-6 text-white" />
+                      <div className="w-10 h-10 esm:w-11 esm:h-11 md:w-12 md:h-12 bg-gradient-to-br from-accent to-accent-hover rounded-full flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
+                        <Icon className="w-5 h-5 md:w-6 md:h-6 text-white" />
                       </div>
                       {index < currentContent.rightSteps.length - 1 && (
-                        <div className="absolute left-1/2 top-12 w-0.5 h-4 bg-gradient-to-b from-accent/40 to-transparent -translate-x-1/2" />
+                        <div className="absolute left-1/2 top-10 esm:top-11 md:top-12 w-0.5 h-4 bg-gradient-to-b from-accent/40 to-transparent -translate-x-1/2" />
                       )}
                     </div>
-                    <p className="text-gray-700 font-medium group-hover:text-accent transition-colors">
+                    <p className="text-gray-700 text-sm esm:text-base md:text-base font-medium group-hover:text-accent transition-colors">
                       {step}
                     </p>
                   </div>

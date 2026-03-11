@@ -30,12 +30,12 @@ export default function OwnerSection() {
   const t = content[language];
 
   return (
-    <section className="py-8 px-4 bg-gradient-to-b from-white to-gray-50">
+    <section className="py-10 md:py-8 px-4 sm:px-6 bg-gradient-to-b from-white to-gray-50">
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-100">
-          <div className="grid md:grid-cols-[35%_65%] gap-0 items-center p-4">
+          <div className="grid md:grid-cols-[35%_65%] gap-0 items-center p-4 sm:p-5 md:p-4">
             {/* Image Section */}
-            <div className="relative h-[450px] md:h-[520px]">
+            <div className="relative h-[260px] esm:h-[320px] sm:h-[380px] md:h-[520px]">
               <Image
                 src="/owner.png"
                 alt="Property Owner"
@@ -47,27 +47,29 @@ export default function OwnerSection() {
 
             {/* Content Section */}
             <div className="p-8 md:p-14 lg:p-16 flex flex-col justify-center">
-              <h2 className="text-4xl font-bold text-gray-900 mb-6 leading-tight">
+              <h2 className="text-2xl esm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 esm:mb-5 md:mb-6 leading-tight">
                 {t.title}
               </h2>
               
-              <p className="text-gray-600 text-base md:text-lg mb-8 leading-relaxed text-justify">
+              <p className="text-gray-600 text-sm esm:text-base md:text-lg mb-6 esm:mb-7 md:mb-8 leading-relaxed text-justify">
                 {t.description}
               </p>
 
-              <ul className="space-y-4 mb-10">
+              <ul className="space-y-3 esm:space-y-4 mb-7 esm:mb-8 md:mb-10">
                 {t.features.map((feature, index) => (
-                  <li key={index} className="flex items-center text-gray-800 font-medium">
+                  <li key={index} className="flex items-start esm:items-center text-gray-800 font-medium">
                     <span className="w-2.5 h-2.5 bg-blue-600 rounded-full mr-4 flex-shrink-0"></span>
-                    <span>{feature}</span>
+                    <span className="text-sm esm:text-base md:text-base leading-snug">
+                      {feature}
+                    </span>
                   </li>
                 ))}
               </ul>
 
-              <button className="inline-flex items-center gap-4 px-10 py-2.5 border-2 border-blue-600 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all duration-300 w-fit font-semibold text-lg shadow-sm hover:shadow-md">
+              <button className="inline-flex items-center justify-center gap-3 esm:gap-4 px-6 esm:px-8 md:px-10 py-2.5 border-2 border-blue-600 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all duration-300 w-full esm:w-fit font-semibold text-base esm:text-lg md:text-lg shadow-sm hover:shadow-md">
                 {t.button}
                 <svg 
-                  className="w-5 h-5 transition-transform group-hover:translate-x-1" 
+                  className="w-4 h-4 esm:w-5 esm:h-5 transition-transform group-hover:translate-x-1" 
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"

@@ -8,6 +8,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      screens: {
+        esm: "400px",
+      },
       colors: {
         primary: {
           DEFAULT: '#1E40AF',

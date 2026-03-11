@@ -1,4 +1,4 @@
-"use client";
+ "use client";
 
 import { useState, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -197,26 +197,26 @@ export default function PropertyListings() {
   });
 
   return (
-    <div className="px-4">
-    <div className="w-full max-w-7xl mx-auto py-12">
+    <div className="px-4 sm:px-6">
+    <div className="w-full max-w-7xl mx-auto py-8 sm:py-10 md:py-12">
       {/* Header */}
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
+      <div className="mb-6 sm:mb-8">
+        <h2 className="text-2xl esm:text-3xl md:text-3xl font-bold text-gray-900 mb-2">
           {t("properties.featured")}
         </h2>
-        <p className="text-gray-600">
+        <p className="text-sm esm:text-base md:text-base text-gray-600">
           {t("properties.subtitle")}
         </p>
       </div>
 
       {/* Property Type Tabs with Navigation Arrows */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide">
+      <div className="flex items-center justify-between mb-5 sm:mb-6 gap-3">
+        <div className="flex gap-2 esm:gap-3 overflow-x-auto scrollbar-hide pr-2 -mr-2">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-2.5 rounded-lg font-medium whitespace-nowrap transition-all duration-300 ${
+              className={`px-4 esm:px-5 md:px-6 py-2 md:py-2.5 rounded-lg font-medium whitespace-nowrap transition-all duration-300 ${
                 activeTab === tab.id
                   ? "bg-primary text-white shadow-md"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -228,18 +228,18 @@ export default function PropertyListings() {
         </div>
 
         {/* Navigation Arrows */}
-        <div className="flex gap-2 ml-4">
+        <div className="hidden sm:flex gap-2 ml-1 md:ml-4 flex-shrink-0">
           <button
             onClick={() => scroll("left")}
-            className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-gray-300 hover:border-primary hover:bg-primary-light transition-all duration-300"
+            className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-full border-2 border-gray-300 hover:border-primary hover:bg-primary-light transition-all duration-300"
           >
-            <ChevronLeft className="w-5 h-5 text-gray-700" />
+            <ChevronLeft className="w-4 h-4 md:w-5 md:h-5 text-gray-700" />
           </button>
           <button
             onClick={() => scroll("right")}
-            className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-gray-300 hover:border-primary hover:bg-primary-light transition-all duration-300"
+            className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-full border-2 border-gray-300 hover:border-primary hover:bg-primary-light transition-all duration-300"
           >
-            <ChevronRight className="w-5 h-5 text-gray-700" />
+            <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-gray-700" />
           </button>
         </div>
       </div>
@@ -247,23 +247,23 @@ export default function PropertyListings() {
       {/* Scrollable Container */}
       <div
         ref={scrollContainerRef}
-        className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth pb-4"
+        className="flex gap-4 esm:gap-5 md:gap-6 overflow-x-auto scrollbar-hide scroll-smooth pb-4"
         style={{
           scrollbarWidth: "none",
           msOverflowStyle: "none",
         }}
       >
         {filteredProperties.map((property) => (
-          <div key={property.id} className="flex-shrink-0 w-[300px]">
+          <div key={property.id} className="flex-shrink-0 w-[260px] esm:w-[280px] md:w-[300px]">
             <PropertyCard {...property} />
           </div>
         ))}
       </div>
 
       {/* View All Properties Button */}
-      <div className="text-center mt-8">
+      <div className="text-center mt-6 sm:mt-8">
         <Link href="/properties">
-          <button className="px-8 py-3 bg-primary text-white rounded-xl font-semibold shadow-lg hover:bg-primary-dark hover:shadow-xl transition-all duration-300">
+          <button className="px-6 esm:px-8 py-2.5 md:py-3 bg-primary text-white rounded-xl font-semibold shadow-lg hover:bg-primary-dark hover:shadow-xl transition-all duration-300">
             {t("properties.viewAll")}
           </button>
         </Link>
