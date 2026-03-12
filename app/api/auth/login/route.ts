@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     const validatedData = loginSchema.parse(body);
 
     // Find user with password (since password is excluded by default)
-    const user = await User.findByEmailWithPassword(validatedData.email);
+    const user = await User.findOne({ email: validatedData.email }).select('+password');
     if (!user) {
       return NextResponse.json(
         { error: 'Invalid email or password' },

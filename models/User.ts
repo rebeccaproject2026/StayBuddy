@@ -92,8 +92,8 @@ userSchema.index({ country: 1 });
 
 // Pre-save middleware to hash password
 userSchema.pre('save', async function() {
-  // Only hash the password if it has been modified (or is new)
-  if (!this.isModified('password')) return;
+  // Only hash the password if it has been modified (or is new) and exists
+  if (!this.isModified('password') || !this.password) return;
 
   // Hash password with cost of 12
   const saltRounds = 12;

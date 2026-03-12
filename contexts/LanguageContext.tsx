@@ -29,7 +29,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Automatically switch language when navigating between country routes
     if (country) {
-      setLanguageState(country === "fr" ? "fr" : "en");
+      const newLanguage = country === "fr" ? "fr" : "en";
+      console.log(`Language context: Country "${country}" -> Language "${newLanguage}"`);
+      setLanguageState(newLanguage);
     }
   }, [country]);
 

@@ -26,10 +26,10 @@ export const signupSchema = z.object({
     ),
   confirmPassword: z.string(),
   role: z.enum(['renter', 'landlord'], {
-    errorMap: () => ({ message: 'Role must be either renter or landlord' }),
+    message: 'Role must be either renter or landlord',
   }),
   country: z.enum(['fr', 'in'], {
-    errorMap: () => ({ message: 'Country must be either fr or in' }),
+    message: 'Country must be either fr or in',
   }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Passwords do not match',

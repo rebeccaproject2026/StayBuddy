@@ -6,6 +6,7 @@ import "../globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,9 +27,11 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <LanguageProvider>
-          {!isDashboard && <Navbar />}
-          <main className={!isDashboard ? "pt-20" : ""}>{children}</main>
-          {!isDashboard && <Footer />}
+          <AuthProvider>
+            {!isDashboard && <Navbar />}
+            <main className={!isDashboard ? "pt-20" : ""}>{children}</main>
+            {!isDashboard && <Footer />}
+          </AuthProvider>
         </LanguageProvider>
       </body>
     </html>

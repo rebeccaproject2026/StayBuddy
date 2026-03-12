@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 import Link from "@/components/LocalizedLink";
 import Image from "next/image";
 import {
@@ -22,8 +24,49 @@ import {
 
 export default function TenantDashboard() {
   const { language, t } = useLanguage();
+  const { user, isLoading, isAuthenticated } = useAuth();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("saved");
   const currencySymbol = t("currency.symbol");
+
+  // Authentication check
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push('/login');
+        return;
+      }
+      
+      if (user?.role !== 'renter') {
+        // Redirect to appropriate dashboard based on role
+        if (user?.role === 'landlord') {
+          router.push('/dashboard/owner');
+        } else if (user?.role === 'admin') {
+          router.push('/dashboard/admin');
+        } else {
+          router.push('/');
+        }
+        return;
+      }
+    }
+  }, [user, isLoading, isAuthenticated, router]);
+
+  // Show loading while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated or wrong role
+  if (!isAuthenticated || user?.role !== 'renter') {
+    return null;
+  }
 
   // Mock data - in real app, this would come from API
   const savedProperties = [

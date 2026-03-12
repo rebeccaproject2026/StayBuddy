@@ -19,7 +19,7 @@ Modern, animated, and fully responsive rental marketplace platform built with Ne
 🎨 Smooth animations and transitions
 📱 Fully responsive design
 🔑 Password visibility toggle
-🌐 Social login options (Google, Facebook)
+🌐 Multi-language support (English/French)
 
 ## Installation
 
