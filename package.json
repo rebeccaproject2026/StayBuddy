@@ -12,8 +12,16 @@
     "@headlessui/react": "^2.2.9",
     "@hookform/resolvers": "^5.2.2",
     "@iconify/react": "^6.0.2",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
     "framer-motion": "^11.0.0",
+    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.344.0",
+    "mongoose": "^9.3.0",
     "next": "^14.2.0",
     "next-intl": "^4.8.3",
     "react": "^18.3.0",
@@ -22,12 +30,14 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
+    "@types/express": "^5.0.6",
+    "@types/node": "^20.19.37",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "autoprefixer": "^10.4.0",
     "postcss": "^8.4.0",
     "tailwindcss": "^3.4.0",
-    "typescript": "^5.3.0"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }
