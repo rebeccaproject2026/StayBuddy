@@ -6,10 +6,13 @@ export interface IUser extends Document {
   fullName: string;
   email: string;
   phoneNumber?: string;
-  password: string;
+  password?: string; // Optional for Google users
   role: 'renter' | 'landlord' | 'admin';
   country: 'fr' | 'in';
   isVerified: boolean;
+  provider: 'credentials' | 'google';
+  googleId?: string;
+  profileImage?: string;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -49,7 +52,9 @@ const userSchema = new Schema<IUser>(
     },
     password: {
       type: String,
-      required: [true, 'Password is required'],
+      required: function(this: IUser): boolean {
+        return this.provider === 'credentials';
+      },
       minlength: [8, 'Password must be at least 8 characters long'],
       select: false // Don't include password in queries by default
     },
@@ -72,6 +77,19 @@ const userSchema = new Schema<IUser>(
     isVerified: {
       type: Boolean,
       default: false
+    },
+    provider: {
+      type: String,
+      enum: ['credentials', 'google'],
+      default: 'credentials'
+    },
+    googleId: {
+      type: String,
+      sparse: true,
+      unique: true
+    },
+    profileImage: {
+      type: String
     }
   },
   {
@@ -89,11 +107,12 @@ const userSchema = new Schema<IUser>(
 userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ country: 1 });
+userSchema.index({ googleId: 1 });
 
 // Pre-save middleware to hash password
 userSchema.pre('save', async function() {
-  // Only hash the password if it has been modified (or is new) and exists
-  if (!this.isModified('password') || !this.password) return;
+  // Only hash the password if it has been modified (or is new), exists, and provider is credentials
+  if (!this.isModified('password') || !this.password || this.provider !== 'credentials') return;
 
   // Hash password with cost of 12
   const saltRounds = 12;
@@ -102,6 +121,7 @@ userSchema.pre('save', async function() {
 
 // Instance method to compare password
 userSchema.method('comparePassword', async function(candidatePassword: string): Promise<boolean> {
+  if (!this.password) return false;
   return bcrypt.compare(candidatePassword, this.password);
 });
 

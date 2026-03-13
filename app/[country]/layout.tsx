@@ -5,8 +5,7 @@ import { Inter } from "next/font/google";
 import "../globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { LanguageProvider } from "@/contexts/LanguageContext";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { Providers } from "@/components/Providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,13 +25,11 @@ export default function RootLayout({
         <meta name="description" content="Premium rental marketplace for PG and tenant listings" />
       </head>
       <body className={inter.className}>
-        <LanguageProvider>
-          <AuthProvider>
-            {!isDashboard && <Navbar />}
-            <main className={!isDashboard ? "pt-20" : ""}>{children}</main>
-            {!isDashboard && <Footer />}
-          </AuthProvider>
-        </LanguageProvider>
+        <Providers>
+          {!isDashboard && <Navbar />}
+          <main className={!isDashboard ? "pt-20" : ""}>{children}</main>
+          {!isDashboard && <Footer />}
+        </Providers>
       </body>
     </html>
   );

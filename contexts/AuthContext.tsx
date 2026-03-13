@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useSession, signIn as nextAuthSignIn, signOut as nextAuthSignOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
@@ -12,6 +13,7 @@ interface User {
   role: 'renter' | 'landlord' | 'admin';
   country: 'fr' | 'in';
   isVerified: boolean;
+  profileImage?: string;
   createdAt: string;
 }
 
@@ -21,6 +23,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
+  googleLogin: (role: string) => Promise<void>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
 }
@@ -44,13 +47,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   const isAuthenticated = !!user && !!token;
 
-  // Load user data from localStorage on mount
+  // Load user data from localStorage and NextAuth session
   useEffect(() => {
     const loadUserData = async () => {
       try {
+        // Check NextAuth session first
+        if (status === 'authenticated' && session?.user) {
+          const nextAuthUser: User = {
+            id: session.user.id,
+            fullName: session.user.name || '',
+            email: session.user.email || '',
+            role: session.user.role as 'renter' | 'landlord' | 'admin',
+            country: 'in', // Default, could be improved
+            isVerified: true,
+            profileImage: session.user.profileImage || session.user.image || undefined,
+            createdAt: new Date().toISOString(),
+          };
+          setUser(nextAuthUser);
+          setToken('nextauth'); // Dummy token for NextAuth
+          setIsLoading(false);
+          return;
+        }
+
+        // Fallback to custom auth
         const storedToken = localStorage.getItem('staybuddy_token');
         const storedUser = localStorage.getItem('staybuddy_user');
 
@@ -95,13 +118,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setToken(null);
         setUser(null);
       } finally {
-        console.log('AuthContext - Setting isLoading to false');
-        setIsLoading(false);
+        if (status !== 'loading') {
+          console.log('AuthContext - Setting isLoading to false');
+          setIsLoading(false);
+        }
       }
     };
 
-    loadUserData();
-  }, []);
+    if (status !== 'loading') {
+      loadUserData();
+    }
+  }, [session, status]);
+
+  const googleLogin = async (role: string) => {
+    try {
+      await nextAuthSignIn('google', { callbackUrl: '/', state: role });
+    } catch (error) {
+      console.error('Google login error:', error);
+      toast.error('Google login failed', {
+        duration: 4000,
+        position: 'top-center',
+      });
+    }
+  };
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -173,6 +212,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('staybuddy_token');
     localStorage.removeItem('staybuddy_user');
 
+    // Sign out from NextAuth if applicable
+    nextAuthSignOut({ callbackUrl: '/' });
+
     toast.success('Logged out successfully', {
       duration: 2000,
       position: 'top-center',
@@ -203,6 +245,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading,
     isAuthenticated,
     login,
+    googleLogin,
     logout,
     updateUser,
   };

@@ -98,11 +98,22 @@ export default function Navbar() {
     }
   };
 
-  const ProfileAvatar = () => (
-    <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-semibold">
-      {user?.fullName?.charAt(0).toUpperCase() || 'U'}
-    </div>
-  );
+  const ProfileAvatar = () => {
+    if (user?.profileImage) {
+      return (
+        <img
+          src={user.profileImage}
+          alt={user.fullName}
+          className="w-8 h-8 rounded-full object-cover"
+        />
+      );
+    }
+    return (
+      <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-semibold">
+        {user?.fullName?.charAt(0).toUpperCase() || 'U'}
+      </div>
+    );
+  };
 
   return (
     <nav
