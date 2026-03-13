@@ -1559,6 +1559,7 @@ export default function PropertyDetailsPage() {
               reviews={property.reviews || defaultReviews} 
               language={language}
               t={t}
+              country={country}
             />
 
             {/* Related Listings Section */}

@@ -104,10 +104,8 @@ const userSchema = new Schema<IUser>(
 );
 
 // Index for better query performance
-userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ country: 1 });
-userSchema.index({ googleId: 1 });
 
 // Pre-save middleware to hash password
 userSchema.pre('save', async function() {

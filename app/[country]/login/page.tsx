@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
@@ -11,6 +11,7 @@ import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -29,7 +30,17 @@ export default function LoginPage() {
   const { login, googleLogin } = useAuth();
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const country = params.country as string;
+  const toastShownRef = useRef(false);
+
+  useEffect(() => {
+    const message = searchParams.get('message');
+    if (message === 'review' && !toastShownRef.current) {
+      toast("After login you can give the review");
+      toastShownRef.current = true;
+    }
+  }, [searchParams]);
 
   const {
     register,

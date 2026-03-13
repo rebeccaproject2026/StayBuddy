@@ -4,6 +4,9 @@ import { useState } from "react";
 import { Star, ThumbsUp, MessageSquare, Flag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 interface Review {
   id: string;
@@ -32,11 +35,14 @@ interface ReviewSectionProps {
   reviews: Review[];
   language?: string;
   t?: any; // Pass translations directly
+  country?: string;
 }
 
-export default function ReviewSection({ stats, reviews, language, t }: ReviewSectionProps) {
+export default function ReviewSection({ stats, reviews, language, t, country }: ReviewSectionProps) {
   const [showAll, setShowAll] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
   
   // Default translations if t is not provided perfectly
   const translations = {
@@ -87,7 +93,13 @@ export default function ReviewSection({ stats, reviews, language, t }: ReviewSec
           {translations.reviewsAndRatings}
         </h3>
         <button
-          onClick={() => setShowReviewModal(true)}
+          onClick={() => {
+            if (isAuthenticated) {
+              setShowReviewModal(true);
+            } else {
+              router.push(`/${country}/login?message=review`);
+            }
+          }}
           className="px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white font-semibold rounded-lg transition-colors text-sm sm:text-base border border-primary/20 hover:border-transparent whitespace-nowrap"
         >
           {translations.writeReview}
