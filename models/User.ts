@@ -13,6 +13,8 @@ export interface IUser extends Document {
   provider: 'credentials' | 'google';
   googleId?: string;
   profileImage?: string;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -90,6 +92,12 @@ const userSchema = new Schema<IUser>(
     },
     profileImage: {
       type: String
+    },
+    resetPasswordToken: {
+      type: String
+    },
+    resetPasswordExpires: {
+      type: Date
     }
   },
   {

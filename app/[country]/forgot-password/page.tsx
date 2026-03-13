@@ -1,62 +1,245 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "@/components/LocalizedLink";
-import { Mail, ArrowLeft } from "lucide-react";
+import { Mail, ArrowLeft, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useParams } from "next/navigation";
+import toast, { Toaster } from 'react-hot-toast';
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email("Invalid email address").min(1, "Email is required"),
+});
+
+type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPasswordPage() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50 flex items-center justify-center px-4 py-12">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="w-full max-w-md"
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { t } = useLanguage();
+  const params = useParams();
+  const country = params.country as string;
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    getValues,
+  } = useForm<ForgotPasswordFormData>({
+    resolver: zodResolver(forgotPasswordSchema),
+  });
+
+  const onSubmit = async (data: ForgotPasswordFormData) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: data.email }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to send reset link');
+      }
+
+      setIsSuccess(true);
+      toast.success("Reset link sent! Check your email.");
+      reset();
+    } catch (err: any) {
+      setError(err.message || "Failed to send reset link. Please try again.");
+      toast.error("Failed to send reset link. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isSuccess) {
+    return (
+      <div 
+        className="min-h-screen flex items-center justify-center px-4 py-12 relative bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url('https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop')` }}
       >
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <Link
-            href="/login"
-            className="inline-flex items-center text-indigo-600 hover:text-indigo-700 mb-6 transition-colors duration-300"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Login
-          </Link>
-
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent mb-2">
-              Forgot Password?
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="w-full max-w-md relative z-10"
+        >
+          <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+              className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"
+            >
+              <CheckCircle className="w-8 h-8 text-green-600" />
+            </motion.div>
+            
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Check Your Email
             </h1>
-            <p className="text-gray-600">
-              Enter your email and we'll send you a reset link
+            <p className="text-gray-600 mb-8">
+              We've sent a password reset link to <strong>{getValues("email")}</strong>
             </p>
-          </div>
-
-          <form className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="email"
-                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 outline-none"
-                  placeholder="your@email.com"
-                />
+            
+            <div className="space-y-4">
+              <p className="text-sm text-gray-500">
+                Didn't receive the email? Check your spam folder or try again.
+              </p>
+              
+              <div className="flex gap-3">
+                <motion.button
+                  onClick={() => setIsSuccess(false)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex-1 py-2 px-4 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors duration-300"
+                >
+                  Try Again
+                </motion.button>
+                
+                <Link href={`/${country}/login`} className="flex-1">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full py-2 px-4 bg-primary text-white rounded-xl font-medium hover:bg-primary-dark transition-colors duration-300"
+                  >
+                    Back to Login
+                  </motion.button>
+                </Link>
               </div>
             </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
-            <motion.button
-              type="submit"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full py-3 bg-gradient-to-r from-indigo-600 to-blue-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+  return (
+    <>
+      <Toaster />
+      <div 
+        className="min-h-screen flex items-center justify-center px-4 py-12 relative bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url('https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop')` }}
+      >
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="w-full max-w-md relative z-10"
+        >
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <Link
+              href={`/${country}/login`}
+              className="inline-flex items-center text-indigo-600 hover:text-indigo-700 mb-6 transition-colors duration-300"
             >
-              Send Reset Link
-            </motion.button>
-          </form>
-        </div>
-      </motion.div>
-    </div>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Login
+            </Link>
+
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent mb-2">
+                Forgot Password?
+              </h1>
+              <p className="text-gray-600">
+                Enter your email and we'll send you a reset link
+              </p>
+            </div>
+
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3"
+              >
+                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                <p className="text-red-700 text-sm">{error}</p>
+              </motion.div>
+            )}
+
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1, duration: 0.4 }}
+              >
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    {...register("email")}
+                    type="email"
+                    disabled={isLoading}
+                    className={`w-full pl-11 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
+                      errors.email ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="your@email.com"
+                  />
+                </div>
+                {errors.email && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-red-500 text-sm mt-1 flex items-center gap-1"
+                  >
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.email.message}
+                  </motion.p>
+                )}
+              </motion.div>
+
+              <motion.button
+                type="submit"
+                disabled={isLoading}
+                whileHover={!isLoading ? { scale: 1.02 } : {}}
+                whileTap={!isLoading ? { scale: 0.98 } : {}}
+                className="w-full py-3 bg-gradient-to-r from-indigo-600 to-blue-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  "Send Reset Link"
+                )}
+              </motion.button>
+            </form>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.4 }}
+              className="mt-6 text-center"
+            >
+              <p className="text-gray-600">
+                Remember your password?{" "}
+                <Link
+                  href={`/${country}/login`}
+                  className="text-indigo-600 font-semibold hover:text-indigo-700 transition-colors duration-300"
+                >
+                  Sign in
+                </Link>
+              </p>
+            </motion.div>
+          </div>
+        </motion.div>
+      </div>
+    </>
   );
 }
