@@ -146,9 +146,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
@@ -156,35 +154,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (response.ok) {
         const { user: userData, token: userToken } = result;
-        
-        // Store in state
         setUser(userData);
         setToken(userToken);
-        
-        // Store in localStorage
         localStorage.setItem('staybuddy_token', userToken);
         localStorage.setItem('staybuddy_user', JSON.stringify(userData));
 
         toast.success('Login successful!', {
           duration: 3000,
           position: 'top-center',
-          style: {
-            background: '#10B981',
-            color: 'white',
-            fontWeight: '500',
-          },
+          style: { background: '#10B981', color: 'white', fontWeight: '500' },
         });
 
         return true;
       } else {
+        // Handle unverified user — redirect to OTP page
+        if (result.unverified && result.email) {
+          toast.error('Please verify your email first.', {
+            duration: 4000,
+            position: 'top-center',
+          });
+          router.push(`/verify-otp?email=${encodeURIComponent(result.email)}`);
+          return false;
+        }
+
         toast.error(result.error || 'Login failed', {
           duration: 4000,
           position: 'top-center',
-          style: {
-            background: '#EF4444',
-            color: 'white',
-            fontWeight: '500',
-          },
+          style: { background: '#EF4444', color: 'white', fontWeight: '500' },
         });
         return false;
       }
@@ -193,11 +189,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       toast.error('Connection error. Please try again.', {
         duration: 4000,
         position: 'top-center',
-        style: {
-          background: '#EF4444',
-          color: 'white',
-          fontWeight: '500',
-        },
+        style: { background: '#EF4444', color: 'white', fontWeight: '500' },
       });
       return false;
     }

@@ -32,6 +32,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Block unverified users
+    if (!user.isVerified) {
+      return NextResponse.json(
+        { error: 'Please verify your email before logging in.', unverified: true, email: user.email },
+        { status: 403 }
+      );
+    }
+
     // Compare password
     const isPasswordValid = await user.comparePassword(validatedData.password);
     if (!isPasswordValid) {

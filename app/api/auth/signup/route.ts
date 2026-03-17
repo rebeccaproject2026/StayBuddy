@@ -1,71 +1,72 @@
 import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/mongodb';
+import connectDB, { getDB } from '@/lib/mongodb';
 import User from '@/models/User';
 import { signupSchema } from '@/lib/validation';
-import { generateToken } from '@/lib/jwt';
+import { sendOTPEmail } from '@/lib/email';
+
+function generateOTP(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
 export async function POST(request: NextRequest) {
   try {
-    // Connect to database
     await connectDB();
+    const db = await getDB();
 
-    // Parse request body
     const body = await request.json();
-
-    // Validate input
     const validatedData = signupSchema.parse(body);
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email: validatedData.email });
-    if (existingUser) {
-      return NextResponse.json(
-        { error: 'User with this email already exists' },
-        { status: 400 }
+    const emailLower = validatedData.email.toLowerCase().trim();
+    const otp = generateOTP();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    console.log('[signup] Generated OTP:', otp, 'for', emailLower);
+
+    const existingDoc = await db.collection('users').findOne({ email: emailLower });
+
+    if (existingDoc) {
+      if (existingDoc.isVerified) {
+        return NextResponse.json(
+          { error: 'User with this email already exists' },
+          { status: 400 }
+        );
+      }
+      // Unverified user — update OTP
+      await db.collection('users').updateOne(
+        { email: emailLower },
+        { $set: { otpCode: otp, otpExpires } }
       );
+      console.log('[signup] Updated OTP for existing unverified user');
+    } else {
+      // New user — create via Mongoose for password hashing
+      const user = new User({
+        fullName: validatedData.fullName,
+        email: emailLower,
+        phoneNumber: validatedData.phoneNumber || undefined,
+        password: validatedData.password,
+        role: validatedData.role,
+        country: validatedData.country,
+        isVerified: false,
+        otpCode: otp,
+        otpExpires,
+      });
+      await user.save();
+      console.log('[signup] Created new user with OTP');
     }
 
-    // Create new user (password will be hashed by pre-save middleware)
-    const user = new User({
-      fullName: validatedData.fullName,
-      email: validatedData.email,
-      phoneNumber: validatedData.phoneNumber || undefined,
-      password: validatedData.password,
-      role: validatedData.role,
-      country: validatedData.country,
-    });
+    // Confirm OTP was saved
+    const saved = await db.collection('users').findOne({ email: emailLower });
+    console.log('[signup] Confirmed saved otpCode:', saved?.otpCode);
 
-    await user.save();
+    await sendOTPEmail(emailLower, otp, validatedData.fullName);
 
-    // Generate JWT token
-    const token = generateToken({
-      userId: user._id.toString(),
-      email: user.email,
-      role: user.role,
-      country: user.country,
-    });
-
-    // Return success response
     return NextResponse.json(
-      {
-        message: 'User created successfully',
-        user: {
-          id: user._id,
-          fullName: user.fullName,
-          email: user.email,
-          phoneNumber: user.phoneNumber,
-          role: user.role,
-          country: user.country,
-          isVerified: user.isVerified,
-          createdAt: user.createdAt,
-        },
-        token,
-      },
-      { status: 201 }
+      { message: 'OTP sent to your email. Please verify your account.' },
+      { status: 200 }
     );
   } catch (error: any) {
-    console.error('Signup error:', error);
+    console.error('[signup] error:', error);
 
-    // Handle validation errors
     if (error.name === 'ZodError') {
       return NextResponse.json(
         {
@@ -79,7 +80,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Handle MongoDB duplicate key error
     if (error.code === 11000) {
       return NextResponse.json(
         { error: 'User with this email already exists' },
@@ -87,10 +87,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Handle other errors
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

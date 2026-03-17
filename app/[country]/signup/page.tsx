@@ -86,16 +86,12 @@ export default function SignupPage() {
       if (response.ok) {
         toast.success(
           language === 'fr' 
-            ? 'Compte créé avec succès! Redirection vers la connexion...' 
-            : 'Account created successfully! Redirecting to login...',
+            ? 'OTP envoyé! Vérifiez votre email.' 
+            : 'OTP sent! Check your email.',
           {
             duration: 3000,
             position: 'top-center',
-            style: {
-              background: '#10B981',
-              color: 'white',
-              fontWeight: '500',
-            },
+            style: { background: '#10B981', color: 'white', fontWeight: '500' },
           }
         );
 
@@ -103,9 +99,10 @@ export default function SignupPage() {
         setPassword("");
         setConfirmPassword("");
 
+        // Redirect to OTP verification page
         setTimeout(() => {
-          router.push(`/${country}/login`);
-        }, 2000);
+          router.push(`/${country}/verify-otp?email=${encodeURIComponent(data.email)}`);
+        }, 1500);
 
       } else {
         if (result.details && Array.isArray(result.details)) {

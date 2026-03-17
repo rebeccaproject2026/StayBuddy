@@ -6,7 +6,7 @@ export interface IUser extends Document {
   fullName: string;
   email: string;
   phoneNumber?: string;
-  password?: string; // Optional for Google users
+  password?: string;
   role: 'renter' | 'landlord' | 'admin';
   country: 'fr' | 'in';
   isVerified: boolean;
@@ -15,6 +15,8 @@ export interface IUser extends Document {
   profileImage?: string;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
+  otpCode?: string;
+  otpExpires?: Date;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -54,11 +56,8 @@ const userSchema = new Schema<IUser>(
     },
     password: {
       type: String,
-      required: function(this: IUser): boolean {
-        return this.provider === 'credentials';
-      },
       minlength: [8, 'Password must be at least 8 characters long'],
-      select: false // Don't include password in queries by default
+      select: false
     },
     role: {
       type: String,
@@ -98,6 +97,14 @@ const userSchema = new Schema<IUser>(
     },
     resetPasswordExpires: {
       type: Date
+    },
+    otpCode: {
+      type: String,
+      select: false
+    },
+    otpExpires: {
+      type: Date,
+      select: false
     }
   },
   {
@@ -136,7 +143,20 @@ userSchema.static('findByEmailWithPassword', function(email: string) {
   return this.findOne({ email }).select('+password');
 });
 
-// Check if model already exists to prevent OverwriteModelError
-const User = mongoose.models.User || mongoose.model<IUser, IUserModel>('User', userSchema);
+// Safely register or reuse the model
+let User: IUserModel;
+
+try {
+  // Try to get existing model
+  User = mongoose.model<IUser, IUserModel>('User');
+  // If it exists but doesn't have otpCode, delete and re-register
+  if (!User.schema.path('otpCode')) {
+    delete (mongoose.models as any).User;
+    User = mongoose.model<IUser, IUserModel>('User', userSchema);
+  }
+} catch {
+  // Model doesn't exist yet, register it
+  User = mongoose.model<IUser, IUserModel>('User', userSchema);
+}
 
 export default User;
