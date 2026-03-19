@@ -1,0 +1,123 @@
+import { NextRequest, NextResponse } from 'next/server';
+import connectDB from '@/lib/mongodb';
+import Property from '@/models/Property';
+import { authenticateUser } from '@/lib/auth-middleware';
+import mongoose from 'mongoose';
+
+// ─── GET /api/properties/[id] ────────────────────────────────────────────────
+
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await connectDB();
+
+    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+      return NextResponse.json({ error: 'Invalid property ID' }, { status: 400 });
+    }
+
+    const property = await Property.findById(params.id).lean();
+    if (!property) {
+      return NextResponse.json({ error: 'Property not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, property });
+  } catch (error) {
+    console.error('[GET /api/properties/[id]]', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+// ─── PUT /api/properties/[id] ────────────────────────────────────────────────
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await connectDB();
+
+    let authUser;
+    try {
+      authUser = await authenticateUser(req);
+    } catch {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+      return NextResponse.json({ error: 'Invalid property ID' }, { status: 400 });
+    }
+
+    const property = await Property.findById(params.id);
+    if (!property) {
+      return NextResponse.json({ error: 'Property not found' }, { status: 404 });
+    }
+
+    // Only the owner or admin can update
+    if (
+      property.createdBy.toString() !== authUser.id &&
+      authUser.role !== 'admin'
+    ) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const body = await req.json();
+    const updated = await Property.findByIdAndUpdate(
+      params.id,
+      { $set: body },
+      { new: true, runValidators: true }
+    ).lean();
+
+    return NextResponse.json({ success: true, property: updated });
+  } catch (error: any) {
+    console.error('[PUT /api/properties/[id]]', error);
+    if (error.name === 'ValidationError') {
+      return NextResponse.json(
+        { error: 'Validation failed', details: Object.values(error.errors).map((e: any) => e.message) },
+        { status: 400 }
+      );
+    }
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+// ─── DELETE /api/properties/[id] ─────────────────────────────────────────────
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await connectDB();
+
+    let authUser;
+    try {
+      authUser = await authenticateUser(req);
+    } catch {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+      return NextResponse.json({ error: 'Invalid property ID' }, { status: 400 });
+    }
+
+    const property = await Property.findById(params.id);
+    if (!property) {
+      return NextResponse.json({ error: 'Property not found' }, { status: 404 });
+    }
+
+    if (
+      property.createdBy.toString() !== authUser.id &&
+      authUser.role !== 'admin'
+    ) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    await Property.findByIdAndDelete(params.id);
+    return NextResponse.json({ success: true, message: 'Property deleted' });
+  } catch (error) {
+    console.error('[DELETE /api/properties/[id]]', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ArrowLeft, X, MapPin, Check } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
 
 type PropertyType = "PG" | "Tenant" | null;
 type PosterType = "Owner" | "Property Manager" | "Agent" | null;
@@ -20,7 +22,11 @@ type TenantPreference = "Professionals" | "Students" | "Both" | null;
 
 export default function PostPropertyPage() {
   const { language } = useLanguage();
+  const router = useRouter();
+  const params = useParams();
+  const country = (params?.country as string) || 'in';
   const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Step 1: Property Type & Basic Info
   const [propertyType, setPropertyType] = useState<PropertyType>(null);
@@ -715,14 +721,202 @@ export default function PostPropertyPage() {
     scrollToTop();
   };
 
-  const handleContinueStep4 = () => {
+  const handleContinueStep4 = async () => {
     if (!pgDescription.trim()) {
       setError(t.descriptionError);
       return;
     }
     setError("");
-    setStep(5); // Success step
-    scrollToTop();
+    setIsSubmitting(true);
+
+    try {
+      // Helper: convert File to base64 data URI
+      const toBase64 = (file: File): Promise<string> =>
+        new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+      // Convert all image arrays to base64
+      const mainImagesBase64 = await Promise.all(
+        roomImages
+          .filter((r) => r.file)
+          .map((r) => toBase64(r.file!))
+      );
+
+      // We need at least one main image — use room images as main images for PG,
+      // or tenant room images for Tenant
+      const tenantRoomImagesBase64 = await Promise.all(
+        tenantRoomImages
+          .filter((r) => r.file)
+          .map((r) => toBase64(r.file!))
+      );
+
+      const allMainImages =
+        propertyType === 'PG' ? mainImagesBase64 : tenantRoomImagesBase64;
+
+      const kitchenBase64 = await Promise.all(kitchenImages.map(toBase64));
+      const washroomBase64 = await Promise.all(washroomImages.map(toBase64));
+      const commonAreaBase64 = await Promise.all(commonAreaImages.map(toBase64));
+      const tenantKitchenBase64 = await Promise.all(tenantKitchenImages.map(toBase64));
+      const tenantWashroomBase64 = await Promise.all(tenantWashroomImages.map(toBase64));
+      const tenantCommonAreaBase64 = await Promise.all(tenantCommonAreaImages.map(toBase64));
+
+      const roomImagesPayload = await Promise.all(
+        roomImages.map(async (r) => ({
+          id: r.id,
+          name: r.name,
+          status: r.status,
+          image: r.file ? await toBase64(r.file) : undefined,
+        }))
+      );
+
+      const tenantRoomImagesPayload = await Promise.all(
+        tenantRoomImages.map(async (r) => ({
+          id: r.id,
+          name: r.name,
+          image: r.file ? await toBase64(r.file) : undefined,
+        }))
+      );
+
+      // Build the first room's rent as the main price (for PG use lowest room rent)
+      const firstRoomCategory = selectedRoomCategories[0];
+      const pgPrice = firstRoomCategory
+        ? parseFloat(roomDetails[firstRoomCategory].monthlyRent) || 0
+        : 0;
+      const pgDeposit = firstRoomCategory
+        ? parseFloat(roomDetails[firstRoomCategory].securityDeposit) || 0
+        : 0;
+
+      const payload: Record<string, any> = {
+        country,
+        propertyType,
+        posterType,
+        location: selectedCity.split(',')[0] || selectedCity,
+        fullAddress: address,
+        pincode,
+        landmark,
+        googleMapLink,
+        title: propertyType === 'PG' ? pgName || `${selectedCity.split(',')[0]} PG` : `${propertyCategory} in ${selectedCity.split(',')[0]}`,
+        category: propertyCategory || (propertyType === 'PG' ? 'PG' : 'Flat'),
+        rentalPeriod: 'Monthly',
+        availableFrom: availableFrom === 'Immediately' ? new Date().toISOString().split('T')[0] : availableDate,
+        price: propertyType === 'PG' ? pgPrice : parseFloat(monthlyRentAmount) || 0,
+        deposit: propertyType === 'PG' ? pgDeposit : parseFloat(securityAmount) || 0,
+        rooms: propertyType === 'PG' ? selectedRoomCategories.length : parseInt(bedrooms) || 1,
+        bathrooms: parseInt(bathrooms) || 0,
+        area: propertyType === 'PG' ? 0 : (parseFloat(areaMin) || 0),
+        pgDescription,
+        uspCategory: uspCategory || undefined,
+        uspText: uspText || undefined,
+        images: allMainImages.length > 0 ? allMainImages : ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=400'],
+        // Image arrays
+        roomImages: roomImagesPayload,
+        kitchenImages: kitchenBase64,
+        washroomImages: washroomBase64,
+        commonAreaImages: commonAreaBase64,
+        tenantRoomImages: tenantRoomImagesPayload,
+        tenantKitchenImages: tenantKitchenBase64,
+        tenantWashroomImages: tenantWashroomBase64,
+        tenantCommonAreaImages: tenantCommonAreaBase64,
+        view360Url: view360Url || undefined,
+      };
+
+      // PG-specific fields
+      if (propertyType === 'PG') {
+        // Only include roomDetails for selected categories — strip the rest
+        const filteredRoomDetails: Record<string, any> = {};
+        for (const cat of selectedRoomCategories) {
+          filteredRoomDetails[cat] = roomDetails[cat];
+        }
+
+        Object.assign(payload, {
+          operationalSince,
+          pgPresentIn,
+          pgName,
+          pgFor: preferredGender,
+          preferredGender,
+          tenantPreference,
+          selectedRoomCategories,
+          roomDetails: filteredRoomDetails,
+          pgRules,
+          noticePeriod,
+          gateClosingTime,
+          foodProvided,
+          meals,
+          vegNonVeg,
+          foodCharges,
+          commonAmenities,
+          parkingAvailable,
+          parkingType,
+        });
+      }
+
+      // Tenant-specific fields
+      if (propertyType === 'Tenant') {
+        Object.assign(payload, {
+          flatsInProject,
+          bedrooms,
+          balcony,
+          totalFloors,
+          floorNumber,
+          furnishing,
+          areaMin,
+          areaMax,
+          societyName,
+          monthlyRentAmount,
+          securityAmount,
+          maintenanceCharges,
+          maintenanceType,
+          availableDate,
+          additionalRooms,
+          overlooking,
+          facing,
+          societyAmenities,
+          tenantsPrefer,
+          localityDescription,
+        });
+      }
+
+      const token = localStorage.getItem('staybuddy_token');
+
+      // Strip null/undefined values so Zod optional() fields don't receive null
+      const cleanPayload = Object.fromEntries(
+        Object.entries(payload).filter(([, v]) => v !== null && v !== undefined)
+      );
+
+      const res = await fetch('/api/properties', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(cleanPayload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        const allErrors = data?.details?.map
+          ? data.details.map((e: any) => `${e.field}: ${e.message}`).join('\n')
+          : data?.details || data?.error || 'Failed to post property';
+        console.error('Property POST errors:', JSON.stringify(data?.details, null, 2));
+        setError(allErrors);
+        setIsSubmitting(false);
+        return;
+      }
+
+      toast.success('Property posted successfully!', {
+        duration: 3000,
+        position: 'top-center',
+      });
+      router.push(`/${country}`);
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong. Please try again.');
+      setIsSubmitting(false);
+    }
   };
 
   const handleBack = () => {
@@ -923,15 +1117,16 @@ export default function PostPropertyPage() {
   useEffect(() => {
     if (step === 5) {
       const timer = setTimeout(() => {
-        window.location.href = '/';
+        router.push(`/${country}`);
       }, 3000);
       
       return () => clearTimeout(timer);
     }
-  }, [step]);
+  }, [step, router, country]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 relative overflow-hidden">
+      <Toaster />
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-green-500/5 rounded-full blur-3xl"></div>
 
@@ -2798,10 +2993,11 @@ export default function PostPropertyPage() {
 
                 {error && <p className="text-red-500 text-sm">{error}</p>}
                 <button 
-                  onClick={handleContinueStep4} 
-                  className="w-full py-4 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition-colors shadow-lg hover:shadow-xl"
+                  onClick={handleContinueStep4}
+                  disabled={isSubmitting}
+                  className="w-full py-4 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition-colors shadow-lg hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {t.continue}
+                  {isSubmitting ? 'Posting...' : t.continue}
                 </button>
               </div>
             )}

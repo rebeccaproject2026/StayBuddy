@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/jwt';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth-options';
 
 export interface AuthenticatedRequest extends NextRequest {
   user?: {
@@ -14,28 +16,37 @@ export interface AuthenticatedRequest extends NextRequest {
 
 export async function authenticateUser(request: NextRequest) {
   try {
-    // Connect to database
     await connectDB();
 
-    // Extract token from Authorization header
+    // ── Try JWT first ──────────────────────────────────────────────────────
     const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
-
-    // Verify token
-    const decoded = verifyToken(token);
-
-    // Find user to ensure they still exist
-    const user = await User.findById(decoded.userId);
-    if (!user) {
-      throw new Error('User not found');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = extractTokenFromHeader(authHeader);
+      const decoded = verifyToken(token);
+      const user = await User.findById(decoded.userId);
+      if (!user) throw new Error('User not found');
+      return {
+        id: user._id.toString(),
+        email: user.email,
+        role: user.role as 'renter' | 'landlord' | 'admin',
+        country: user.country as 'fr' | 'in',
+      };
     }
 
-    return {
-      id: user._id.toString(),
-      email: user.email,
-      role: user.role,
-      country: user.country,
-    };
+    // ── Fall back to NextAuth session (Google login) ───────────────────────
+    const session = await getServerSession(authOptions);
+    if (session?.user?.id) {
+      const user = await User.findById(session.user.id);
+      if (!user) throw new Error('User not found');
+      return {
+        id: user._id.toString(),
+        email: user.email,
+        role: user.role as 'renter' | 'landlord' | 'admin',
+        country: user.country as 'fr' | 'in',
+      };
+    }
+
+    throw new Error('No valid authentication');
   } catch (error) {
     throw new Error('Authentication failed');
   }
