@@ -26,7 +26,8 @@ export interface IProperty extends Document {
   pgName?: string;
   selectedRoomCategories?: string[];
   roomDetails?: Record<string, {
-    numberOfRooms: string;
+    totalRooms: string;
+    availableRooms: string;
     monthlyRent: string;
     securityDeposit: string;
     facilities: string[];
@@ -71,7 +72,6 @@ export interface IProperty extends Document {
   pgDescription?: string;
   // Images
     roomsAvailability?: Array<{ id: string; name: string; status: string; image: string }>;
-    amenities?: string[];
     rules?: Record<string, string>;
     services?: Record<string, string>;
     landlord?: { name: string; phone: string; email: string };
@@ -96,7 +96,6 @@ const PropertySchema: Schema = new Schema<IProperty>({
     pgFor: { type: String },
     preferredTenants: { type: String },
     roomsAvailability: [{ id: String, name: String, status: String, image: String }],
-    amenities: [{ type: String }],
     rules: { type: Object },
     services: { type: Object },
     landlord: { name: String, phone: String, email: String },

@@ -71,7 +71,6 @@ export interface IProperty {
   pgDescription?: string;
   // Images
     roomsAvailability?: Array<{ id: string; name: string; status: string; image: string }>;
-    amenities?: string[];
     rules?: Record<string, string>;
     services?: Record<string, string>;
     landlord?: { name: string; phone: string; email: string };

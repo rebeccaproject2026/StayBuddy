@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, X, MapPin, Check } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -12,7 +13,8 @@ type PropertyCategory = "Villa" | "Flat" | "House" | "Penthouse" | null;
 type PGPresentIn = "An Independent Building" | "An Independent Flats" | "Present In A Society" | null;
 type RoomCategory = "Single" | "Double" | "Triple" | "Four" | "Other";
 type RoomDetails = {
-  numberOfRooms: string;
+  totalRooms: string;
+  availableRooms: string;
   monthlyRent: string;
   securityDeposit: string;
   facilities: string[];
@@ -22,6 +24,7 @@ type TenantPreference = "Professionals" | "Students" | "Both" | null;
 
 export default function PostPropertyPage() {
   const { language } = useLanguage();
+  const { user } = useAuth();
   const router = useRouter();
   const params = useParams();
   const country = (params?.country as string) || 'in';
@@ -46,11 +49,11 @@ export default function PostPropertyPage() {
   const [pgName, setPgName] = useState("");
   const [selectedRoomCategories, setSelectedRoomCategories] = useState<RoomCategory[]>([]);
   const [roomDetails, setRoomDetails] = useState<Record<RoomCategory, RoomDetails>>({
-    Single: { numberOfRooms: "", monthlyRent: "", securityDeposit: "", facilities: [] },
-    Double: { numberOfRooms: "", monthlyRent: "", securityDeposit: "", facilities: [] },
-    Triple: { numberOfRooms: "", monthlyRent: "", securityDeposit: "", facilities: [] },
-    Four: { numberOfRooms: "", monthlyRent: "", securityDeposit: "", facilities: [] },
-    Other: { numberOfRooms: "", monthlyRent: "", securityDeposit: "", facilities: [] }
+    Single: { totalRooms: "", availableRooms: "", monthlyRent: "", securityDeposit: "", facilities: [] },
+    Double: { totalRooms: "", availableRooms: "", monthlyRent: "", securityDeposit: "", facilities: [] },
+    Triple: { totalRooms: "", availableRooms: "", monthlyRent: "", securityDeposit: "", facilities: [] },
+    Four:   { totalRooms: "", availableRooms: "", monthlyRent: "", securityDeposit: "", facilities: [] },
+    Other:  { totalRooms: "", availableRooms: "", monthlyRent: "", securityDeposit: "", facilities: [] },
   });
   
   // Step 2: Property Details (Tenant)
@@ -153,30 +156,12 @@ export default function PostPropertyPage() {
   // Indian cities used for location suggestions in the city field
   const cities = [
     "Ahmedabad, Gujarat",
-    "Bengaluru, Karnataka",
-    "Chennai, Tamil Nadu",
-    "Delhi",
-    "Gurugram, Haryana",
-    "Hyderabad, Telangana",
-    "Jaipur, Rajasthan",
-    "Kolkata, West Bengal",
-    "Mumbai, Maharashtra",
-    "Nagpur, Maharashtra",
-    "Noida, Uttar Pradesh",
-    "Pune, Maharashtra",
-    "Surat, Gujarat",
-    "Vadodara, Gujarat",
-    "Indore, Madhya Pradesh",
-    "Bhopal, Madhya Pradesh",
-    "Chandigarh",
-    "Lucknow, Uttar Pradesh",
-    "Kanpur, Uttar Pradesh",
-    "Patna, Bihar"
+    "Gandhinagar, Gujarat",
   ];
 
   const content = {
     en: {
-      greeting: "Hi Khush,",
+      greeting: `Hi ${user?.fullName?.split(' ')[0] || 'there'},`,
       // Step 1
       step1Title: "Property Type & Basic Information",
       postingFor: "You are posting Your property for",
@@ -419,7 +404,7 @@ export default function PostPropertyPage() {
       priceError: "Please enter monthly rent",
     },
     fr: {
-      greeting: "Salut Khush,",
+      greeting: `Salut ${user?.fullName?.split(' ')[0] || 'là'},`,
       step1Title: "Type de propriété et informations de base",
       postingFor: "Vous publiez votre propriété pour",
       pg: "PG",
@@ -688,7 +673,7 @@ export default function PostPropertyPage() {
       // Validate room details
       for (const category of selectedRoomCategories) {
         const details = roomDetails[category];
-        if (!details.numberOfRooms || !details.monthlyRent || !details.securityDeposit) {
+        if (!details.totalRooms || !details.monthlyRent || !details.securityDeposit) {
           setError(t.rentDetailsError);
           return;
         }
@@ -1459,21 +1444,39 @@ export default function PostPropertyPage() {
                     {selectedRoomCategories.map((category) => (
                       <div key={category} className="space-y-4 pb-4 border-b border-gray-200">
                         <h3 className="text-lg font-bold text-primary">{t.roomDetailsFor} {category} {t.roomCategoriesTitle.split(' ')[0]}</h3>
-                        <div>
-                          <label className="block text-gray-700 font-medium mb-2">
-                            {t.numberOfRooms}<span className="text-red-500">*</span>
-                          </label>
-                          <input 
-                            type="text"
-                            inputMode="numeric"
-                            value={roomDetails[category].numberOfRooms}
-                            onChange={(e) => {
-                              const onlyDigits = e.target.value.replace(/\D/g, "");
-                              updateRoomDetail(category, 'numberOfRooms', onlyDigits);
-                            }}
-                            placeholder={t.numberOfRoomsPlaceholder}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
-                          />
+                        <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-gray-700 font-medium mb-2">
+                              Total Rooms<span className="text-red-500">*</span>
+                            </label>
+                            <input 
+                              type="text"
+                              inputMode="numeric"
+                              value={roomDetails[category].totalRooms}
+                              onChange={(e) => {
+                                const onlyDigits = e.target.value.replace(/\D/g, "");
+                                updateRoomDetail(category, 'totalRooms', onlyDigits);
+                              }}
+                              placeholder="Enter total rooms"
+                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 font-medium mb-2">
+                              Available Rooms<span className="text-red-500">*</span>
+                            </label>
+                            <input 
+                              type="text"
+                              inputMode="numeric"
+                              value={roomDetails[category].availableRooms}
+                              onChange={(e) => {
+                                const onlyDigits = e.target.value.replace(/\D/g, "");
+                                updateRoomDetail(category, 'availableRooms', onlyDigits);
+                              }}
+                              placeholder="Enter available rooms"
+                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
+                            />
+                          </div>
                         </div>
                         <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
                           <div>

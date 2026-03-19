@@ -63,7 +63,8 @@ export type AdminLoginInput = z.infer<typeof adminLoginSchema>;
 // ─── Property Validation ────────────────────────────────────────────────────
 
 const roomDetailSchema = z.object({
-  numberOfRooms: z.string().min(1, 'Number of rooms is required'),
+  totalRooms: z.string().min(1, 'Total rooms is required'),
+  availableRooms: z.string().min(1, 'Available rooms is required'),
   monthlyRent: z.string().min(1, 'Monthly rent is required'),
   securityDeposit: z.string().min(1, 'Security deposit is required'),
   facilities: z.array(z.string()).default([]),
@@ -173,7 +174,6 @@ export const propertySchema = z.object({
   view360Url: z.string().optional().or(z.literal('')),
 
   // ── Misc ──────────────────────────────────────────────────────────────────
-  amenities: z.array(z.string()).optional(),
   rules: z.record(z.string(), z.string()).optional(),
   services: z.record(z.string(), z.string()).optional(),
   priceStatus: z.enum(['below average', 'average', 'above average']).optional(),
@@ -204,7 +204,7 @@ export const propertySchema = z.object({
     if (data.selectedRoomCategories && data.roomDetails) {
       for (const cat of data.selectedRoomCategories) {
         const detail = data.roomDetails[cat];
-        if (!detail?.numberOfRooms || !detail?.monthlyRent || !detail?.securityDeposit) {
+        if (!detail?.totalRooms || !detail?.monthlyRent || !detail?.securityDeposit) {
           ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Room details for ${cat} are incomplete`, path: ['roomDetails'] });
         }
       }
