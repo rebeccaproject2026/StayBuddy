@@ -119,7 +119,12 @@ export default function PropertyDetailsPage() {
       viewMore: "View more properties", share: "Share", shareProperty: "Share Property",
       copyLink: "Copy Link", linkCopied: "Link Copied!", shareVia: "Share via",
       allowed: "Allowed", notAllowed: "Not Allowed", included: "Included", notIncluded: "Not Included",
-      loading: "Loading property...", notFound: "Property not found."
+      loading: "Loading property...", notFound: "Property not found.",
+      balcony: "Balcony", totalFloors: "Total Floors", floorNumber: "Floor No.",
+      furnishing: "Furnishing", maintenanceCharges: "Maintenance Charges",
+      additionalRooms: "ADDITIONAL ROOMS", overlooking: "OVERLOOKING",
+      tenantsPrefer: "TENANTS PREFERRED", localityDescription: "LOCALITY DESCRIPTION",
+      facing: "Facing", usp: "WHY THIS PROPERTY"
     },
     fr: {
       home: "Accueil", properties: "Propriétés", addToFavorites: "Ajouter aux favoris",
@@ -145,7 +150,12 @@ export default function PropertyDetailsPage() {
       viewMore: "Voir plus de propriétés", share: "Partager", shareProperty: "Partager la propriété",
       copyLink: "Copier le lien", linkCopied: "Lien copié!", shareVia: "Partager via",
       allowed: "Autorisé", notAllowed: "Non autorisé", included: "Inclus", notIncluded: "Non inclus",
-      loading: "Chargement...", notFound: "Propriété introuvable."
+      loading: "Chargement...", notFound: "Propriété introuvable.",
+      balcony: "Balcon", totalFloors: "Nombre d'étages", floorNumber: "Étage",
+      furnishing: "Ameublement", maintenanceCharges: "Charges de maintenance",
+      additionalRooms: "PIÈCES SUPPLÉMENTAIRES", overlooking: "VUE SUR",
+      tenantsPrefer: "LOCATAIRES PRÉFÉRÉS", localityDescription: "DESCRIPTION DE LA LOCALITÉ",
+      facing: "Orientation", usp: "POURQUOI CETTE PROPRIÉTÉ"
     }
   };
 
@@ -223,9 +233,12 @@ export default function PropertyDetailsPage() {
   };
 
   // ── Derived display values ─────────────────────────────────────────────────
-  // pgRules is string[] — convert to display object
   const rulesDisplay: Record<string, string> = property?.rules || {};
-  const servicesDisplay: Record<string, string> = property?.services || {};
+
+  // services can be string[] (PG) or Record<string,string> (Tenant/legacy)
+  const rawServices = property?.services;
+  const servicesArray: string[] = Array.isArray(rawServices) ? rawServices : [];
+  const servicesDisplay: Record<string, string> = (!Array.isArray(rawServices) && rawServices && typeof rawServices === 'object') ? rawServices : {};
 
   // amenities: PG uses commonAmenities, Tenant uses societyAmenities
   const amenitiesList: string[] = property
@@ -412,14 +425,16 @@ export default function PropertyDetailsPage() {
               <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 sm:gap-3 mb-2 flex-wrap">
-                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">{property.title}</h1>
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
+                      {property.propertyType === "Tenant" && property.societyName ? property.societyName : property.title}
+                    </h1>
                     <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-semibold ${property.propertyType === "PG" ? "bg-blue-600 text-white" : "bg-green-600 text-white"}`}>
                       {property.propertyType}
                     </span>
                   </div>
                   <p className="text-sm sm:text-base text-gray-600 flex items-center gap-1.5 sm:gap-2">
                     <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                    <span className="line-clamp-2">{property.fullAddress}</span>
+                    <span className="line-clamp-2">{property.fullAddress}, {property.areaName}, {property.state}</span>
                   </p>
                 </div>
                 <button onClick={() => setIsFavorite(!isFavorite)}
@@ -438,6 +453,21 @@ export default function PropertyDetailsPage() {
                 </div>
               )}
 
+              {/* USP */}
+              {property.uspText && (
+                <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
+                  <div className="flex items-center gap-2 mb-2">
+                    {property.uspCategory && (
+                      <span className="px-2 py-0.5 bg-primary text-white text-xs font-semibold rounded-full capitalize">
+                        {property.uspCategory}
+                      </span>
+                    )}
+                    <h3 className="text-xs sm:text-sm font-semibold text-primary">{t.usp}</h3>
+                  </div>
+                  <p className="text-sm sm:text-base text-gray-700 leading-relaxed">{property.uspText}</p>
+                </div>
+              )}
+
               {/* Property Details */}
               <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
                 <h3 className="text-xs sm:text-sm font-semibold text-gray-500 mb-3 sm:mb-4">{t.propertyDetails}</h3>
@@ -450,16 +480,16 @@ export default function PropertyDetailsPage() {
                     <span className="text-sm sm:text-base text-gray-600">{t.category}</span>
                     <span className="text-sm sm:text-base font-semibold text-gray-900">{property.category}</span>
                   </div>
-                  {property.propertyType === "PG" && property.pgFor && (
+                  {property.propertyType === "PG" && (property.pgFor || property.preferredGender) && (
                     <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
                       <span className="text-sm sm:text-base text-gray-600">{t.pgFor}</span>
-                      <span className="text-sm sm:text-base font-semibold text-gray-900">{property.pgFor}</span>
+                      <span className="text-sm sm:text-base font-semibold text-gray-900">{property.pgFor || property.preferredGender}</span>
                     </div>
                   )}
-                  {property.propertyType === "PG" && property.preferredTenants && (
+                  {property.propertyType === "PG" && (property.preferredTenants || property.tenantPreference) && (
                     <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
                       <span className="text-sm sm:text-base text-gray-600">{t.preferredTenants}</span>
-                      <span className="text-sm sm:text-base font-semibold text-gray-900">{property.preferredTenants}</span>
+                      <span className="text-sm sm:text-base font-semibold text-gray-900">{property.preferredTenants || property.tenantPreference}</span>
                     </div>
                   )}
                   <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
@@ -486,8 +516,98 @@ export default function PropertyDetailsPage() {
                     <span className="text-sm sm:text-base text-gray-600">{t.availableFrom}</span>
                     <span className="text-sm sm:text-base font-semibold text-green-600">{property.availableFrom}</span>
                   </div>
+                  {/* Tenant-specific detail rows */}
+                  {property.propertyType === "Tenant" && property.balcony && (
+                    <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
+                      <span className="text-sm sm:text-base text-gray-600">{t.balcony}</span>
+                      <span className="text-sm sm:text-base font-semibold text-gray-900">{property.balcony}</span>
+                    </div>
+                  )}
+                  {property.propertyType === "Tenant" && property.totalFloors && (
+                    <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
+                      <span className="text-sm sm:text-base text-gray-600">{t.totalFloors}</span>
+                      <span className="text-sm sm:text-base font-semibold text-gray-900">{property.totalFloors}</span>
+                    </div>
+                  )}
+                  {property.propertyType === "Tenant" && property.floorNumber && (
+                    <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
+                      <span className="text-sm sm:text-base text-gray-600">{t.floorNumber}</span>
+                      <span className="text-sm sm:text-base font-semibold text-gray-900">{property.floorNumber}</span>
+                    </div>
+                  )}
+                  {property.propertyType === "Tenant" && property.furnishing && property.furnishing.length > 0 && (
+                    <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
+                      <span className="text-sm sm:text-base text-gray-600">{t.furnishing}</span>
+                      <span className="text-sm sm:text-base font-semibold text-gray-900">{property.furnishing.join(", ")}</span>
+                    </div>
+                  )}
+                  {property.propertyType === "Tenant" && property.facing && (
+                    <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
+                      <span className="text-sm sm:text-base text-gray-600">{t.facing}</span>
+                      <span className="text-sm sm:text-base font-semibold text-gray-900">{property.facing}</span>
+                    </div>
+                  )}
+                  {property.propertyType === "Tenant" && property.maintenanceCharges && (
+                    <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
+                      <span className="text-sm sm:text-base text-gray-600">{t.maintenanceCharges}</span>
+                      <span className="text-sm sm:text-base font-semibold text-gray-900">
+                        {currencySymbol} {property.maintenanceCharges}{property.maintenanceType ? ` (${property.maintenanceType})` : ""}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Tenant: Additional Rooms, Overlooking, Tenants Prefer */}
+              {property.propertyType === "Tenant" && (
+                <>
+                  {property.additionalRooms && property.additionalRooms.length > 0 && (
+                    <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
+                      <h3 className="text-xs sm:text-sm font-semibold text-gray-500 mb-3 sm:mb-4">{t.additionalRooms}</h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                        {property.additionalRooms.map((room: string, i: number) => (
+                          <div key={i} className="flex items-center gap-2 p-2 sm:p-3 bg-gray-50 rounded-lg">
+                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full flex-shrink-0"></div>
+                            <span className="text-xs sm:text-sm text-gray-700">{room}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {property.overlooking && property.overlooking.length > 0 && (
+                    <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
+                      <h3 className="text-xs sm:text-sm font-semibold text-gray-500 mb-3 sm:mb-4">{t.overlooking}</h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                        {property.overlooking.map((view: string, i: number) => (
+                          <div key={i} className="flex items-center gap-2 p-2 sm:p-3 bg-gray-50 rounded-lg">
+                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-400 rounded-full flex-shrink-0"></div>
+                            <span className="text-xs sm:text-sm text-gray-700">{view}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {property.tenantsPrefer && property.tenantsPrefer.length > 0 && (
+                    <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
+                      <h3 className="text-xs sm:text-sm font-semibold text-gray-500 mb-3 sm:mb-4">{t.tenantsPrefer}</h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                        {property.tenantsPrefer.map((pref: string, i: number) => (
+                          <div key={i} className="flex items-center gap-2 p-2 sm:p-3 bg-gray-50 rounded-lg">
+                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full flex-shrink-0"></div>
+                            <span className="text-xs sm:text-sm text-gray-700">{pref}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {property.localityDescription && (
+                    <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
+                      <h3 className="text-xs sm:text-sm font-semibold text-gray-500 mb-3 sm:mb-4">{t.localityDescription}</h3>
+                      <p className="text-sm sm:text-base text-gray-700 leading-relaxed">{property.localityDescription}</p>
+                    </div>
+                  )}
+                </>
+              )}
 
               {/* Amenities */}
               {amenitiesList.length > 0 && (
@@ -509,12 +629,22 @@ export default function PropertyDetailsPage() {
                 <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
                   <h3 className="text-xs sm:text-sm font-semibold text-gray-500 mb-3 sm:mb-4">{t.rules}</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                    {property.pgRules.map((rule: string, index: number) => (
-                      <div key={index} className="flex items-center gap-2 p-2 sm:p-3 bg-gray-50 rounded-lg">
-                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-400 rounded-full flex-shrink-0"></div>
-                        <span className="text-xs sm:text-sm text-gray-700">{rule}</span>
-                      </div>
-                    ))}
+                    {property.pgRules.map((rule: string, index: number) => {
+                      const ruleLabels: Record<string, string> = {
+                        guardian: "Guardian not allowed",
+                        nonveg: "Non-Veg Food not allowed",
+                        gender: "Opposite Gender not allowed",
+                        alcohol: "Alcohol not allowed",
+                        smoking: "Smoking not allowed",
+                      };
+                      const label = ruleLabels[rule] || rule;
+                      return (
+                        <div key={index} className="flex items-center gap-2 p-2 sm:p-3 bg-gray-50 rounded-lg">
+                          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-400 rounded-full flex-shrink-0"></div>
+                          <span className="text-xs sm:text-sm text-gray-700">{label}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -535,17 +665,39 @@ export default function PropertyDetailsPage() {
               )}
 
               {/* Services */}
-              {Object.keys(servicesDisplay).length > 0 && (
+              {(servicesArray.length > 0 || Object.keys(servicesDisplay).length > 0) && (
                 <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
                   <h3 className="text-xs sm:text-sm font-semibold text-gray-500 mb-3 sm:mb-4">{t.services}</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    {Object.entries(servicesDisplay).map(([key, val]) => (
-                      <div key={key} className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
-                        <span className="text-sm sm:text-base text-gray-600 capitalize">{key}</span>
-                        <span className={`text-sm sm:text-base font-semibold ${val === "Included" || val === "Daily" ? "text-green-600" : "text-gray-900"}`}>{val}</span>
-                      </div>
-                    ))}
-                  </div>
+                  {/* PG: string array */}
+                  {servicesArray.length > 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                      {servicesArray.map((service: string, index: number) => {
+                        const serviceLabels: Record<string, string> = {
+                          laundry: "Laundry",
+                          cleaning: "Room Cleaning",
+                          warden: "Warden",
+                        };
+                        const label = serviceLabels[service] || service;
+                        return (
+                          <div key={index} className="flex items-center gap-2 p-2 sm:p-3 bg-gray-50 rounded-lg">
+                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full flex-shrink-0"></div>
+                            <span className="text-xs sm:text-sm text-gray-700">{label}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {/* Tenant/legacy: Record<string,string> */}
+                  {Object.keys(servicesDisplay).length > 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      {Object.entries(servicesDisplay).map(([key, val]) => (
+                        <div key={key} className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
+                          <span className="text-sm sm:text-base text-gray-600 capitalize">{key}</span>
+                          <span className={`text-sm sm:text-base font-semibold ${val === "Included" || val === "Daily" ? "text-green-600" : "text-gray-900"}`}>{val}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -577,14 +729,60 @@ export default function PropertyDetailsPage() {
                   <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
                   <span className="text-xs sm:text-sm text-gray-700 line-clamp-2">{property.fullAddress}</span>
                 </div>
-                {property.googleMapLink ? (
-                  <div className="w-full h-48 sm:h-56 md:h-64 rounded-lg overflow-hidden">
-                    <iframe src={property.googleMapLink} width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
-                  </div>
-                ) : (
-                  <div className="w-full h-48 sm:h-56 md:h-64 bg-gray-200 rounded-lg flex items-center justify-center">
-                    <p className="text-sm sm:text-base text-gray-500">Map placeholder</p>
-                  </div>
+                {(() => {
+                  // Build a proper Google Maps embed URL
+                  const raw = property.googleMapLink || "";
+                  let embedSrc = "";
+
+                  if (raw.includes("google.com/maps/embed")) {
+                    // Already an embed URL
+                    embedSrc = raw;
+                  } else if (raw.includes("@")) {
+                    // Standard maps URL with coordinates e.g. /@23.0225,72.5714,15z
+                    const match = raw.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+                    if (match) {
+                      embedSrc = `https://maps.google.com/maps?q=${match[1]},${match[2]}&z=15&output=embed`;
+                    }
+                  } else if (raw.includes("place/")) {
+                    // Place URL — extract place name
+                    const match = raw.match(/place\/([^/]+)/);
+                    if (match) {
+                      const place = decodeURIComponent(match[1]).replace(/\+/g, " ");
+                      embedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(place)}&output=embed`;
+                    }
+                  }
+
+                  // Fallback: geocode by full address
+                  if (!embedSrc) {
+                    const query = [property.fullAddress, property.areaName, property.state, property.location]
+                      .filter(Boolean).join(", ");
+                    embedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
+                  }
+
+                  return (
+                    <div className="w-full h-48 sm:h-56 md:h-64 rounded-lg overflow-hidden">
+                      <iframe
+                        src={embedSrc}
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0 }}
+                        allowFullScreen
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                      />
+                    </div>
+                  );
+                })()}
+                {property.googleMapLink && (
+                  <a
+                    href={property.googleMapLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 mt-3 text-xs sm:text-sm text-primary hover:underline"
+                  >
+                    <MapPin className="w-3.5 h-3.5" />
+                    Open in Google Maps
+                  </a>
                 )}
               </div>
 

@@ -12,7 +12,10 @@ type PropertyType = "all" | "pg" | "tenant";
 interface Property {
   _id: string;
   title: string;
+  societyName?: string;
   location: string;
+  areaName?: string;
+  state?: string;
   price: number;
   rooms: number;
   area: number;
@@ -146,7 +149,10 @@ export default function PropertyListings() {
                 <PropertyCard
                   id={property._id}
                   title={property.title}
+                  societyName={property.societyName}
                   location={property.location}
+                  areaName={property.areaName}
+                  state={property.state}
                   price={property.price}
                   rooms={property.rooms}
                   area={property.area}

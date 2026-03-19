@@ -15,7 +15,10 @@ function mapProperty(p: any) {
   return {
     id: p._id as string,
     title: p.title as string,
+    societyName: p.societyName as string | undefined,
     location: p.location as string,
+    areaName: p.areaName as string | undefined,
+    state: p.state as string | undefined,
     price: p.price as number,
     rooms: p.rooms as number,
     area: p.area as number,

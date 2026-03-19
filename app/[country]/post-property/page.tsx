@@ -41,6 +41,8 @@ export default function PostPropertyPage() {
   
   // Step 2: Property Details (PG)
   const [address, setAddress] = useState("");
+  const [areaName, setAreaName] = useState("");
+  const [state, setState] = useState("");
   const [pincode, setPincode] = useState("");
   const [landmark, setLandmark] = useState("");
   const [googleMapLink, setGoogleMapLink] = useState("");
@@ -188,6 +190,10 @@ export default function PostPropertyPage() {
       addressSubtitle: "Make sure the address is correct, complete and precise",
       addressLabel: "Address",
       addressPlaceholder: "Enter Your Address",
+      areaNameLabel: "Area / Locality",
+      areaNamePlaceholder: "e.g. Navarangpura, Satellite, Bopal",
+      stateLabel: "State",
+      statePlaceholder: "e.g. Gujarat, Maharashtra",
       pincodeLabel: "Pincode",
       pincodePlaceholder: "Enter Your Pincode",
       landmarkLabel: "Landmark",
@@ -429,6 +435,10 @@ export default function PostPropertyPage() {
       addressSubtitle: "Assurez-vous que l'adresse est correcte, complète et précise",
       addressLabel: "Adresse",
       addressPlaceholder: "Entrez votre adresse",
+      areaNameLabel: "Quartier / Localité",
+      areaNamePlaceholder: "ex. Navarangpura, Satellite, Bopal",
+      stateLabel: "État",
+      statePlaceholder: "ex. Gujarat, Maharashtra",
       pincodeLabel: "Code postal",
       pincodePlaceholder: "Entrez votre code postal",
       landmarkLabel: "Point de repère",
@@ -666,11 +676,10 @@ export default function PostPropertyPage() {
 
   const handleContinueStep2 = () => {
     if (propertyType === "PG") {
-      if (!address.trim() || !pincode.trim() || !landmark.trim() || !googleMapLink.trim() || !operationalSince.trim() || !pgPresentIn || !pgName.trim() || selectedRoomCategories.length === 0) {
+      if (!address.trim() || !areaName.trim() || !state.trim() || !pincode.trim() || !landmark.trim() || !googleMapLink.trim() || !operationalSince.trim() || !pgPresentIn || !pgName.trim() || selectedRoomCategories.length === 0) {
         setError(t.addressError);
         return;
-      }
-      // Validate room details
+      }      // Validate room details
       for (const category of selectedRoomCategories) {
         const details = roomDetails[category];
         if (!details.totalRooms || !details.monthlyRent || !details.securityDeposit) {
@@ -679,7 +688,7 @@ export default function PostPropertyPage() {
         }
       }
     } else if (propertyType === "Tenant") {
-      if (!address.trim() || !pincode.trim() || !landmark.trim() || !googleMapLink.trim() || !flatsInProject || !bedrooms || !bathrooms || !totalFloors || !floorNumber || !societyName.trim()) {
+      if (!address.trim() || !areaName.trim() || !state.trim() || !pincode.trim() || !landmark.trim() || !googleMapLink.trim() || !flatsInProject || !bedrooms || !bathrooms || !totalFloors || !floorNumber || !societyName.trim()) {
         setError(t.addressError);
         return;
       }
@@ -781,6 +790,8 @@ export default function PostPropertyPage() {
         posterType,
         location: selectedCity.split(',')[0] || selectedCity,
         fullAddress: address,
+        areaName,
+        state,
         pincode,
         landmark,
         googleMapLink,
@@ -829,6 +840,7 @@ export default function PostPropertyPage() {
           pgRules,
           noticePeriod,
           gateClosingTime,
+          services,
           foodProvided,
           meals,
           vegNonVeg,
@@ -1314,6 +1326,32 @@ export default function PostPropertyPage() {
                       placeholder={t.addressPlaceholder} 
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
                     />
+                  </div>
+                  <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2">
+                        {t.areaNameLabel}<span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={areaName}
+                        onChange={(e) => setAreaName(e.target.value)}
+                        placeholder={t.areaNamePlaceholder}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2">
+                        {t.stateLabel}<span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={state}
+                        onChange={(e) => setState(e.target.value)}
+                        placeholder={t.statePlaceholder}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors"
+                      />
+                    </div>
                   </div>
                   <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
                     <div>

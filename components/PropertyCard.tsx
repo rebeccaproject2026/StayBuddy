@@ -10,6 +10,9 @@ import { useLanguage } from "@/contexts/LanguageContext";
 interface PropertyCardProps {
   id: string;
   title: string;
+  societyName?: string;
+  areaName?: string;
+  state?: string;
   location: string;
   price: number;
   rooms: number;
@@ -26,10 +29,11 @@ interface PropertyCardProps {
 export default function PropertyCard({
   id,
   title,
+  societyName,
+  areaName,
+  state,
   location,
   price,
-  rooms,
-  area,
   images,
   isNew = false,
   badge,
@@ -198,9 +202,11 @@ export default function PropertyCard({
         {/* Content */}
         <div className="p-4">
           <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-1">
-            {title}
+            {type === "Tenant" && societyName ? societyName : title}
           </h3>
-          <p className="text-sm text-gray-600 mb-2 line-clamp-1">{location}</p>
+          <p className="text-sm text-gray-600 mb-2 line-clamp-1">
+            {[areaName, location, state].filter(Boolean).join(", ")}
+          </p>
 
           <div className="flex flex-row-reverse items-end justify-between">
             {/* Rating Section */}

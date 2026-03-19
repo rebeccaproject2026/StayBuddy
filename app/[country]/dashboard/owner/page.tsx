@@ -22,6 +22,203 @@ import {
   Eye,
 } from "lucide-react";
 
+function ProfileSection({ user, tc, language }: { user: any; tc: any; language: string }) {
+  const [form, setForm] = useState({
+    fullName: user?.fullName || "",
+    email: user?.email || "",
+    phoneNumber: user?.phoneNumber || "",
+  });
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const [pwForm, setPwForm] = useState({ current: "", next: "", confirm: "" });
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwMsg, setPwMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const handleSaveProfile = async () => {
+    setSaving(true);
+    setSaveMsg(null);
+    try {
+      const token = localStorage.getItem("staybuddy_token");
+      const res = await fetch("/api/auth/me", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ fullName: form.fullName, phoneNumber: form.phoneNumber }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSaveMsg({ type: "success", text: language === "fr" ? "Profil mis à jour." : "Profile updated." });
+      } else {
+        setSaveMsg({ type: "error", text: data.message || "Failed to update." });
+      }
+    } catch {
+      setSaveMsg({ type: "error", text: "Something went wrong." });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (pwForm.next !== pwForm.confirm) {
+      setPwMsg({ type: "error", text: language === "fr" ? "Les mots de passe ne correspondent pas." : "Passwords do not match." });
+      return;
+    }
+    setPwSaving(true);
+    setPwMsg(null);
+    try {
+      const token = localStorage.getItem("staybuddy_token");
+      const res = await fetch("/api/auth/me", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ currentPassword: pwForm.current, newPassword: pwForm.next }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPwMsg({ type: "success", text: language === "fr" ? "Mot de passe mis à jour." : "Password updated." });
+        setPwForm({ current: "", next: "", confirm: "" });
+      } else {
+        setPwMsg({ type: "error", text: data.message || "Failed to update password." });
+      }
+    } catch {
+      setPwMsg({ type: "error", text: "Something went wrong." });
+    } finally {
+      setPwSaving(false);
+    }
+  };
+
+  const countryLabel = user?.country === "fr" ? "France" : user?.country === "in" ? "India" : user?.country || "—";
+  const roleLabel = user?.role === "landlord" ? (language === "fr" ? "Propriétaire" : "Owner") : user?.role || "—";
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">{tc.profileSettings}</h2>
+
+      {/* Avatar + summary card */}
+      <div className="bg-white rounded-2xl shadow-md p-6 flex flex-col sm:flex-row items-center gap-6">
+        <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+          {user?.profileImage ? (
+            <Image src={user.profileImage} alt={user.fullName} width={80} height={80} className="object-cover w-full h-full" />
+          ) : (
+            <User className="w-10 h-10 text-primary" />
+          )}
+        </div>
+        <div className="text-center sm:text-left">
+          <p className="text-xl font-bold text-gray-900">{user?.fullName || "—"}</p>
+          <p className="text-gray-500 text-sm">{user?.email}</p>
+          <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
+            <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full">{roleLabel}</span>
+            <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">{countryLabel}</span>
+            <span className={`px-3 py-1 text-xs font-medium rounded-full ${user?.isVerified ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+              {user?.isVerified ? (language === "fr" ? "Vérifié" : "Verified") : (language === "fr" ? "Non vérifié" : "Unverified")}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Personal info */}
+      <div className="bg-white rounded-2xl shadow-md p-6">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">{language === "fr" ? "Informations personnelles" : "Personal Information"}</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{tc.fullName}</label>
+            <input
+              type="text"
+              value={form.fullName}
+              onChange={(e) => setForm((p) => ({ ...p, fullName: e.target.value }))}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{tc.email}</label>
+            <input
+              type="email"
+              value={form.email}
+              disabled
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+            />
+            <p className="text-xs text-gray-400 mt-1">{language === "fr" ? "L'email ne peut pas être modifié." : "Email cannot be changed."}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{tc.phone}</label>
+            <input
+              type="tel"
+              value={form.phoneNumber}
+              onChange={(e) => setForm((p) => ({ ...p, phoneNumber: e.target.value }))}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder={language === "fr" ? "Numéro de téléphone" : "Phone number"}
+            />
+          </div>
+          {saveMsg && (
+            <p className={`text-sm font-medium ${saveMsg.type === "success" ? "text-green-600" : "text-red-600"}`}>{saveMsg.text}</p>
+          )}
+          <button
+            onClick={handleSaveProfile}
+            disabled={saving}
+            className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-medium disabled:opacity-60"
+          >
+            {saving ? "..." : tc.saveChanges}
+          </button>
+        </div>
+      </div>
+
+      {/* Change password — only for credentials users */}
+      {user?.provider === "credentials" && (
+        <div className="bg-white rounded-2xl shadow-md p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">{language === "fr" ? "Changer le mot de passe" : "Change Password"}</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{language === "fr" ? "Mot de passe actuel" : "Current Password"}</label>
+              <input
+                type="password"
+                value={pwForm.current}
+                onChange={(e) => setPwForm((p) => ({ ...p, current: e.target.value }))}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder={language === "fr" ? "Mot de passe actuel" : "Current password"}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{language === "fr" ? "Nouveau mot de passe" : "New Password"}</label>
+              <input
+                type="password"
+                value={pwForm.next}
+                onChange={(e) => setPwForm((p) => ({ ...p, next: e.target.value }))}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder={language === "fr" ? "Nouveau mot de passe" : "New password"}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{language === "fr" ? "Confirmer le mot de passe" : "Confirm New Password"}</label>
+              <input
+                type="password"
+                value={pwForm.confirm}
+                onChange={(e) => setPwForm((p) => ({ ...p, confirm: e.target.value }))}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder={language === "fr" ? "Confirmer" : "Confirm password"}
+              />
+            </div>
+            {pwMsg && (
+              <p className={`text-sm font-medium ${pwMsg.type === "success" ? "text-green-600" : "text-red-600"}`}>{pwMsg.text}</p>
+            )}
+            <button
+              onClick={handleChangePassword}
+              disabled={pwSaving}
+              className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-medium disabled:opacity-60"
+            >
+              {pwSaving ? "..." : (language === "fr" ? "Mettre à jour le mot de passe" : "Update Password")}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function OwnerDashboard() {
   const { language, t } = useLanguage();
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -722,93 +919,7 @@ export default function OwnerDashboard() {
 
             {/* Profile */}
             {activeTab === "profile" && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">{tc.profileSettings}</h2>
-                
-                <div className="bg-white rounded-2xl shadow-md p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Personal Information</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {tc.fullName}
-                      </label>
-                      <input
-                        type="text"
-                        defaultValue="John Doe"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {tc.email}
-                      </label>
-                      <input
-                        type="email"
-                        defaultValue="john.doe@example.com"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {tc.phone}
-                      </label>
-                      <input
-                        type="tel"
-                        defaultValue="+91 99999 99999"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    </div>
-
-                    <button className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-medium">
-                      {tc.saveChanges}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-2xl shadow-md p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Change Password</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Current Password
-                      </label>
-                      <input
-                        type="password"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        placeholder="Enter current password"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        New Password
-                      </label>
-                      <input
-                        type="password"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        placeholder="Enter new password"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Confirm New Password
-                      </label>
-                      <input
-                        type="password"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        placeholder="Confirm new password"
-                      />
-                    </div>
-
-                    <button className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-medium">
-                      Update Password
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <ProfileSection user={user} tc={tc} language={language} />
             )}
           </div>
         </div>

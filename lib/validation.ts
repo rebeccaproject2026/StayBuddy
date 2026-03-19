@@ -94,6 +94,8 @@ export const propertySchema = z.object({
   // ── Location (always required) ─────────────────────────────────────────────
   location: z.string().min(2, 'Location is required').trim(),
   fullAddress: z.string().min(5, 'Full address is required').trim(),
+  areaName: z.string().min(1, 'Area / locality is required').trim(),
+  state: z.string().min(1, 'State is required').trim(),
   pincode: z.string().min(4, 'Pincode is required').trim(),
   landmark: z.string().min(2, 'Landmark is required').trim(),
   googleMapLink: z.string().min(1, 'Google Maps link is required').trim(),
@@ -175,7 +177,7 @@ export const propertySchema = z.object({
 
   // ── Misc ──────────────────────────────────────────────────────────────────
   rules: z.record(z.string(), z.string()).optional(),
-  services: z.record(z.string(), z.string()).optional(),
+  services: z.union([z.array(z.string()), z.record(z.string(), z.string())]).optional(),
   priceStatus: z.enum(['below average', 'average', 'above average']).optional(),
   isNew: z.boolean().optional().default(false),
   view360Available: z.boolean().optional(),

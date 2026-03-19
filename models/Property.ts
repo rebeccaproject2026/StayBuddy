@@ -5,6 +5,8 @@ export interface IProperty extends Document {
   title: string;
   location: string;
   fullAddress: string;
+  areaName?: string;
+  state?: string;
   pincode: string;
   landmark: string;
   googleMapLink: string;
@@ -97,7 +99,7 @@ const PropertySchema: Schema = new Schema<IProperty>({
     preferredTenants: { type: String },
     roomsAvailability: [{ id: String, name: String, status: String, image: String }],
     rules: { type: Object },
-    services: { type: Object },
+    services: { type: Schema.Types.Mixed },
     landlord: { name: String, phone: String, email: String },
     priceStatus: { type: String },
     view360Available: { type: Boolean },
@@ -106,6 +108,8 @@ const PropertySchema: Schema = new Schema<IProperty>({
   title: { type: String, required: true },
   location: { type: String, required: true },
   fullAddress: { type: String, required: true },
+  areaName: { type: String },
+  state: { type: String },
   pincode: { type: String, required: true },
   landmark: { type: String, required: true },
   googleMapLink: { type: String, required: true },
@@ -171,5 +175,13 @@ const PropertySchema: Schema = new Schema<IProperty>({
   view360Url: { type: String },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
 }, { timestamps: true });
+
+// Force re-register if schema is missing new fields (handles Next.js hot-reload cache)
+if (mongoose.models.Property) {
+  const existing = mongoose.models.Property;
+  if (!existing.schema.path('areaName') || !existing.schema.path('state')) {
+    delete (mongoose.models as any).Property;
+  }
+}
 
 export default mongoose.models.Property || mongoose.model<IProperty>('Property', PropertySchema);
