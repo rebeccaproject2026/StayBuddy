@@ -196,6 +196,7 @@ export async function GET(req: NextRequest) {
     const category   = searchParams.get('category');
     const minPrice   = searchParams.get('minPrice');
     const maxPrice   = searchParams.get('maxPrice');
+    const mine       = searchParams.get('mine');       // 'true' → filter by logged-in user
     const page       = Math.max(1, parseInt(searchParams.get('page') ?? '1'));
     const limit      = Math.min(50, parseInt(searchParams.get('limit') ?? '12'));
 
@@ -207,6 +208,17 @@ export async function GET(req: NextRequest) {
       filter.price = {};
       if (minPrice) filter.price.$gte = Number(minPrice);
       if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+
+    // Filter by the authenticated user's own properties
+    if (mine === 'true') {
+      let authUser;
+      try {
+        authUser = await authenticateUser(req);
+      } catch {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      filter.createdBy = authUser.id;
     }
 
     const [properties, total] = await Promise.all([

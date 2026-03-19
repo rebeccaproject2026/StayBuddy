@@ -198,7 +198,7 @@ export default function PropertyCard({
         {/* Content */}
         <div className="p-4">
           <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-1">
-            {rooms} rooms apartment of {area}m²
+            {title}
           </h3>
           <p className="text-sm text-gray-600 mb-2 line-clamp-1">{location}</p>
 

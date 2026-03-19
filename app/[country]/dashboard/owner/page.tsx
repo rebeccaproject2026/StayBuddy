@@ -22,22 +22,6 @@ import {
   Eye,
 } from "lucide-react";
 
-type Listing = {
-  id: number;
-  name: string;
-  type: "PG" | "Tenant";
-  image: string;
-  rent: number;
-  location: string;
-  address: string;
-  rooms: number;
-  occupied: number;
-  status: string;
-  verificationStatus: string;
-  views: number;
-  inquiries: number;
-};
-
 export default function OwnerDashboard() {
   const { language, t } = useLanguage();
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -46,6 +30,20 @@ export default function OwnerDashboard() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const currencySymbol = t("currency.symbol");
 
+  const [myListings, setMyListings] = useState<any[]>([]);
+  const [listingsLoading, setListingsLoading] = useState(true);
+  const [editingListing, setEditingListing] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    type: "PG",
+    rent: "",
+    location: "",
+    address: "",
+    rooms: "",
+    occupied: "",
+  });
+  const [editPhotoPreviewUrl, setEditPhotoPreviewUrl] = useState<string | null>(null);
+
   // Authentication check
   useEffect(() => {
     if (!isLoading) {
@@ -53,9 +51,7 @@ export default function OwnerDashboard() {
         router.push('/login');
         return;
       }
-      
       if (user?.role !== 'landlord') {
-        // Redirect to appropriate dashboard based on role
         if (user?.role === 'renter') {
           router.push('/dashboard/tenant');
         } else if (user?.role === 'admin') {
@@ -67,6 +63,22 @@ export default function OwnerDashboard() {
       }
     }
   }, [user, isLoading, isAuthenticated, router]);
+
+  // Fetch this landlord's own properties
+  useEffect(() => {
+    if (!isAuthenticated || user?.role !== 'landlord') return;
+    const token = localStorage.getItem('staybuddy_token');
+    setListingsLoading(true);
+    fetch('/api/properties?mine=true&limit=50', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) setMyListings(data.properties || []);
+      })
+      .catch(() => {})
+      .finally(() => setListingsLoading(false));
+  }, [isAuthenticated, user]);
 
   // Show loading while checking authentication
   if (isLoading) {
@@ -84,67 +96,6 @@ export default function OwnerDashboard() {
   if (!isAuthenticated || user?.role !== 'landlord') {
     return null;
   }
-
-  // Mock data - in real app, this would come from API
-  const [myListings, setMyListings] = useState<Listing[]>([
-    {
-      id: 1,
-      name: "Sunshine PG",
-      type: "PG",
-      image: "/owner.png",
-      rent: 8000,
-      location: "Ahmedabad, Gujarat",
-      address: "123 Main Street, Satellite Area",
-      rooms: 12,
-      occupied: 10,
-      status: "Approved",
-      verificationStatus: "Approved",
-      views: 245,
-      inquiries: 12,
-    },
-    {
-      id: 2,
-      name: "Green Valley Apartment",
-      type: "Tenant",
-      image: "/owner.png",
-      rent: 25000,
-      location: "Mumbai, Maharashtra",
-      address: "456 Park Avenue, Andheri West",
-      rooms: 3,
-      occupied: 3,
-      status: "Approved",
-      verificationStatus: "Approved",
-      views: 189,
-      inquiries: 8,
-    },
-    {
-      id: 3,
-      name: "Comfort PG",
-      type: "PG",
-      image: "/owner.png",
-      rent: 7500,
-      location: "Pune, Maharashtra",
-      address: "789 College Road, Kothrud",
-      rooms: 8,
-      occupied: 6,
-      status: "Pending Approval",
-      verificationStatus: "Pending",
-      views: 0,
-      inquiries: 0,
-    },
-  ]);
-
-  const [editingListing, setEditingListing] = useState<Listing | null>(null);
-  const [editForm, setEditForm] = useState({
-    name: "",
-    type: "PG" as Listing["type"],
-    rent: "",
-    location: "",
-    address: "",
-    rooms: "",
-    occupied: "",
-  });
-  const [editPhotoPreviewUrl, setEditPhotoPreviewUrl] = useState<string | null>(null);
 
   const bookingRequests = [
     {
@@ -289,16 +240,16 @@ export default function OwnerDashboard() {
     }
   };
 
-  const openEdit = (listing: Listing) => {
+  const openEdit = (listing: any) => {
     setEditingListing(listing);
     setEditForm({
-      name: listing.name,
-      type: listing.type,
-      rent: String(listing.rent),
-      location: listing.location,
-      address: listing.address,
-      rooms: String(listing.rooms),
-      occupied: String(listing.occupied),
+      name: listing.title || listing.name || "",
+      type: listing.propertyType || "PG",
+      rent: String(listing.price || listing.rent || ""),
+      location: listing.location || "",
+      address: listing.fullAddress || listing.address || "",
+      rooms: String(listing.rooms || ""),
+      occupied: "",
     });
     setEditPhotoPreviewUrl(null);
   };
@@ -309,46 +260,52 @@ export default function OwnerDashboard() {
     setEditingListing(null);
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editingListing) return;
-
-    const rent = Number(editForm.rent);
-    const rooms = Math.max(0, Number(editForm.rooms));
-    const occupied = Math.min(Math.max(0, Number(editForm.occupied)), rooms);
-
-    setMyListings((prev) =>
-      prev.map((l) =>
-        l.id === editingListing.id
-          ? {
-              ...l,
-              name: editForm.name.trim() || l.name,
-              type: editForm.type,
-              rent: Number.isFinite(rent) ? rent : l.rent,
-              location: editForm.location.trim() || l.location,
-              address: editForm.address.trim() || l.address,
-              rooms: Number.isFinite(rooms) ? rooms : l.rooms,
-              occupied: Number.isFinite(occupied) ? occupied : l.occupied,
-              image: editPhotoPreviewUrl ?? l.image,
-            }
-          : l
-      )
-    );
-
+    const token = localStorage.getItem('staybuddy_token');
+    const id = editingListing._id;
+    const updates: any = {
+      title: editForm.name.trim() || editingListing.title,
+      propertyType: editForm.type,
+      price: Number(editForm.rent) || editingListing.price,
+      location: editForm.location.trim() || editingListing.location,
+      fullAddress: editForm.address.trim() || editingListing.fullAddress,
+      rooms: Number(editForm.rooms) || editingListing.rooms,
+    };
+    try {
+      const res = await fetch(`/api/properties/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(updates),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMyListings(prev => prev.map(l => l._id === id ? data.property : l));
+      }
+    } catch {}
     closeEdit();
   };
 
-  const deleteListing = (id: number) => {
-    setMyListings((prev) => prev.filter((l) => l.id !== id));
-    if (editingListing?.id === id) closeEdit();
+  const deleteListing = async (id: string) => {
+    const token = localStorage.getItem('staybuddy_token');
+    try {
+      await fetch(`/api/properties/${id}`, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      setMyListings(prev => prev.filter(l => l._id !== id));
+      if (editingListing?._id === id) closeEdit();
+    } catch {}
   };
 
-  const bumpRooms = (id: number, delta: number) => {
-    setMyListings((prev) =>
-      prev.map((l) => {
-        if (l.id !== id) return l;
-        const rooms = Math.max(0, l.rooms + delta);
-        const occupied = Math.min(l.occupied, rooms);
-        return { ...l, rooms, occupied };
+  const bumpRooms = (id: string, delta: number) => {
+    setMyListings(prev =>
+      prev.map(l => {
+        if (l._id !== id) return l;
+        return { ...l, rooms: Math.max(0, (l.rooms || 0) + delta) };
       })
     );
   };
@@ -473,57 +430,75 @@ export default function OwnerDashboard() {
                   </div>
                 </div>
 
-                {myListings.length > 0 ? (
+                {listingsLoading ? (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <div key={i} className="bg-white rounded-2xl shadow-md overflow-hidden animate-pulse">
+                        <div className="h-48 bg-gray-200" />
+                        <div className="p-6 space-y-3">
+                          <div className="h-4 bg-gray-200 rounded w-3/4" />
+                          <div className="h-3 bg-gray-200 rounded w-1/2" />
+                          <div className="h-5 bg-gray-200 rounded w-1/3" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : myListings.length > 0 ? (
                   <>
                     {/* Grid View */}
                     {viewMode === "grid" && (
                       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {myListings.map((listing) => (
-                          <div key={listing.id} className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                          <div key={listing._id} className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                             <div className="relative h-48">
                               <Image
-                                src={listing.image}
-                                alt={listing.name}
+                                src={listing.images?.[0] || "/owner.png"}
+                                alt={listing.title}
                                 fill
                                 className="object-cover"
                               />
                               <span className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${
-                                listing.type === "PG" ? "bg-blue-500 text-white" : "bg-green-500 text-white"
+                                listing.propertyType === "PG" ? "bg-blue-500 text-white" : "bg-green-500 text-white"
                               }`}>
-                                {listing.type}
-                              </span>
-                              <span className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(listing.verificationStatus)}`}>
-                                {listing.verificationStatus === "Approved" ? tc.approved : listing.verificationStatus === "Pending" ? tc.pendingApproval : tc.rejected}
+                                {listing.propertyType}
                               </span>
                             </div>
                             <div className="p-6">
-                              <h3 className="text-xl font-bold text-gray-900 mb-2">{listing.name}</h3>
+                              <h3 className="text-xl font-bold text-gray-900 mb-2">{listing.title}</h3>
                               <div className="flex items-center gap-2 text-gray-600 mb-3">
                                 <MapPin className="w-4 h-4" />
                                 <span className="text-sm">{listing.location}</span>
                               </div>
                               <div className="flex items-center gap-2 mb-4">
                                 <span className="text-2xl font-bold text-primary">
-                                  {currencySymbol} {listing.rent.toLocaleString()}
+                                  {currencySymbol} {listing.price?.toLocaleString()}
                                 </span>
                                 <span className="text-gray-600 text-sm">/month</span>
                               </div>
                               <div className="grid grid-cols-3 gap-2 mb-4 text-sm">
                                 <div className="text-center p-2 bg-gray-50 rounded-lg">
-                                  <p className="text-gray-600">{tc.rooms}</p>
-                                  <p className="font-bold text-gray-900">{listing.rooms}</p>
+                                  <p className="text-gray-600">Total Rooms</p>
+                                  <p className="font-bold text-gray-900">
+                                    {listing.propertyType === "PG" && listing.roomDetails
+                                      ? Object.values(listing.roomDetails as Record<string, any>).reduce((s: number, r: any) => s + (parseInt(r.totalRooms) || 0), 0)
+                                      : listing.rooms}
+                                  </p>
                                 </div>
                                 <div className="text-center p-2 bg-gray-50 rounded-lg">
-                                  <p className="text-gray-600">{tc.views}</p>
-                                  <p className="font-bold text-gray-900">{listing.views}</p>
+                                  <p className="text-gray-600">Available</p>
+                                  <p className="font-bold text-green-600">
+                                    {listing.propertyType === "PG" && listing.roomDetails
+                                      ? Object.values(listing.roomDetails as Record<string, any>).reduce((s: number, r: any) => s + (parseInt(r.availableRooms) || 0), 0)
+                                      : listing.rooms}
+                                  </p>
                                 </div>
                                 <div className="text-center p-2 bg-gray-50 rounded-lg">
-                                  <p className="text-gray-600">{tc.inquiries}</p>
-                                  <p className="font-bold text-gray-900">{listing.inquiries}</p>
+                                  <p className="text-gray-600">Area</p>
+                                  <p className="font-bold text-gray-900">{listing.area} m²</p>
                                 </div>
                               </div>
                               <div className="flex flex-col gap-2">
-                                <Link href={`/property/${listing.id}`} className="flex items-center justify-center gap-2 px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm">
+                                <Link href={`/property/${listing._id}`} className="flex items-center justify-center gap-2 px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm">
                                   <Eye className="w-4 h-4" />
                                   {tc.viewDetails}
                                 </Link>
@@ -536,7 +511,7 @@ export default function OwnerDashboard() {
                                     {tc.edit}
                                   </button>
                                   <button
-                                    onClick={() => deleteListing(listing.id)}
+                                    onClick={() => deleteListing(listing._id)}
                                     className="flex items-center justify-center gap-2 px-3 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition-colors text-sm"
                                     aria-label={tc.delete}
                                   >
@@ -554,65 +529,70 @@ export default function OwnerDashboard() {
                     {viewMode === "list" && (
                       <div className="space-y-4">
                         {myListings.map((listing) => (
-                          <div key={listing.id} className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow">
+                          <div key={listing._id} className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow">
                             <div className="flex flex-col md:flex-row gap-4 md:gap-6">
                               <div className="relative w-full h-48 md:w-48 md:h-32 flex-shrink-0">
                                 <Image
-                                  src={listing.image}
-                                  alt={listing.name}
+                                  src={listing.images?.[0] || "/owner.png"}
+                                  alt={listing.title}
                                   fill
                                   className="object-cover rounded-lg"
                                 />
                                 <span className={`absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-medium ${
-                                  listing.type === "PG" ? "bg-blue-500 text-white" : "bg-green-500 text-white"
+                                  listing.propertyType === "PG" ? "bg-blue-500 text-white" : "bg-green-500 text-white"
                                 }`}>
-                                  {listing.type}
+                                  {listing.propertyType}
                                 </span>
                               </div>
 
                               <div className="flex-1">
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-3">
                                   <div>
-                                    <h3 className="text-xl font-bold text-gray-900 mb-1">{listing.name}</h3>
+                                    <h3 className="text-xl font-bold text-gray-900 mb-1">{listing.title}</h3>
                                     <div className="flex items-center gap-2 text-gray-600 mb-2">
                                       <MapPin className="w-4 h-4" />
                                       <span className="text-sm">{listing.location}</span>
                                     </div>
-                                    <p className="text-sm text-gray-500">{listing.address}</p>
+                                    <p className="text-sm text-gray-500">{listing.fullAddress}</p>
                                   </div>
-                                  <span className={`self-start px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(listing.verificationStatus)}`}>
-                                    {listing.verificationStatus === "Approved" ? tc.approved : listing.verificationStatus === "Pending" ? tc.pendingApproval : tc.rejected}
-                                  </span>
                                 </div>
 
                                 <div className="flex items-center gap-2 mb-4">
                                   <span className="text-2xl font-bold text-primary">
-                                    {currencySymbol} {listing.rent.toLocaleString()}
+                                    {currencySymbol} {listing.price?.toLocaleString()}
                                   </span>
                                   <span className="text-gray-600 text-sm">/month</span>
                                 </div>
 
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
                                   <div className="p-3 bg-gray-50 rounded-lg">
-                                    <p className="text-sm text-gray-600">{tc.rooms}</p>
-                                    <p className="font-bold text-gray-900">{listing.rooms}</p>
+                                    <p className="text-sm text-gray-600">Total Rooms</p>
+                                    <p className="font-bold text-gray-900">
+                                      {listing.propertyType === "PG" && listing.roomDetails
+                                        ? Object.values(listing.roomDetails as Record<string, any>).reduce((s: number, r: any) => s + (parseInt(r.totalRooms) || 0), 0)
+                                        : listing.rooms}
+                                    </p>
                                   </div>
                                   <div className="p-3 bg-gray-50 rounded-lg">
-                                    <p className="text-sm text-gray-600">{tc.occupied}</p>
-                                    <p className="font-bold text-gray-900">{listing.occupied}</p>
+                                    <p className="text-sm text-gray-600">Available</p>
+                                    <p className="font-bold text-green-600">
+                                      {listing.propertyType === "PG" && listing.roomDetails
+                                        ? Object.values(listing.roomDetails as Record<string, any>).reduce((s: number, r: any) => s + (parseInt(r.availableRooms) || 0), 0)
+                                        : listing.rooms}
+                                    </p>
                                   </div>
                                   <div className="p-3 bg-gray-50 rounded-lg">
-                                    <p className="text-sm text-gray-600">{tc.views}</p>
-                                    <p className="font-bold text-gray-900">{listing.views}</p>
+                                    <p className="text-sm text-gray-600">Area</p>
+                                    <p className="font-bold text-gray-900">{listing.area} m²</p>
                                   </div>
                                   <div className="p-3 bg-gray-50 rounded-lg">
-                                    <p className="text-sm text-gray-600">{tc.inquiries}</p>
-                                    <p className="font-bold text-gray-900">{listing.inquiries}</p>
+                                    <p className="text-sm text-gray-600">Category</p>
+                                    <p className="font-bold text-gray-900">{listing.category}</p>
                                   </div>
                                 </div>
 
                                 <div className="flex flex-wrap gap-2">
-                                  <Link href={`/property/${listing.id}`} className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm sm:text-base">
+                                  <Link href={`/property/${listing._id}`} className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm sm:text-base">
                                     <Eye className="w-4 h-4" />
                                     {tc.viewDetails}
                                   </Link>
@@ -624,7 +604,7 @@ export default function OwnerDashboard() {
                                     {tc.edit}
                                   </button>
                                   <button
-                                    onClick={() => deleteListing(listing.id)}
+                                    onClick={() => deleteListing(listing._id)}
                                     className="flex items-center gap-2 px-4 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition-colors text-sm sm:text-base"
                                   >
                                     <Trash2 className="w-4 h-4" />
@@ -868,7 +848,7 @@ export default function OwnerDashboard() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Property Type</label>
                     <select
                       value={editForm.type}
-                      onChange={(e) => setEditForm((p) => ({ ...p, type: e.target.value as Listing["type"] }))}
+                      onChange={(e) => setEditForm((p) => ({ ...p, type: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option value="PG">PG</option>
@@ -908,7 +888,7 @@ export default function OwnerDashboard() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">{tc.rooms}</label>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => bumpRooms(editingListing.id, -1)}
+                        onClick={() => bumpRooms(editingListing._id, -1)}
                         className="px-3 py-3 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
                         type="button"
                       >
@@ -921,7 +901,7 @@ export default function OwnerDashboard() {
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                       />
                       <button
-                        onClick={() => bumpRooms(editingListing.id, 1)}
+                        onClick={() => bumpRooms(editingListing._id, 1)}
                         className="px-3 py-3 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
                         type="button"
                       >
@@ -958,7 +938,7 @@ export default function OwnerDashboard() {
                     <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
                       <div className="relative aspect-video rounded-lg overflow-hidden border border-gray-200">
                         <Image
-                          src={editPhotoPreviewUrl ?? editingListing.image}
+                          src={editPhotoPreviewUrl ?? editingListing.images?.[0] ?? "/owner.png"}
                           alt="Listing preview"
                           fill
                           className="object-cover"
@@ -971,7 +951,7 @@ export default function OwnerDashboard() {
 
               <div className="p-5 sm:p-6 border-t border-gray-200 flex flex-col sm:flex-row gap-2 sm:justify-end">
                 <button
-                  onClick={() => deleteListing(editingListing.id)}
+                  onClick={() => deleteListing(editingListing._id)}
                   className="w-full sm:w-auto px-4 py-3 rounded-lg border border-red-500 text-red-500 hover:bg-red-50"
                 >
                   {tc.delete} Listing
