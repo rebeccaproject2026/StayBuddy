@@ -22,7 +22,7 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string, country?: string) => Promise<boolean>;
   googleLogin: (role: string) => Promise<void>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
@@ -62,13 +62,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             fullName: session.user.name || '',
             email: session.user.email || '',
             role: session.user.role as 'renter' | 'landlord' | 'admin',
-            country: 'in', // Default, could be improved
+            country: (session.user.country as 'fr' | 'in') || 'in',
             isVerified: true,
             profileImage: session.user.profileImage || session.user.image || undefined,
             createdAt: new Date().toISOString(),
           };
           setUser(nextAuthUser);
-          setToken('nextauth'); // Dummy token for NextAuth
+          setToken('nextauth');
           setIsLoading(false);
           return;
         }
@@ -132,7 +132,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const googleLogin = async (role: string) => {
     try {
-      await nextAuthSignIn('google', { callbackUrl: '/', state: role });
+      // Extract country from current URL path (e.g. /fr/login → fr)
+      const pathParts = window.location.pathname.split('/').filter(Boolean);
+      const country = ['fr', 'in'].includes(pathParts[0]) ? pathParts[0] : 'in';
+      // Store country in a cookie so the server-side signIn callback can read it
+      document.cookie = `pending_country=${country}; path=/; max-age=300; SameSite=Lax`;
+      await nextAuthSignIn('google', { callbackUrl: `/${country}` });
     } catch (error) {
       console.error('Google login error:', error);
       toast.error('Google login failed', {
@@ -142,7 +147,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string, country?: string): Promise<boolean> => {
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -167,13 +172,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         return true;
       } else {
-        // Handle unverified user — redirect to OTP page
+        // Handle unverified user — redirect to OTP page with country
         if (result.unverified && result.email) {
           toast.error('Please verify your email first.', {
             duration: 4000,
             position: 'top-center',
           });
-          router.push(`/verify-otp?email=${encodeURIComponent(result.email)}`);
+          const c = country || 'in';
+          router.push(`/${c}/verify-otp?email=${encodeURIComponent(result.email)}`);
           return false;
         }
 
@@ -196,24 +202,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
+    const userCountry = user?.country || 'in';
+    const isNextAuth = token === 'nextauth';
+
     // Clear state
     setUser(null);
     setToken(null);
-    
+
     // Clear localStorage
     localStorage.removeItem('staybuddy_token');
     localStorage.removeItem('staybuddy_user');
-
-    // Sign out from NextAuth if applicable
-    nextAuthSignOut({ callbackUrl: '/' });
 
     toast.success('Logged out successfully', {
       duration: 2000,
       position: 'top-center',
     });
 
-    // Redirect to home page
-    router.push('/');
+    if (isNextAuth) {
+      // NextAuth session — signOut handles redirect
+      nextAuthSignOut({ callbackUrl: `/${userCountry}` });
+    } else {
+      // Credentials session — redirect manually
+      router.push(`/${userCountry}`);
+    }
   };
 
   const updateUser = (userData: Partial<User>) => {

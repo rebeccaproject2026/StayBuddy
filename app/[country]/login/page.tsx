@@ -55,7 +55,7 @@ export default function LoginPage() {
     setIsLoading(true);
     
     try {
-      const success = await login(data.email, data.password);
+      const success = await login(data.email, data.password, country);
       
       if (success) {
         // Reset form
