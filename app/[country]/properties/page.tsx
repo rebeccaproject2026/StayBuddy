@@ -26,8 +26,8 @@ function mapProperty(p: any) {
     type: p.propertyType as "PG" | "Tenant",
     isNew: false,
     verified: false,
-    rating: 4.5,
-    reviewsCount: 24,
+    rating: p.averageRating ?? undefined,
+    reviewsCount: p.reviewsCount ?? 0,
   };
 }
 

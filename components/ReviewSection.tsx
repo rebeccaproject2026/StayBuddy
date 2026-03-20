@@ -1,262 +1,330 @@
 "use client";
 
-import { useState } from "react";
-import { Star, ThumbsUp, MessageSquare, Flag } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Star, MessageSquare, Flag, ThumbsUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
 
 interface Review {
-  id: string;
+  _id: string;
   userName: string;
   userImage?: string;
-  date: string;
+  createdAt: string;
   rating: number;
   comment: string;
-  helpfulCount: number;
-}
-
-interface RatingStats {
-  average: number;
-  total: number;
-  distribution: {
-    5: number;
-    4: number;
-    3: number;
-    2: number;
-    1: number;
-  };
 }
 
 interface ReviewSectionProps {
-  stats: RatingStats;
-  reviews: Review[];
+  propertyId: string;
   language?: string;
-  t?: any; // Pass translations directly
   country?: string;
 }
 
-export default function ReviewSection({ stats, reviews, language, t, country }: ReviewSectionProps) {
-  const [showAll, setShowAll] = useState(false);
-  const [showReviewModal, setShowReviewModal] = useState(false);
+export default function ReviewSection({ propertyId, language = "en", country = "in" }: ReviewSectionProps) {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
-  
-  // Default translations if t is not provided perfectly
-  const translations = {
-    reviewsAndRatings: t?.reviewsAndRatings || (language === 'fr' ? "Avis et évaluations" : "Reviews & Ratings"),
-    overallRating: t?.overallRating || (language === 'fr' ? "Évaluation globale" : "Overall Rating"),
-    basedOn: t?.basedOn || (language === 'fr' ? "Basé sur" : "Based on"),
-    reviews: t?.reviews || (language === 'fr' ? "avis" : "reviews"),
-    writeReview: t?.writeReview || (language === 'fr' ? "Écrire un avis" : "Write a Review"),
-    helpful: t?.helpful || (language === 'fr' ? "Utile" : "Helpful"),
-    report: t?.report || (language === 'fr' ? "Signaler" : "Report"),
-    showMore: t?.showMoreReviews || (language === 'fr' ? "Voir plus d'avis" : "Show more reviews"),
-    showLess: t?.showLessReviews || (language === 'fr' ? "Voir moins d'avis" : "Show less reviews"),
-    submitReview: t?.submitReview || (language === 'fr' ? "Soumettre l'avis" : "Submit Review"),
-    cancel: t?.cancel || (language === 'fr' ? "Annuler" : "Cancel"),
-    yourRating: t?.yourRating || (language === 'fr' ? "Votre note" : "Your Rating"),
-    yourReview: t?.yourReview || (language === 'fr' ? "Votre avis" : "Your Review"),
+
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+
+  // Modal form state
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
+  const isFr = language === "fr";
+  const tr = {
+    title: isFr ? "Avis et évaluations" : "Reviews & Ratings",
+    writeReview: isFr ? "Écrire un avis" : "Write a Review",
+    overallRating: isFr ? "Note globale" : "Overall Rating",
+    basedOn: isFr ? "Basé sur" : "Based on",
+    reviewsWord: isFr ? "avis" : "reviews",
+    noReviews: isFr ? "Aucun avis pour l'instant. Soyez le premier !" : "No reviews yet. Be the first!",
+    showMore: isFr ? "Voir plus" : "Show more",
+    showLess: isFr ? "Voir moins" : "Show less",
+    yourRating: isFr ? "Votre note" : "Your Rating",
+    yourReview: isFr ? "Votre avis" : "Your Review",
+    placeholder: isFr ? "Partagez votre expérience..." : "Share your experience with this property...",
+    submit: isFr ? "Soumettre" : "Submit Review",
+    cancel: isFr ? "Annuler" : "Cancel",
+    loginRequired: isFr ? "Connectez-vous pour laisser un avis" : "Login to write a review",
+    minChars: isFr ? "Minimum 10 caractères" : "Minimum 10 characters",
+    selectRating: isFr ? "Veuillez sélectionner une note" : "Please select a rating",
+    success: isFr ? "Avis soumis !" : "Review submitted!",
   };
 
-  const displayedReviews = showAll ? reviews : reviews.slice(0, 3);
-  
-  const renderStars = (rating: number) => {
-    return (
-      <div className="flex gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            className={`w-4 h-4 sm:w-5 sm:h-5 ${
-              star <= rating
-                ? "fill-yellow-400 text-yellow-400"
-                : "fill-gray-200 text-gray-200"
-            }`}
-          />
-        ))}
-      </div>
-    );
+  const fetchReviews = () => {
+    setLoading(true);
+    fetch(`/api/properties/${propertyId}/reviews`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) setReviews(data.reviews || []);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   };
 
-  const calculatePercentage = (count: number) => {
-    if (stats.total === 0) return 0;
-    return Math.round((count / stats.total) * 100);
+  useEffect(() => {
+    if (propertyId) fetchReviews();
+  }, [propertyId]);
+
+  // Computed stats from real reviews
+  const total = reviews.length;
+  const average = total > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / total : 0;
+  const distribution = [5, 4, 3, 2, 1].map(star => ({
+    star,
+    count: reviews.filter(r => r.rating === star).length,
+    pct: total > 0 ? Math.round((reviews.filter(r => r.rating === star).length / total) * 100) : 0,
+  }));
+
+  const displayed = showAll ? reviews : reviews.slice(0, 3);
+
+  const handleSubmit = async () => {
+    setSubmitError("");
+    if (rating === 0) { setSubmitError(tr.selectRating); return; }
+    if (comment.trim().length < 10) { setSubmitError(tr.minChars); return; }
+
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem("staybuddy_token");
+      const res = await fetch(`/api/properties/${propertyId}/reviews`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ rating, comment }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setShowModal(false);
+        setRating(0);
+        setComment("");
+        fetchReviews();
+      } else {
+        setSubmitError(data.error || "Failed to submit review.");
+      }
+    } catch {
+      setSubmitError("Something went wrong.");
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  const formatDate = (iso: string) => {
+    try {
+      return new Date(iso).toLocaleDateString(isFr ? "fr-FR" : "en-US", { year: "numeric", month: "long" });
+    } catch { return ""; }
+  };
+
+  const renderStars = (val: number, size = "w-4 h-4") => (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map(s => (
+        <Star key={s} className={`${size} ${s <= val ? "fill-yellow-400 text-yellow-400" : "fill-gray-200 text-gray-200"}`} />
+      ))}
+    </div>
+  );
 
   return (
     <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 md:p-6 mb-6 sm:mb-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <h3 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
           <MessageSquare className="w-5 h-5 text-primary" />
-          {translations.reviewsAndRatings}
+          {tr.title}
         </h3>
         <button
           onClick={() => {
             if (isAuthenticated) {
-              setShowReviewModal(true);
+              setShowModal(true);
             } else {
-              router.push(`/${country}/login?message=review`);
+              router.push(`/${country}/login`);
             }
           }}
-          className="px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white font-semibold rounded-lg transition-colors text-sm sm:text-base border border-primary/20 hover:border-transparent whitespace-nowrap"
+          className="px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white font-semibold rounded-lg transition-colors text-sm border border-primary/20 hover:border-transparent whitespace-nowrap"
         >
-          {translations.writeReview}
+          {tr.writeReview}
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 mb-8">
-        {/* Overall Rating Score */}
-        <div className="md:col-span-4 flex flex-col items-center justify-center p-6 bg-gray-50 rounded-xl border border-gray-100">
-          <h4 className="text-sm font-semibold text-gray-500 mb-2 uppercase tracking-wider">{translations.overallRating}</h4>
-          <div className="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-2">
-            {stats.average.toFixed(1)}
+      {/* Stats */}
+      {total > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-8">
+          {/* Average score */}
+          <div className="md:col-span-4 flex flex-col items-center justify-center p-6 bg-gray-50 rounded-xl border border-gray-100">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{tr.overallRating}</p>
+            <p className="text-5xl font-extrabold text-gray-900 mb-2">{average.toFixed(1)}</p>
+            {renderStars(Math.round(average), "w-5 h-5")}
+            <p className="text-sm text-gray-500 mt-2">{tr.basedOn} {total} {tr.reviewsWord}</p>
           </div>
-          <div className="mb-2">
-            {renderStars(Math.round(stats.average))}
-          </div>
-          <p className="text-sm text-gray-600 font-medium">
-            {translations.basedOn} {stats.total} {translations.reviews}
-          </p>
-        </div>
-
-        {/* Rating Distribution */}
-        <div className="md:col-span-8 flex flex-col justify-center gap-3">
-          {[5, 4, 3, 2, 1].map((star) => {
-            const count = stats.distribution[star as keyof typeof stats.distribution] || 0;
-            const percentage = calculatePercentage(count);
-            return (
-              <div key={star} className="flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-1 w-12 shrink-0 font-medium text-gray-700">
-                  {star} <Star className="w-3.5 h-3.5 fill-gray-400 text-gray-400" />
-                </div>
+          {/* Distribution */}
+          <div className="md:col-span-8 flex flex-col justify-center gap-3">
+            {distribution.map(({ star, pct }) => (
+              <div key={star} className="flex items-center gap-3 text-sm">
+                <span className="w-10 shrink-0 text-gray-600 font-medium flex items-center gap-1">
+                  {star} <Star className="w-3 h-3 fill-gray-400 text-gray-400" />
+                </span>
                 <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
-                    whileInView={{ width: `${percentage}%` }}
+                    whileInView={{ width: `${pct}%` }}
                     viewport={{ once: true }}
-                    transition={{ duration: 1, ease: "easeOut" }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
                     className="h-full bg-yellow-400 rounded-full"
                   />
                 </div>
-                <div className="w-10 shrink-0 text-right text-gray-500 font-medium">
-                  {percentage}%
+                <span className="w-10 text-right text-gray-500 shrink-0">{pct}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Reviews list */}
+      {loading ? (
+        <div className="space-y-4">
+          {[1, 2].map(i => (
+            <div key={i} className="animate-pulse p-4 border border-gray-100 rounded-xl">
+              <div className="flex gap-3 mb-3">
+                <div className="w-10 h-10 bg-gray-200 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 bg-gray-200 rounded w-1/3" />
+                  <div className="h-2 bg-gray-200 rounded w-1/4" />
                 </div>
               </div>
-            );
-          })}
+              <div className="h-3 bg-gray-200 rounded w-full mb-2" />
+              <div className="h-3 bg-gray-200 rounded w-3/4" />
+            </div>
+          ))}
         </div>
-      </div>
-
-      {/* Reviews List */}
-      <div className="space-y-4 sm:space-y-6">
-        <AnimatePresence>
-          {displayedReviews.map((review, index) => (
-            <motion.div
-              key={review.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="p-4 sm:p-5 border border-gray-100 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden shrink-0">
-                    {review.userImage ? (
-                      <Image src={review.userImage} alt={review.userName} width={40} height={40} className="object-cover" />
-                    ) : (
-                      review.userName.charAt(0).toUpperCase()
-                    )}
+      ) : reviews.length === 0 ? (
+        <p className="text-center text-gray-500 py-8">{tr.noReviews}</p>
+      ) : (
+        <div className="space-y-4">
+          <AnimatePresence>
+            {displayed.map((review, i) => (
+              <motion.div
+                key={review._id}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="p-4 sm:p-5 border border-gray-100 rounded-xl hover:shadow-sm transition-shadow"
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden shrink-0">
+                      {review.userImage ? (
+                        <Image src={review.userImage} alt={review.userName} width={40} height={40} className="object-cover w-full h-full" />
+                      ) : (
+                        <span>{review.userName.charAt(0).toUpperCase()}</span>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 text-sm">{review.userName}</p>
+                      <p className="text-xs text-gray-500">{formatDate(review.createdAt)}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h5 className="font-semibold text-gray-900 text-sm sm:text-base leading-tight">{review.userName}</h5>
-                    <span className="text-xs text-gray-500">{review.date}</span>
-                  </div>
-                </div>
-                <div className="flex flex-col items-end gap-1">
                   {renderStars(review.rating)}
                 </div>
+                <p className="text-sm text-gray-700 leading-relaxed">{review.comment}</p>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {reviews.length > 3 && (
+            <div className="text-center pt-2">
+              <button
+                onClick={() => setShowAll(v => !v)}
+                className="px-6 py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 font-semibold rounded-lg text-sm border border-gray-200 transition-colors"
+              >
+                {showAll ? tr.showLess : `${tr.showMore} (${reviews.length - 3})`}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Review Modal */}
+      <AnimatePresence>
+        {showModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-2xl w-full max-w-lg p-6 sm:p-8 shadow-2xl"
+            >
+              <h3 className="text-xl font-bold text-gray-900 mb-6">{tr.writeReview}</h3>
+
+              <div className="space-y-5">
+                {/* Star picker */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">{tr.yourRating}</label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map(s => (
+                      <button
+                        key={s}
+                        type="button"
+                        onMouseEnter={() => setHoverRating(s)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        onClick={() => setRating(s)}
+                        className="transition-transform hover:scale-110"
+                      >
+                        <Star
+                          className={`w-9 h-9 transition-colors ${
+                            s <= (hoverRating || rating)
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "fill-gray-200 text-gray-200"
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Comment */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">{tr.yourReview}</label>
+                  <textarea
+                    value={comment}
+                    onChange={e => setComment(e.target.value)}
+                    rows={4}
+                    placeholder={tr.placeholder}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary resize-none text-sm"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">{comment.trim().length}/10 min</p>
+                </div>
+
+                {submitError && (
+                  <p className="text-sm text-red-600">{submitError}</p>
+                )}
               </div>
-              
-              <p className="text-gray-700 text-sm sm:text-base leading-relaxed mb-4">
-                {review.comment}
-              </p>
-              
-              <div className="flex items-center gap-4 text-xs sm:text-sm pt-3 border-t border-gray-50">
-                <button className="flex items-center gap-1.5 text-gray-500 hover:text-green-600 transition-colors font-medium">
-                  <ThumbsUp className="w-4 h-4" />
-                  <span>{translations.helpful} ({review.helpfulCount})</span>
+
+              <div className="flex justify-end gap-3 mt-6 pt-5 border-t border-gray-100">
+                <button
+                  onClick={() => { setShowModal(false); setRating(0); setComment(""); setSubmitError(""); }}
+                  className="px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+                >
+                  {tr.cancel}
                 </button>
-                <button className="flex items-center gap-1.5 text-gray-400 hover:text-red-500 transition-colors ml-auto font-medium text-xs">
-                  <Flag className="w-3.5 h-3.5" />
-                  <span>{translations.report}</span>
+                <button
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className="px-6 py-2.5 text-sm font-semibold bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors disabled:opacity-60"
+                >
+                  {submitting ? "..." : tr.submit}
                 </button>
               </div>
             </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
-
-      {reviews.length > 3 && (
-        <div className="mt-8 text-center pt-2">
-          <button
-            onClick={() => setShowAll(!showAll)}
-            className="px-6 py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 font-semibold rounded-lg transition-colors text-sm sm:text-base border border-gray-200"
-          >
-            {showAll ? translations.showLess : translations.showMore}
-          </button>
-        </div>
-      )}
-
-      {/* Mock Review Modal */}
-      {showReviewModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl w-full max-w-lg p-6 sm:p-8 shadow-2xl"
-          >
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6">{translations.writeReview}</h3>
-            
-            <div className="space-y-5">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">{translations.yourRating}</label>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button key={star} className="text-gray-300 hover:text-yellow-400 transition-colors">
-                      <Star className="w-8 h-8 fill-current" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">{translations.yourReview}</label>
-                <textarea 
-                  className="w-full h-32 p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none transition-all placeholder:text-gray-400"
-                  placeholder="Share your experience with this property..."
-                ></textarea>
-              </div>
-            </div>
-            
-            <div className="mt-8 flex justify-end gap-3 border-t border-gray-100 pt-5">
-              <button 
-                onClick={() => setShowReviewModal(false)}
-                className="px-5 py-2.5 text-sm sm:text-base font-semibold text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-colors"
-              >
-                {translations.cancel}
-              </button>
-              <button 
-                onClick={() => setShowReviewModal(false)}
-                className="px-6 py-2.5 text-sm sm:text-base font-semibold bg-primary text-white rounded-xl shadow-md hover:shadow-lg hover:bg-primary-dark transition-all"
-              >
-                {translations.submitReview}
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

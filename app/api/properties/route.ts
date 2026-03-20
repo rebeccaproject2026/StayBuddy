@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Property from '@/models/Property';
+import Review from '@/models/Review';
 import cloudinary from '@/lib/cloudinary';
 import { authenticateUser } from '@/lib/auth-middleware';
 import { propertySchema } from '@/lib/validation';
@@ -230,9 +231,34 @@ export async function GET(req: NextRequest) {
       Property.countDocuments(filter),
     ]);
 
+    // Attach review stats to each property
+    const propertyIds = properties.map((p: any) => p._id);
+    const reviewStats = await Review.aggregate([
+      { $match: { property: { $in: propertyIds } } },
+      {
+        $group: {
+          _id: '$property',
+          averageRating: { $avg: '$rating' },
+          reviewsCount: { $sum: 1 },
+        },
+      },
+    ]);
+    const statsMap: Record<string, { averageRating: number; reviewsCount: number }> = {};
+    for (const s of reviewStats) {
+      statsMap[String(s._id)] = { averageRating: s.averageRating, reviewsCount: s.reviewsCount };
+    }
+    const propertiesWithStats = properties.map((p: any) => {
+      const stats = statsMap[String(p._id)];
+      return {
+        ...p,
+        averageRating: stats ? Math.round(stats.averageRating * 10) / 10 : null,
+        reviewsCount: stats ? stats.reviewsCount : 0,
+      };
+    });
+
     return NextResponse.json({
       success: true,
-      properties,
+      properties: propertiesWithStats,
       pagination: {
         total,
         page,

@@ -23,6 +23,8 @@ interface Property {
   propertyType: "PG" | "Tenant";
   isNew?: boolean;
   priceStatus?: string;
+  averageRating?: number | null;
+  reviewsCount?: number;
 }
 
 export default function PropertyListings() {
@@ -163,8 +165,8 @@ export default function PropertyListings() {
                   }
                   type={property.propertyType}
                   isNew={property.isNew}
-                  rating={4.5}
-                  reviewsCount={24}
+                  rating={property.averageRating ?? undefined}
+                  reviewsCount={property.reviewsCount}
                 />
               </div>
             ))}
