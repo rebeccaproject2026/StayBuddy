@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Property from '@/models/Property';
+import cloudinary from '@/lib/cloudinary';
 import { authenticateUser } from '@/lib/auth-middleware';
 import mongoose from 'mongoose';
 
@@ -63,6 +64,57 @@ export async function PUT(
     }
 
     const body = await req.json();
+
+    // Upload any new base64 images to Cloudinary
+    if (Array.isArray(body.images)) {
+      body.images = await Promise.all(
+        body.images.map(async (img: string) => {
+          if (!img || img.startsWith('http')) return img;
+          try {
+            const result = await cloudinary.uploader.upload(img, {
+              folder: 'staybuddy/properties',
+              resource_type: 'image',
+            });
+            return result.secure_url;
+          } catch {
+            return img;
+          }
+        })
+      );
+    }
+
+    // Upload simple string image arrays
+    const simpleArrayFields = ['kitchenImages', 'washroomImages', 'commonAreaImages', 'tenantKitchenImages', 'tenantWashroomImages', 'tenantCommonAreaImages'];
+    for (const field of simpleArrayFields) {
+      if (Array.isArray(body[field])) {
+        body[field] = await Promise.all(
+          body[field].map(async (img: string) => {
+            if (!img || img.startsWith('http')) return img;
+            try {
+              const result = await cloudinary.uploader.upload(img, { folder: 'staybuddy/properties', resource_type: 'image' });
+              return result.secure_url;
+            } catch { return img; }
+          })
+        );
+      }
+    }
+
+    // Upload room image objects {id, name, status?, image?}
+    const roomArrayFields = ['roomImages', 'tenantRoomImages'];
+    for (const field of roomArrayFields) {
+      if (Array.isArray(body[field])) {
+        body[field] = await Promise.all(
+          body[field].map(async (room: any) => {
+            if (!room.image || room.image.startsWith('http')) return room;
+            try {
+              const result = await cloudinary.uploader.upload(room.image, { folder: 'staybuddy/properties/rooms', resource_type: 'image' });
+              return { ...room, image: result.secure_url };
+            } catch { return room; }
+          })
+        );
+      }
+    }
+
     const updated = await Property.findByIdAndUpdate(
       params.id,
       { $set: body },

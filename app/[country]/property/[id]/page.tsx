@@ -624,6 +624,50 @@ export default function PropertyDetailsPage() {
                 </div>
               )}
 
+              {/* PG Room Details */}
+              {property.propertyType === "PG" && property.roomDetails && Object.keys(property.roomDetails).length > 0 && (
+                <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
+                  <h3 className="text-xs sm:text-sm font-semibold text-gray-500 mb-3 sm:mb-4 uppercase tracking-wide">
+                    {language === "fr" ? "Détails des chambres" : "Room Details"}
+                  </h3>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {Object.entries(property.roomDetails as Record<string, any>).map(([category, detail]) => (
+                      <div key={category} className="border border-gray-200 rounded-xl p-4 hover:border-primary/40 transition-colors">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-bold text-gray-900 text-base">{category} Bed</h4>
+                          <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-semibold rounded-full">
+                            {detail.availableRooms ?? "—"} {language === "fr" ? "dispo" : "available"}
+                          </span>
+                        </div>
+                        <div className="space-y-2 mb-3">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-500">{language === "fr" ? "Total chambres" : "Total Rooms"}</span>
+                            <span className="font-semibold text-gray-900">{detail.totalRooms ?? "—"}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-500">{t.monthlyRent}</span>
+                            <span className="font-bold text-primary">{currencySymbol} {Number(detail.monthlyRent).toLocaleString()}</span>
+                          </div>
+                          {detail.securityDeposit && Number(detail.securityDeposit) > 0 && (
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-500">{t.deposit}</span>
+                              <span className="font-semibold text-gray-900">{currencySymbol} {Number(detail.securityDeposit).toLocaleString()}</span>
+                            </div>
+                          )}
+                        </div>
+                        {detail.facilities && detail.facilities.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 pt-2 border-t border-gray-100">
+                            {detail.facilities.map((f: string, i: number) => (
+                              <span key={i} className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full capitalize">{f}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* PG Rules */}
               {property.propertyType === "PG" && property.pgRules && property.pgRules.length > 0 && (
                 <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
