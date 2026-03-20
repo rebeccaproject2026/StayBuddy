@@ -7,6 +7,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, X, MapPin, Check } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import * as yup from "yup";
+import PGStep2Details from "@/components/post-property/PGStep2Details";
+import TenantStep2Details from "@/components/post-property/TenantStep2Details";
+import PGStep3Preferences from "@/components/post-property/PGStep3Preferences";
+import TenantStep3Pricing from "@/components/post-property/TenantStep3Pricing";
+import PGStep4Images from "@/components/post-property/PGStep4Images";
+import TenantStep4Images from "@/components/post-property/TenantStep4Images";
 
 type PropertyType = "PG" | "Tenant" | null;
 type PosterType = "Owner" | "Property Manager" | "Agent" | null;
@@ -1576,418 +1582,55 @@ export default function PostPropertyPage() {
 
                 {/* PG Specific Details */}
                 {propertyType === "PG" && (
-                  <>
-                    <div className="space-y-4 pb-4 border-b border-gray-200">
-                      <div data-field="operationalSince">
-                        <label className="block text-gray-700 font-medium mb-2">
-                          {t.operationalLabel}<span className="text-red-500">*</span>
-                        </label>
-                        <input 
-                          type="text" 
-                          value={operationalSince} 
-                          onChange={(e) => setOperationalSince(e.target.value)} 
-                          placeholder={t.operationalPlaceholder} 
-                          className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors.operationalSince ? 'border-red-400' : 'border-gray-200'}`}
-                        />
-                        <FieldError name="operationalSince" />
-                      </div>
-                      <div data-field="pgPresentIn">
-                        <label className="block text-gray-700 font-medium mb-2">
-                          {t.presentInLabel}<span className="text-red-500">*</span>
-                        </label>
-                        <div className="space-y-2">
-                          {[
-                            { value: 'An Independent Building', label: t.independentBuilding },
-                            { value: 'An Independent Flats', label: t.independentFlats },
-                            { value: 'Present In A Society', label: t.pgSociety }
-                          ].map((option) => (
-                            <label key={option.value} className={`flex items-center gap-4 p-3 border-2 rounded-xl cursor-pointer transition-all hover:border-primary hover:bg-primary/5 ${
-                              pgPresentIn === option.value ? 'border-primary bg-primary/10' : 'border-gray-200'
-                            }`}>
-                              <input 
-                                type="radio" 
-                                name="pgPresentIn" 
-                                value={option.value} 
-                                checked={pgPresentIn === option.value} 
-                                onChange={(e) => setPgPresentIn(e.target.value as PGPresentIn)} 
-                                className="w-5 h-5 text-primary focus:ring-primary" 
-                              />
-                              <span className="text-base font-medium text-gray-700">{option.label}</span>
-                            </label>
-                          ))}
-                        </div>
-                        <FieldError name="pgPresentIn" />
-                      </div>
-                      <div data-field="pgName">
-                        <label className="block text-gray-700 font-medium mb-2">
-                          {t.pgNameLabel}<span className="text-red-500">*</span>
-                        </label>
-                        <input 
-                          type="text" 
-                          value={pgName} 
-                          onChange={(e) => setPgName(e.target.value)} 
-                          placeholder={t.pgNamePlaceholder} 
-                          className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors.pgName ? 'border-red-400' : 'border-gray-200'}`}
-                        />
-                        <FieldError name="pgName" />
-                      </div>
-                    </div>
-
-                    {/* Room Categories */}
-                    <div data-field="selectedRoomCategories" className="space-y-4 pb-4 border-b border-gray-200">
-                      <h3 className="text-lg font-bold text-gray-800">{t.roomCategoriesTitle}</h3>
-                      <p className="text-sm text-gray-600">{t.roomCategoriesSubtitle}</p>
-                      <div className="grid grid-cols-1 esm:grid-cols-2 md:grid-cols-3 gap-3">
-                        {(['Single', 'Double', 'Triple', 'Four', 'Other'] as RoomCategory[]).map((category) => (
-                          <button
-                            key={category}
-                            onClick={() => toggleRoomCategory(category)}
-                            className={`py-3 px-4 border-2 rounded-xl transition-all ${
-                              selectedRoomCategories.includes(category)
-                                ? 'border-primary bg-primary/10 text-primary font-medium'
-                                : 'border-gray-200 text-gray-700 hover:border-gray-300'
-                            }`}
-                          >
-                            {category === 'Single' ? t.single : category === 'Double' ? t.double : category === 'Triple' ? t.triple : category === 'Four' ? t.four : t.other}
-                          </button>
-                        ))}
-                      </div>
-                      <FieldError name="selectedRoomCategories" />
-                    </div>
-
-                    {/* Room Details for each selected category */}
-                    {selectedRoomCategories.map((category) => (
-                      <div key={category} className="space-y-4 pb-4 border-b border-gray-200">
-                        <h3 className="text-lg font-bold text-primary">{t.roomDetailsFor} {category} {t.roomCategoriesTitle.split(' ')[0]}</h3>
-                        <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
-                          <div data-field={`room_${category}_totalRooms`}>
-                            <label className="block text-gray-700 font-medium mb-2">
-                              Total Rooms<span className="text-red-500">*</span>
-                            </label>
-                            <input 
-                              type="text"
-                              inputMode="numeric"
-                              value={roomDetails[category].totalRooms}
-                              onChange={(e) => {
-                                const onlyDigits = e.target.value.replace(/\D/g, "");
-                                updateRoomDetail(category, 'totalRooms', onlyDigits);
-                              }}
-                              placeholder="Enter total rooms"
-                              className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors[`room_${category}_totalRooms`] ? 'border-red-400' : 'border-gray-200'}`}
-                            />
-                            <FieldError name={`room_${category}_totalRooms`} />
-                          </div>
-                          <div data-field={`room_${category}_availableRooms`}>
-                            <label className="block text-gray-700 font-medium mb-2">
-                              Available Rooms<span className="text-red-500">*</span>
-                            </label>
-                            <input 
-                              type="text"
-                              inputMode="numeric"
-                              value={roomDetails[category].availableRooms}
-                              onChange={(e) => {
-                                const onlyDigits = e.target.value.replace(/\D/g, "");
-                                updateRoomDetail(category, 'availableRooms', onlyDigits);
-                              }}
-                              placeholder="Enter available rooms"
-                              className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors[`room_${category}_availableRooms`] ? 'border-red-400' : 'border-gray-200'}`}
-                            />
-                            <FieldError name={`room_${category}_availableRooms`} />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
-                          <div data-field={`room_${category}_monthlyRent`}>
-                            <label className="block text-gray-700 font-medium mb-2">
-                              {t.monthlyRent}<span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative">
-                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">{currencySymbol}</span>
-                              <input 
-                                type="text"
-                                inputMode="numeric"
-                                value={roomDetails[category].monthlyRent}
-                                onChange={(e) => {
-                                  const onlyDigits = e.target.value.replace(/\D/g, "");
-                                  updateRoomDetail(category, 'monthlyRent', onlyDigits);
-                                }}
-                                placeholder={t.monthlyRentPlaceholder}
-                                className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors[`room_${category}_monthlyRent`] ? 'border-red-400' : 'border-gray-200'}`}
-                              />
-                            </div>
-                            <FieldError name={`room_${category}_monthlyRent`} />
-                          </div>
-                          <div data-field={`room_${category}_securityDeposit`}>
-                            <label className="block text-gray-700 font-medium mb-2">
-                              {t.securityDeposit}<span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative">
-                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">{currencySymbol}</span>
-                              <input 
-                                type="text"
-                                inputMode="numeric"
-                                value={roomDetails[category].securityDeposit}
-                                onChange={(e) => {
-                                  const onlyDigits = e.target.value.replace(/\D/g, "");
-                                  updateRoomDetail(category, 'securityDeposit', onlyDigits);
-                                }}
-                                placeholder={t.securityDepositPlaceholder}
-                                className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors[`room_${category}_securityDeposit`] ? 'border-red-400' : 'border-gray-200'}`}
-                              />
-                            </div>
-                            <FieldError name={`room_${category}_securityDeposit`} />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-gray-700 font-medium mb-3">{t.roomFacilities}</label>
-                          <div className="grid grid-cols-1 esm:grid-cols-2 gap-2">
-                            {[ 
-                              ...roomFacilities,
-                              ...roomDetails[category].facilities
-                                .filter((f) => !roomFacilities.some((rf) => rf.id === f))
-                                .map((f) => ({ id: f, label: f }))
-                            ].map((facility) => (
-                              <button
-                                key={facility.id}
-                                onClick={() => toggleFacility(category, facility.id)}
-                                className={`flex items-center justify-between p-3 border-2 rounded-xl transition-all ${
-                                  roomDetails[category].facilities.includes(facility.id)
-                                    ? 'border-primary bg-primary/10'
-                                    : 'border-gray-200 bg-white hover:border-gray-300'
-                                }`}
-                              >
-                                <span className="text-sm text-gray-700">{facility.label}</span>
-                                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                                  roomDetails[category].facilities.includes(facility.id) ? 'border-primary bg-primary' : 'border-gray-300'
-                                }`}>
-                                  {roomDetails[category].facilities.includes(facility.id) && <Check className="w-3 h-3 text-white" />}
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                          <div className="mt-3 space-y-2">
-                            <label className="block text-sm font-medium text-gray-700">
-                              Add extra facilities
-                            </label>
-                            <div className="flex flex-col sm:flex-row gap-2">
-                              <input
-                                type="text"
-                                placeholder="e.g. Study table, Balcony access"
-                                className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors text-sm"
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") {
-                                    e.preventDefault();
-                                    const value = (e.target as HTMLInputElement).value.trim();
-                                    if (!value) return;
-                                    if (!roomDetails[category].facilities.includes(value)) {
-                                      updateRoomDetail(category, "facilities", [
-                                        ...roomDetails[category].facilities,
-                                        value,
-                                      ]);
-                                    }
-                                    (e.target as HTMLInputElement).value = "";
-                                  }
-                                }}
-                              />
-                              <button
-                                type="button"
-                                className="px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-dark transition-colors"
-                                onClick={(e) => {
-                                  const input = (e.currentTarget.parentElement?.querySelector("input") as HTMLInputElement | null);
-                                  if (!input) return;
-                                  const value = input.value.trim();
-                                  if (!value) return;
-                                  if (!roomDetails[category].facilities.includes(value)) {
-                                    updateRoomDetail(category, "facilities", [
-                                      ...roomDetails[category].facilities,
-                                      value,
-                                    ]);
-                                  }
-                                  input.value = "";
-                                }}
-                              >
-                                Add
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </>
+                  <PGStep2Details
+                    t={t}
+                    currencySymbol={currencySymbol}
+                    fieldErrors={fieldErrors}
+                    FieldError={FieldError}
+                    operationalSince={operationalSince}
+                    setOperationalSince={setOperationalSince}
+                    pgPresentIn={pgPresentIn}
+                    setPgPresentIn={setPgPresentIn}
+                    pgName={pgName}
+                    setPgName={setPgName}
+                    selectedRoomCategories={selectedRoomCategories}
+                    toggleRoomCategory={toggleRoomCategory}
+                    roomDetails={roomDetails}
+                    updateRoomDetail={updateRoomDetail}
+                    toggleFacility={toggleFacility}
+                  />
                 )}
 
                 {/* Tenant Specific Details */}
                 {propertyType === "Tenant" && (
-                  <>
-                    <div className="space-y-4 pb-4 border-b border-gray-200">
-                      <div data-field="flatsInProject">
-                        <label className="block text-gray-700 font-medium mb-3">{t.flatsInProject}</label>
-                        <div className="grid grid-cols-1 esm:grid-cols-2 md:grid-cols-3 gap-3">
-                          {['<50', '50-100', '>100'].map((option) => (
-                            <button
-                              key={option}
-                              onClick={() => setFlatsInProject(option)}
-                              className={`py-3 px-4 border-2 rounded-xl transition-all ${
-                                flatsInProject === option
-                                  ? 'border-primary bg-primary/10 text-primary font-medium'
-                                  : 'border-gray-200 text-gray-700 hover:border-gray-300'
-                              }`}
-                            >
-                              {option}
-                            </button>
-                          ))}
-                        </div>
-                        <FieldError name="flatsInProject" />
-                      </div>
-                      <div data-field="bedrooms">
-                        <label className="block text-gray-700 font-medium mb-3">{t.bedroom}</label>
-                        <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-5 gap-2">
-                          {['All', '1+', '2+', '3+', '4+'].map((option) => (
-                            <button
-                              key={option}
-                              onClick={() => setBedrooms(option)}
-                              className={`py-2 px-3 border-2 rounded-xl transition-all text-sm ${
-                                bedrooms === option
-                                  ? 'border-primary bg-primary/10 text-primary font-medium'
-                                  : 'border-gray-200 text-gray-700 hover:border-gray-300'
-                              }`}
-                            >
-                              {option}
-                            </button>
-                          ))}
-                        </div>
-                        <FieldError name="bedrooms" />
-                      </div>
-                      <div data-field="bathrooms">
-                        <label className="block text-gray-700 font-medium mb-3">{t.bathroom}</label>
-                        <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-5 gap-2">
-                          {['All', '1+', '2+', '3+', '4+'].map((option) => (
-                            <button
-                              key={option}
-                              onClick={() => setBathrooms(option)}
-                              className={`py-2 px-3 border-2 rounded-xl transition-all text-sm ${
-                                bathrooms === option
-                                  ? 'border-primary bg-primary/10 text-primary font-medium'
-                                  : 'border-gray-200 text-gray-700 hover:border-gray-300'
-                              }`}
-                            >
-                              {option}
-                            </button>
-                          ))}
-                        </div>
-                        <FieldError name="bathrooms" />
-                      </div>
-                      <div>
-                        <label className="block text-gray-700 font-medium mb-3">{t.balconyOptional}</label>
-                        <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-5 gap-2">
-                          {['All', '1+', '2+', '3+', '4+'].map((option) => (
-                            <button
-                              key={option}
-                              onClick={() => setBalcony(option)}
-                              className={`py-2 px-3 border-2 rounded-xl transition-all text-sm ${
-                                balcony === option
-                                  ? 'border-primary bg-primary/10 text-primary font-medium'
-                                  : 'border-gray-200 text-gray-700 hover:border-gray-300'
-                              }`}
-                            >
-                              {option}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
-                        <div data-field="totalFloors">
-                          <label className="block text-gray-700 font-medium mb-2">{t.totalFloorsInBuilding}</label>
-                          <select 
-                            value={totalFloors} 
-                            onChange={(e) => setTotalFloors(e.target.value)}
-                            className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none bg-white cursor-pointer ${fieldErrors.totalFloors ? 'border-red-400' : 'border-gray-200'}`}
-                          >
-                            <option value="">{t.presentInPlaceholder}</option>
-                            {Array.from({length: 50}, (_, i) => i + 1).map(num => (
-                              <option key={num} value={num}>{num}</option>
-                            ))}
-                          </select>
-                          <FieldError name="totalFloors" />
-                        </div>
-                        <div data-field="floorNumber">
-                          <label className="block text-gray-700 font-medium mb-2">{t.floorNoOfProperty}</label>
-                          <select 
-                            value={floorNumber} 
-                            onChange={(e) => setFloorNumber(e.target.value)}
-                            className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none bg-white cursor-pointer ${fieldErrors.floorNumber ? 'border-red-400' : 'border-gray-200'}`}
-                          >
-                            <option value="">{t.presentInPlaceholder}</option>
-                            {Array.from({length: 50}, (_, i) => i + 1).map(num => (
-                              <option key={num} value={num}>{num}</option>
-                            ))}
-                          </select>
-                          <FieldError name="floorNumber" />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-gray-700 font-medium mb-3">{t.furnishingLabel}</label>
-                        <div className="space-y-2">
-                          {['Unfurnished', 'Semi-Furnished', 'Fully-Furnished'].map((option) => (
-                            <button
-                              key={option}
-                              onClick={() => toggleFurnishing(option)}
-                              className={`w-full flex items-center justify-between p-3 border-2 rounded-xl transition-all ${
-                                furnishing.includes(option)
-                                  ? 'border-primary bg-primary/10'
-                                  : 'border-gray-200 bg-white hover:border-gray-300'
-                              }`}
-                            >
-                              <span className="text-gray-700">{option}</span>
-                              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                                furnishing.includes(option) ? 'border-primary bg-primary' : 'border-gray-300'
-                              }`}>
-                                {furnishing.includes(option) && <Check className="w-3 h-3 text-white" />}
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-gray-700 font-medium mb-2">{t.areaLabel}</label>
-                        <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-sm text-gray-600 mb-1">{t.min}</label>
-                            <input 
-                              type="text" 
-                              value={areaMin} 
-                              onChange={(e) => setAreaMin(e.target.value)} 
-                              placeholder={t.enterMinArea} 
-                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm text-gray-600 mb-1">{t.max}</label>
-                            <input 
-                              type="text" 
-                              value={areaMax} 
-                              onChange={(e) => setAreaMax(e.target.value)} 
-                              placeholder={t.enterMaxArea} 
-                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      <div data-field="societyName">
-                        <label className="block text-gray-700 font-medium mb-2">
-                          {t.societyName}<span className="text-red-500">*</span>
-                        </label>
-                        <input 
-                          type="text" 
-                          value={societyName} 
-                          onChange={(e) => setSocietyName(e.target.value)} 
-                          placeholder={t.enterSocietyName} 
-                          className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors.societyName ? 'border-red-400' : 'border-gray-200'}`}
-                        />
-                        <FieldError name="societyName" />
-                      </div>
-                    </div>
-                  </>
+                  <TenantStep2Details
+                    t={t}
+                    fieldErrors={fieldErrors}
+                    FieldError={FieldError}
+                    flatsInProject={flatsInProject}
+                    setFlatsInProject={setFlatsInProject}
+                    bedrooms={bedrooms}
+                    setBedrooms={setBedrooms}
+                    bathrooms={bathrooms}
+                    setBathrooms={setBathrooms}
+                    balcony={balcony}
+                    setBalcony={setBalcony}
+                    totalFloors={totalFloors}
+                    setTotalFloors={setTotalFloors}
+                    floorNumber={floorNumber}
+                    setFloorNumber={setFloorNumber}
+                    furnishing={furnishing}
+                    toggleFurnishing={toggleFurnishing}
+                    areaMin={areaMin}
+                    setAreaMin={setAreaMin}
+                    areaMax={areaMax}
+                    setAreaMax={setAreaMax}
+                    societyName={societyName}
+                    setSocietyName={setSocietyName}
+                  />
                 )}
+
+
 
                 {error && <p className="text-red-500 text-sm">{error}</p>}
                 <button 
@@ -2009,626 +1652,74 @@ export default function PostPropertyPage() {
                   <h2 className="text-2xl md:text-3xl font-bold text-primary mb-6">{t.step3Title}</h2>
                 </div>
 
+
                 {/* PG Pricing & Preferences */}
                 {propertyType === "PG" && (
-                  <>
-                    <div data-field="preferredGender" className="space-y-4 pb-4 border-b border-gray-200">
-                      <h3 className="text-lg font-bold text-gray-800">{t.preferredGenderTitle}</h3>
-                      <div className="grid grid-cols-1 esm:grid-cols-2 md:grid-cols-3 gap-3">
-                        {(['Male', 'Female', 'Both'] as PreferredGender[]).map((gender) => (
-                          <button
-                            key={gender}
-                            onClick={() => setPreferredGender(gender)}
-                            className={`py-3 px-4 border-2 rounded-xl transition-all ${
-                              preferredGender === gender
-                                ? 'border-primary bg-primary/10 text-primary font-medium'
-                                : 'border-gray-200 text-gray-700 hover:border-gray-300'
-                            }`}
-                          >
-                            {gender === 'Male' ? t.male : gender === 'Female' ? t.female : t.both}
-                          </button>
-                        ))}
-                      </div>
-                      <FieldError name="preferredGender" />
-                    </div>
-
-                    <div data-field="tenantPreference" className="space-y-4 pb-4 border-b border-gray-200">
-                      <h3 className="text-lg font-bold text-gray-800">{t.tenantPreferencesTitle}</h3>
-                      <div className="grid grid-cols-1 esm:grid-cols-2 md:grid-cols-3 gap-3">
-                        {(['Professionals', 'Students', 'Both'] as TenantPreference[]).map((pref) => (
-                          <button
-                            key={pref}
-                            onClick={() => setTenantPreference(pref)}
-                            className={`py-3 px-4 border-2 rounded-xl transition-all ${
-                              tenantPreference === pref
-                                ? 'border-primary bg-primary/10 text-primary font-medium'
-                                : 'border-gray-200 text-gray-700 hover:border-gray-300'
-                            }`}
-                          >
-                            {pref === 'Professionals' ? t.professionals : pref === 'Students' ? t.students : t.both}
-                          </button>
-                        ))}
-                      </div>
-                      <FieldError name="tenantPreference" />
-                    </div>
-
-                    <div className="space-y-4 pb-4 border-b border-gray-200">
-                      <h3 className="text-lg font-bold text-gray-800">{t.pgRulesTitle}</h3>
-                      <div className="space-y-2">
-                        {[
-                          ...pgRulesOptions,
-                          ...pgRules
-                            .filter((r) => !pgRulesOptions.some((opt) => opt.id === r))
-                            .map((r) => ({ id: r, label: r })),
-                        ].map((rule) => (
-                          <button
-                            key={rule.id}
-                            onClick={() => togglePGRule(rule.id)}
-                            className={`w-full flex items-center justify-between p-3 border-2 rounded-xl transition-all ${
-                              pgRules.includes(rule.id)
-                                ? "border-primary bg-primary/10"
-                                : "border-gray-200 bg-white hover:border-gray-300"
-                            }`}
-                          >
-                            <span className="text-gray-700 text-sm">{rule.label}</span>
-                            <div
-                              className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                                pgRules.includes(rule.id) ? "border-primary bg-primary" : "border-gray-300"
-                              }`}
-                            >
-                              {pgRules.includes(rule.id) && <Check className="w-3 h-3 text-white" />}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                      <div className="mt-3 space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">
-                          Add extra PG rules
-                        </label>
-                        <div className="flex flex-col sm:flex-row gap-2">
-                          <input
-                            type="text"
-                            placeholder="e.g. No loud music after 10 PM"
-                            className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors text-sm"
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                                const value = (e.target as HTMLInputElement).value.trim();
-                                if (!value) return;
-                                if (!pgRules.includes(value)) {
-                                  togglePGRule(value);
-                                }
-                                (e.target as HTMLInputElement).value = "";
-                              }
-                            }}
-                          />
-                          <button
-                            type="button"
-                            className="px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-dark transition-colors"
-                            onClick={(e) => {
-                              const input = e.currentTarget.parentElement?.querySelector(
-                                "input"
-                              ) as HTMLInputElement | null;
-                              if (!input) return;
-                              const value = input.value.trim();
-                              if (!value) return;
-                              if (!pgRules.includes(value)) {
-                                togglePGRule(value);
-                              }
-                              input.value = "";
-                            }}
-                          >
-                            Add
-                          </button>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 esm:grid-cols-2 gap-3 mt-4">
-                        <div>
-                          <label className="block text-gray-700 font-medium mb-2">{t.noticePeriodTitle}</label>
-                          <select 
-                            value={noticePeriod} 
-                            onChange={(e) => setNoticePeriod(e.target.value)}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none bg-white cursor-pointer"
-                          >
-                            <option value="">{t.noticePeriodPlaceholder}</option>
-                            <option value="1 Week">{t.oneWeek}</option>
-                            <option value="15 Days">{t.fifteenDays}</option>
-                            <option value="1 Month">{t.oneMonth}</option>
-                            <option value="2 Month">{t.twoMonths}</option>
-                            <option value="No Notice Period">{t.noNoticePeriod}</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-gray-700 font-medium mb-2">{t.gateClosingTitle}</label>
-                          <input 
-                            type="time" 
-                            value={gateClosingTime} 
-                            onChange={(e) => setGateClosingTime(e.target.value)} 
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4 pb-4 border-b border-gray-200">
-                      <h3 className="text-lg font-bold text-gray-800">{t.servicesTitle}</h3>
-                      <div className="space-y-2">
-                        {[
-                          ...servicesOptions,
-                          ...services
-                            .filter((s) => !servicesOptions.some((opt) => opt.id === s))
-                            .map((s) => ({ id: s, label: s })),
-                        ].map((service) => (
-                          <button
-                            key={service.id}
-                            onClick={() => toggleService(service.id)}
-                            className={`w-full flex items-center justify-between p-3 border-2 rounded-xl transition-all ${
-                              services.includes(service.id)
-                                ? "border-primary bg-primary/10"
-                                : "border-gray-200 bg-white hover:border-gray-300"
-                            }`}
-                          >
-                            <span className="text-gray-700 text-sm">{service.label}</span>
-                            <div
-                              className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                                services.includes(service.id) ? "border-primary bg-primary" : "border-gray-300"
-                              }`}
-                            >
-                              {services.includes(service.id) && <Check className="w-3 h-3 text-white" />}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                      <div className="mt-3 space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">
-                          Add extra services
-                        </label>
-                        <div className="flex flex-col sm:flex-row gap-2">
-                          <input
-                            type="text"
-                            placeholder="e.g. 24x7 Security, Cab service"
-                            className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors text-sm"
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                                const value = (e.target as HTMLInputElement).value.trim();
-                                if (!value) return;
-                                if (!services.includes(value)) {
-                                  toggleService(value);
-                                }
-                                (e.target as HTMLInputElement).value = "";
-                              }
-                            }}
-                          />
-                          <button
-                            type="button"
-                            className="px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-dark transition-colors"
-                            onClick={(e) => {
-                              const input = e.currentTarget.parentElement?.querySelector(
-                                "input"
-                              ) as HTMLInputElement | null;
-                              if (!input) return;
-                              const value = input.value.trim();
-                              if (!value) return;
-                              if (!services.includes(value)) {
-                                toggleService(value);
-                              }
-                              input.value = "";
-                            }}
-                          >
-                            Add
-                          </button>
-                        </div>
-                      </div>
-                      <div className="mt-4">
-                        <label className="flex items-center gap-3 cursor-pointer">
-                          <input 
-                            type="checkbox" 
-                            checked={foodProvided} 
-                            onChange={(e) => setFoodProvided(e.target.checked)} 
-                            className="w-5 h-5 text-primary focus:ring-primary rounded" 
-                          />
-                          <span className="text-gray-700 font-medium">{t.foodProvidedLabel}</span>
-                        </label>
-                      </div>
-                      {foodProvided && (
-                        <div className="space-y-3 mt-3 pl-8">
-                          <div>
-                            <label className="block text-gray-700 font-medium mb-2">Meals</label>
-                            <div className="grid grid-cols-1 esm:grid-cols-2 md:grid-cols-3 gap-2">
-                              {['Breakfast', 'Lunch', 'Dinner'].map((meal) => (
-                                <button
-                                  key={meal}
-                                  onClick={() => toggleMeal(meal)}
-                                  className={`py-2 px-3 border-2 rounded-xl transition-all text-sm ${
-                                    meals.includes(meal)
-                                      ? 'border-primary bg-primary/10 text-primary font-medium'
-                                      : 'border-gray-200 text-gray-700 hover:border-gray-300'
-                                  }`}
-                                >
-                                  {meal === 'Breakfast' ? t.breakfast : meal === 'Lunch' ? t.lunch : t.dinner}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                          <div>
-                            <label className="block text-gray-700 font-medium mb-2">{t.vegNonVegLabel}</label>
-                            <div className="grid grid-cols-1 esm:grid-cols-2 gap-2">
-                              {['Veg', 'Veg & Non Veg'].map((option) => (
-                                <button
-                                  key={option}
-                                  onClick={() => setVegNonVeg(option)}
-                                  className={`py-2 px-3 border-2 rounded-xl transition-all text-sm ${
-                                    vegNonVeg === option
-                                      ? 'border-primary bg-primary/10 text-primary font-medium'
-                                      : 'border-gray-200 text-gray-700 hover:border-gray-300'
-                                  }`}
-                                >
-                                  {option === 'Veg' ? t.veg : t.vegAndNonVeg}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                          <div>
-                            <label className="block text-gray-700 font-medium mb-2">{t.foodChargesLabel}</label>
-                            <select 
-                              value={foodCharges} 
-                              onChange={(e) => setFoodCharges(e.target.value)}
-                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none bg-white cursor-pointer"
-                            >
-                              <option value="">{t.selectCategoryPlaceholder}</option>
-                              <option value="Included in rent">{t.includedInRent}</option>
-                              <option value="Per meal Basis">{t.perMealBasis}</option>
-                              <option value="Fixed monthly Amount">{t.fixedMonthlyAmount}</option>
-                            </select>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-4 pb-4 border-b border-gray-200">
-                      <h3 className="text-lg font-bold text-gray-800">{t.commonAreaTitle}</h3>
-                      <div className="grid grid-cols-1 esm:grid-cols-2 gap-2">
-                        {[
-                          ...commonAmenitiesOptions,
-                          ...commonAmenities
-                            .filter((a) => !commonAmenitiesOptions.some((opt) => opt.id === a))
-                            .map((a) => ({ id: a, label: a })),
-                        ].map((amenity) => (
-                          <button
-                            key={amenity.id}
-                            onClick={() => toggleCommonAmenity(amenity.id)}
-                            className={`flex items-center justify-between p-3 border-2 rounded-xl transition-all ${
-                              commonAmenities.includes(amenity.id)
-                                ? "border-primary bg-primary/10"
-                                : "border-gray-200 bg-white hover:border-gray-300"
-                            }`}
-                          >
-                            <span className="text-sm text-gray-700">{amenity.label}</span>
-                            <div
-                              className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                                commonAmenities.includes(amenity.id) ? "border-primary bg-primary" : "border-gray-300"
-                              }`}
-                            >
-                              {commonAmenities.includes(amenity.id) && <Check className="w-3 h-3 text-white" />}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                      <div className="mt-3 space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">
-                          Add extra common area amenities
-                        </label>
-                        <div className="flex flex-col sm:flex-row gap-2">
-                          <input
-                            type="text"
-                            placeholder="e.g. Terrace garden, Library room"
-                            className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors text-sm"
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                                const value = (e.target as HTMLInputElement).value.trim();
-                                if (!value) return;
-                                if (!commonAmenities.includes(value)) {
-                                  toggleCommonAmenity(value);
-                                }
-                                (e.target as HTMLInputElement).value = "";
-                              }
-                            }}
-                          />
-                          <button
-                            type="button"
-                            className="px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-dark transition-colors"
-                            onClick={(e) => {
-                              const input = e.currentTarget.parentElement?.querySelector(
-                                "input"
-                              ) as HTMLInputElement | null;
-                              if (!input) return;
-                              const value = input.value.trim();
-                              if (!value) return;
-                              if (!commonAmenities.includes(value)) {
-                                toggleCommonAmenity(value);
-                              }
-                              input.value = "";
-                            }}
-                          >
-                            Add
-                          </button>
-                        </div>
-                      </div>
-                      <div className="mt-4">
-                        <label className="flex items-center gap-3 cursor-pointer">
-                          <input 
-                            type="checkbox" 
-                            checked={parkingAvailable} 
-                            onChange={(e) => setParkingAvailable(e.target.checked)} 
-                            className="w-5 h-5 text-primary focus:ring-primary rounded" 
-                          />
-                          <span className="text-gray-700 font-medium">{t.parkingAvailability}</span>
-                        </label>
-                      </div>
-                      {parkingAvailable && (
-                        <div className="pl-8">
-                          <div className="grid grid-cols-1 esm:grid-cols-2 gap-2">
-                            {['2-Wheeler', 'Car Parking'].map((option) => (
-                              <button
-                                key={option}
-                                onClick={() => setParkingType(option)}
-                                className={`py-2 px-3 border-2 rounded-xl transition-all text-sm ${
-                                  parkingType === option
-                                    ? 'border-primary bg-primary/10 text-primary font-medium'
-                                    : 'border-gray-200 text-gray-700 hover:border-gray-300'
-                                }`}
-                              >
-                                {option === '2-Wheeler' ? t.twoWheeler : t.carParking}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </>
+                  <PGStep3Preferences
+                    t={t}
+                    fieldErrors={fieldErrors}
+                    FieldError={FieldError}
+                    preferredGender={preferredGender}
+                    setPreferredGender={setPreferredGender}
+                    tenantPreference={tenantPreference}
+                    setTenantPreference={setTenantPreference}
+                    pgRules={pgRules}
+                    togglePGRule={togglePGRule}
+                    noticePeriod={noticePeriod}
+                    setNoticePeriod={setNoticePeriod}
+                    gateClosingTime={gateClosingTime}
+                    setGateClosingTime={setGateClosingTime}
+                    services={services}
+                    toggleService={toggleService}
+                    foodProvided={foodProvided}
+                    setFoodProvided={setFoodProvided}
+                    meals={meals}
+                    toggleMeal={toggleMeal}
+                    vegNonVeg={vegNonVeg}
+                    setVegNonVeg={setVegNonVeg}
+                    foodCharges={foodCharges}
+                    setFoodCharges={setFoodCharges}
+                    commonAmenities={commonAmenities}
+                    toggleCommonAmenity={toggleCommonAmenity}
+                    parkingAvailable={parkingAvailable}
+                    setParkingAvailable={setParkingAvailable}
+                    parkingType={parkingType}
+                    setParkingType={setParkingType}
+                  />
                 )}
 
                 {/* Tenant Pricing & Preferences */}
                 {propertyType === "Tenant" && (
-                  <>
-                    <div className="space-y-4 pb-4 border-b border-gray-200">
-                      <h3 className="text-lg font-bold text-gray-800">{t.priceExpectTitle}</h3>
-                      <div data-field="monthlyRentAmount">
-                        <label className="block text-gray-700 font-medium mb-2">
-                          {t.monthlyRentLabel}<span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-lg">{currencySymbol}</span>
-                          <input 
-                            type="text" 
-                            value={monthlyRentAmount} 
-                            onChange={(e) => setMonthlyRentAmount(e.target.value)} 
-                            placeholder={t.enterMonthlyRent} 
-                            className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors text-lg ${fieldErrors.monthlyRentAmount ? 'border-red-400' : 'border-gray-200'}`}
-                          />
-                        </div>
-                        <FieldError name="monthlyRentAmount" />
-                      </div>
-                      <div>
-                        <label className="block text-gray-700 font-medium mb-2">{t.securityAmountOptional}</label>
-                        <div className="relative">
-                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">{currencySymbol}</span>
-                          <input 
-                            type="text" 
-                            value={securityAmount} 
-                            onChange={(e) => setSecurityAmount(e.target.value)} 
-                            placeholder={t.enterSecurityAmount} 
-                            className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-gray-700 font-medium mb-2">{t.maintenanceChargesOptional}</label>
-                        <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
-                          <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">{currencySymbol}</span>
-                            <input 
-                              type="text" 
-                              value={maintenanceCharges} 
-                              onChange={(e) => setMaintenanceCharges(e.target.value)} 
-                              placeholder={t.enterSecurityAmount} 
-                              className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
-                            />
-                          </div>
-                          <select 
-                            value={maintenanceType} 
-                            onChange={(e) => setMaintenanceType(e.target.value)}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none bg-white cursor-pointer"
-                          >
-                            <option value="">{t.selectMaintenanceType}</option>
-                            <option value="Monthly">Monthly</option>
-                            <option value="Yearly">Yearly</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4 pb-4 border-b border-gray-200">
-                      <h3 className="text-lg font-bold text-gray-800">{t.statusOfProperty}</h3>
-                      <div>
-                        <label className="block text-gray-700 font-medium mb-3">{t.availableFrom}</label>
-                        <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
-                          {['Selected Date', 'Immediately'].map((option) => (
-                            <button
-                              key={option}
-                              onClick={() => setAvailableFrom(option)}
-                              className={`py-3 px-4 border-2 rounded-xl transition-all ${
-                                availableFrom === option
-                                  ? 'border-primary bg-primary/10 text-primary font-medium'
-                                  : 'border-gray-200 text-gray-700 hover:border-gray-300'
-                              }`}
-                            >
-                              {option === 'Selected Date' ? t.selectedDate : t.immediately}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      {availableFrom === 'Selected Date' && (
-                        <div>
-                          <label className="block text-gray-700 font-medium mb-2">{t.availableDate}</label>
-                          <input 
-                            type="date" 
-                            value={availableDate} 
-                            onChange={(e) => setAvailableDate(e.target.value)} 
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-4 pb-4 border-b border-gray-200">
-                      <h3 className="text-lg font-bold text-gray-800">{t.additionalDetailsTitle}</h3>
-                      <div>
-                        <label className="block text-gray-700 font-medium mb-2">{t.additionalRooms}</label>
-                        <div className="space-y-2">
-                          {[
-                            { id: 'poojaRoom', label: t.poojaRoom },
-                            { id: 'servantRoom', label: t.servantRoom },
-                            { id: 'store', label: t.store },
-                            { id: 'study', label: t.study }
-                          ].map((room) => (
-                            <button
-                              key={room.id}
-                              onClick={() => toggleAdditionalRoom(room.id)}
-                              className={`w-full flex items-center justify-between p-3 border-2 rounded-xl transition-all ${
-                                additionalRooms.includes(room.id)
-                                  ? 'border-primary bg-primary/10'
-                                  : 'border-gray-200 bg-white hover:border-gray-300'
-                              }`}
-                            >
-                              <span className="text-gray-700">{room.label}</span>
-                              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                                additionalRooms.includes(room.id) ? 'border-primary bg-primary' : 'border-gray-300'
-                              }`}>
-                                {additionalRooms.includes(room.id) && <Check className="w-3 h-3 text-white" />}
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-gray-700 font-medium mb-2">{t.overlookingLabel}</label>
-                        <div className="space-y-2">
-                          {[
-                            { id: 'gardenPark', label: t.gardenPark },
-                            { id: 'mainRoad', label: t.mainRoad },
-                            { id: 'pool', label: t.pool }
-                          ].map((item) => (
-                            <button
-                              key={item.id}
-                              onClick={() => toggleOverlooking(item.id)}
-                              className={`w-full flex items-center justify-between p-3 border-2 rounded-xl transition-all ${
-                                overlooking.includes(item.id)
-                                  ? 'border-primary bg-primary/10'
-                                  : 'border-gray-200 bg-white hover:border-gray-300'
-                              }`}
-                            >
-                              <span className="text-gray-700">{item.label}</span>
-                              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                                overlooking.includes(item.id) ? 'border-primary bg-primary' : 'border-gray-300'
-                              }`}>
-                                {overlooking.includes(item.id) && <Check className="w-3 h-3 text-white" />}
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-gray-700 font-medium mb-2">{t.facingLabel}</label>
-                        <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-4 gap-2">
-                          {['East', 'North', 'North-East', 'North-West', 'South', 'South-East', 'South-West', 'West'].map((direction) => (
-                            <button
-                              key={direction}
-                              onClick={() => setFacing(direction)}
-                              className={`py-2 px-2 border-2 rounded-xl transition-all text-xs ${
-                                facing === direction
-                                  ? 'border-primary bg-primary/10 text-primary font-medium'
-                                  : 'border-gray-200 text-gray-700 hover:border-gray-300'
-                              }`}
-                            >
-                              {direction}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-gray-700 font-medium mb-2">{t.societyAmenitiesLabel}</label>
-                        <div className="grid grid-cols-1 esm:grid-cols-2 md:grid-cols-2 gap-2">
-                          {[
-                            'Maintenance Staff', 'Air Conditioned', 'Outdoor Tennis Courts', 'Banquet Hall',
-                            'Park', 'Bar/Lounge', 'Piped Gas', 'Cafeteria/Food Court', 'Power Back Up',
-                            'Club House', 'Private Terrace/Garden', 'Conference Room', 'RO Water System',
-                            'DTH Television Facility', 'Rain Water Harvesting', 'Gymnasium', 'Reserved Parking',
-                            'Intercom Facility', 'Security', 'Internet/Wi-Fi Connectivity', 'Service/Good Lift',
-                            'Jogging and Strolling Track', 'Swimming Pool', 'Laundry Service', 'Vaastu Compliant',
-                            'Lift', 'Waste Disposal'
-                          ].map((amenity) => (
-                            <button
-                              key={amenity}
-                              onClick={() => toggleSocietyAmenity(amenity)}
-                              className={`flex items-center justify-between p-2 border-2 rounded-xl transition-all text-xs ${
-                                societyAmenities.includes(amenity)
-                                  ? 'border-primary bg-primary/10'
-                                  : 'border-gray-200 bg-white hover:border-gray-300'
-                              }`}
-                            >
-                              <span className="text-gray-700 text-left">{amenity}</span>
-                              <div className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 ml-1 ${
-                                societyAmenities.includes(amenity) ? 'bg-primary' : 'border-2 border-gray-300'
-                              }`}>
-                                {societyAmenities.includes(amenity) && <Check className="w-2.5 h-2.5 text-white" />}
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-gray-700 font-medium mb-2">{t.tenantsYouPrefer}</label>
-                        <div className="space-y-2">
-                          {[
-                            { id: 'coupleFamily', label: t.coupleFamily },
-                            { id: 'vegetarians', label: t.vegetarians },
-                            { id: 'withCompanyLease', label: t.withCompanyLease },
-                            { id: 'withoutPets', label: t.withoutPets }
-                          ].map((tenant) => (
-                            <button
-                              key={tenant.id}
-                              onClick={() => toggleTenantPrefer(tenant.id)}
-                              className={`w-full flex items-center justify-between p-3 border-2 rounded-xl transition-all ${
-                                tenantsPrefer.includes(tenant.id)
-                                  ? 'border-primary bg-primary/10'
-                                  : 'border-gray-200 bg-white hover:border-gray-300'
-                              }`}
-                            >
-                              <span className="text-gray-700">{tenant.label}</span>
-                              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                                tenantsPrefer.includes(tenant.id) ? 'border-primary bg-primary' : 'border-gray-300'
-                              }`}>
-                                {tenantsPrefer.includes(tenant.id) && <Check className="w-3 h-3 text-white" />}
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-gray-700 font-medium mb-2">{t.localityDescriptionLabel}</label>
-                        <textarea 
-                          value={localityDescription} 
-                          onChange={(e) => setLocalityDescription(e.target.value)} 
-                          placeholder={t.localityDescriptionPlaceholder} 
-                          rows={4}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors resize-none" 
-                        />
-                      </div>
-                    </div>
-                  </>
+                  <TenantStep3Pricing
+                    t={t}
+                    currencySymbol={currencySymbol}
+                    fieldErrors={fieldErrors}
+                    FieldError={FieldError}
+                    monthlyRentAmount={monthlyRentAmount}
+                    setMonthlyRentAmount={setMonthlyRentAmount}
+                    securityAmount={securityAmount}
+                    setSecurityAmount={setSecurityAmount}
+                    maintenanceCharges={maintenanceCharges}
+                    setMaintenanceCharges={setMaintenanceCharges}
+                    maintenanceType={maintenanceType}
+                    setMaintenanceType={setMaintenanceType}
+                    availableFrom={availableFrom}
+                    setAvailableFrom={setAvailableFrom}
+                    availableDate={availableDate}
+                    setAvailableDate={setAvailableDate}
+                    additionalRooms={additionalRooms}
+                    toggleAdditionalRoom={toggleAdditionalRoom}
+                    overlooking={overlooking}
+                    toggleOverlooking={toggleOverlooking}
+                    facing={facing}
+                    setFacing={setFacing}
+                    societyAmenities={societyAmenities}
+                    toggleSocietyAmenity={toggleSocietyAmenity}
+                    tenantsPrefer={tenantsPrefer}
+                    toggleTenantPrefer={toggleTenantPrefer}
+                    localityDescription={localityDescription}
+                    setLocalityDescription={setLocalityDescription}
+                  />
                 )}
 
                 {error && <p className="text-red-500 text-sm">{error}</p>}
@@ -2718,512 +1809,61 @@ export default function PostPropertyPage() {
                   <p className="text-xs text-gray-500">{t.uploadInfo}</p>
                   
                   {propertyType === "PG" ? (
-                    // PG Property Image Upload
-                    <div className="space-y-6">
-                      {/* Rooms Images */}
-                      <div data-field="roomImages" className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h4 className="text-md font-semibold text-gray-800">{t.roomsImages}</h4>
-                            <p className="text-xs text-gray-500">{t.roomsImagesSubtitle}</p>
-                          </div>
-                          <button                            type="button"
-                            onClick={addRoomImage}
-                            className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors"
-                          >
-                            + {t.addRoom}
-                          </button>
-                        </div>
-                        <FieldError name="roomImages" />
-                        
-                        <div className="space-y-3">
-                          {roomImages.map((room) => (
-                            <div key={room.id} className="bg-gray-50 rounded-xl p-4 space-y-3">
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                {/* Room Name */}
-                                <div>
-                                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                                    {t.roomName}
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={room.name}
-                                    onChange={(e) => updateRoomImage(room.id, 'name', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-                                    placeholder="e.g., Room 1"
-                                  />
-                                </div>
-                                
-                                {/* Room Status */}
-                                <div>
-                                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                                    {t.roomStatus}
-                                  </label>
-                                  <select
-                                    value={room.status}
-                                    onChange={(e) => updateRoomImage(room.id, 'status', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-                                  >
-                                    <option value="vacant">{t.vacant}</option>
-                                    <option value="occupied">{t.occupied}</option>
-                                  </select>
-                                </div>
-                                
-                                {/* Upload Image */}
-                                <div>
-                                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                                    {t.uploadRoomImage}
-                                  </label>
-                                  <div className="flex gap-2">
-                                    <input
-                                      type="file"
-                                      id={`room-${room.id}`}
-                                      accept="image/*"
-                                      onChange={(e) => handleRoomImageUpload(room.id, e.target.files?.[0] || null)}
-                                      className="hidden"
-                                    />
-                                    <label
-                                      htmlFor={`room-${room.id}`}
-                                      className={`flex-1 px-3 py-2 text-center text-sm font-medium rounded-lg cursor-pointer transition-colors ${
-                                        room.file 
-                                          ? 'bg-green-100 text-green-700 border border-green-300' 
-                                          : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                                      }`}
-                                    >
-                                      {room.file ? '✓ Uploaded' : 'Choose File'}
-                                    </label>
-                                    <button
-                                      type="button"
-                                      onClick={() => removeRoomImage(room.id)}
-                                      className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
-                                    >
-                                      <X className="w-4 h-4" />
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              {/* Preview Image */}
-                              {room.file && (
-                                <div className="relative h-32 rounded-lg overflow-hidden">
-                                  <img
-                                    src={URL.createObjectURL(room.file)}
-                                    alt={room.name}
-                                    className="w-full h-full object-cover"
-                                  />
-                                  <div className={`absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-semibold ${
-                                    room.status === 'vacant' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
-                                  }`}>
-                                    {room.status === 'vacant' ? t.vacant : t.occupied}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                          
-                          {roomImages.length === 0 && (
-                            <div className="text-center py-8 text-gray-500 text-sm">
-                              No rooms added yet. Click "Add Room" to start.
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* Kitchen Images */}
-                      <div className="space-y-3">
-                        <h4 className="text-md font-semibold text-gray-800">{t.kitchenImages}</h4>
-                        <div className="relative">
-                          <input
-                            type="file"
-                            id="kitchen-images"
-                            accept="image/*"
-                            multiple
-                            onChange={(e) => handleKitchenImageUpload(e.target.files)}
-                            className="hidden"
-                          />
-                          <label
-                            htmlFor="kitchen-images"
-                            className="flex flex-col items-center justify-center h-32 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 hover:border-primary hover:bg-primary/5 cursor-pointer transition-all"
-                          >
-                            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-2">
-                              <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                              </svg>
-                            </div>
-                            <span className="text-sm font-medium text-gray-700">{t.uploadImages}</span>
-                            {kitchenImages.length > 0 && (
-                              <span className="text-xs text-green-600 mt-1">{kitchenImages.length} {t.imagesUploaded}</span>
-                            )}
-                          </label>
-                        </div>
-                        {kitchenImages.length > 0 && (
-                          <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-3 gap-2">
-                            {kitchenImages.map((file, index) => (
-                              <div key={index} className="relative h-24 rounded-lg overflow-hidden group">
-                                <img src={URL.createObjectURL(file)} alt={`Kitchen ${index + 1}`} className="w-full h-full object-cover" />
-                                <button
-                                  type="button"
-                                  onClick={() => setKitchenImages(prev => prev.filter((_, i) => i !== index))}
-                                  className="absolute top-1 right-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Washroom Images */}
-                      <div className="space-y-3">
-                        <h4 className="text-md font-semibold text-gray-800">{t.washroomImages}</h4>
-                        <div className="relative">
-                          <input
-                            type="file"
-                            id="washroom-images"
-                            accept="image/*"
-                            multiple
-                            onChange={(e) => handleWashroomImageUpload(e.target.files)}
-                            className="hidden"
-                          />
-                          <label
-                            htmlFor="washroom-images"
-                            className="flex flex-col items-center justify-center h-32 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 hover:border-primary hover:bg-primary/5 cursor-pointer transition-all"
-                          >
-                            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-2">
-                              <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                              </svg>
-                            </div>
-                            <span className="text-sm font-medium text-gray-700">{t.uploadImages}</span>
-                            {washroomImages.length > 0 && (
-                              <span className="text-xs text-green-600 mt-1">{washroomImages.length} {t.imagesUploaded}</span>
-                            )}
-                          </label>
-                        </div>
-                        {washroomImages.length > 0 && (
-                          <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-3 gap-2">
-                            {washroomImages.map((file, index) => (
-                              <div key={index} className="relative h-24 rounded-lg overflow-hidden group">
-                                <img src={URL.createObjectURL(file)} alt={`Washroom ${index + 1}`} className="w-full h-full object-cover" />
-                                <button
-                                  type="button"
-                                  onClick={() => setWashroomImages(prev => prev.filter((_, i) => i !== index))}
-                                  className="absolute top-1 right-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Common Area Images */}
-                      <div className="space-y-3">
-                        <h4 className="text-md font-semibold text-gray-800">{t.commonAreaImages}</h4>
-                        <div className="relative">
-                          <input
-                            type="file"
-                            id="common-area-images"
-                            accept="image/*"
-                            multiple
-                            onChange={(e) => handleCommonAreaImageUpload(e.target.files)}
-                            className="hidden"
-                          />
-                          <label
-                            htmlFor="common-area-images"
-                            className="flex flex-col items-center justify-center h-32 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 hover:border-primary hover:bg-primary/5 cursor-pointer transition-all"
-                          >
-                            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-2">
-                              <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                              </svg>
-                            </div>
-                            <span className="text-sm font-medium text-gray-700">{t.uploadImages}</span>
-                            {commonAreaImages.length > 0 && (
-                              <span className="text-xs text-green-600 mt-1">{commonAreaImages.length} {t.imagesUploaded}</span>
-                            )}
-                          </label>
-                        </div>
-                        {commonAreaImages.length > 0 && (
-                          <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-3 gap-2">
-                            {commonAreaImages.map((file, index) => (
-                              <div key={index} className="relative h-24 rounded-lg overflow-hidden group">
-                                <img src={URL.createObjectURL(file)} alt={`Common Area ${index + 1}`} className="w-full h-full object-cover" />
-                                <button
-                                  type="button"
-                                  onClick={() => setCommonAreaImages(prev => prev.filter((_, i) => i !== index))}
-                                  className="absolute top-1 right-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    <PGStep4Images
+                      t={t}
+                      FieldError={FieldError}
+                      roomImages={roomImages}
+                      addRoomImage={addRoomImage}
+                      removeRoomImage={removeRoomImage}
+                      updateRoomImage={updateRoomImage}
+                      handleRoomImageUpload={handleRoomImageUpload}
+                      kitchenImages={kitchenImages}
+                      setKitchenImages={setKitchenImages}
+                      handleKitchenImageUpload={handleKitchenImageUpload}
+                      washroomImages={washroomImages}
+                      setWashroomImages={setWashroomImages}
+                      handleWashroomImageUpload={handleWashroomImageUpload}
+                      commonAreaImages={commonAreaImages}
+                      setCommonAreaImages={setCommonAreaImages}
+                      handleCommonAreaImageUpload={handleCommonAreaImageUpload}
+                    />
                   ) : (
-                    // Tenant Property Image Upload - New Structure
-                    <div className="space-y-6">
-                      {/* Room Images */}
-                      <div data-field="roomImages" className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h4 className="text-md font-semibold text-gray-800">{t.tenantRoomsImages}</h4>
-                            <p className="text-xs text-gray-500">{t.tenantRoomsImagesSubtitle}</p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={addTenantRoomImage}
-                            className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors"
-                          >
-                            + {t.addRoom}
-                          </button>
-                        </div>
-                        <FieldError name="roomImages" />
-                        
-                        <div className="space-y-3">
-                          {tenantRoomImages.map((room) => (
-                            <div key={room.id} className="bg-gray-50 rounded-xl p-4 space-y-3">
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {/* Room Name */}
-                                <div>
-                                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                                    {t.roomName}
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={room.name}
-                                    onChange={(e) => updateTenantRoomImage(room.id, 'name', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-                                    placeholder="e.g., Master Bedroom, Living Room"
-                                  />
-                                </div>
-                                
-                                {/* Upload Image */}
-                                <div>
-                                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                                    {t.uploadRoomImage}
-                                  </label>
-                                  <div className="flex gap-2">
-                                    <input
-                                      type="file"
-                                      id={`tenant-room-${room.id}`}
-                                      accept="image/*"
-                                      onChange={(e) => handleTenantRoomImageUpload(room.id, e.target.files?.[0] || null)}
-                                      className="hidden"
-                                    />
-                                    <label
-                                      htmlFor={`tenant-room-${room.id}`}
-                                      className={`flex-1 px-3 py-2 text-center text-sm font-medium rounded-lg cursor-pointer transition-colors ${
-                                        room.file 
-                                          ? 'bg-green-100 text-green-700 border border-green-300' 
-                                          : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                                      }`}
-                                    >
-                                      {room.file ? '✓ Uploaded' : 'Choose File'}
-                                    </label>
-                                    <button
-                                      type="button"
-                                      onClick={() => removeTenantRoomImage(room.id)}
-                                      className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
-                                    >
-                                      <X className="w-4 h-4" />
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              {/* Preview Image */}
-                              {room.file && (
-                                <div className="relative h-32 rounded-lg overflow-hidden">
-                                  <img
-                                    src={URL.createObjectURL(room.file)}
-                                    alt={room.name}
-                                    className="w-full h-full object-cover"
-                                  />
-                                  <div className="absolute bottom-2 left-2 px-3 py-1 rounded-lg bg-primary/90 text-white text-xs font-semibold">
-                                    {room.name}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                          
-                          {tenantRoomImages.length === 0 && (
-                            <div className="text-center py-8 text-gray-500 text-sm">
-                              No rooms added yet. Click "Add Room" to start.
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* Kitchen Images */}
-                      <div className="space-y-3">
-                        <h4 className="text-md font-semibold text-gray-800">{t.kitchenImages}</h4>
-                        <div className="relative">
-                          <input
-                            type="file"
-                            id="tenant-kitchen-images"
-                            accept="image/*"
-                            multiple
-                            onChange={(e) => handleTenantKitchenImageUpload(e.target.files)}
-                            className="hidden"
-                          />
-                          <label
-                            htmlFor="tenant-kitchen-images"
-                            className="flex flex-col items-center justify-center h-32 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 hover:border-primary hover:bg-primary/5 cursor-pointer transition-all"
-                          >
-                            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-2">
-                              <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                              </svg>
-                            </div>
-                            <span className="text-sm font-medium text-gray-700">{t.uploadImages}</span>
-                            {tenantKitchenImages.length > 0 && (
-                              <span className="text-xs text-green-600 mt-1">{tenantKitchenImages.length} {t.imagesUploaded}</span>
-                            )}
-                          </label>
-                        </div>
-                        {tenantKitchenImages.length > 0 && (
-                          <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-3 gap-2">
-                            {tenantKitchenImages.map((file, index) => (
-                              <div key={index} className="relative h-24 rounded-lg overflow-hidden group">
-                                <img src={URL.createObjectURL(file)} alt={`Kitchen ${index + 1}`} className="w-full h-full object-cover" />
-                                <button
-                                  type="button"
-                                  onClick={() => setTenantKitchenImages(prev => prev.filter((_, i) => i !== index))}
-                                  className="absolute top-1 right-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Washroom Images */}
-                      <div className="space-y-3">
-                        <h4 className="text-md font-semibold text-gray-800">{t.washroomImages}</h4>
-                        <div className="relative">
-                          <input
-                            type="file"
-                            id="tenant-washroom-images"
-                            accept="image/*"
-                            multiple
-                            onChange={(e) => handleTenantWashroomImageUpload(e.target.files)}
-                            className="hidden"
-                          />
-                          <label
-                            htmlFor="tenant-washroom-images"
-                            className="flex flex-col items-center justify-center h-32 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 hover:border-primary hover:bg-primary/5 cursor-pointer transition-all"
-                          >
-                            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-2">
-                              <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                              </svg>
-                            </div>
-                            <span className="text-sm font-medium text-gray-700">{t.uploadImages}</span>
-                            {tenantWashroomImages.length > 0 && (
-                              <span className="text-xs text-green-600 mt-1">{tenantWashroomImages.length} {t.imagesUploaded}</span>
-                            )}
-                          </label>
-                        </div>
-                        {tenantWashroomImages.length > 0 && (
-                          <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-3 gap-2">
-                            {tenantWashroomImages.map((file, index) => (
-                              <div key={index} className="relative h-24 rounded-lg overflow-hidden group">
-                                <img src={URL.createObjectURL(file)} alt={`Washroom ${index + 1}`} className="w-full h-full object-cover" />
-                                <button
-                                  type="button"
-                                  onClick={() => setTenantWashroomImages(prev => prev.filter((_, i) => i !== index))}
-                                  className="absolute top-1 right-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Common Area Images */}
-                      <div className="space-y-3">
-                        <h4 className="text-md font-semibold text-gray-800">{t.commonAreaImages}</h4>
-                        <div className="relative">
-                          <input
-                            type="file"
-                            id="tenant-common-area-images"
-                            accept="image/*"
-                            multiple
-                            onChange={(e) => handleTenantCommonAreaImageUpload(e.target.files)}
-                            className="hidden"
-                          />
-                          <label
-                            htmlFor="tenant-common-area-images"
-                            className="flex flex-col items-center justify-center h-32 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 hover:border-primary hover:bg-primary/5 cursor-pointer transition-all"
-                          >
-                            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-2">
-                              <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                              </svg>
-                            </div>
-                            <span className="text-sm font-medium text-gray-700">{t.uploadImages}</span>
-                            {tenantCommonAreaImages.length > 0 && (
-                              <span className="text-xs text-green-600 mt-1">{tenantCommonAreaImages.length} {t.imagesUploaded}</span>
-                            )}
-                          </label>
-                        </div>
-                        {tenantCommonAreaImages.length > 0 && (
-                          <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-3 gap-2">
-                            {tenantCommonAreaImages.map((file, index) => (
-                              <div key={index} className="relative h-24 rounded-lg overflow-hidden group">
-                                <img src={URL.createObjectURL(file)} alt={`Common Area ${index + 1}`} className="w-full h-full object-cover" />
-                                <button
-                                  type="button"
-                                  onClick={() => setTenantCommonAreaImages(prev => prev.filter((_, i) => i !== index))}
-                                  className="absolute top-1 right-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* 360° Virtual Tour */}
-                      <div className="space-y-3">
-                        <div>
-                          <h4 className="text-md font-semibold text-gray-800">{t.view360Section}</h4>
-                          <p className="text-xs text-gray-500">{t.view360Subtitle}</p>
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-2">
-                            {t.view360Label}
-                          </label>
-                          <input
-                            type="url"
-                            value={view360Url}
-                            onChange={(e) => setView360Url(e.target.value)}
-                            placeholder={t.view360Placeholder}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors"
-                          />
-                          {view360Url && (
-                            <div className="mt-2 flex items-center gap-2 text-xs text-green-600">
-                              <Check className="w-4 h-4" />
-                              <span>360° view link added</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                    <TenantStep4Images
+                      t={t}
+                      FieldError={FieldError}
+                      tenantRoomImages={tenantRoomImages}
+                      addTenantRoomImage={addTenantRoomImage}
+                      removeTenantRoomImage={removeTenantRoomImage}
+                      updateTenantRoomImage={updateTenantRoomImage}
+                      handleTenantRoomImageUpload={handleTenantRoomImageUpload}
+                      tenantKitchenImages={tenantKitchenImages}
+                      setTenantKitchenImages={setTenantKitchenImages}
+                      handleTenantKitchenImageUpload={handleTenantKitchenImageUpload}
+                      tenantWashroomImages={tenantWashroomImages}
+                      setTenantWashroomImages={setTenantWashroomImages}
+                      handleTenantWashroomImageUpload={handleTenantWashroomImageUpload}
+                      tenantCommonAreaImages={tenantCommonAreaImages}
+                      setTenantCommonAreaImages={setTenantCommonAreaImages}
+                      handleTenantCommonAreaImageUpload={handleTenantCommonAreaImageUpload}
+                    />
                   )}
                 </div>
 
+                {/* 360° Virtual Tour */}
+                <div className="space-y-4 pb-4 border-b border-gray-200">
+                  <h3 className="text-lg font-bold text-gray-800">{t.view360Section}</h3>
+                  <p className="text-sm text-gray-600">{t.view360Subtitle}</p>
+                  <div>
+                    <label className="block text-gray-700 font-medium mb-2">{t.view360Label}</label>
+                    <input
+                      type="url"
+                      value={view360Url}
+                      onChange={(e) => setView360Url(e.target.value)}
+                      placeholder={t.view360Placeholder}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors"
+                    />
+                  </div>
+                </div>
                 {error && <p className="text-red-500 text-sm">{error}</p>}
                 <button 
                   onClick={handleContinueStep4}
