@@ -24,9 +24,11 @@ import {
 
 export default function TenantDashboard() {
   const { language, t } = useLanguage();
-  const { user, isLoading, isAuthenticated } = useAuth();
+  const { user, isLoading, isAuthenticated, token } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("saved");
+  const [savedProperties, setSavedProperties] = useState<any[]>([]);
+  const [favLoading, setFavLoading] = useState(false);
   const currencySymbol = t("currency.symbol");
 
   // Authentication check
@@ -51,6 +53,26 @@ export default function TenantDashboard() {
     }
   }, [user, isLoading, isAuthenticated, router]);
 
+  // Fetch favorites when on saved tab
+  useEffect(() => {
+    if (!isAuthenticated || !token || user?.role !== 'renter') return;
+    const fetchFavorites = async () => {
+      setFavLoading(true);
+      try {
+        const res = await fetch('/api/auth/favorites', {
+          headers: token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {},
+        });
+        const data = await res.json();
+        if (data.success) setSavedProperties(data.favorites);
+      } catch {
+        // silently fail
+      } finally {
+        setFavLoading(false);
+      }
+    };
+    fetchFavorites();
+  }, [isAuthenticated, token, user?.role]);
+
   // Show loading while checking authentication
   if (isLoading) {
     return (
@@ -68,40 +90,27 @@ export default function TenantDashboard() {
     return null;
   }
 
-  // Mock data - in real app, this would come from API
-  const savedProperties = [
-    {
-      id: 1,
-      name: "Sunshine PG",
-      type: "PG",
-      image: "/owner.png",
-      rent: 8000,
-      location: "Ahmedabad, Gujarat",
-      address: "123 Main Street, Satellite Area",
-      amenities: ["WiFi", "Meals", "Laundry", "AC"],
-    },
-    {
-      id: 2,
-      name: "Green Valley Apartment",
-      type: "Tenant",
-      image: "/owner.png",
-      rent: 25000,
-      location: "Mumbai, Maharashtra",
-      address: "456 Park Avenue, Andheri West",
-      amenities: ["WiFi", "Parking", "Gym", "Security"],
-    },
-    {
-      id: 3,
-      name: "Comfort PG",
-      type: "PG",
-      image: "/owner.png",
-      rent: 7500,
-      location: "Pune, Maharashtra",
-      address: "789 College Road, Kothrud",
-      amenities: ["WiFi", "Meals", "AC", "Laundry"],
-    },
-  ];
+  const handleRemoveFavorite = async (propertyId: string) => {
+    if (!token) return;
+    try {
+      const res = await fetch('/api/auth/favorites', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ propertyId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSavedProperties(prev => prev.filter((p: any) => p._id !== propertyId));
+      }
+    } catch {
+      // silently fail
+    }
+  };
 
+  // Mock data - in real app, this would come from API
   const myRequests = [
     {
       id: 1,
@@ -391,51 +400,55 @@ export default function TenantDashboard() {
             {activeTab === "saved" && (
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">{tc.savedProperties}</h2>
-                {savedProperties.length > 0 ? (
+                {favLoading ? (
                   <div className="grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {savedProperties.map((property) => (
-                      <div key={property.id} className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="bg-white rounded-2xl shadow-md h-72 animate-pulse" />
+                    ))}
+                  </div>
+                ) : savedProperties.length > 0 ? (
+                  <div className="grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {savedProperties.map((property: any) => (
+                      <div key={property._id} className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                         <div className="relative h-48">
                           <Image
-                            src={property.image}
-                            alt={property.name}
+                            src={property.images?.[0] || "/owner.png"}
+                            alt={property.title || property.societyName}
                             fill
                             className="object-cover"
                           />
                           <span className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${
-                            property.type === "PG" ? "bg-blue-500 text-white" : "bg-green-500 text-white"
+                            property.propertyType === "PG" ? "bg-blue-500 text-white" : "bg-green-500 text-white"
                           }`}>
-                            {property.type}
+                            {property.propertyType}
                           </span>
                         </div>
                         <div className="p-6">
-                          <h3 className="text-xl font-bold text-gray-900 mb-2">{property.name}</h3>
+                          <h3 className="text-xl font-bold text-gray-900 mb-2">
+                            {property.societyName || property.title}
+                          </h3>
                           <div className="flex items-center gap-2 text-gray-600 mb-3">
                             <MapPin className="w-4 h-4" />
-                            <span className="text-sm">{property.location}</span>
+                            <span className="text-sm">{[property.areaName, property.location, property.state].filter(Boolean).join(", ")}</span>
                           </div>
                           <div className="flex items-center gap-2 mb-4">
                             <span className="text-2xl font-bold text-primary">
-                              {currencySymbol} {property.rent.toLocaleString()}
+                              {currencySymbol} {property.price?.toLocaleString()}
                             </span>
                             <span className="text-gray-600 text-sm">/month</span>
                           </div>
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            {property.amenities.slice(0, 3).map((amenity, index) => (
-                              <span key={index} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs">
-                                {amenity}
-                              </span>
-                            ))}
-                          </div>
                           <div className="flex flex-col sm:flex-row gap-2">
                             <Link
-                              href={`/property/${property.id}`}
+                              href={`/property/${property._id}`}
                               className="w-full sm:flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
                             >
                               <Eye className="w-4 h-4" />
                               {tc.viewDetails}
                             </Link>
-                            <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition-colors">
+                            <button
+                              onClick={() => handleRemoveFavorite(property._id)}
+                              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition-colors"
+                            >
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>

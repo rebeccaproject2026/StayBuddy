@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Heart, ShieldCheck } from "lucide-react";
 import Image from "next/image";
@@ -24,6 +24,8 @@ interface PropertyCardProps {
   verified?: boolean;
   rating?: number;
   reviewsCount?: number;
+  isFavorite?: boolean;
+  onToggleFavorite?: (id: string, newState: boolean) => void;
 }
 
 export default function PropertyCard({
@@ -41,11 +43,19 @@ export default function PropertyCard({
   verified = false,
   rating,
   reviewsCount,
+  isFavorite: isFavoriteProp = false,
+  onToggleFavorite,
 }: PropertyCardProps) {
   const { t } = useLanguage();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(isFavoriteProp);
+  const [isTogglingFav, setIsTogglingFav] = useState(false);
   const [direction, setDirection] = useState(0);
+
+  // Sync when parent updates favorites
+  useEffect(() => {
+    setIsFavorite(isFavoriteProp);
+  }, [isFavoriteProp]);
 
   // Currency symbol based on language from translations
   const currencySymbol = t('currency.symbol');
@@ -65,10 +75,25 @@ export default function PropertyCard({
     setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
-  const toggleFavorite = (e: React.MouseEvent) => {
+  const toggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsFavorite(!isFavorite);
+    if (isTogglingFav) return;
+
+    if (onToggleFavorite) {
+      setIsTogglingFav(true);
+      const newState = !isFavorite;
+      setIsFavorite(newState);
+      try {
+        await onToggleFavorite(id, newState);
+      } catch {
+        setIsFavorite(!newState); // revert on error
+      } finally {
+        setIsTogglingFav(false);
+      }
+    } else {
+      setIsFavorite(!isFavorite);
+    }
   };
 
   const variants = {
@@ -169,7 +194,8 @@ export default function PropertyCard({
           {/* Favorite Button */}
           <button
             onClick={toggleFavorite}
-            className="absolute top-3 right-3 w-9 h-9 bg-white/90 hover:bg-white rounded-full flex items-center justify-center transition-all duration-300 z-10 shadow-md"
+            disabled={isTogglingFav}
+            className="absolute top-3 right-3 w-9 h-9 bg-white/90 hover:bg-white rounded-full flex items-center justify-center transition-all duration-300 z-10 shadow-md disabled:opacity-70"
           >
             <Heart
               className={`w-5 h-5 transition-colors duration-300 ${isFavorite ? "fill-red-500 text-red-500" : "text-gray-700"

@@ -6,6 +6,7 @@ import "../globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Providers } from "@/components/Providers";
+import { Toaster } from "react-hot-toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -29,6 +30,7 @@ export default function RootLayout({
           {!isDashboard && <Navbar />}
           <main className={!isDashboard ? "pt-20" : ""}>{children}</main>
           {!isDashboard && <Footer />}
+          <Toaster position="top-center" />
         </Providers>
       </body>
     </html>

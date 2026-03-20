@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "@/components/LocalizedLink";
 import { ChevronLeft, ChevronRight, Heart, MapPin, Mail, Share2, X, MessageCircle, CheckCircle } from "lucide-react";
@@ -10,14 +12,18 @@ import { motion, AnimatePresence } from "framer-motion";
 import ContactOwnerForm from "@/components/ContactOwnerForm";
 import SubscribeSection from "@/components/SubscribeSection";
 import ReviewSection from "@/components/ReviewSection";
+import toast from "react-hot-toast";
 
 
 
 export default function PropertyDetailsPage() {
   const params = useParams();
   const { language, t: translate } = useLanguage();
+  const { isAuthenticated, token } = useAuth();
+  const router = useRouter();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isTogglingFav, setIsTogglingFav] = useState(false);
   const [direction, setDirection] = useState(0);
   const [showContactForm, setShowContactForm] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -82,6 +88,59 @@ export default function PropertyDetailsPage() {
     setCopySuccess(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [propertyId]);
+
+  // Fetch favorite state for this property
+  useEffect(() => {
+    if (!isAuthenticated || !token || !propertyId) return;
+    fetch('/api/auth/favorites', {
+      headers: token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          const ids = data.favorites.map((f: any) => f._id?.toString() ?? f.toString());
+          setIsFavorite(ids.includes(propertyId));
+        }
+      })
+      .catch(() => {});
+  }, [isAuthenticated, token, propertyId]);
+
+  const handleToggleFavorite = async () => {
+    if (!isAuthenticated || !token) {
+      toast.error("Please login to save favorites");
+      router.push(`/${country}/login`);
+      return;
+    }
+    if (isTogglingFav) return;
+    setIsTogglingFav(true);
+    const newState = !isFavorite;
+    setIsFavorite(newState);
+    try {
+      const res = await fetch('/api/auth/favorites', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ propertyId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (data.isFavorite) {
+          toast.success("Added to favorites");
+        } else {
+          toast("Removed from favorites", { icon: "💔" });
+        }
+        setIsFavorite(data.isFavorite);
+      } else {
+        setIsFavorite(!newState); // revert
+      }
+    } catch {
+      setIsFavorite(!newState); // revert
+    } finally {
+      setIsTogglingFav(false);
+    }
+  };
 
   const content = {
     en: {
@@ -426,8 +485,9 @@ export default function PropertyDetailsPage() {
                     <span className="line-clamp-2">{property.fullAddress}, {property.areaName}, {property.state}</span>
                   </p>
                 </div>
-                <button onClick={() => setIsFavorite(!isFavorite)}
-                  className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl text-xs sm:text-sm md:text-base font-semibold transition-all duration-300 shadow-md hover:shadow-lg ${isFavorite ? 'bg-red-50 border-2 border-red-500 text-red-600 hover:bg-red-100' : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-primary hover:bg-primary/5 hover:text-primary'}`}>
+                <button onClick={handleToggleFavorite}
+                  disabled={isTogglingFav}
+                  className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl text-xs sm:text-sm md:text-base font-semibold transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-70 ${isFavorite ? 'bg-red-50 border-2 border-red-500 text-red-600 hover:bg-red-100' : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-primary hover:bg-primary/5 hover:text-primary'}`}>
                   <Heart className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300 ${isFavorite ? "fill-red-500 text-red-500 scale-110" : "text-current"}`} />
                   <span className="whitespace-nowrap hidden sm:inline">{t.addToFavorites}</span>
                   <span className="whitespace-nowrap sm:hidden">Favorite</span>

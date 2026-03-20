@@ -13,6 +13,7 @@ export interface IUser extends Document {
   provider: 'credentials' | 'google';
   googleId?: string;
   profileImage?: string;
+  favorites: mongoose.Types.ObjectId[];
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   otpCode?: string;
@@ -91,6 +92,10 @@ const userSchema = new Schema<IUser>(
     },
     profileImage: {
       type: String
+    },
+    favorites: {
+      type: [{ type: Schema.Types.ObjectId, ref: 'Property' }],
+      default: []
     },
     resetPasswordToken: {
       type: String

@@ -5,7 +5,9 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import PropertyCard from "./PropertyCard";
 import Link from "@/components/LocalizedLink";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useParams } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { useParams, useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 type PropertyType = "all" | "pg" | "tenant";
 
@@ -29,12 +31,15 @@ interface Property {
 
 export default function PropertyListings() {
   const { t } = useLanguage();
+  const { isAuthenticated, token } = useAuth();
   const params = useParams();
+  const router = useRouter();
   const country = (params?.country as string) || "in";
 
   const [activeTab, setActiveTab] = useState<PropertyType>("all");
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -57,6 +62,55 @@ export default function PropertyListings() {
 
     fetchProperties();
   }, [country, activeTab]);
+
+  // Fetch user's favorites when authenticated
+  useEffect(() => {
+    if (!isAuthenticated || !token) {
+      setFavoriteIds(new Set());
+      return;
+    }
+    const fetchFavorites = async () => {
+      try {
+        const res = await fetch('/api/auth/favorites', {
+          headers: token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {},
+        });
+        const data = await res.json();
+        if (data.success) {
+          setFavoriteIds(new Set(data.favorites.map((f: any) => f._id?.toString() ?? f.toString())));
+        }
+      } catch {
+        // silently fail
+      }
+    };
+    fetchFavorites();
+  }, [isAuthenticated, token]);
+
+  const handleToggleFavorite = async (propertyId: string, newState: boolean) => {
+    if (!isAuthenticated || !token) {
+      toast.error("Please login to save favorites");
+      router.push(`/${country}/login`);
+      throw new Error("unauthenticated"); // causes PropertyCard to revert the optimistic update
+    }
+    const res = await fetch('/api/auth/favorites', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ propertyId }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      setFavoriteIds(new Set(data.favoriteIds));
+      if (data.isFavorite) {
+        toast.success("Added to favorites");
+      } else {
+        toast("Removed from favorites", { icon: "💔" });
+      }
+    } else {
+      throw new Error(data.error);
+    }
+  };
 
   const scroll = (direction: "left" | "right") => {
     if (scrollContainerRef.current) {
@@ -167,6 +221,8 @@ export default function PropertyListings() {
                   isNew={property.isNew}
                   rating={property.averageRating ?? undefined}
                   reviewsCount={property.reviewsCount}
+                  isFavorite={favoriteIds.has(property._id)}
+                  onToggleFavorite={handleToggleFavorite}
                 />
               </div>
             ))}
