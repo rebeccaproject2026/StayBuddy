@@ -6,6 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, X, MapPin, Check } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+import * as yup from "yup";
 
 type PropertyType = "PG" | "Tenant" | null;
 type PosterType = "Owner" | "Property Manager" | "Agent" | null;
@@ -118,6 +119,124 @@ export default function PostPropertyPage() {
   const [view360Url, setView360Url] = useState("");
   
   const [error, setError] = useState("");
+
+  // Per-field validation errors
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // Yup schemas per step
+  const step1Schema = yup.object({
+    propertyType: yup.string().required("Please select a property type (PG or Tenant)"),
+    posterType: yup.string().required("Please select how you are posting (Owner / Manager / Agent)"),
+    propertyCategory: yup.string().when("propertyType", {
+      is: "Tenant",
+      then: (s) => s.required("Please select a property category"),
+      otherwise: (s) => s.optional(),
+    }),
+    selectedCity: yup.string().required("Please select a city from the suggestions"),
+  });
+
+  const step2PGSchema = yup.object({
+    address: yup.string().trim().required("Full address is required").min(5, "Address must be at least 5 characters"),
+    areaName: yup.string().trim().required("Area / Locality is required"),
+    state: yup.string().trim().required("State is required"),
+    pincode: yup
+      .string()
+      .trim()
+      .required("Pincode is required")
+      .matches(/^\d{6}$/, "Pincode must be exactly 6 digits"),
+    landmark: yup.string().trim().required("Landmark is required").min(2, "Landmark must be at least 2 characters"),
+    googleMapLink: yup
+      .string()
+      .trim()
+      .required("Google Map link is required")
+      .url("Please enter a valid URL (e.g. https://maps.google.com/...)"),
+    operationalSince: yup.string().trim().required("PG operational since is required"),
+    pgPresentIn: yup.string().nullable().required("Please select where the PG is present"),
+    pgName: yup.string().trim().required("PG name is required"),
+    selectedRoomCategories: yup
+      .array()
+      .of(yup.string())
+      .min(1, "Please select at least one room category"),
+  });
+
+  const step2TenantSchema = yup.object({
+    address: yup.string().trim().required("Full address is required").min(5, "Address must be at least 5 characters"),
+    areaName: yup.string().trim().required("Area / Locality is required"),
+    state: yup.string().trim().required("State is required"),
+    pincode: yup
+      .string()
+      .trim()
+      .required("Pincode is required")
+      .matches(/^\d{6}$/, "Pincode must be exactly 6 digits"),
+    landmark: yup.string().trim().required("Landmark is required").min(2, "Landmark must be at least 2 characters"),
+    googleMapLink: yup
+      .string()
+      .trim()
+      .required("Google Map link is required")
+      .url("Please enter a valid URL (e.g. https://maps.google.com/...)"),
+    flatsInProject: yup.string().required("Please select number of flats in project"),
+    bedrooms: yup.string().required("Please select number of bedrooms"),
+    bathrooms: yup.string().required("Please select number of bathrooms"),
+    totalFloors: yup.string().required("Please select total floors"),
+    floorNumber: yup.string().required("Please select floor number"),
+    societyName: yup.string().trim().required("Society name is required"),
+  });
+
+  const step3PGSchema = yup.object({
+    preferredGender: yup.string().nullable().required("Please select preferred gender"),
+    tenantPreference: yup.string().nullable().required("Please select tenant preference"),
+  });
+
+  const step3TenantSchema = yup.object({
+    monthlyRentAmount: yup
+      .string()
+      .trim()
+      .required("Monthly rent is required")
+      .matches(/^\d+$/, "Monthly rent must be a valid number")
+      .test("min", "Monthly rent must be greater than 0", (v) => parseInt(v || "0") > 0),
+  });
+
+  const step4Schema = yup.object({
+    pgDescription: yup.string().trim().required("Property description is required").min(20, "Description must be at least 20 characters"),
+  });
+
+  const scrollToFirstError = (errors: Record<string, string>) => {
+    const firstKey = Object.keys(errors)[0];
+    if (!firstKey) return;
+    // Try data-field attribute first, then fall back to name/id attribute
+    const el =
+      document.querySelector(`[data-field="${firstKey}"]`) ||
+      document.querySelector(`[name="${firstKey}"]`) ||
+      document.getElementById(firstKey);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
+  const validateStep = async (schema: yup.AnyObjectSchema, data: Record<string, any>): Promise<boolean> => {
+    try {
+      await schema.validate(data, { abortEarly: false });
+      setFieldErrors({});
+      return true;
+    } catch (err) {
+      if (err instanceof yup.ValidationError) {
+        const errors: Record<string, string> = {};
+        err.inner.forEach((e) => {
+          if (e.path) errors[e.path] = e.message;
+        });
+        setFieldErrors(errors);
+        // Small delay so React renders the error elements before we scroll
+        setTimeout(() => scrollToFirstError(errors), 50);
+      }
+      return false;
+    }
+  };
+
+  // Helper to render a field error
+  const FieldError = ({ name }: { name: string }) =>
+    fieldErrors[name] ? (
+      <p className="text-red-500 text-xs mt-1" data-field={`${name}-error`}>{fieldErrors[name]}</p>
+    ) : null;
 
   const roomFacilities = [
     { id: "bed", label: "Bed" },
@@ -664,51 +783,78 @@ export default function PostPropertyPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleContinueStep1 = () => {
-    if (!propertyType || !posterType || (propertyType === "Tenant" && !propertyCategory) || !selectedCity) {
-      setError(t.selectError);
-      return;
-    }
+  const handleContinueStep1 = async () => {
+    const valid = await validateStep(step1Schema, {
+      propertyType,
+      posterType,
+      propertyCategory: propertyType === "Tenant" ? propertyCategory : "skip",
+      selectedCity,
+    });
+    if (!valid) return;
     setError("");
     setStep(2);
     scrollToTop();
   };
 
-  const handleContinueStep2 = () => {
+  const handleContinueStep2 = async () => {
     if (propertyType === "PG") {
-      if (!address.trim() || !areaName.trim() || !state.trim() || !pincode.trim() || !landmark.trim() || !googleMapLink.trim() || !operationalSince.trim() || !pgPresentIn || !pgName.trim() || selectedRoomCategories.length === 0) {
-        setError(t.addressError);
-        return;
-      }      // Validate room details
+      const valid = await validateStep(step2PGSchema, {
+        address,
+        areaName,
+        state,
+        pincode,
+        landmark,
+        googleMapLink,
+        operationalSince,
+        pgPresentIn,
+        pgName,
+        selectedRoomCategories,
+      });
+      if (!valid) return;
+      // Validate room details for each selected category
+      const roomErrors: Record<string, string> = {};
       for (const category of selectedRoomCategories) {
         const details = roomDetails[category];
-        if (!details.totalRooms || !details.monthlyRent || !details.securityDeposit) {
-          setError(t.rentDetailsError);
-          return;
-        }
+        if (!details.totalRooms) roomErrors[`room_${category}_totalRooms`] = "Total rooms is required";
+        if (!details.availableRooms) roomErrors[`room_${category}_availableRooms`] = "Available rooms is required";
+        if (!details.monthlyRent) roomErrors[`room_${category}_monthlyRent`] = "Monthly rent is required";
+        else if (parseInt(details.monthlyRent) <= 0) roomErrors[`room_${category}_monthlyRent`] = "Monthly rent must be greater than 0";
+        if (!details.securityDeposit) roomErrors[`room_${category}_securityDeposit`] = "Security deposit is required";
       }
-    } else if (propertyType === "Tenant") {
-      if (!address.trim() || !areaName.trim() || !state.trim() || !pincode.trim() || !landmark.trim() || !googleMapLink.trim() || !flatsInProject || !bedrooms || !bathrooms || !totalFloors || !floorNumber || !societyName.trim()) {
-        setError(t.addressError);
+      if (Object.keys(roomErrors).length > 0) {
+        setFieldErrors((prev) => ({ ...prev, ...roomErrors }));
+        setTimeout(() => scrollToFirstError(roomErrors), 50);
         return;
       }
+    } else if (propertyType === "Tenant") {
+      const valid = await validateStep(step2TenantSchema, {
+        address,
+        areaName,
+        state,
+        pincode,
+        landmark,
+        googleMapLink,
+        flatsInProject,
+        bedrooms,
+        bathrooms,
+        totalFloors,
+        floorNumber,
+        societyName,
+      });
+      if (!valid) return;
     }
     setError("");
     setStep(3);
     scrollToTop();
   };
 
-  const handleContinueStep3 = () => {
+  const handleContinueStep3 = async () => {
     if (propertyType === "PG") {
-      if (!preferredGender || !tenantPreference) {
-        setError(t.preferencesError);
-        return;
-      }
+      const valid = await validateStep(step3PGSchema, { preferredGender, tenantPreference });
+      if (!valid) return;
     } else if (propertyType === "Tenant") {
-      if (!monthlyRentAmount.trim()) {
-        setError(t.priceError);
-        return;
-      }
+      const valid = await validateStep(step3TenantSchema, { monthlyRentAmount });
+      if (!valid) return;
     }
     setError("");
     setStep(4);
@@ -716,8 +862,21 @@ export default function PostPropertyPage() {
   };
 
   const handleContinueStep4 = async () => {
-    if (!pgDescription.trim()) {
-      setError(t.descriptionError);
+    const valid = await validateStep(step4Schema, { pgDescription });
+    if (!valid) return;
+
+    // Validate at least one room image with an actual file uploaded
+    const hasRoomImage =
+      propertyType === "PG"
+        ? roomImages.some((r) => r.file !== null)
+        : tenantRoomImages.some((r) => r.file !== null);
+
+    if (!hasRoomImage) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        roomImages: "At least one room image is required",
+      }));
+      setTimeout(() => scrollToFirstError({ roomImages: "At least one room image is required" }), 50);
       return;
     }
     setError("");
@@ -909,7 +1068,8 @@ export default function PostPropertyPage() {
         duration: 3000,
         position: 'top-center',
       });
-      router.push(`/${country}`);
+      setStep(5);
+      scrollToTop();
     } catch (err: any) {
       setError(err.message || 'Something went wrong. Please try again.');
       setIsSubmitting(false);
@@ -919,6 +1079,7 @@ export default function PostPropertyPage() {
   const handleBack = () => {
     if (step > 1) {
       setStep(step - 1);
+      setFieldErrors({});
       scrollToTop();
     }
   };
@@ -1046,6 +1207,7 @@ export default function PostPropertyPage() {
     setRoomImages(prev => prev.map(room => 
       room.id === id ? { ...room, file } : room
     ));
+    if (file) setFieldErrors((prev) => { const e = { ...prev }; delete e.roomImages; return e; });
   };
 
   const handleKitchenImageUpload = (files: FileList | null) => {
@@ -1090,6 +1252,7 @@ export default function PostPropertyPage() {
     setTenantRoomImages(prev => prev.map(room => 
       room.id === id ? { ...room, file } : room
     ));
+    if (file) setFieldErrors((prev) => { const e = { ...prev }; delete e.roomImages; return e; });
   };
 
   const handleTenantKitchenImageUpload = (files: FileList | null) => {
@@ -1159,7 +1322,7 @@ export default function PostPropertyPage() {
                 </div>
 
                 {/* Property Type */}
-                <div>
+                <div data-field="propertyType">
                   <label className="block text-gray-700 font-semibold mb-3">{t.postingFor}</label>
                   <div className="grid grid-cols-1 esm:grid-cols-2 gap-4">
                     {['PG', 'Tenant'].map((type) => (
@@ -1178,11 +1341,12 @@ export default function PostPropertyPage() {
                       </label>
                     ))}
                   </div>
+                  <FieldError name="propertyType" />
                 </div>
 
                 {/* Poster Type */}
                 {propertyType && (
-                  <div>
+                  <div data-field="posterType">
                     <label className="block text-gray-700 font-semibold mb-3">
                       {propertyType === "PG" ? t.postingPGAs : t.postingTenantAs}
                     </label>
@@ -1205,12 +1369,13 @@ export default function PostPropertyPage() {
                         </label>
                       ))}
                     </div>
+                    <FieldError name="posterType" />
                   </div>
                 )}
 
                 {/* Property Category (Tenant only) */}
                 {propertyType === "Tenant" && posterType && (
-                  <div>
+                  <div data-field="propertyCategory">
                     <label className="block text-gray-700 font-semibold mb-3">{t.propertyCategory}</label>
                     <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
                       {['Villa', 'Flat', 'House', 'Penthouse'].map((category) => (
@@ -1231,12 +1396,13 @@ export default function PostPropertyPage() {
                         </label>
                       ))}
                     </div>
+                    <FieldError name="propertyCategory" />
                   </div>
                 )}
 
                 {/* City Selection */}
                 {posterType && (propertyType === "PG" || propertyCategory) && (
-                  <div>
+                  <div data-field="selectedCity">
                     <label className="block text-gray-700 font-semibold mb-2">
                       {propertyType === "PG" ? t.cityTitle : t.cityTitleTenant}
                     </label>
@@ -1283,6 +1449,7 @@ export default function PostPropertyPage() {
                         </div>
                       )}
                     </div>
+                    <FieldError name="selectedCity" />
                   </div>
                 )}
 
@@ -1315,7 +1482,7 @@ export default function PostPropertyPage() {
                 {/* Address Section */}
                 <div className="space-y-4 pb-4 border-b border-gray-200">
                   <h3 className="text-lg font-bold text-gray-800">{propertyType === "PG" ? t.addressTitle : t.tenantAddressTitle}</h3>
-                  <div>
+                  <div data-field="address">
                     <label className="block text-gray-700 font-medium mb-2">
                       {t.addressLabel}<span className="text-red-500">*</span>
                     </label>
@@ -1324,11 +1491,12 @@ export default function PostPropertyPage() {
                       value={address} 
                       onChange={(e) => setAddress(e.target.value)} 
                       placeholder={t.addressPlaceholder} 
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors.address ? 'border-red-400' : 'border-gray-200'}`}
                     />
+                    <FieldError name="address" />
                   </div>
                   <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
-                    <div>
+                    <div data-field="areaName">
                       <label className="block text-gray-700 font-medium mb-2">
                         {t.areaNameLabel}<span className="text-red-500">*</span>
                       </label>
@@ -1337,10 +1505,11 @@ export default function PostPropertyPage() {
                         value={areaName}
                         onChange={(e) => setAreaName(e.target.value)}
                         placeholder={t.areaNamePlaceholder}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors"
+                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors.areaName ? 'border-red-400' : 'border-gray-200'}`}
                       />
+                      <FieldError name="areaName" />
                     </div>
-                    <div>
+                    <div data-field="state">
                       <label className="block text-gray-700 font-medium mb-2">
                         {t.stateLabel}<span className="text-red-500">*</span>
                       </label>
@@ -1349,12 +1518,13 @@ export default function PostPropertyPage() {
                         value={state}
                         onChange={(e) => setState(e.target.value)}
                         placeholder={t.statePlaceholder}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors"
+                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors.state ? 'border-red-400' : 'border-gray-200'}`}
                       />
+                      <FieldError name="state" />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
-                    <div>
+                    <div data-field="pincode">
                       <label className="block text-gray-700 font-medium mb-2">
                         {t.pincodeLabel}<span className="text-red-500">*</span>
                       </label>
@@ -1367,10 +1537,11 @@ export default function PostPropertyPage() {
                           setPincode(onlyDigits);
                         }}
                         placeholder={t.pincodePlaceholder}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
+                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors.pincode ? 'border-red-400' : 'border-gray-200'}`}
                       />
+                      <FieldError name="pincode" />
                     </div>
-                    <div>
+                    <div data-field="landmark">
                       <label className="block text-gray-700 font-medium mb-2">
                         {t.landmarkLabel}<span className="text-red-500">*</span>
                       </label>
@@ -1379,11 +1550,12 @@ export default function PostPropertyPage() {
                         value={landmark} 
                         onChange={(e) => setLandmark(e.target.value)} 
                         placeholder={t.landmarkPlaceholder} 
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
+                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors.landmark ? 'border-red-400' : 'border-gray-200'}`}
                       />
+                      <FieldError name="landmark" />
                     </div>
                   </div>
-                  <div>
+                  <div data-field="googleMapLink">
                     <label className="block text-gray-700 font-medium mb-2">
                       {t.googleMapLabel}<span className="text-red-500">*</span>
                     </label>
@@ -1392,8 +1564,9 @@ export default function PostPropertyPage() {
                       value={googleMapLink} 
                       onChange={(e) => setGoogleMapLink(e.target.value)} 
                       placeholder={t.googleMapPlaceholder} 
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors.googleMapLink ? 'border-red-400' : 'border-gray-200'}`}
                     />
+                    <FieldError name="googleMapLink" />
                     <p className="text-sm text-gray-500 mt-1 flex items-start gap-1">
                       <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
                       <span>{t.googleMapHelper}</span>
@@ -1405,7 +1578,7 @@ export default function PostPropertyPage() {
                 {propertyType === "PG" && (
                   <>
                     <div className="space-y-4 pb-4 border-b border-gray-200">
-                      <div>
+                      <div data-field="operationalSince">
                         <label className="block text-gray-700 font-medium mb-2">
                           {t.operationalLabel}<span className="text-red-500">*</span>
                         </label>
@@ -1414,10 +1587,11 @@ export default function PostPropertyPage() {
                           value={operationalSince} 
                           onChange={(e) => setOperationalSince(e.target.value)} 
                           placeholder={t.operationalPlaceholder} 
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
+                          className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors.operationalSince ? 'border-red-400' : 'border-gray-200'}`}
                         />
+                        <FieldError name="operationalSince" />
                       </div>
-                      <div>
+                      <div data-field="pgPresentIn">
                         <label className="block text-gray-700 font-medium mb-2">
                           {t.presentInLabel}<span className="text-red-500">*</span>
                         </label>
@@ -1442,8 +1616,9 @@ export default function PostPropertyPage() {
                             </label>
                           ))}
                         </div>
+                        <FieldError name="pgPresentIn" />
                       </div>
-                      <div>
+                      <div data-field="pgName">
                         <label className="block text-gray-700 font-medium mb-2">
                           {t.pgNameLabel}<span className="text-red-500">*</span>
                         </label>
@@ -1452,13 +1627,14 @@ export default function PostPropertyPage() {
                           value={pgName} 
                           onChange={(e) => setPgName(e.target.value)} 
                           placeholder={t.pgNamePlaceholder} 
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
+                          className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors.pgName ? 'border-red-400' : 'border-gray-200'}`}
                         />
+                        <FieldError name="pgName" />
                       </div>
                     </div>
 
                     {/* Room Categories */}
-                    <div className="space-y-4 pb-4 border-b border-gray-200">
+                    <div data-field="selectedRoomCategories" className="space-y-4 pb-4 border-b border-gray-200">
                       <h3 className="text-lg font-bold text-gray-800">{t.roomCategoriesTitle}</h3>
                       <p className="text-sm text-gray-600">{t.roomCategoriesSubtitle}</p>
                       <div className="grid grid-cols-1 esm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -1476,6 +1652,7 @@ export default function PostPropertyPage() {
                           </button>
                         ))}
                       </div>
+                      <FieldError name="selectedRoomCategories" />
                     </div>
 
                     {/* Room Details for each selected category */}
@@ -1483,7 +1660,7 @@ export default function PostPropertyPage() {
                       <div key={category} className="space-y-4 pb-4 border-b border-gray-200">
                         <h3 className="text-lg font-bold text-primary">{t.roomDetailsFor} {category} {t.roomCategoriesTitle.split(' ')[0]}</h3>
                         <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
-                          <div>
+                          <div data-field={`room_${category}_totalRooms`}>
                             <label className="block text-gray-700 font-medium mb-2">
                               Total Rooms<span className="text-red-500">*</span>
                             </label>
@@ -1496,10 +1673,11 @@ export default function PostPropertyPage() {
                                 updateRoomDetail(category, 'totalRooms', onlyDigits);
                               }}
                               placeholder="Enter total rooms"
-                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
+                              className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors[`room_${category}_totalRooms`] ? 'border-red-400' : 'border-gray-200'}`}
                             />
+                            <FieldError name={`room_${category}_totalRooms`} />
                           </div>
-                          <div>
+                          <div data-field={`room_${category}_availableRooms`}>
                             <label className="block text-gray-700 font-medium mb-2">
                               Available Rooms<span className="text-red-500">*</span>
                             </label>
@@ -1512,12 +1690,13 @@ export default function PostPropertyPage() {
                                 updateRoomDetail(category, 'availableRooms', onlyDigits);
                               }}
                               placeholder="Enter available rooms"
-                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
+                              className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors[`room_${category}_availableRooms`] ? 'border-red-400' : 'border-gray-200'}`}
                             />
+                            <FieldError name={`room_${category}_availableRooms`} />
                           </div>
                         </div>
                         <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
-                          <div>
+                          <div data-field={`room_${category}_monthlyRent`}>
                             <label className="block text-gray-700 font-medium mb-2">
                               {t.monthlyRent}<span className="text-red-500">*</span>
                             </label>
@@ -1532,11 +1711,12 @@ export default function PostPropertyPage() {
                                   updateRoomDetail(category, 'monthlyRent', onlyDigits);
                                 }}
                                 placeholder={t.monthlyRentPlaceholder}
-                                className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
+                                className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors[`room_${category}_monthlyRent`] ? 'border-red-400' : 'border-gray-200'}`}
                               />
                             </div>
+                            <FieldError name={`room_${category}_monthlyRent`} />
                           </div>
-                          <div>
+                          <div data-field={`room_${category}_securityDeposit`}>
                             <label className="block text-gray-700 font-medium mb-2">
                               {t.securityDeposit}<span className="text-red-500">*</span>
                             </label>
@@ -1551,9 +1731,10 @@ export default function PostPropertyPage() {
                                   updateRoomDetail(category, 'securityDeposit', onlyDigits);
                                 }}
                                 placeholder={t.securityDepositPlaceholder}
-                                className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
+                                className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors[`room_${category}_securityDeposit`] ? 'border-red-400' : 'border-gray-200'}`}
                               />
                             </div>
+                            <FieldError name={`room_${category}_securityDeposit`} />
                           </div>
                         </div>
                         <div>
@@ -1638,7 +1819,7 @@ export default function PostPropertyPage() {
                 {propertyType === "Tenant" && (
                   <>
                     <div className="space-y-4 pb-4 border-b border-gray-200">
-                      <div>
+                      <div data-field="flatsInProject">
                         <label className="block text-gray-700 font-medium mb-3">{t.flatsInProject}</label>
                         <div className="grid grid-cols-1 esm:grid-cols-2 md:grid-cols-3 gap-3">
                           {['<50', '50-100', '>100'].map((option) => (
@@ -1655,8 +1836,9 @@ export default function PostPropertyPage() {
                             </button>
                           ))}
                         </div>
+                        <FieldError name="flatsInProject" />
                       </div>
-                      <div>
+                      <div data-field="bedrooms">
                         <label className="block text-gray-700 font-medium mb-3">{t.bedroom}</label>
                         <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-5 gap-2">
                           {['All', '1+', '2+', '3+', '4+'].map((option) => (
@@ -1673,8 +1855,9 @@ export default function PostPropertyPage() {
                             </button>
                           ))}
                         </div>
+                        <FieldError name="bedrooms" />
                       </div>
-                      <div>
+                      <div data-field="bathrooms">
                         <label className="block text-gray-700 font-medium mb-3">{t.bathroom}</label>
                         <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-5 gap-2">
                           {['All', '1+', '2+', '3+', '4+'].map((option) => (
@@ -1691,6 +1874,7 @@ export default function PostPropertyPage() {
                             </button>
                           ))}
                         </div>
+                        <FieldError name="bathrooms" />
                       </div>
                       <div>
                         <label className="block text-gray-700 font-medium mb-3">{t.balconyOptional}</label>
@@ -1711,31 +1895,33 @@ export default function PostPropertyPage() {
                         </div>
                       </div>
                       <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
-                        <div>
+                        <div data-field="totalFloors">
                           <label className="block text-gray-700 font-medium mb-2">{t.totalFloorsInBuilding}</label>
                           <select 
                             value={totalFloors} 
                             onChange={(e) => setTotalFloors(e.target.value)}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none bg-white cursor-pointer"
+                            className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none bg-white cursor-pointer ${fieldErrors.totalFloors ? 'border-red-400' : 'border-gray-200'}`}
                           >
                             <option value="">{t.presentInPlaceholder}</option>
                             {Array.from({length: 50}, (_, i) => i + 1).map(num => (
                               <option key={num} value={num}>{num}</option>
                             ))}
                           </select>
+                          <FieldError name="totalFloors" />
                         </div>
-                        <div>
+                        <div data-field="floorNumber">
                           <label className="block text-gray-700 font-medium mb-2">{t.floorNoOfProperty}</label>
                           <select 
                             value={floorNumber} 
                             onChange={(e) => setFloorNumber(e.target.value)}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none bg-white cursor-pointer"
+                            className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none bg-white cursor-pointer ${fieldErrors.floorNumber ? 'border-red-400' : 'border-gray-200'}`}
                           >
                             <option value="">{t.presentInPlaceholder}</option>
                             {Array.from({length: 50}, (_, i) => i + 1).map(num => (
                               <option key={num} value={num}>{num}</option>
                             ))}
                           </select>
+                          <FieldError name="floorNumber" />
                         </div>
                       </div>
                       <div>
@@ -1786,7 +1972,7 @@ export default function PostPropertyPage() {
                           </div>
                         </div>
                       </div>
-                      <div>
+                      <div data-field="societyName">
                         <label className="block text-gray-700 font-medium mb-2">
                           {t.societyName}<span className="text-red-500">*</span>
                         </label>
@@ -1795,8 +1981,9 @@ export default function PostPropertyPage() {
                           value={societyName} 
                           onChange={(e) => setSocietyName(e.target.value)} 
                           placeholder={t.enterSocietyName} 
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors" 
+                          className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors.societyName ? 'border-red-400' : 'border-gray-200'}`}
                         />
+                        <FieldError name="societyName" />
                       </div>
                     </div>
                   </>
@@ -1825,7 +2012,7 @@ export default function PostPropertyPage() {
                 {/* PG Pricing & Preferences */}
                 {propertyType === "PG" && (
                   <>
-                    <div className="space-y-4 pb-4 border-b border-gray-200">
+                    <div data-field="preferredGender" className="space-y-4 pb-4 border-b border-gray-200">
                       <h3 className="text-lg font-bold text-gray-800">{t.preferredGenderTitle}</h3>
                       <div className="grid grid-cols-1 esm:grid-cols-2 md:grid-cols-3 gap-3">
                         {(['Male', 'Female', 'Both'] as PreferredGender[]).map((gender) => (
@@ -1842,9 +2029,10 @@ export default function PostPropertyPage() {
                           </button>
                         ))}
                       </div>
+                      <FieldError name="preferredGender" />
                     </div>
 
-                    <div className="space-y-4 pb-4 border-b border-gray-200">
+                    <div data-field="tenantPreference" className="space-y-4 pb-4 border-b border-gray-200">
                       <h3 className="text-lg font-bold text-gray-800">{t.tenantPreferencesTitle}</h3>
                       <div className="grid grid-cols-1 esm:grid-cols-2 md:grid-cols-3 gap-3">
                         {(['Professionals', 'Students', 'Both'] as TenantPreference[]).map((pref) => (
@@ -1861,6 +2049,7 @@ export default function PostPropertyPage() {
                           </button>
                         ))}
                       </div>
+                      <FieldError name="tenantPreference" />
                     </div>
 
                     <div className="space-y-4 pb-4 border-b border-gray-200">
@@ -2206,7 +2395,7 @@ export default function PostPropertyPage() {
                   <>
                     <div className="space-y-4 pb-4 border-b border-gray-200">
                       <h3 className="text-lg font-bold text-gray-800">{t.priceExpectTitle}</h3>
-                      <div>
+                      <div data-field="monthlyRentAmount">
                         <label className="block text-gray-700 font-medium mb-2">
                           {t.monthlyRentLabel}<span className="text-red-500">*</span>
                         </label>
@@ -2217,9 +2406,10 @@ export default function PostPropertyPage() {
                             value={monthlyRentAmount} 
                             onChange={(e) => setMonthlyRentAmount(e.target.value)} 
                             placeholder={t.enterMonthlyRent} 
-                            className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors text-lg" 
+                            className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors text-lg ${fieldErrors.monthlyRentAmount ? 'border-red-400' : 'border-gray-200'}`}
                           />
                         </div>
+                        <FieldError name="monthlyRentAmount" />
                       </div>
                       <div>
                         <label className="block text-gray-700 font-medium mb-2">{t.securityAmountOptional}</label>
@@ -2494,15 +2684,16 @@ export default function PostPropertyPage() {
                 <div className="space-y-4 pb-4 border-b border-gray-200">
                   <h3 className="text-lg font-bold text-gray-800">{t.pgDescriptionTitle}</h3>
                   <p className="text-sm text-gray-600">{t.pgDescriptionSubtitle}</p>
-                  <div>
+                  <div data-field="pgDescription">
                     <label className="block text-gray-700 font-medium mb-2">{t.pgDescriptionLabel}</label>
                     <textarea 
                       value={pgDescription} 
                       onChange={(e) => setPgDescription(e.target.value)} 
                       placeholder={t.pgDescriptionPlaceholder} 
                       rows={6}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors resize-none" 
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors resize-none ${fieldErrors.pgDescription ? 'border-red-400' : 'border-gray-200'}`}
                     />
+                    <FieldError name="pgDescription" />
                   </div>
                   <div className="flex gap-3">
                     <button
@@ -2530,20 +2721,20 @@ export default function PostPropertyPage() {
                     // PG Property Image Upload
                     <div className="space-y-6">
                       {/* Rooms Images */}
-                      <div className="space-y-4">
+                      <div data-field="roomImages" className="space-y-4">
                         <div className="flex items-center justify-between">
                           <div>
                             <h4 className="text-md font-semibold text-gray-800">{t.roomsImages}</h4>
                             <p className="text-xs text-gray-500">{t.roomsImagesSubtitle}</p>
                           </div>
-                          <button
-                            type="button"
+                          <button                            type="button"
                             onClick={addRoomImage}
                             className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors"
                           >
                             + {t.addRoom}
                           </button>
                         </div>
+                        <FieldError name="roomImages" />
                         
                         <div className="space-y-3">
                           {roomImages.map((room) => (
@@ -2777,7 +2968,7 @@ export default function PostPropertyPage() {
                     // Tenant Property Image Upload - New Structure
                     <div className="space-y-6">
                       {/* Room Images */}
-                      <div className="space-y-4">
+                      <div data-field="roomImages" className="space-y-4">
                         <div className="flex items-center justify-between">
                           <div>
                             <h4 className="text-md font-semibold text-gray-800">{t.tenantRoomsImages}</h4>
@@ -2791,6 +2982,7 @@ export default function PostPropertyPage() {
                             + {t.addRoom}
                           </button>
                         </div>
+                        <FieldError name="roomImages" />
                         
                         <div className="space-y-3">
                           {tenantRoomImages.map((room) => (
