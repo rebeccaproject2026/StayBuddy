@@ -19,7 +19,8 @@ import toast from "react-hot-toast";
 export default function PropertyDetailsPage() {
   const params = useParams();
   const { language, t: translate } = useLanguage();
-  const { isAuthenticated, token } = useAuth();
+  const { isAuthenticated, token, user } = useAuth();
+  const isOwner = user?.role === 'landlord';
   const router = useRouter();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -938,6 +939,7 @@ export default function PropertyDetailsPage() {
                     </div>
                   </div>
 
+                  {!isOwner && (
                   <button onClick={() => {
                     if (!isAuthenticated) {
                       router.push(`/${country}/login?redirect=${encodeURIComponent(`/${country}/property/${propertyId}`)}`);
@@ -948,8 +950,10 @@ export default function PropertyDetailsPage() {
                     className="w-full py-2.5 sm:py-3 bg-green-600 hover:bg-green-700 text-white text-sm sm:text-base font-semibold rounded-lg transition-colors mb-3 sm:mb-4">
                     {t.contactOwner}
                   </button>
+                  )}
 
                   {/* Call Owner */}
+                  {!isOwner && (
                   <button
                     onClick={() => {
                       if (!isAuthenticated) {
@@ -968,6 +972,7 @@ export default function PropertyDetailsPage() {
                     <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
                     {language === 'fr' ? 'Appeler le propriétaire' : 'Call Owner'}
                   </button>
+                  )}
 
                   <button onClick={() => setShowShareModal(true)}
                     className="w-full py-2.5 sm:py-3 border-2 border-gray-300 hover:border-primary text-gray-700 text-sm sm:text-base font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
@@ -1011,7 +1016,7 @@ export default function PropertyDetailsPage() {
         </svg>
       </a>
 
-      <ContactOwnerForm isOpen={showContactForm} onClose={() => setShowContactForm(false)} property={property} language={language} />
+      <ContactOwnerForm isOpen={showContactForm} onClose={() => setShowContactForm(false)} property={property} language={language} token={token} />
 
       {/* Share Modal */}
       {showShareModal && (

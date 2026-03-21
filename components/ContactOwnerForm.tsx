@@ -8,10 +8,13 @@ interface ContactOwnerFormProps {
   onClose: () => void;
   property: any;
   language: string;
+  token?: string | null;
 }
 
-export default function ContactOwnerForm({ isOpen, onClose, property, language }: ContactOwnerFormProps) {
+export default function ContactOwnerForm({ isOpen, onClose, property, language, token }: ContactOwnerFormProps) {
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -132,60 +135,44 @@ export default function ContactOwnerForm({ isOpen, onClose, property, language }
 
   const t = content[language as keyof typeof content] || content.en;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Prepare data to send to backend
-    const submissionData = {
-      ...formData,
-      pgId: property.id,
-      ownerId: property.landlord?.id || "owner-id",
-      listingTitle: property.title,
-      listingLocation: property.location,
-      timestamp: new Date().toISOString(),
-    };
-    
-    console.log("Form submitted:", submissionData);
-    // TODO: Send to backend API
-    
-    setFormSubmitted(true);
-    setTimeout(() => {
-      setFormSubmitted(false);
-      onClose();
-      setFormData({
-        fullName: "",
-        phone: "",
-        email: "",
-        gender: "",
-        moveInDate: "",
-        stayDuration: "",
-        numberOfOccupants: "1",
-        roomType: "",
-        occupation: "",
-        companyCollege: "",
-        budgetRange: "",
-        foodPreference: "",
-        needParking: "",
-        message: "",
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      const res = await fetch('/api/contact-requests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ propertyId: property._id, ...formData }),
       });
-    }, 3000);
+      const data = await res.json();
+      if (!res.ok) {
+        setSubmitError(data.error || 'Failed to send request');
+        return;
+      }
+      setFormSubmitted(true);
+      setTimeout(() => {
+        setFormSubmitted(false);
+        onClose();
+        setFormData({
+          fullName: "", phone: "", email: "", gender: "",
+          moveInDate: "", stayDuration: "", numberOfOccupants: "1",
+          roomType: "", occupation: "", companyCollege: "",
+          budgetRange: "", foodPreference: "", needParking: "", message: "",
+        });
+      }, 3000);
+    } catch {
+      setSubmitError('Something went wrong. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleCallOwner = () => {
-    if (property.landlord?.phone) {
-      window.location.href = `tel:${property.landlord.phone}`;
-    }
-  };
-
-  const handleWhatsAppOwner = () => {
-    if (property.landlord?.phone) {
-      const message = encodeURIComponent(`Hi, I'm interested in your property: ${property.title}`);
-      window.open(`https://wa.me/${property.landlord.phone.replace(/[^0-9]/g, '')}?text=${message}`, '_blank');
-    }
   };
 
   if (!isOpen) return null;
@@ -533,12 +520,16 @@ export default function ContactOwnerForm({ isOpen, onClose, property, language }
 
               {/* Action Buttons */}
               <div className="space-y-3">
+                {submitError && (
+                  <p className="text-sm text-red-600 text-center">{submitError}</p>
+                )}
                 <button
                   type="submit"
-                  className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                  disabled={submitting}
+                  className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
                 >
                   <Send className="w-5 h-5" />
-                  {t.send}
+                  {submitting ? (language === 'fr' ? 'Envoi...' : 'Sending...') : t.send}
                 </button>
 
                 <button

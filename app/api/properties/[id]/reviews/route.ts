@@ -77,6 +77,15 @@ export async function POST(
       );
     }
 
+    // Block property owners from leaving reviews
+    const user = await User.findById(decoded.userId).select('role fullName profileImage');
+    if (user?.role === 'landlord') {
+      return NextResponse.json(
+        { success: false, error: 'Property owners cannot submit reviews' },
+        { status: 403 }
+      );
+    }
+
     // Check if property exists
     const property = await Property.findById(propertyId);
     if (!property) {
@@ -94,11 +103,10 @@ export async function POST(
 
     if (existingReview) {
       // Update existing review
-      const dbUser = await User.findById(decoded.userId).select('fullName profileImage');
       existingReview.rating = rating;
       existingReview.comment = comment.trim();
-      existingReview.userName = dbUser?.fullName || decoded.email;
-      existingReview.userImage = dbUser?.profileImage;
+      existingReview.userName = user?.fullName || decoded.email;
+      existingReview.userImage = user?.profileImage;
       await existingReview.save();
 
       return NextResponse.json({
@@ -108,12 +116,11 @@ export async function POST(
       });
     } else {
       // Create new review
-      const dbUser = await User.findById(decoded.userId).select('fullName profileImage');
       const review = await Review.create({
         property: propertyId,
         user: decoded.userId,
-        userName: dbUser?.fullName || decoded.email,
-        userImage: dbUser?.profileImage,
+        userName: user?.fullName || decoded.email,
+        userImage: user?.profileImage,
         rating,
         comment: comment.trim(),
       });

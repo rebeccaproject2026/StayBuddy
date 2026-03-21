@@ -21,6 +21,7 @@ import {
   List,
   Eye,
   ArrowLeft,
+  Phone,
 } from "lucide-react";
 
 function ProfileSection({ user, tc, language }: { user: any; tc: any; language: string }) {
@@ -230,6 +231,8 @@ export default function OwnerDashboard() {
 
   const [myListings, setMyListings] = useState<any[]>([]);
   const [listingsLoading, setListingsLoading] = useState(true);
+  const [contactRequests, setContactRequests] = useState<any[]>([]);
+  const [requestsLoading, setRequestsLoading] = useState(false);
   const [selectedListing, setSelectedListing] = useState<any | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [editingListing, setEditingListing] = useState<any | null>(null);
@@ -283,6 +286,20 @@ export default function OwnerDashboard() {
       .finally(() => setListingsLoading(false));
   }, [isAuthenticated, user]);
 
+  // Fetch contact requests for this owner
+  useEffect(() => {
+    if (!isAuthenticated || user?.role !== 'landlord') return;
+    const token = localStorage.getItem('staybuddy_token');
+    setRequestsLoading(true);
+    fetch('/api/contact-requests', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then(r => r.json())
+      .then(data => { if (data.success) setContactRequests(data.requests || []); })
+      .catch(() => {})
+      .finally(() => setRequestsLoading(false));
+  }, [isAuthenticated, user]);
+
   // Show loading while checking authentication
   if (isLoading) {
     return (
@@ -300,28 +317,22 @@ export default function OwnerDashboard() {
     return null;
   }
 
-  const bookingRequests = [
-    {
-      id: 1,
-      tenantName: "Rahul Sharma",
-      propertyName: "Sunshine PG",
-      roomType: "Single",
-      moveInDate: "2024-04-01",
-      status: "Pending",
-      message: "Hi, I'm interested in a single room. Is it available?",
-      date: "2024-03-08",
-    },
-    {
-      id: 2,
-      tenantName: "Priya Patel",
-      propertyName: "Green Valley Apartment",
-      roomType: "2BHK",
-      moveInDate: "2024-03-20",
-      status: "Approved",
-      message: "Looking for a 2BHK apartment for 1 year.",
-      date: "2024-03-07",
-    },
-  ];
+  const handleRequestAction = async (id: string, status: 'accepted' | 'rejected') => {
+    const token = localStorage.getItem('staybuddy_token');
+    try {
+      const res = await fetch(`/api/contact-requests/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setContactRequests(prev => prev.map(r => r._id === id ? { ...r, status } : r));
+      }
+    } catch {}
+  };
+
+
 
   const messages = [
     {
@@ -434,6 +445,7 @@ export default function OwnerDashboard() {
       case "pending":
       case "pending approval":
         return "bg-yellow-100 text-yellow-700";
+      case "accepted":
       case "approved":
         return "bg-green-100 text-green-700";
       case "rejected":
@@ -677,6 +689,11 @@ export default function OwnerDashboard() {
                 >
                   <Calendar className="w-5 h-5" />
                   <span className="font-medium">{tc.bookingRequests}</span>
+                  {contactRequests.filter((r: any) => r.status === 'pending').length > 0 && (
+                    <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                      {contactRequests.filter((r: any) => r.status === 'pending').length}
+                    </span>
+                  )}
                 </button>
                 <button
                   onClick={() => setActiveTab("profile")}
@@ -1535,46 +1552,132 @@ export default function OwnerDashboard() {
             {activeTab === "requests" && (
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">{tc.bookingRequests}</h2>
-                {bookingRequests.length > 0 ? (
+                {requestsLoading ? (
                   <div className="space-y-4">
-                    {bookingRequests.map((request) => (
-                      <div key={request.id} className="bg-white rounded-2xl shadow-md p-6">
+                    {[...Array(2)].map((_, i) => (
+                      <div key={i} className="bg-white rounded-2xl shadow-md h-40 animate-pulse" />
+                    ))}
+                  </div>
+                ) : contactRequests.length > 0 ? (
+                  <div className="space-y-4">
+                    {contactRequests.map((req: any) => (
+                      <div key={req._id} className="bg-white rounded-2xl shadow-md p-6">
+                        {/* Header */}
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
                           <div className="flex-1">
-                            <h3 className="text-lg font-bold text-gray-900 mb-1">{request.tenantName}</h3>
-                            <p className="text-sm text-gray-600 mb-2">
-                              {tc.propertyName}: <span className="font-medium">{request.propertyName}</span>
+                            <h3 className="text-lg font-bold text-gray-900 mb-1">{req.fullName}</h3>
+                            <p className="text-sm text-gray-600 mb-1">
+                              {tc.propertyName}: <span className="font-medium">{req.propertyTitle || "—"}</span>
                             </p>
-                            <p className="text-sm text-gray-500">Date: {request.date}</p>
+                            <p className="text-sm text-gray-500">
+                              {new Date(req.createdAt).toLocaleDateString()}
+                            </p>
                           </div>
-                          <span className={`self-start px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(request.status)}`}>
-                            {request.status === "Pending" ? tc.pending : request.status === "Approved" ? tc.approved : tc.rejected}
+                          <span className={`self-start px-4 py-1.5 rounded-full text-sm font-medium ${getStatusColor(req.status)}`}>
+                            {req.status === "pending" ? tc.pending : req.status === "accepted" ? tc.approved : tc.rejected}
                           </span>
                         </div>
-                        <div className="grid sm:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg mb-4">
-                          <div>
-                            <p className="text-sm text-gray-600">{tc.roomType}</p>
-                            <p className="font-semibold text-gray-900">{request.roomType}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-600">{tc.moveInDate}</p>
-                            <p className="font-semibold text-gray-900">{request.moveInDate}</p>
-                          </div>
+
+                        {/* Details grid */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 bg-gray-50 rounded-xl mb-4">
+                          {req.roomType && (
+                            <div>
+                              <p className="text-xs text-gray-500">{tc.roomType}</p>
+                              <p className="text-sm font-semibold text-gray-900">{req.roomType}</p>
+                            </div>
+                          )}
+                          {req.moveInDate && (
+                            <div>
+                              <p className="text-xs text-gray-500">{tc.moveInDate}</p>
+                              <p className="text-sm font-semibold text-gray-900">{req.moveInDate}</p>
+                            </div>
+                          )}
+                          {req.stayDuration && (
+                            <div>
+                              <p className="text-xs text-gray-500">{language === "fr" ? "Durée" : "Stay Duration"}</p>
+                              <p className="text-sm font-semibold text-gray-900">{req.stayDuration}</p>
+                            </div>
+                          )}
+                          {req.budgetRange && (
+                            <div>
+                              <p className="text-xs text-gray-500">{language === "fr" ? "Budget" : "Budget"}</p>
+                              <p className="text-sm font-semibold text-gray-900">{req.budgetRange}</p>
+                            </div>
+                          )}
+                          {req.occupation && (
+                            <div>
+                              <p className="text-xs text-gray-500">{language === "fr" ? "Profession" : "Occupation"}</p>
+                              <p className="text-sm font-semibold text-gray-900">{req.occupation}</p>
+                            </div>
+                          )}
+                          {req.gender && (
+                            <div>
+                              <p className="text-xs text-gray-500">{language === "fr" ? "Genre" : "Gender"}</p>
+                              <p className="text-sm font-semibold text-gray-900">{req.gender}</p>
+                            </div>
+                          )}
+                          {req.numberOfOccupants && (
+                            <div>
+                              <p className="text-xs text-gray-500">{language === "fr" ? "Occupants" : "Occupants"}</p>
+                              <p className="text-sm font-semibold text-gray-900">{req.numberOfOccupants}</p>
+                            </div>
+                          )}
+                          {req.foodPreference && (
+                            <div>
+                              <p className="text-xs text-gray-500">{language === "fr" ? "Alimentation" : "Food"}</p>
+                              <p className="text-sm font-semibold text-gray-900">{req.foodPreference}</p>
+                            </div>
+                          )}
+                          {req.needParking && (
+                            <div>
+                              <p className="text-xs text-gray-500">{language === "fr" ? "Parking" : "Parking"}</p>
+                              <p className="text-sm font-semibold text-gray-900">{req.needParking}</p>
+                            </div>
+                          )}
+                          {req.companyCollege && (
+                            <div>
+                              <p className="text-xs text-gray-500">{language === "fr" ? "Société/École" : "Company/College"}</p>
+                              <p className="text-sm font-semibold text-gray-900">{req.companyCollege}</p>
+                            </div>
+                          )}
                         </div>
-                        <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                          <p className="text-sm font-medium text-gray-700 mb-1">Message:</p>
-                          <p className="text-gray-800">{request.message}</p>
-                        </div>
-                        {request.status === "Pending" && (
-                          <div className="flex flex-col sm:flex-row gap-2">
-                            <button className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                              {tc.approve}
-                            </button>
-                            <button className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                              {tc.reject}
-                            </button>
+
+                        {/* Message */}
+                        {req.message && (
+                          <div className="bg-gray-50 rounded-xl p-4 mb-4">
+                            <p className="text-xs font-semibold text-gray-500 uppercase mb-1">{language === "fr" ? "Message" : "Message"}</p>
+                            <p className="text-sm text-gray-800">{req.message}</p>
                           </div>
                         )}
+
+                        {/* Actions */}
+                        <div className="flex flex-wrap gap-2">
+                          {req.phone && (
+                            <a
+                              href={`tel:${req.phone}`}
+                              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                            >
+                              <Phone className="w-4 h-4" />
+                              {language === "fr" ? "Appeler" : "Call"}
+                            </a>
+                          )}
+                          {req.status === "pending" && (
+                            <>
+                              <button
+                                onClick={() => handleRequestAction(req._id, "accepted")}
+                                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                              >
+                                {tc.approve}
+                              </button>
+                              <button
+                                onClick={() => handleRequestAction(req._id, "rejected")}
+                                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                              >
+                                {tc.reject}
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>

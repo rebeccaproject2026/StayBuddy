@@ -23,7 +23,8 @@ interface ReviewSectionProps {
 }
 
 export default function ReviewSection({ propertyId, language = "en", country = "in" }: ReviewSectionProps) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const isOwner = user?.role === 'landlord';
   const router = useRouter();
 
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -139,6 +140,7 @@ export default function ReviewSection({ propertyId, language = "en", country = "
           <MessageSquare className="w-5 h-5 text-primary" />
           {tr.title}
         </h3>
+        {!isOwner && (
         <button
           onClick={() => {
             if (isAuthenticated) {
@@ -151,6 +153,7 @@ export default function ReviewSection({ propertyId, language = "en", country = "
         >
           {tr.writeReview}
         </button>
+        )}
       </div>
 
       {/* Stats */}

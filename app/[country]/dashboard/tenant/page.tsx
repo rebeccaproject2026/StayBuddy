@@ -29,6 +29,8 @@ export default function TenantDashboard() {
   const [activeTab, setActiveTab] = useState("saved");
   const [savedProperties, setSavedProperties] = useState<any[]>([]);
   const [favLoading, setFavLoading] = useState(false);
+  const [myRequests, setMyRequests] = useState<any[]>([]);
+  const [requestsLoading, setRequestsLoading] = useState(false);
   const currencySymbol = t("currency.symbol");
 
   // Authentication check
@@ -73,6 +75,19 @@ export default function TenantDashboard() {
     fetchFavorites();
   }, [isAuthenticated, token, user?.role]);
 
+  // Fetch contact requests
+  useEffect(() => {
+    if (!isAuthenticated || !token || user?.role !== 'renter') return;
+    setRequestsLoading(true);
+    fetch('/api/contact-requests', {
+      headers: token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then(r => r.json())
+      .then(data => { if (data.success) setMyRequests(data.requests || []); })
+      .catch(() => {})
+      .finally(() => setRequestsLoading(false));
+  }, [isAuthenticated, token, user?.role]);
+
   // Show loading while checking authentication
   if (isLoading) {
     return (
@@ -111,33 +126,6 @@ export default function TenantDashboard() {
   };
 
   // Mock data - in real app, this would come from API
-  const myRequests = [
-    {
-      id: 1,
-      pgName: "Sunshine PG",
-      ownerName: "Rajesh Kumar",
-      message: "Hi, I'm interested in a single room. Is it available from next month?",
-      date: "2024-03-08",
-      status: "Pending",
-    },
-    {
-      id: 2,
-      pgName: "Green Valley Apartment",
-      ownerName: "Priya Sharma",
-      message: "Looking for a 2BHK apartment. Can I schedule a visit?",
-      date: "2024-03-07",
-      status: "Replied",
-    },
-    {
-      id: 3,
-      pgName: "Comfort PG",
-      ownerName: "Amit Patel",
-      message: "Interested in double sharing room for 6 months.",
-      date: "2024-03-05",
-      status: "Closed",
-    },
-  ];
-
   const myBookings = [
     {
       id: 1,
@@ -469,25 +457,32 @@ export default function TenantDashboard() {
             {activeTab === "requests" && (
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">{tc.myRequests}</h2>
-                {myRequests.length > 0 ? (
+                {requestsLoading ? (
                   <div className="space-y-4">
-                    {myRequests.map((request) => (
-                      <div key={request.id} className="bg-white rounded-2xl shadow-md p-6">
+                    {[...Array(2)].map((_, i) => <div key={i} className="bg-white rounded-2xl shadow-md h-32 animate-pulse" />)}
+                  </div>
+                ) : myRequests.length > 0 ? (
+                  <div className="space-y-4">
+                    {myRequests.map((req: any) => (
+                      <div key={req._id} className="bg-white rounded-2xl shadow-md p-6">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
                           <div className="flex-1">
-                            <h3 className="text-lg font-bold text-gray-900 mb-1">{request.pgName}</h3>
-                            <p className="text-sm text-gray-600 mb-2">
-                              {tc.ownerName}: <span className="font-medium">{request.ownerName}</span>
-                            </p>
-                            <p className="text-sm text-gray-500">{tc.date}: {request.date}</p>
+                            <h3 className="text-lg font-bold text-gray-900 mb-1">{req.propertyTitle}</h3>
+                            <p className="text-sm text-gray-500">{tc.date}: {new Date(req.createdAt).toLocaleDateString()}</p>
                           </div>
-                          <span className={`self-start px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(request.status)}`}>
-                            {request.status === "Pending" ? tc.pending : request.status === "Replied" ? tc.replied : tc.closed}
+                          <span className={`self-start px-4 py-1.5 rounded-full text-sm font-medium capitalize ${getStatusColor(req.status)}`}>
+                            {req.status}
                           </span>
                         </div>
-                        <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="grid sm:grid-cols-2 gap-3 text-sm mb-3">
+                          <div><span className="text-gray-500">Room Type:</span> <span className="font-medium capitalize">{req.roomType}</span></div>
+                          <div><span className="text-gray-500">Move-in:</span> <span className="font-medium">{req.moveInDate}</span></div>
+                          <div><span className="text-gray-500">Duration:</span> <span className="font-medium">{req.stayDuration} months</span></div>
+                          <div><span className="text-gray-500">Budget:</span> <span className="font-medium">{req.budgetRange}</span></div>
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-3">
                           <p className="text-sm font-medium text-gray-700 mb-1">{tc.messageSent}:</p>
-                          <p className="text-gray-800">{request.message}</p>
+                          <p className="text-sm text-gray-800">{req.message}</p>
                         </div>
                       </div>
                     ))}
