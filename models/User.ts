@@ -39,7 +39,6 @@ const userSchema = new Schema<IUser>(
     email: {
       type: String,
       required: [true, 'Email is required'],
-      unique: true,
       lowercase: true,
       trim: true,
       match: [
@@ -87,8 +86,6 @@ const userSchema = new Schema<IUser>(
     },
     googleId: {
       type: String,
-      sparse: true,
-      unique: true
     },
     profileImage: {
       type: String
@@ -126,6 +123,9 @@ const userSchema = new Schema<IUser>(
 // Index for better query performance
 userSchema.index({ role: 1 });
 userSchema.index({ country: 1 });
+// One account per email per country, one Google account per country
+userSchema.index({ email: 1, country: 1 }, { unique: true });
+userSchema.index({ googleId: 1, country: 1 }, { unique: true, partialFilterExpression: { googleId: { $type: 'string' } } });
 
 // Pre-save middleware to hash password
 userSchema.pre('save', async function() {

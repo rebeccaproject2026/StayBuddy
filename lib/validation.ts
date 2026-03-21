@@ -44,6 +44,7 @@ export const loginSchema = z.object({
     .toLowerCase()
     .trim(),
   password: z.string().min(1, 'Password is required'),
+  country: z.enum(['fr', 'in']).optional(),
 });
 
 // Admin login validation schema

@@ -8,7 +8,7 @@ function generateOTP(): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json();
+    const { email, country } = await request.json();
 
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
@@ -17,7 +17,11 @@ export async function POST(request: NextRequest) {
     const db = await getDB();
     const emailLower = email.toLowerCase().trim();
 
-    const userDoc = await db.collection('users').findOne({ email: emailLower });
+    // Scope lookup by country so /in and /fr accounts are separate
+    const query: Record<string, string> = { email: emailLower };
+    if (country && ['fr', 'in'].includes(country)) query.country = country;
+
+    const userDoc = await db.collection('users').findOne(query);
 
     if (!userDoc) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -31,7 +35,7 @@ export async function POST(request: NextRequest) {
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
     await db.collection('users').updateOne(
-      { email: emailLower },
+      query,
       { $set: { otpCode: otp, otpExpires } }
     );
 

@@ -22,7 +22,10 @@ export async function POST(request: NextRequest) {
 
     console.log('[signup] Generated OTP:', otp, 'for', emailLower);
 
-    const existingDoc = await db.collection('users').findOne({ email: emailLower });
+    const existingDoc = await db.collection('users').findOne({
+      email: emailLower,
+      country: validatedData.country,
+    });
 
     if (existingDoc) {
       if (existingDoc.isVerified) {
@@ -33,7 +36,7 @@ export async function POST(request: NextRequest) {
       }
       // Unverified user — update OTP
       await db.collection('users').updateOne(
-        { email: emailLower },
+        { email: emailLower, country: validatedData.country },
         { $set: { otpCode: otp, otpExpires } }
       );
       console.log('[signup] Updated OTP for existing unverified user');

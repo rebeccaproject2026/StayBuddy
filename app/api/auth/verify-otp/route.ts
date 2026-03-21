@@ -3,7 +3,7 @@ import { getDB } from '@/lib/mongodb';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, otp } = await request.json();
+    const { email, otp, country } = await request.json();
 
     if (!email || !otp) {
       return NextResponse.json(
@@ -16,7 +16,11 @@ export async function POST(request: NextRequest) {
     const emailLower = email.toLowerCase().trim();
     const otpTrimmed = String(otp).trim();
 
-    const userDoc = await db.collection('users').findOne({ email: emailLower });
+    // Scope lookup by country if provided so /in and /fr accounts are separate
+    const query: Record<string, string> = { email: emailLower };
+    if (country && ['fr', 'in'].includes(country)) query.country = country;
+
+    const userDoc = await db.collection('users').findOne(query);
 
     console.log('[verify-otp] email:', emailLower);
     console.log('[verify-otp] received otp:', otpTrimmed);
@@ -54,7 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     await db.collection('users').updateOne(
-      { email: emailLower },
+      query,
       {
         $set: { isVerified: true },
         $unset: { otpCode: '', otpExpires: '' },

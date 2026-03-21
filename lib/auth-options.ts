@@ -16,7 +16,13 @@ export const authOptions: NextAuthOptions = {
       try {
         await connectToDatabase();
 
-        const existingUser = await User.findOne({ email: user.email });
+        // Read country from cookie set before OAuth redirect
+        const cookieStore = await cookies();
+        const pendingCountry = cookieStore.get('pending_country')?.value;
+        const country = ['fr', 'in'].includes(pendingCountry || '') ? pendingCountry! : 'in';
+
+        // Look up by email + country so /in and /fr are separate accounts
+        const existingUser = await User.findOne({ email: user.email, country });
 
         if (existingUser) {
           if (!existingUser.googleId && account?.provider === 'google') {
@@ -26,11 +32,6 @@ export const authOptions: NextAuthOptions = {
           }
           return true;
         }
-
-        // Read country from cookie set before OAuth redirect
-        const cookieStore = await cookies();
-        const pendingCountry = cookieStore.get('pending_country')?.value;
-        const country = ['fr', 'in'].includes(pendingCountry || '') ? pendingCountry! : 'in';
 
         const newUser = new User({
           fullName: user.name,
@@ -55,7 +56,11 @@ export const authOptions: NextAuthOptions = {
       if (account && user) {
         try {
           await connectToDatabase();
-          const dbUser = await User.findOne({ email: user.email });
+          // Read country from cookie to find the correct account
+          const cookieStore = await cookies();
+          const pendingCountry = cookieStore.get('pending_country')?.value;
+          const country = ['fr', 'in'].includes(pendingCountry || '') ? pendingCountry! : 'in';
+          const dbUser = await User.findOne({ email: user.email, country });
           if (dbUser) {
             token.id = dbUser._id.toString();
             token.role = dbUser.role;

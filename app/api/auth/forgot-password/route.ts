@@ -7,7 +7,7 @@ import jwt from 'jsonwebtoken';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json();
+    const { email, country } = await request.json();
 
     if (!email) {
       return NextResponse.json(
@@ -19,8 +19,12 @@ export async function POST(request: NextRequest) {
     // Connect to database
     await connectDB();
 
-    // Find user by email
-    const user = await User.findOne({ email: email.toLowerCase() });
+    // Scope by country so /in and /fr accounts are separate
+    const query: Record<string, string> = { email: email.toLowerCase() };
+    if (country && ['fr', 'in'].includes(country)) query.country = country;
+
+    // Find user by email (+ country if provided)
+    const user = await User.findOne(query);
     if (!user) {
       // Don't reveal if email exists or not for security
       return NextResponse.json(

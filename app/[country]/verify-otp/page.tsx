@@ -59,7 +59,7 @@ function VerifyOTPContent() {
       const res = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp: otpString }),
+        body: JSON.stringify({ email, otp: otpString, country }),
       });
 
       const data = await res.json();
@@ -157,7 +157,7 @@ function VerifyOTPContent() {
       const res = await fetch("/api/auth/resend-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, country }),
       });
 
       const data = await res.json();
