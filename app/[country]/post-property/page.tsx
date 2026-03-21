@@ -244,42 +244,6 @@ export default function PostPropertyPage() {
       <p className="text-red-500 text-xs mt-1" data-field={`${name}-error`}>{fieldErrors[name]}</p>
     ) : null;
 
-  const roomFacilities = [
-    { id: "bed", label: "Bed" },
-    { id: "washroom", label: "Attached Washroom" },
-    { id: "cupboard", label: "Cupboard" },
-    { id: "table", label: "Table" },
-    { id: "tv", label: "TV" },
-    { id: "wifi", label: "Wi-Fi" },
-    { id: "mattress", label: "Mattress" },
-    { id: "aircooler", label: "Air Cooler" }
-  ];
-
-  const pgRulesOptions = [
-    { id: "guardian", label: "Guardian not allowed" },
-    { id: "nonveg", label: "Non-Veg Food" },
-    { id: "gender", label: "Opposite Gender" },
-    { id: "alcohol", label: "Alcohol" },
-    { id: "smoking", label: "Smoking" }
-  ];
-
-  const servicesOptions = [
-    { id: "laundry", label: "Laundry" },
-    { id: "cleaning", label: "Room Cleaning" },
-    { id: "warden", label: "Warden" }
-  ];
-
-  const commonAmenitiesOptions = [
-    { id: "fridge", label: "Fridge" },
-    { id: "kitchen", label: "Kitchen for Self-cooking" },
-    { id: "water", label: "RO Water" },
-    { id: "wifi", label: "Wi-Fi" },
-    { id: "tv", label: "TV" },
-    { id: "powerbackup", label: "Power Backup" },
-    { id: "cctv", label: "CCTV" },
-    { id: "gym", label: "Gymnasium" }
-  ];
-
   // Indian cities used for location suggestions in the city field
   const cities = [
     "Ahmedabad, Gujarat",

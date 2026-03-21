@@ -23,7 +23,15 @@ export async function GET(
       return NextResponse.json({ error: 'Property not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, property });
+    // Populate creator's phone so the detail page can show "Call Owner"
+    const User = (await import('@/models/User')).default;
+    const creator = await User.findById((property as any).createdBy).select('phoneNumber').lean();
+    const propertyWithPhone = {
+      ...property,
+      ownerPhone: (creator as any)?.phoneNumber || null,
+    };
+
+    return NextResponse.json({ success: true, property: propertyWithPhone });
   } catch (error) {
     console.error('[GET /api/properties/[id]]', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

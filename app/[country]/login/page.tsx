@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
 import { motion } from "framer-motion";
@@ -32,15 +32,26 @@ export default function LoginPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const country = params.country as string;
-  const toastShownRef = useRef(false);
 
   useEffect(() => {
     const message = searchParams.get('message');
-    if (message === 'review' && !toastShownRef.current) {
-      toast("After login you can give the review");
-      toastShownRef.current = true;
+    const redirect = searchParams.get('redirect');
+    const reason = searchParams.get('reason');
+
+    if (!redirect && message !== 'review') return;
+
+    // Use a fixed toast ID so only one ever shows at a time
+    const id = 'redirect-toast';
+    if (message === 'review') {
+      toast("After login you can give the review", { id, duration: 3000 });
+    } else if (redirect) {
+      const msg = reason === 'call'
+        ? (language === 'fr' ? 'Connectez-vous pour appeler le propriétaire' : 'Login to call the owner 📞')
+        : (language === 'fr' ? 'Connectez-vous pour contacter le propriétaire' : 'Login to contact the owner 🔒');
+      toast(msg, { id, duration: 3000 });
     }
-  }, [searchParams]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // run once on mount only
 
   const {
     register,
@@ -61,9 +72,10 @@ export default function LoginPage() {
         // Reset form
         reset();
         
-        // Redirect to home page after successful login
+        // Redirect to the intended page or home after successful login
+        const redirect = searchParams.get('redirect');
         setTimeout(() => {
-          router.push(`/${country}`);
+          router.push(redirect || `/${country}`);
         }, 1500);
       }
     } catch (error) {
@@ -90,7 +102,7 @@ export default function LoginPage() {
 
   return (
     <>
-      <Toaster />
+      <Toaster toastOptions={{ duration: 3000 }} />
       <div 
         className="min-h-screen flex items-center justify-center px-4 py-12 relative bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url('https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop')` }}

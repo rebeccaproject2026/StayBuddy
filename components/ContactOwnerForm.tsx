@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Send, MessageCircle, CheckCircle, Phone, MessageSquare } from "lucide-react";
+import { X, Send, MessageCircle, CheckCircle } from "lucide-react";
 
 interface ContactOwnerFormProps {
   isOpen: boolean;
@@ -540,26 +540,6 @@ export default function ContactOwnerForm({ isOpen, onClose, property, language }
                   <Send className="w-5 h-5" />
                   {t.send}
                 </button>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={handleCallOwner}
-                    className="py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Phone className="w-5 h-5" />
-                    {t.callOwner}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleWhatsAppOwner}
-                    className="py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
-                  >
-                    <MessageSquare className="w-5 h-5" />
-                    {t.whatsappOwner}
-                  </button>
-                </div>
 
                 <button
                   type="button"
