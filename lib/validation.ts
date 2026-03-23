@@ -158,6 +158,7 @@ export const propertySchema = z.object({
   societyAmenities: z.array(z.string()).optional(),
   tenantsPrefer: z.array(z.string()).optional(),
   localityDescription: z.string().optional(),
+  nearbyPlaces: z.array(z.object({ name: z.string(), distance: z.string() })).optional(),
   preferredTenants: z.string().optional(),
 
   // ── Description & USP ─────────────────────────────────────────────────────

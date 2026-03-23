@@ -54,8 +54,9 @@ export default function PostPropertyPage() {
   const [pincode, setPincode] = useState("");
   const [landmark, setLandmark] = useState("");
   const [googleMapLink, setGoogleMapLink] = useState("");
-  const [nearbyPlaces, setNearbyPlaces] = useState<string[]>([]);
+  const [nearbyPlaces, setNearbyPlaces] = useState<{ name: string; distance: string }[]>([]);
   const [nearbyPlaceInput, setNearbyPlaceInput] = useState("");
+  const [nearbyDistanceInput, setNearbyDistanceInput] = useState("");
   const [operationalSince, setOperationalSince] = useState("");
   const [pgPresentIn, setPgPresentIn] = useState<PGPresentIn>(null);
   const [pgName, setPgName] = useState("");
@@ -1062,7 +1063,7 @@ export default function PostPropertyPage() {
                   <div>
                     <label className="block text-gray-700 font-medium mb-2">{t.nearbyPlacesLabel}</label>
                     <p className="text-xs text-gray-500 mb-2">{t.nearbyPlacesHelper}</p>
-                    <div className="flex gap-2 mb-3">
+                    <div className="flex flex-col sm:flex-row gap-2 mb-3">
                       <input
                         type="text"
                         value={nearbyPlaceInput}
@@ -1070,24 +1071,35 @@ export default function PostPropertyPage() {
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
-                            const val = nearbyPlaceInput.trim();
-                            if (val && !nearbyPlaces.includes(val)) {
-                              setNearbyPlaces(prev => [...prev, val]);
+                            const name = nearbyPlaceInput.trim();
+                            const distance = nearbyDistanceInput.trim();
+                            if (name) {
+                              setNearbyPlaces(prev => [...prev, { name, distance }]);
+                              setNearbyPlaceInput('');
+                              setNearbyDistanceInput('');
                             }
-                            setNearbyPlaceInput('');
                           }
                         }}
                         placeholder={t.nearbyPlacesPlaceholder}
                         className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors"
                       />
+                      <input
+                        type="text"
+                        value={nearbyDistanceInput}
+                        onChange={(e) => setNearbyDistanceInput(e.target.value)}
+                        placeholder="Distance (e.g. 500m, 2km)"
+                        className="w-full sm:w-40 px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors"
+                      />
                       <button
                         type="button"
                         onClick={() => {
-                          const val = nearbyPlaceInput.trim();
-                          if (val && !nearbyPlaces.includes(val)) {
-                            setNearbyPlaces(prev => [...prev, val]);
+                          const name = nearbyPlaceInput.trim();
+                          const distance = nearbyDistanceInput.trim();
+                          if (name) {
+                            setNearbyPlaces(prev => [...prev, { name, distance }]);
+                            setNearbyPlaceInput('');
+                            setNearbyDistanceInput('');
                           }
-                          setNearbyPlaceInput('');
                         }}
                         className="px-4 py-3 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors font-medium"
                       >
@@ -1098,7 +1110,8 @@ export default function PostPropertyPage() {
                       <div className="flex flex-wrap gap-2">
                         {nearbyPlaces.map((place, i) => (
                           <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium">
-                            {place}
+                            <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                            {place.name}{place.distance ? ` · ${place.distance}` : ''}
                             <button
                               type="button"
                               onClick={() => setNearbyPlaces(prev => prev.filter((_, idx) => idx !== i))}

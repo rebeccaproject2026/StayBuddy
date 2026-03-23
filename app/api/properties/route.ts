@@ -111,6 +111,10 @@ export async function POST(req: NextRequest) {
 
     const data = parsed.data;
 
+    // Debug: log nearbyPlaces at each stage
+    console.log('[POST /api/properties] body.nearbyPlaces:', JSON.stringify(body.nearbyPlaces));
+    console.log('[POST /api/properties] parsed.nearbyPlaces:', JSON.stringify(data.nearbyPlaces));
+
     // 4. Upload images to Cloudinary
     console.log('[POST /api/properties] Starting Cloudinary uploads...');
     let mainImages, kitchenImgs, washroomImgs, commonAreaImgs,
@@ -149,6 +153,7 @@ export async function POST(req: NextRequest) {
 
     // 5. Build property document
     console.log('[POST /api/properties] Saving to DB...');
+    console.log('[POST /api/properties] nearbyPlaces going to DB:', JSON.stringify(data.nearbyPlaces));
     const property = await Property.create({
       ...data,
       images: mainImages,
@@ -163,6 +168,7 @@ export async function POST(req: NextRequest) {
       createdBy: authUser.id,
     });
 
+    console.log('[POST /api/properties] Saved nearbyPlaces:', JSON.stringify((property as any).nearbyPlaces));
     return NextResponse.json({ success: true, property }, { status: 201 });
   } catch (error: any) {
     console.error('[POST /api/properties]', error);

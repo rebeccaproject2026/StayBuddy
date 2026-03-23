@@ -622,23 +622,50 @@ export default function OwnerDashboard() {
       state: listing.state || "",
       pincode: listing.pincode || "",
       landmark: listing.landmark || "",
+      googleMapLink: listing.googleMapLink || "",
       rooms: String(listing.rooms || ""),
       bathrooms: String(listing.bathrooms || ""),
       area: String(listing.area || ""),
       availableFrom: listing.availableFrom || "",
-      pgDescription: listing.pgDescription || listing.localityDescription || "",
+      pgDescription: listing.pgDescription || "",
       // PG-specific
       pgFor: listing.pgFor || listing.preferredGender || "",
       tenantPreference: listing.tenantPreference || "",
       noticePeriod: listing.noticePeriod || "",
       gateClosingTime: listing.gateClosingTime || "",
+      pgRules: listing.pgRules || [],
+      services: Array.isArray(listing.services) ? listing.services : [],
+      foodProvided: listing.foodProvided || false,
+      meals: listing.meals || [],
+      vegNonVeg: listing.vegNonVeg || "",
+      foodCharges: listing.foodCharges || "",
+      commonAmenities: listing.commonAmenities || [],
+      parkingAvailable: listing.parkingAvailable || false,
+      parkingType: listing.parkingType || "",
+      operationalSince: listing.operationalSince || "",
+      pgPresentIn: listing.pgPresentIn || "",
+      pgName: listing.pgName || "",
       // Tenant-specific
       societyName: listing.societyName || "",
-      furnishing: Array.isArray(listing.furnishing) ? listing.furnishing.join(", ") : (listing.furnishing || ""),
+      furnishing: Array.isArray(listing.furnishing) ? listing.furnishing : [],
       floorNumber: listing.floorNumber || "",
       totalFloors: listing.totalFloors || "",
+      balcony: listing.balcony || "",
       facing: listing.facing || "",
       maintenanceCharges: listing.maintenanceCharges || "",
+      maintenanceType: listing.maintenanceType || "",
+      securityAmount: listing.securityAmount || listing.monthlyRentAmount ? String(listing.deposit || "") : "",
+      monthlyRentAmount: listing.monthlyRentAmount || String(listing.price || ""),
+      additionalRooms: listing.additionalRooms || [],
+      overlooking: listing.overlooking || [],
+      societyAmenities: listing.societyAmenities || [],
+      tenantsPrefer: listing.tenantsPrefer || [],
+      localityDescription: listing.localityDescription || "",
+      nearbyPlaces: listing.nearbyPlaces || [],
+      nearbyPlaceInput: "",
+      nearbyDistanceInput: "",
+      uspCategory: listing.uspCategory || "",
+      uspText: listing.uspText || "",
     });
     setEditImages(listing.images || []);
     setEditNewFiles([]);
@@ -730,14 +757,38 @@ export default function OwnerDashboard() {
       if (editForm.tenantPreference) updates.tenantPreference = editForm.tenantPreference;
       if (editForm.noticePeriod) updates.noticePeriod = editForm.noticePeriod;
       if (editForm.gateClosingTime) updates.gateClosingTime = editForm.gateClosingTime;
+      updates.pgRules = editForm.pgRules || [];
+      updates.services = editForm.services || [];
+      updates.foodProvided = editForm.foodProvided || false;
+      updates.meals = editForm.meals || [];
+      updates.vegNonVeg = editForm.vegNonVeg || "";
+      updates.foodCharges = editForm.foodCharges || "";
+      updates.commonAmenities = editForm.commonAmenities || [];
+      updates.parkingAvailable = editForm.parkingAvailable || false;
+      updates.parkingType = editForm.parkingType || "";
+      if (editForm.operationalSince) updates.operationalSince = editForm.operationalSince;
+      if (editForm.pgPresentIn) updates.pgPresentIn = editForm.pgPresentIn;
+      if (editForm.pgName) updates.pgName = editForm.pgName;
     } else {
       if (editForm.societyName) updates.societyName = editForm.societyName.trim();
-      if (editForm.furnishing) updates.furnishing = editForm.furnishing.split(",").map((s: string) => s.trim()).filter(Boolean);
+      updates.furnishing = Array.isArray(editForm.furnishing) ? editForm.furnishing : [];
       if (editForm.floorNumber) updates.floorNumber = editForm.floorNumber;
       if (editForm.totalFloors) updates.totalFloors = editForm.totalFloors;
+      if (editForm.balcony) updates.balcony = editForm.balcony;
       if (editForm.facing) updates.facing = editForm.facing;
       if (editForm.maintenanceCharges) updates.maintenanceCharges = editForm.maintenanceCharges;
+      if (editForm.maintenanceType) updates.maintenanceType = editForm.maintenanceType;
+      if (editForm.monthlyRentAmount) updates.monthlyRentAmount = editForm.monthlyRentAmount;
+      if (editForm.securityAmount) updates.securityAmount = editForm.securityAmount;
+      updates.additionalRooms = editForm.additionalRooms || [];
+      updates.overlooking = editForm.overlooking || [];
+      updates.societyAmenities = editForm.societyAmenities || [];
+      updates.tenantsPrefer = editForm.tenantsPrefer || [];
+      if (editForm.localityDescription) updates.localityDescription = editForm.localityDescription;
     }
+    if (editForm.nearbyPlaces?.length > 0) updates.nearbyPlaces = editForm.nearbyPlaces;
+    if (editForm.uspCategory) updates.uspCategory = editForm.uspCategory;
+    if (editForm.uspText) updates.uspText = editForm.uspText;
 
     try {
       const res = await fetch(`/api/properties/${id}`, {
@@ -935,103 +986,154 @@ export default function OwnerDashboard() {
                     {editingListing ? (
                       <div className="bg-white rounded-2xl shadow-md overflow-hidden">
                         {/* Header */}
-                        <div className="flex items-center gap-3 p-4 sm:p-6 border-b border-gray-200">
+                        <div className="flex items-center gap-3 p-4 sm:p-6 bg-gradient-to-r from-primary/5 to-transparent border-b border-gray-100">
                           <button
                             onClick={closeEdit}
-                            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors text-sm"
+                            className="flex items-center gap-2 px-3 py-2 rounded-xl border-2 border-gray-200 text-gray-600 hover:bg-white hover:border-primary/30 transition-all text-sm font-medium"
                           >
-                            ← {language === "fr" ? "Retour aux annonces" : "Back to listings"}
+                            <ArrowLeft className="w-4 h-4" />
+                            {language === "fr" ? "Retour" : "Back"}
                           </button>
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${editingListing.propertyType === "PG" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"}`}>
-                            {editingListing.propertyType}
-                          </span>
-                          <span className="ml-auto text-sm font-medium text-gray-500">
-                            {language === "fr" ? "Modifier" : "Edit Listing"}
+                          <div className="flex items-center gap-2">
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${editingListing.propertyType === "PG" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"}`}>
+                              {editingListing.propertyType}
+                            </span>
+                            <span className="text-base font-bold text-gray-900 truncate max-w-xs">
+                              {editingListing.title}
+                            </span>
+                          </div>
+                          <span className="ml-auto text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full">
+                            {language === "fr" ? "Modifier l'annonce" : "Edit Listing"}
                           </span>
                         </div>
 
-                        <div className="p-4 sm:p-6 space-y-5">
-                          <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="p-4 sm:p-6 space-y-6">
 
+                          {/* ── Section: Basic Info ── */}
+                          <div className="bg-gray-50 rounded-2xl p-4 sm:p-5 space-y-4">
+                            <h3 className="text-sm font-bold text-primary uppercase tracking-wide flex items-center gap-2">
+                              <span className="w-1 h-4 bg-primary rounded-full inline-block" />
+                              Basic Information
+                            </h3>
+                            <div className="grid sm:grid-cols-2 gap-4">
                             <div className="sm:col-span-2">
                               <label className="block text-sm font-medium text-gray-700 mb-1">Property Title</label>
                               <input value={editForm.title} onChange={e => setEditForm(p => ({ ...p, title: e.target.value }))}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
                             </div>
-
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Rent ({currencySymbol})</label>
                               <input value={editForm.price} onChange={e => setEditForm(p => ({ ...p, price: e.target.value }))}
                                 inputMode="numeric"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
                             </div>
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-1">Security Deposit ({currencySymbol})</label>
                               <input value={editForm.deposit} onChange={e => setEditForm(p => ({ ...p, deposit: e.target.value }))}
                                 inputMode="numeric"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
                             </div>
-
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-                              <input value={editForm.location} onChange={e => setEditForm(p => ({ ...p, location: e.target.value }))}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Area / Locality</label>
-                              <input value={editForm.areaName} onChange={e => setEditForm(p => ({ ...p, areaName: e.target.value }))}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
-                            </div>
-                            <div className="sm:col-span-2">
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Full Address</label>
-                              <input value={editForm.fullAddress} onChange={e => setEditForm(p => ({ ...p, fullAddress: e.target.value }))}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-                              <input value={editForm.state} onChange={e => setEditForm(p => ({ ...p, state: e.target.value }))}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Pincode</label>
-                              <input value={editForm.pincode} onChange={e => setEditForm(p => ({ ...p, pincode: e.target.value }))}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
-                            </div>
-                            <div className="sm:col-span-2">
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Landmark</label>
-                              <input value={editForm.landmark} onChange={e => setEditForm(p => ({ ...p, landmark: e.target.value }))}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
-                            </div>
-
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-1">Rooms</label>
                               <input value={editForm.rooms} onChange={e => setEditForm(p => ({ ...p, rooms: e.target.value }))}
                                 inputMode="numeric"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
                             </div>
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-1">Bathrooms</label>
                               <input value={editForm.bathrooms} onChange={e => setEditForm(p => ({ ...p, bathrooms: e.target.value }))}
                                 inputMode="numeric"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
                             </div>
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-1">Area (m²)</label>
                               <input value={editForm.area} onChange={e => setEditForm(p => ({ ...p, area: e.target.value }))}
                                 inputMode="numeric"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
                             </div>
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-1">Available From</label>
                               <input value={editForm.availableFrom} onChange={e => setEditForm(p => ({ ...p, availableFrom: e.target.value }))}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
                             </div>
+                            </div>
+                          </div>
+
+                          {/* ── Section: Location ── */}
+                          <div className="bg-gray-50 rounded-2xl p-4 sm:p-5 space-y-4">
+                            <h3 className="text-sm font-bold text-primary uppercase tracking-wide flex items-center gap-2">
+                              <span className="w-1 h-4 bg-primary rounded-full inline-block" />
+                              Location
+                            </h3>
+                            <div className="grid sm:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                              <input value={editForm.location} onChange={e => setEditForm(p => ({ ...p, location: e.target.value }))}
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Area / Locality</label>
+                              <input value={editForm.areaName} onChange={e => setEditForm(p => ({ ...p, areaName: e.target.value }))}
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                            </div>
+                            <div className="sm:col-span-2">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Full Address</label>
+                              <input value={editForm.fullAddress} onChange={e => setEditForm(p => ({ ...p, fullAddress: e.target.value }))}
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                              <input value={editForm.state} onChange={e => setEditForm(p => ({ ...p, state: e.target.value }))}
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Pincode</label>
+                              <input value={editForm.pincode} onChange={e => setEditForm(p => ({ ...p, pincode: e.target.value }))}
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                            </div>
+                            <div className="sm:col-span-2">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Landmark</label>
+                              <input value={editForm.landmark} onChange={e => setEditForm(p => ({ ...p, landmark: e.target.value }))}
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                            </div>
+                            </div>
+                          </div>
+
+                          {/* ── Type-specific sections ── */}
+                          <div className="bg-gray-50 rounded-2xl p-4 sm:p-5 space-y-4">
+                            <h3 className="text-sm font-bold text-primary uppercase tracking-wide flex items-center gap-2">
+                              <span className="w-1 h-4 bg-primary rounded-full inline-block" />
+                              {editForm.propertyType === "PG" ? "PG Details" : "Property Details"}
+                            </h3>
+                            <div className="grid sm:grid-cols-2 gap-4">
 
                             {editForm.propertyType === "PG" && (<>
+                              {/* PG Basic */}
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">PG Name</label>
+                                <input value={editForm.pgName} onChange={e => setEditForm(p => ({ ...p, pgName: e.target.value }))}
+                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Operational Since</label>
+                                <input value={editForm.operationalSince} onChange={e => setEditForm(p => ({ ...p, operationalSince: e.target.value }))}
+                                  placeholder="e.g. 2018"
+                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">PG Present In</label>
+                                <select value={editForm.pgPresentIn} onChange={e => setEditForm(p => ({ ...p, pgPresentIn: e.target.value }))}
+                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white appearance-none cursor-pointer">
+                                  <option value="">Select</option>
+                                  <option value="An Independent Building">An Independent Building</option>
+                                  <option value="An Independent Flats">An Independent Flats</option>
+                                  <option value="Present In A Society">Present In A Society</option>
+                                </select>
+                              </div>
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">PG For</label>
                                 <select value={editForm.pgFor} onChange={e => setEditForm(p => ({ ...p, pgFor: e.target.value }))}
-                                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white appearance-none cursor-pointer">
                                   <option value="">Select</option>
                                   <option value="Male">Male</option>
                                   <option value="Female">Female</option>
@@ -1041,7 +1143,7 @@ export default function OwnerDashboard() {
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Tenant Preference</label>
                                 <select value={editForm.tenantPreference} onChange={e => setEditForm(p => ({ ...p, tenantPreference: e.target.value }))}
-                                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white appearance-none cursor-pointer">
                                   <option value="">Select</option>
                                   <option value="Professionals">Professionals</option>
                                   <option value="Students">Students</option>
@@ -1050,13 +1152,229 @@ export default function OwnerDashboard() {
                               </div>
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Notice Period</label>
-                                <input value={editForm.noticePeriod} onChange={e => setEditForm(p => ({ ...p, noticePeriod: e.target.value }))}
-                                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
+                                <select value={editForm.noticePeriod} onChange={e => setEditForm(p => ({ ...p, noticePeriod: e.target.value }))}
+                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white appearance-none cursor-pointer">
+                                  <option value="">Select</option>
+                                  <option value="1 Week">1 Week</option>
+                                  <option value="15 Days">15 Days</option>
+                                  <option value="1 Month">1 Month</option>
+                                  <option value="2 Month">2 Month</option>
+                                  <option value="No Notice Period">No Notice Period</option>
+                                </select>
                               </div>
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Gate Closing Time</label>
-                                <input value={editForm.gateClosingTime} onChange={e => setEditForm(p => ({ ...p, gateClosingTime: e.target.value }))}
-                                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
+                                <input type="time" value={editForm.gateClosingTime} onChange={e => setEditForm(p => ({ ...p, gateClosingTime: e.target.value }))}
+                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                              </div>
+                              {/* PG Rules */}
+                              <div className="sm:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">PG Rules <span className="text-xs text-gray-400 font-normal">(select what is NOT allowed)</span></label>
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                  {[
+                                    ...["guardian","nonveg","gender","alcohol","smoking"].map(id => ({
+                                      id,
+                                      label: ({ guardian:"Guardian", nonveg:"Non-Veg Food", gender:"Opposite Gender", alcohol:"Alcohol", smoking:"Smoking" } as Record<string,string>)[id]
+                                    })),
+                                    ...(editForm.pgRules||[])
+                                      .filter((r:string) => !["guardian","nonveg","gender","alcohol","smoking"].includes(r))
+                                      .map((r:string) => ({ id: r, label: r }))
+                                  ].map(rule => {
+                                    const active = (editForm.pgRules||[]).includes(rule.id);
+                                    return (
+                                      <button key={rule.id} type="button" onClick={() => setEditForm(p => ({ ...p, pgRules: active ? p.pgRules.filter((r:string)=>r!==rule.id) : [...(p.pgRules||[]), rule.id] }))}
+                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
+                                        {rule.label}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="Add custom rule..."
+                                    className="flex-1 px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary transition-colors bg-white"
+                                    onKeyDown={e => {
+                                      if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        const val = (e.target as HTMLInputElement).value.trim();
+                                        if (val && !(editForm.pgRules||[]).includes(val)) setEditForm(p => ({ ...p, pgRules: [...(p.pgRules||[]), val] }));
+                                        (e.target as HTMLInputElement).value = "";
+                                      }
+                                    }}
+                                  />
+                                  <button type="button"
+                                    className="px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-dark transition-colors"
+                                    onClick={e => {
+                                      const input = (e.currentTarget.previousElementSibling as HTMLInputElement);
+                                      const val = input.value.trim();
+                                      if (val && !(editForm.pgRules||[]).includes(val)) setEditForm(p => ({ ...p, pgRules: [...(p.pgRules||[]), val] }));
+                                      input.value = "";
+                                    }}>
+                                    Add
+                                  </button>
+                                </div>
+                              </div>
+                              {/* Services */}
+                              <div className="sm:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Services</label>
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                  {[
+                                    ...["laundry","cleaning","warden"].map(id => ({
+                                      id,
+                                      label: ({ laundry:"Laundry", cleaning:"Room Cleaning", warden:"Warden" } as Record<string,string>)[id]
+                                    })),
+                                    ...(editForm.services||[])
+                                      .filter((s:string) => !["laundry","cleaning","warden"].includes(s))
+                                      .map((s:string) => ({ id: s, label: s }))
+                                  ].map(svc => {
+                                    const active = (editForm.services||[]).includes(svc.id);
+                                    return (
+                                      <button key={svc.id} type="button" onClick={() => setEditForm(p => ({ ...p, services: active ? p.services.filter((x:string)=>x!==svc.id) : [...(p.services||[]), svc.id] }))}
+                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
+                                        {svc.label}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="Add custom service..."
+                                    className="flex-1 px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary transition-colors bg-white"
+                                    onKeyDown={e => {
+                                      if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        const val = (e.target as HTMLInputElement).value.trim();
+                                        if (val && !(editForm.services||[]).includes(val)) setEditForm(p => ({ ...p, services: [...(p.services||[]), val] }));
+                                        (e.target as HTMLInputElement).value = "";
+                                      }
+                                    }}
+                                  />
+                                  <button type="button"
+                                    className="px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-dark transition-colors"
+                                    onClick={e => {
+                                      const input = (e.currentTarget.previousElementSibling as HTMLInputElement);
+                                      const val = input.value.trim();
+                                      if (val && !(editForm.services||[]).includes(val)) setEditForm(p => ({ ...p, services: [...(p.services||[]), val] }));
+                                      input.value = "";
+                                    }}>
+                                    Add
+                                  </button>
+                                </div>
+                              </div>
+                              {/* Food */}
+                              <div className="sm:col-span-2">
+                                <label className={`flex items-center gap-3 cursor-pointer p-3 rounded-xl border-2 transition-all w-fit ${editForm.foodProvided ? "border-primary bg-primary/5" : "border-gray-200 bg-white"}`}>
+                                  <input type="checkbox" checked={editForm.foodProvided||false} onChange={e => setEditForm(p => ({ ...p, foodProvided: e.target.checked }))}
+                                    className="w-4 h-4 text-primary rounded accent-primary" />
+                                  <span className="text-sm font-medium text-gray-700">Food Provided</span>
+                                </label>
+                                {editForm.foodProvided && (
+                                  <div className="mt-3 p-4 bg-orange-50 border border-orange-100 rounded-xl space-y-3">
+                                    <div>
+                                      <label className="block text-xs font-semibold text-gray-600 mb-2">Meals</label>
+                                      <div className="flex flex-wrap gap-2">
+                                        {["Breakfast","Lunch","Dinner"].map(m => {
+                                          const active = (editForm.meals||[]).includes(m);
+                                          return (
+                                            <button key={m} type="button" onClick={() => setEditForm(p => ({ ...p, meals: active ? p.meals.filter((x:string)=>x!==m) : [...(p.meals||[]), m] }))}
+                                              className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
+                                              {m}
+                                            </button>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <label className="block text-xs font-semibold text-gray-600 mb-2">Veg / Non-Veg</label>
+                                      <div className="flex gap-2">
+                                        {["Veg","Veg & Non Veg"].map(opt => (
+                                          <button key={opt} type="button" onClick={() => setEditForm(p => ({ ...p, vegNonVeg: opt }))}
+                                            className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${editForm.vegNonVeg===opt ? "bg-primary text-white border-primary" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
+                                            {opt}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <label className="block text-xs font-semibold text-gray-600 mb-2">Food Charges</label>
+                                      <select value={editForm.foodCharges||""} onChange={e => setEditForm(p => ({ ...p, foodCharges: e.target.value }))}
+                                        className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary bg-white appearance-none cursor-pointer">
+                                        <option value="">Select</option>
+                                        <option value="Included in rent">Included in rent</option>
+                                        <option value="Per meal Basis">Per meal Basis</option>
+                                        <option value="Fixed monthly Amount">Fixed monthly Amount</option>
+                                      </select>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              {/* Common Amenities */}
+                              <div className="sm:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Common Amenities</label>
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                  {[
+                                    ...["fridge","kitchen","water","wifi","tv","powerbackup","cctv","gym"].map(id => ({
+                                      id,
+                                      label: ({ fridge:"Fridge", kitchen:"Kitchen", water:"RO Water", wifi:"Wi-Fi", tv:"TV", powerbackup:"Power Backup", cctv:"CCTV", gym:"Gymnasium" } as Record<string,string>)[id]
+                                    })),
+                                    ...(editForm.commonAmenities||[])
+                                      .filter((a:string) => !["fridge","kitchen","water","wifi","tv","powerbackup","cctv","gym"].includes(a))
+                                      .map((a:string) => ({ id: a, label: a }))
+                                  ].map(amenity => {
+                                    const active = (editForm.commonAmenities||[]).includes(amenity.id);
+                                    return (
+                                      <button key={amenity.id} type="button" onClick={() => setEditForm(p => ({ ...p, commonAmenities: active ? p.commonAmenities.filter((x:string)=>x!==amenity.id) : [...(p.commonAmenities||[]), amenity.id] }))}
+                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
+                                        {amenity.label}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="Add custom amenity..."
+                                    className="flex-1 px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary transition-colors bg-white"
+                                    onKeyDown={e => {
+                                      if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        const val = (e.target as HTMLInputElement).value.trim();
+                                        if (val && !(editForm.commonAmenities||[]).includes(val)) setEditForm(p => ({ ...p, commonAmenities: [...(p.commonAmenities||[]), val] }));
+                                        (e.target as HTMLInputElement).value = "";
+                                      }
+                                    }}
+                                  />
+                                  <button type="button"
+                                    className="px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-dark transition-colors"
+                                    onClick={e => {
+                                      const input = (e.currentTarget.previousElementSibling as HTMLInputElement);
+                                      const val = input.value.trim();
+                                      if (val && !(editForm.commonAmenities||[]).includes(val)) setEditForm(p => ({ ...p, commonAmenities: [...(p.commonAmenities||[]), val] }));
+                                      input.value = "";
+                                    }}>
+                                    Add
+                                  </button>
+                                </div>
+                              </div>
+                              {/* Parking */}
+                              <div className="sm:col-span-2">
+                                <label className={`flex items-center gap-3 cursor-pointer p-3 rounded-xl border-2 transition-all w-fit ${editForm.parkingAvailable ? "border-primary bg-primary/5" : "border-gray-200 bg-white"}`}>
+                                  <input type="checkbox" checked={editForm.parkingAvailable||false} onChange={e => setEditForm(p => ({ ...p, parkingAvailable: e.target.checked }))}
+                                    className="w-4 h-4 text-primary rounded accent-primary" />
+                                  <span className="text-sm font-medium text-gray-700">Parking Available</span>
+                                </label>
+                                {editForm.parkingAvailable && (
+                                  <div className="flex gap-2 mt-3">
+                                    {["2-Wheeler","Car Parking"].map(opt => (
+                                      <button key={opt} type="button" onClick={() => setEditForm(p => ({ ...p, parkingType: opt }))}
+                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${editForm.parkingType===opt ? "bg-primary text-white border-primary" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
+                                        {opt}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             </>)}
 
@@ -1064,18 +1382,47 @@ export default function OwnerDashboard() {
                               <div className="sm:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Society Name</label>
                                 <input value={editForm.societyName} onChange={e => setEditForm(p => ({ ...p, societyName: e.target.value }))}
-                                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
+                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Furnishing</label>
-                                <input value={editForm.furnishing} onChange={e => setEditForm(p => ({ ...p, furnishing: e.target.value }))}
-                                  placeholder="e.g. Fully-Furnished, Semi-Furnished"
-                                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Rent ({currencySymbol})</label>
+                                <input value={editForm.monthlyRentAmount} onChange={e => setEditForm(p => ({ ...p, monthlyRentAmount: e.target.value }))}
+                                  inputMode="numeric"
+                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Security Amount ({currencySymbol})</label>
+                                <input value={editForm.securityAmount} onChange={e => setEditForm(p => ({ ...p, securityAmount: e.target.value }))}
+                                  inputMode="numeric"
+                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Maintenance Charges ({currencySymbol})</label>
+                                <input value={editForm.maintenanceCharges} onChange={e => setEditForm(p => ({ ...p, maintenanceCharges: e.target.value }))}
+                                  inputMode="numeric"
+                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Maintenance Type</label>
+                                <select value={editForm.maintenanceType} onChange={e => setEditForm(p => ({ ...p, maintenanceType: e.target.value }))}
+                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white appearance-none cursor-pointer">
+                                  <option value="">Select</option>
+                                  <option value="Monthly">Monthly</option>
+                                  <option value="Yearly">Yearly</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Balcony</label>
+                                <select value={editForm.balcony} onChange={e => setEditForm(p => ({ ...p, balcony: e.target.value }))}
+                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white appearance-none cursor-pointer">
+                                  <option value="">Select</option>
+                                  {["All","1+","2+","3+","4+"].map(o => <option key={o} value={o}>{o}</option>)}
+                                </select>
                               </div>
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Facing</label>
                                 <select value={editForm.facing} onChange={e => setEditForm(p => ({ ...p, facing: e.target.value }))}
-                                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white appearance-none cursor-pointer">
                                   <option value="">Select</option>
                                   {["East","West","North","South","North-East","North-West","South-East","South-West"].map(d => (
                                     <option key={d} value={d}>{d}</option>
@@ -1085,37 +1432,188 @@ export default function OwnerDashboard() {
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Floor No.</label>
                                 <input value={editForm.floorNumber} onChange={e => setEditForm(p => ({ ...p, floorNumber: e.target.value }))}
-                                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
+                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
                               </div>
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Total Floors</label>
                                 <input value={editForm.totalFloors} onChange={e => setEditForm(p => ({ ...p, totalFloors: e.target.value }))}
-                                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
+                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
                               </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Maintenance Charges ({currencySymbol})</label>
-                                <input value={editForm.maintenanceCharges} onChange={e => setEditForm(p => ({ ...p, maintenanceCharges: e.target.value }))}
-                                  inputMode="numeric"
-                                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
+                              {/* Furnishing toggle */}
+                              <div className="sm:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Furnishing</label>
+                                <div className="flex flex-wrap gap-2">
+                                  {["Unfurnished","Semi-Furnished","Fully-Furnished"].map(opt => {
+                                    const active = (editForm.furnishing||[]).includes(opt);
+                                    return (
+                                      <button key={opt} type="button" onClick={() => setEditForm(p => ({ ...p, furnishing: active ? p.furnishing.filter((x:string)=>x!==opt) : [...(p.furnishing||[]), opt] }))}
+                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
+                                        {opt}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                              {/* Additional Rooms */}
+                              <div className="sm:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Additional Rooms</label>
+                                <div className="flex flex-wrap gap-2">
+                                  {[{id:"poojaRoom",label:"Pooja Room"},{id:"servantRoom",label:"Servant Room"},{id:"store",label:"Store"},{id:"study",label:"Study"}].map(r => {
+                                    const active = (editForm.additionalRooms||[]).includes(r.id);
+                                    return (
+                                      <button key={r.id} type="button" onClick={() => setEditForm(p => ({ ...p, additionalRooms: active ? p.additionalRooms.filter((x:string)=>x!==r.id) : [...(p.additionalRooms||[]), r.id] }))}
+                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
+                                        {r.label}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                              {/* Overlooking */}
+                              <div className="sm:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Overlooking</label>
+                                <div className="flex flex-wrap gap-2">
+                                  {[{id:"gardenPark",label:"Garden/Park"},{id:"mainRoad",label:"Main Road"},{id:"pool",label:"Pool"}].map(item => {
+                                    const active = (editForm.overlooking||[]).includes(item.id);
+                                    return (
+                                      <button key={item.id} type="button" onClick={() => setEditForm(p => ({ ...p, overlooking: active ? p.overlooking.filter((x:string)=>x!==item.id) : [...(p.overlooking||[]), item.id] }))}
+                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
+                                        {item.label}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                              {/* Society Amenities */}
+                              <div className="sm:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Society Amenities</label>
+                                <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
+                                  {["Maintenance Staff","Air Conditioned","Park","Piped Gas","Power Back Up","Club House","Gymnasium","Intercom Facility","Internet/Wi-Fi Connectivity","Jogging and Strolling Track","Lift","Reserved Parking","Security","Swimming Pool","Waste Disposal"].map(a => {
+                                    const active = (editForm.societyAmenities||[]).includes(a);
+                                    return (
+                                      <button key={a} type="button" onClick={() => setEditForm(p => ({ ...p, societyAmenities: active ? p.societyAmenities.filter((x:string)=>x!==a) : [...(p.societyAmenities||[]), a] }))}
+                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
+                                        {a}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                              {/* Tenants Prefer */}
+                              <div className="sm:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Tenants You Prefer</label>
+                                <div className="flex flex-wrap gap-2">
+                                  {[{id:"coupleFamily",label:"Couple/Family"},{id:"vegetarians",label:"Vegetarians"},{id:"withCompanyLease",label:"With Company Lease"},{id:"withoutPets",label:"Without Pets"}].map(t => {
+                                    const active = (editForm.tenantsPrefer||[]).includes(t.id);
+                                    return (
+                                      <button key={t.id} type="button" onClick={() => setEditForm(p => ({ ...p, tenantsPrefer: active ? p.tenantsPrefer.filter((x:string)=>x!==t.id) : [...(p.tenantsPrefer||[]), t.id] }))}
+                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
+                                        {t.label}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                              {/* Locality Description */}
+                              <div className="sm:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Locality Description</label>
+                                <textarea value={editForm.localityDescription} onChange={e => setEditForm(p => ({ ...p, localityDescription: e.target.value }))}
+                                  rows={3} placeholder="Describe the locality..."
+                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white resize-none" />
                               </div>
                             </>)}
 
+                            </div>
+                          </div>
+
+                          {/* ── Section: Description & USP ── */}
+                          <div className="bg-gray-50 rounded-2xl p-4 sm:p-5 space-y-4">
+                            <h3 className="text-sm font-bold text-primary uppercase tracking-wide flex items-center gap-2">
+                              <span className="w-1 h-4 bg-primary rounded-full inline-block" />
+                              Description & Highlights
+                            </h3>
+                            <div className="grid sm:grid-cols-2 gap-4">
                             <div className="sm:col-span-2">
                               <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                               <textarea value={editForm.pgDescription} onChange={e => setEditForm(p => ({ ...p, pgDescription: e.target.value }))}
                                 rows={3}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none" />
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white resize-none" />
                             </div>
+
+                            {/* Google Map Link */}
+                            <div className="sm:col-span-2">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Google Map Link</label>
+                              <input value={editForm.googleMapLink||""} onChange={e => setEditForm(p => ({ ...p, googleMapLink: e.target.value }))}
+                                placeholder="https://maps.google.com/..."
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                            </div>
+
+                            {/* Nearby Places */}
+                            <div className="sm:col-span-2">
+                              <label className="block text-sm font-medium text-gray-700 mb-2">Nearby Places</label>
+                              {(editForm.nearbyPlaces||[]).length > 0 && (
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                  {(editForm.nearbyPlaces||[]).map((place: {name:string;distance:string}, i: number) => (
+                                    <span key={i} className="flex items-center gap-1.5 pl-3 pr-1 py-1.5 bg-primary/10 text-primary border border-primary/20 rounded-full text-xs font-medium">
+                                      <MapPin className="w-3 h-3 flex-shrink-0" />
+                                      {place.name}
+                                      {place.distance && <span className="text-primary/60">· {place.distance}</span>}
+                                      <button type="button" onClick={() => setEditForm(p => ({ ...p, nearbyPlaces: p.nearbyPlaces.filter((_:any, idx:number) => idx !== i) }))}
+                                        className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-primary/20 text-primary ml-0.5 text-base leading-none">×</button>
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                              <div className="flex gap-2">
+                                <input value={editForm.nearbyPlaceInput||""} onChange={e => setEditForm(p => ({ ...p, nearbyPlaceInput: e.target.value }))}
+                                  placeholder="Place name"
+                                  className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary transition-colors bg-white" />
+                                <input value={editForm.nearbyDistanceInput||""} onChange={e => setEditForm(p => ({ ...p, nearbyDistanceInput: e.target.value }))}
+                                  placeholder="Distance"
+                                  className="w-28 px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary transition-colors bg-white" />
+                                <button type="button"
+                                  onClick={() => {
+                                    const name = (editForm.nearbyPlaceInput||"").trim();
+                                    if (!name) return;
+                                    setEditForm(p => ({ ...p, nearbyPlaces: [...(p.nearbyPlaces||[]), { name, distance: p.nearbyDistanceInput||"" }], nearbyPlaceInput: "", nearbyDistanceInput: "" }));
+                                  }}
+                                  className="px-4 py-3 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-dark transition-colors">
+                                  Add
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* USP */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">USP Category</label>
+                              <input value={editForm.uspCategory||""} onChange={e => setEditForm(p => ({ ...p, uspCategory: e.target.value }))}
+                                placeholder="e.g. location, price"
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">USP Text</label>
+                              <input value={editForm.uspText||""} onChange={e => setEditForm(p => ({ ...p, uspText: e.target.value }))}
+                                placeholder="Unique selling point..."
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                            </div>
+                            </div>
+                          </div>
+
+                          {/* ── Section: Photos ── */}
+                          <div className="bg-gray-50 rounded-2xl p-4 sm:p-5 space-y-5">
+                            <h3 className="text-sm font-bold text-primary uppercase tracking-wide flex items-center gap-2">
+                              <span className="w-1 h-4 bg-primary rounded-full inline-block" />
+                              Photos
+                            </h3>
+                            <div className="grid sm:grid-cols-2 gap-5">
 
                             {/* Room Photos */}
                             <div className="sm:col-span-2">
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                                {editForm.propertyType === 'PG' ? 'Room Photos' : 'Room Photos'}
-                              </label>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">Room Photos</label>
                               {editRoomImages.length > 0 && (
                                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
                                   {editRoomImages.map((room: any, i: number) => room.image && (
-                                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group">
+                                    <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 group">
                                       <Image src={room.image} alt={room.name || `room ${i+1}`} fill className="object-cover" />
                                       <p className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs text-center py-0.5 truncate">{room.name}</p>
                                       <button type="button"
@@ -1128,7 +1626,7 @@ export default function OwnerDashboard() {
                               {editRoomNewFiles.length > 0 && (
                                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
                                   {editRoomNewFiles.map((file, i) => (
-                                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden border-2 border-primary/40 group">
+                                    <div key={i} className="relative aspect-square rounded-xl overflow-hidden border-2 border-primary/40 group">
                                       <Image src={URL.createObjectURL(file)} alt={`new room ${i+1}`} fill className="object-cover" />
                                       <button type="button"
                                         onClick={() => setEditRoomNewFiles(prev => prev.filter((_, idx) => idx !== i))}
@@ -1137,8 +1635,8 @@ export default function OwnerDashboard() {
                                   ))}
                                 </div>
                               )}
-                              <label className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary transition-colors text-sm text-gray-500">
-                                <Plus className="w-4 h-4" /> Add room photos
+                              <label className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors text-sm text-gray-500 bg-white">
+                                <Plus className="w-4 h-4 text-primary" /> Add room photos
                                 <input type="file" accept="image/*" multiple className="hidden"
                                   onChange={e => { setEditRoomNewFiles(prev => [...prev, ...Array.from(e.target.files||[])]); e.target.value=""; }} />
                               </label>
@@ -1150,7 +1648,7 @@ export default function OwnerDashboard() {
                               {editCatImages.kitchen.length > 0 && (
                                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
                                   {editCatImages.kitchen.map((url, i) => (
-                                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group">
+                                    <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 group">
                                       <Image src={url} alt={`kitchen ${i+1}`} fill className="object-cover" />
                                       <button type="button"
                                         onClick={() => setEditCatImages(p => ({ ...p, kitchen: p.kitchen.filter((_,idx)=>idx!==i) }))}
@@ -1162,7 +1660,7 @@ export default function OwnerDashboard() {
                               {editCatNewFiles.kitchen.length > 0 && (
                                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
                                   {editCatNewFiles.kitchen.map((file, i) => (
-                                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden border-2 border-primary/40 group">
+                                    <div key={i} className="relative aspect-square rounded-xl overflow-hidden border-2 border-primary/40 group">
                                       <Image src={URL.createObjectURL(file)} alt={`new kitchen ${i+1}`} fill className="object-cover" />
                                       <button type="button"
                                         onClick={() => setEditCatNewFiles(p => ({ ...p, kitchen: p.kitchen.filter((_,idx)=>idx!==i) }))}
@@ -1171,8 +1669,8 @@ export default function OwnerDashboard() {
                                   ))}
                                 </div>
                               )}
-                              <label className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary transition-colors text-sm text-gray-500">
-                                <Plus className="w-4 h-4" /> Add kitchen photos
+                              <label className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors text-sm text-gray-500 bg-white">
+                                <Plus className="w-4 h-4 text-primary" /> Add kitchen photos
                                 <input type="file" accept="image/*" multiple className="hidden"
                                   onChange={e => { setEditCatNewFiles(p => ({ ...p, kitchen: [...p.kitchen, ...Array.from(e.target.files||[])] })); e.target.value=""; }} />
                               </label>
@@ -1184,7 +1682,7 @@ export default function OwnerDashboard() {
                               {editCatImages.washroom.length > 0 && (
                                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
                                   {editCatImages.washroom.map((url, i) => (
-                                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group">
+                                    <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 group">
                                       <Image src={url} alt={`washroom ${i+1}`} fill className="object-cover" />
                                       <button type="button"
                                         onClick={() => setEditCatImages(p => ({ ...p, washroom: p.washroom.filter((_,idx)=>idx!==i) }))}
@@ -1196,7 +1694,7 @@ export default function OwnerDashboard() {
                               {editCatNewFiles.washroom.length > 0 && (
                                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
                                   {editCatNewFiles.washroom.map((file, i) => (
-                                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden border-2 border-primary/40 group">
+                                    <div key={i} className="relative aspect-square rounded-xl overflow-hidden border-2 border-primary/40 group">
                                       <Image src={URL.createObjectURL(file)} alt={`new washroom ${i+1}`} fill className="object-cover" />
                                       <button type="button"
                                         onClick={() => setEditCatNewFiles(p => ({ ...p, washroom: p.washroom.filter((_,idx)=>idx!==i) }))}
@@ -1205,8 +1703,8 @@ export default function OwnerDashboard() {
                                   ))}
                                 </div>
                               )}
-                              <label className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary transition-colors text-sm text-gray-500">
-                                <Plus className="w-4 h-4" /> Add washroom photos
+                              <label className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors text-sm text-gray-500 bg-white">
+                                <Plus className="w-4 h-4 text-primary" /> Add washroom photos
                                 <input type="file" accept="image/*" multiple className="hidden"
                                   onChange={e => { setEditCatNewFiles(p => ({ ...p, washroom: [...p.washroom, ...Array.from(e.target.files||[])] })); e.target.value=""; }} />
                               </label>
@@ -1218,7 +1716,7 @@ export default function OwnerDashboard() {
                               {editCatImages.commonArea.length > 0 && (
                                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
                                   {editCatImages.commonArea.map((url, i) => (
-                                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group">
+                                    <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 group">
                                       <Image src={url} alt={`common ${i+1}`} fill className="object-cover" />
                                       <button type="button"
                                         onClick={() => setEditCatImages(p => ({ ...p, commonArea: p.commonArea.filter((_,idx)=>idx!==i) }))}
@@ -1230,7 +1728,7 @@ export default function OwnerDashboard() {
                               {editCatNewFiles.commonArea.length > 0 && (
                                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
                                   {editCatNewFiles.commonArea.map((file, i) => (
-                                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden border-2 border-primary/40 group">
+                                    <div key={i} className="relative aspect-square rounded-xl overflow-hidden border-2 border-primary/40 group">
                                       <Image src={URL.createObjectURL(file)} alt={`new common ${i+1}`} fill className="object-cover" />
                                       <button type="button"
                                         onClick={() => setEditCatNewFiles(p => ({ ...p, commonArea: p.commonArea.filter((_,idx)=>idx!==i) }))}
@@ -1239,28 +1737,33 @@ export default function OwnerDashboard() {
                                   ))}
                                 </div>
                               )}
-                              <label className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary transition-colors text-sm text-gray-500">
-                                <Plus className="w-4 h-4" /> Add common area photos
+                              <label className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors text-sm text-gray-500 bg-white">
+                                <Plus className="w-4 h-4 text-primary" /> Add common area photos
                                 <input type="file" accept="image/*" multiple className="hidden"
                                   onChange={e => { setEditCatNewFiles(p => ({ ...p, commonArea: [...p.commonArea, ...Array.from(e.target.files||[])] })); e.target.value=""; }} />
                               </label>
                             </div>
 
+                            </div>
                           </div>
 
-                          {editError && <p className="text-sm text-red-600 mt-1">{editError}</p>}
+                          {editError && (
+                            <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
+                              <span className="font-medium">Error:</span> {editError}
+                            </div>
+                          )}
 
-                          <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-100">
+                          <div className="flex flex-wrap gap-3 pt-2">
                             <button onClick={() => setDeleteConfirmId(editingListing._id)}
-                              className="flex items-center gap-2 px-4 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition-colors text-sm">
+                              className="flex items-center gap-2 px-4 py-2.5 border-2 border-red-200 text-red-500 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium">
                               <Trash2 className="w-4 h-4" /> {tc.delete}
                             </button>
                             <button onClick={closeEdit}
-                              className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm ml-auto">
+                              className="flex items-center gap-2 px-4 py-2.5 border-2 border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium ml-auto">
                               Cancel
                             </button>
                             <button onClick={saveEdit} disabled={editSaving}
-                              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium disabled:opacity-60">
+                              className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors text-sm font-semibold disabled:opacity-60 shadow-sm">
                               {editSaving ? "Saving..." : "Update Listing"}
                             </button>
                           </div>
@@ -1412,6 +1915,60 @@ export default function OwnerDashboard() {
                                   <span key={i} className="px-3 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">{p}</span>
                                 ))}
                               </div>
+                            </div>
+                          )}
+
+                          {/* Locality Description (Tenant) */}
+                          {selectedListing.propertyType === "Tenant" && selectedListing.localityDescription && (
+                            <div>
+                              <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Locality Description</p>
+                              <p className="text-sm text-gray-700 leading-relaxed">{selectedListing.localityDescription}</p>
+                            </div>
+                          )}
+
+                          {/* Nearby Places */}
+                          {selectedListing.nearbyPlaces?.length > 0 && (
+                            <div>
+                              <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Nearby Places</p>
+                              <div className="flex flex-wrap gap-2">
+                                {selectedListing.nearbyPlaces.map((place: { name: string; distance: string } | string, i: number) => (
+                                  <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-100 rounded-full text-xs font-medium">
+                                    <MapPin className="w-3 h-3 flex-shrink-0" />
+                                    {typeof place === 'string' ? place : place.name}
+                                    {typeof place !== 'string' && place.distance && (
+                                      <span className="text-blue-400 font-normal">· {place.distance}</span>
+                                    )}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* PG Food */}
+                          {selectedListing.propertyType === "PG" && selectedListing.foodProvided && (
+                            <div>
+                              <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Food</p>
+                              <div className="flex flex-wrap gap-2">
+                                {selectedListing.meals?.map((m: string, i: number) => (
+                                  <span key={i} className="px-3 py-1 bg-orange-50 text-orange-700 text-xs rounded-full">{m}</span>
+                                ))}
+                                {selectedListing.vegNonVeg && (
+                                  <span className="px-3 py-1 bg-green-50 text-green-700 text-xs rounded-full">{selectedListing.vegNonVeg}</span>
+                                )}
+                                {selectedListing.foodCharges && (
+                                  <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">Charges: {currencySymbol} {selectedListing.foodCharges}</span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Parking */}
+                          {selectedListing.parkingAvailable && (
+                            <div>
+                              <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Parking</p>
+                              <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                                {selectedListing.parkingType || "Available"}
+                              </span>
                             </div>
                           )}
 
