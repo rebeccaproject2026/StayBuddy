@@ -98,3 +98,43 @@ export async function sendOTPEmail(email: string, otp: string, name: string) {
     `,
   });
 }
+
+export async function sendChatMessageEmail(
+  recipientEmail: string,
+  recipientName: string,
+  senderName: string,
+  propertyTitle: string,
+  messageText: string,
+  dashboardUrl: string
+) {
+  await transporter.sendMail({
+    from: `"StayBuddy" <${process.env.SMTP_USER}>`,
+    to: recipientEmail,
+    subject: `New message from ${senderName} — "${propertyTitle}"`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px; background: #f9fafb; border-radius: 12px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h1 style="color: #4f46e5; font-size: 28px; margin: 0;">StayBuddy</h1>
+        </div>
+        <div style="background: white; border-radius: 12px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          <h2 style="color: #111827; font-size: 20px; margin-top: 0;">Hi ${recipientName},</h2>
+          <p style="color: #6b7280; line-height: 1.6;">
+            You have a new message from <strong style="color: #111827;">${senderName}</strong> regarding
+            <strong style="color: #111827;">${propertyTitle}</strong>.
+          </p>
+          <div style="background: #eff6ff; border-left: 4px solid #4f46e5; border-radius: 0 8px 8px 0; padding: 16px; margin: 24px 0;">
+            <p style="color: #374151; font-size: 15px; margin: 0; line-height: 1.6;">${messageText}</p>
+          </div>
+          <div style="text-align: center; margin-top: 24px;">
+            <a href="${dashboardUrl}" style="display: inline-block; background: #4f46e5; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">
+              Reply in Dashboard
+            </a>
+          </div>
+        </div>
+        <p style="color: #9ca3af; font-size: 12px; text-align: center; margin-top: 16px;">
+          © StayBuddy — You're receiving this because you have an active inquiry.
+        </p>
+      </div>
+    `,
+  });
+}

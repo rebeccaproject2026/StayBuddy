@@ -80,6 +80,7 @@ export async function GET(req: NextRequest) {
       .sort({ createdAt: -1 })
       .populate('property', 'title location images')
       .populate('renter', 'fullName email phoneNumber')
+      .populate('owner', 'fullName')
       .lean();
 
     return NextResponse.json({ success: true, requests });

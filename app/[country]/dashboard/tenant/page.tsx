@@ -20,6 +20,7 @@ import {
   Lock,
   Mail,
   Phone,
+  X,
 } from "lucide-react";
 
 export default function TenantDashboard() {
@@ -32,6 +33,17 @@ export default function TenantDashboard() {
   const [myRequests, setMyRequests] = useState<any[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(false);
   const currencySymbol = t("currency.symbol");
+
+  // Chat state
+  const [chatRequest, setChatRequest] = useState<any | null>(null);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatSending, setChatSending] = useState(false);
+  // unread counts per requestId
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  // conversations: requestId → last message snippet
+  const [conversations, setConversations] = useState<Record<string, { lastMsg: string; time: string; senderName: string; unread: boolean }>>({});
 
   // Authentication check
   useEffect(() => {
@@ -87,6 +99,153 @@ export default function TenantDashboard() {
       .catch(() => {})
       .finally(() => setRequestsLoading(false));
   }, [isAuthenticated, token, user?.role]);
+
+  // seenCounts: requestId → number of landlord messages already seen (persisted in localStorage)
+  const [seenCounts, setSeenCounts] = useState<Record<string, number>>(() => {
+    if (typeof window === 'undefined') return {};
+    try { return JSON.parse(localStorage.getItem('staybuddy_seen') || '{}'); } catch { return {}; }
+  });
+
+  // Persist seenCounts to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('staybuddy_seen', JSON.stringify(seenCounts));
+    }
+  }, [seenCounts]);
+
+  // Poll all requests for new messages (every 15s)
+  useEffect(() => {
+    if (!isAuthenticated || !token || user?.role !== 'renter') return;
+    if (myRequests.length === 0) return;
+
+    const poll = async () => {
+      const seen: Record<string, number> = JSON.parse(localStorage.getItem('staybuddy_seen') || '{}');
+      for (const req of myRequests) {
+        try {
+          const res = await fetch(`/api/messages/${req._id}`, {
+            headers: token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {},
+          });
+          const data = await res.json();
+          if (data.success && data.messages?.length > 0) {
+            const msgs: any[] = data.messages;
+            const last = msgs[msgs.length - 1];
+            const ownerMsgCount = msgs.filter((m: any) => m.senderRole === 'landlord').length;
+            const isConversationOpen = chatRequest?._id === req._id;
+
+            setConversations(prev => ({
+              ...prev,
+              [req._id]: {
+                lastMsg: last.text,
+                time: last.createdAt,
+                senderName: last.senderName,
+                unread: !isConversationOpen && ownerMsgCount > (seen[req._id] ?? 0),
+              },
+            }));
+
+            if (!isConversationOpen) {
+              setUnreadCounts(prev => ({
+                ...prev,
+                [req._id]: Math.max(0, ownerMsgCount - (seen[req._id] ?? 0)),
+              }));
+            }
+          }
+        } catch {}
+      }
+    };
+
+    poll();
+    const interval = setInterval(poll, 15000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, token, user?.role, myRequests, chatRequest]);
+
+  const openChat = async (req: any) => {
+    setChatRequest(req);
+    setChatMessages([]);
+    setChatLoading(true);
+    // clear unread for this request
+    setUnreadCounts(prev => ({ ...prev, [req._id]: 0 }));
+    setConversations(prev => prev[req._id] ? { ...prev, [req._id]: { ...prev[req._id], unread: false } } : prev);
+    try {
+      const res = await fetch(`/api/messages/${req._id}`, {
+        headers: token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const data = await res.json();
+      if (data.success) {
+        const msgs = data.messages || [];
+        setChatMessages(msgs);
+        // record how many owner messages have been seen
+        const ownerMsgCount = msgs.filter((m: any) => m.senderRole === 'landlord').length;
+        setSeenCounts(prev => ({ ...prev, [req._id]: ownerMsgCount }));
+        if (msgs.length > 0) {
+          const last = msgs[msgs.length - 1];
+          setConversations(prev => ({
+            ...prev,
+            [req._id]: { lastMsg: last.text, time: last.createdAt, senderName: last.senderName, unread: false },
+          }));
+        }
+      }
+    } catch {}
+    setChatLoading(false);
+  };
+
+  const sendChatMessage = async () => {
+    if (!chatInput.trim() || !chatRequest || chatSending) return;
+    const text = chatInput.trim();
+    setChatInput('');
+    setChatSending(true);
+    try {
+      const res = await fetch(`/api/messages/${chatRequest._id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ text }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setChatMessages(prev => [...prev, data.message]);
+        setConversations(prev => ({
+          ...prev,
+          [chatRequest._id]: { lastMsg: text, time: data.message.createdAt, senderName: user?.fullName || 'You', unread: false },
+        }));
+      }
+    } catch {}
+    setChatSending(false);
+  };
+
+  const closeChat = () => {
+    setChatRequest(null);
+    setChatMessages([]);
+    setChatInput('');
+  };
+
+  const deleteChat = async () => {
+    if (!chatRequest) return;
+    try {
+      await fetch(`/api/messages/${chatRequest._id}`, {
+        method: 'DELETE',
+        headers: token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {},
+      });
+      setChatMessages([]);
+      setConversations(prev => {
+        const next = { ...prev };
+        delete next[chatRequest._id];
+        return next;
+      });
+      setSeenCounts(prev => {
+        const next = { ...prev };
+        delete next[chatRequest._id];
+        return next;
+      });
+      setUnreadCounts(prev => {
+        const next = { ...prev };
+        delete next[chatRequest._id];
+        return next;
+      });
+      closeChat();
+    } catch {}
+  };
 
   // Show loading while checking authentication
   if (isLoading) {
@@ -146,33 +305,6 @@ export default function TenantDashboard() {
       status: "Pending",
       ownerName: "Suresh Verma",
       address: "555 Central Avenue, Connaught Place, Delhi",
-    },
-  ];
-
-  const messages = [
-    {
-      id: 1,
-      ownerName: "Rajesh Kumar",
-      propertyName: "Sunshine PG",
-      lastMessage: "Yes, the room is available. You can visit this weekend.",
-      time: "2 hours ago",
-      unread: true,
-    },
-    {
-      id: 2,
-      ownerName: "Priya Sharma",
-      propertyName: "Green Valley Apartment",
-      lastMessage: "Sure, you can visit tomorrow at 5 PM.",
-      time: "1 day ago",
-      unread: false,
-    },
-    {
-      id: 3,
-      ownerName: "Amit Patel",
-      propertyName: "Comfort PG",
-      lastMessage: "Thank you for your interest. The room has been booked.",
-      time: "3 days ago",
-      unread: false,
     },
   ];
 
@@ -352,7 +484,9 @@ export default function TenantDashboard() {
                   <span className="font-medium">{tc.myBookings}</span>
                 </button>
                 <button
-                  onClick={() => setActiveTab("messages")}
+                  onClick={() => {
+                    setActiveTab("messages");
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
                     activeTab === "messages"
                       ? "bg-primary text-white"
@@ -361,9 +495,9 @@ export default function TenantDashboard() {
                 >
                   <Send className="w-5 h-5" />
                   <span className="font-medium">{tc.messagesTab}</span>
-                  {messages.filter(m => m.unread).length > 0 && (
+                  {Object.values(unreadCounts).reduce((a, b) => a + b, 0) > 0 && (
                     <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                      {messages.filter(m => m.unread).length}
+                      {Object.values(unreadCounts).reduce((a, b) => a + b, 0)}
                     </span>
                   )}
                 </button>
@@ -470,9 +604,6 @@ export default function TenantDashboard() {
                             <h3 className="text-lg font-bold text-gray-900 mb-1">{req.propertyTitle}</h3>
                             <p className="text-sm text-gray-500">{tc.date}: {new Date(req.createdAt).toLocaleDateString()}</p>
                           </div>
-                          <span className={`self-start px-4 py-1.5 rounded-full text-sm font-medium capitalize ${getStatusColor(req.status)}`}>
-                            {req.status}
-                          </span>
                         </div>
                         <div className="grid sm:grid-cols-2 gap-3 text-sm mb-3">
                           <div><span className="text-gray-500">Room Type:</span> <span className="font-medium capitalize">{req.roomType}</span></div>
@@ -483,6 +614,15 @@ export default function TenantDashboard() {
                         <div className="bg-gray-50 rounded-lg p-3">
                           <p className="text-sm font-medium text-gray-700 mb-1">{tc.messageSent}:</p>
                           <p className="text-sm text-gray-800">{req.message}</p>
+                        </div>
+                        <div className="mt-3">
+                          <button
+                            onClick={() => { openChat(req); setActiveTab('messages'); }}
+                            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium"
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                            {tc.reply}
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -546,34 +686,56 @@ export default function TenantDashboard() {
             {activeTab === "messages" && (
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">{tc.messagesTab}</h2>
-                {messages.length > 0 ? (
-                  <div className="space-y-4">
-                    {messages.map((message) => (
-                      <div key={message.id} className={`bg-white rounded-2xl shadow-md p-6 ${message.unread ? 'border-l-4 border-primary' : ''}`}>
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="text-lg font-bold text-gray-900">{message.ownerName}</h3>
-                              {message.unread && (
-                                <span className="w-2 h-2 bg-primary rounded-full"></span>
-                              )}
-                            </div>
-                            <p className="text-sm text-gray-600">{message.propertyName}</p>
-                          </div>
-                          <span className="text-xs text-gray-500">{message.time}</span>
-                        </div>
-                        <p className="text-gray-800 mb-4">{message.lastMessage}</p>
-                        <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
-                          <Send className="w-4 h-4" />
-                          {tc.reply}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
+                {myRequests.filter((r: any) => conversations[r._id]).length === 0 ? (
                   <div className="bg-white rounded-2xl shadow-md p-12 text-center">
                     <Send className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-600">{tc.noMessages}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {myRequests
+                      .filter((r: any) => conversations[r._id])
+                      .map((req: any) => {
+                        const conv = conversations[req._id];
+                        const hasUnread = conv.unread;
+                        return (
+                          <div
+                            key={req._id}
+                            onClick={() => openChat(req)}
+                            className={`bg-white rounded-2xl shadow-md p-5 flex items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow ${hasUnread ? 'border-l-4 border-primary' : ''}`}
+                          >
+                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                              <User className="w-6 h-6 text-primary" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-1">
+                                <p className={`truncate ${hasUnread ? 'font-bold text-gray-900' : 'font-semibold text-gray-900'}`}>{req.propertyTitle}</p>
+                                <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
+                                  {new Date(conv.time).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-500 truncate">{conv.senderName}</p>
+                              <p className={`text-sm truncate mt-0.5 ${hasUnread ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>{conv.lastMsg}</p>
+                            </div>
+                            {hasUnread && (
+                              <span className="w-2.5 h-2.5 bg-primary rounded-full flex-shrink-0" />
+                            )}
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                await fetch(`/api/messages/${req._id}`, { method: 'DELETE', headers: token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {} });
+                                setConversations(prev => { const n = { ...prev }; delete n[req._id]; return n; });
+                                setSeenCounts(prev => { const n = { ...prev }; delete n[req._id]; return n; });
+                                setUnreadCounts(prev => { const n = { ...prev }; delete n[req._id]; return n; });
+                              }}
+                              className="p-2 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                              title="Delete conversation"
+                            >
+                              <Trash2 className="w-4 h-4 text-red-400" />
+                            </button>
+                          </div>
+                        );
+                      })}
                   </div>
                 )}
               </div>
@@ -701,6 +863,86 @@ export default function TenantDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Chat Modal */}
+      {chatRequest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={closeChat} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col" style={{ height: '80vh', maxHeight: '600px' }}>
+            {/* Header */}
+            <div className="flex items-center gap-3 p-4 border-b border-gray-200 flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <User className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-gray-900 truncate">{chatRequest.propertyTitle}</p>
+                <p className="text-xs text-gray-500 truncate">{(chatRequest.owner as any)?.fullName || (language === 'fr' ? 'Propriétaire' : 'Owner')}</p>
+              </div>
+              <button onClick={deleteChat} className="p-2 hover:bg-red-50 rounded-lg transition-colors" title={language === 'fr' ? 'Supprimer la conversation' : 'Delete conversation'}>
+                <Trash2 className="w-4 h-4 text-red-400" />
+              </button>
+              <button onClick={closeChat} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* TTL notice */}
+            <div className="px-4 py-2 bg-amber-50 border-b border-amber-100 flex-shrink-0">
+              <p className="text-xs text-amber-700 text-center">
+                {language === 'fr' ? '⏳ Les messages sont automatiquement supprimés après 7 jours.' : '⏳ Messages are automatically cleared after 7 days.'}
+              </p>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {chatLoading ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : chatMessages.length === 0 ? (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-gray-400 text-sm">{language === 'fr' ? 'Aucun message. Commencez la conversation.' : 'No messages yet. Start the conversation.'}</p>
+                </div>
+              ) : (
+                chatMessages.map((msg: any) => {
+                  const isMe = msg.senderRole === 'renter';
+                  return (
+                    <div key={msg._id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${isMe ? 'bg-primary text-white rounded-br-sm' : 'bg-gray-100 text-gray-900 rounded-bl-sm'}`}>
+                        <p>{msg.text}</p>
+                        <p className={`text-xs mt-1 ${isMe ? 'text-white/70' : 'text-gray-400'}`}>
+                          {new Date(msg.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Input */}
+            <div className="p-4 border-t border-gray-200 flex-shrink-0">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={e => setChatInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); } }}
+                  placeholder={language === 'fr' ? 'Écrire un message...' : 'Type a message...'}
+                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                />
+                <button
+                  onClick={sendChatMessage}
+                  disabled={chatSending || !chatInput.trim()}
+                  className="px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

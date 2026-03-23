@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
@@ -23,6 +23,8 @@ import {
   ArrowLeft,
   Phone,
   Mail,
+  X,
+  ChevronDown,
 } from "lucide-react";
 
 function ProfileSection({ user, tc, language }: { user: any; tc: any; language: string }) {
@@ -235,6 +237,7 @@ export default function OwnerDashboard() {
   const [contactRequests, setContactRequests] = useState<any[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(false);
   const [selectedListing, setSelectedListing] = useState<any | null>(null);
+  const [selectedInquiry, setSelectedInquiry] = useState<any | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [editingListing, setEditingListing] = useState<any | null>(null);
   const [editSaving, setEditSaving] = useState(false);
@@ -250,6 +253,15 @@ export default function OwnerDashboard() {
   // Room images (PG: {id,name,status,image} / Tenant: {id,name,image})
   const [editRoomImages, setEditRoomImages] = useState<any[]>([]);
   const [editRoomNewFiles, setEditRoomNewFiles] = useState<File[]>([]);
+
+  // Chat state
+  const [chatRequest, setChatRequest] = useState<any | null>(null); // inquiry being chatted
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatSending, setChatSending] = useState(false);
+  // conversations: map requestId → last message snippet (for Messages tab)
+  const [conversations, setConversations] = useState<Record<string, { lastMsg: string; time: string; unread: boolean }>>({});
 
   // Authentication check
   useEffect(() => {
@@ -287,19 +299,86 @@ export default function OwnerDashboard() {
       .finally(() => setListingsLoading(false));
   }, [isAuthenticated, user]);
 
-  // Fetch contact requests for this owner
+  // Fetch contact requests for this owner + poll every 30s for new ones
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'landlord') return;
     const token = localStorage.getItem('staybuddy_token');
+
+    const fetchRequests = () =>
+      fetch('/api/contact-requests', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+        .then(r => r.json())
+        .then(data => { if (data.success) setContactRequests(data.requests || []); })
+        .catch(() => {});
+
     setRequestsLoading(true);
-    fetch('/api/contact-requests', {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then(r => r.json())
-      .then(data => { if (data.success) setContactRequests(data.requests || []); })
-      .catch(() => {})
-      .finally(() => setRequestsLoading(false));
+    fetchRequests().finally(() => setRequestsLoading(false));
+
+    const interval = setInterval(fetchRequests, 30000);
+    return () => clearInterval(interval);
   }, [isAuthenticated, user]);
+
+  // seenCounts: requestId → number of tenant messages already seen (persisted in localStorage)
+  const [ownerSeenCounts, setOwnerSeenCounts] = useState<Record<string, number>>(() => {
+    if (typeof window === 'undefined') return {};
+    try { return JSON.parse(localStorage.getItem('staybuddy_owner_seen') || '{}'); } catch { return {}; }
+  });
+
+  // seenInquiryIds: set of inquiry IDs the owner has already viewed (persisted in localStorage)
+  const [seenInquiryIds, setSeenInquiryIds] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set();
+    try { return new Set(JSON.parse(localStorage.getItem('staybuddy_owner_inquiry_seen') || '[]')); } catch { return new Set(); }
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('staybuddy_owner_inquiry_seen', JSON.stringify([...seenInquiryIds]));
+    }
+  }, [seenInquiryIds]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('staybuddy_owner_seen', JSON.stringify(ownerSeenCounts));
+    }
+  }, [ownerSeenCounts]);
+
+  // Poll all requests for new messages from tenants (every 15s)
+  useEffect(() => {
+    if (!isAuthenticated || user?.role !== 'landlord') return;
+    if (contactRequests.length === 0) return;
+
+    const poll = async () => {
+      const token = localStorage.getItem('staybuddy_token');
+      const seen: Record<string, number> = JSON.parse(localStorage.getItem('staybuddy_owner_seen') || '{}');
+      for (const req of contactRequests) {
+        try {
+          const res = await fetch(`/api/messages/${req._id}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          });
+          const data = await res.json();
+          if (data.success && data.messages?.length > 0) {
+            const msgs: any[] = data.messages;
+            const last = msgs[msgs.length - 1];
+            const tenantMsgCount = msgs.filter((m: any) => m.senderRole === 'renter').length;
+            const isOpen = chatRequest?._id === req._id;
+            setConversations(prev => ({
+              ...prev,
+              [req._id]: {
+                lastMsg: last.text,
+                time: last.createdAt,
+                unread: !isOpen && tenantMsgCount > (seen[req._id] ?? 0),
+              },
+            }));
+          }
+        } catch {}
+      }
+    };
+
+    poll();
+    const interval = setInterval(poll, 15000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, user, contactRequests, chatRequest]);
 
   // Show loading while checking authentication
   if (isLoading) {
@@ -333,6 +412,84 @@ export default function OwnerDashboard() {
     } catch {}
   };
 
+  const openChat = async (req: any) => {
+    setChatRequest(req);
+    setChatMessages([]);
+    setChatLoading(true);
+    // clear unread for this conversation
+    setConversations(prev => prev[req._id] ? { ...prev, [req._id]: { ...prev[req._id], unread: false } } : prev);
+    const token = localStorage.getItem('staybuddy_token');
+    try {
+      const res = await fetch(`/api/messages/${req._id}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const data = await res.json();
+      if (data.success) {
+        setChatMessages(data.messages || []);
+        const msgs = data.messages || [];
+        // record how many tenant messages have been seen
+        const tenantMsgCount = msgs.filter((m: any) => m.senderRole === 'renter').length;
+        setOwnerSeenCounts(prev => ({ ...prev, [req._id]: tenantMsgCount }));
+        if (msgs.length > 0) {
+          const last = msgs[msgs.length - 1];
+          setConversations(prev => ({
+            ...prev,
+            [req._id]: { lastMsg: last.text, time: last.createdAt, unread: false },
+          }));
+        }
+      }
+    } catch {}
+    setChatLoading(false);
+  };
+
+  const sendChatMessage = async () => {
+    if (!chatInput.trim() || !chatRequest || chatSending) return;
+    const token = localStorage.getItem('staybuddy_token');
+    const text = chatInput.trim();
+    setChatInput('');
+    setChatSending(true);
+    try {
+      const res = await fetch(`/api/messages/${chatRequest._id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ text }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setChatMessages(prev => [...prev, data.message]);
+        setConversations(prev => ({
+          ...prev,
+          [chatRequest._id]: { lastMsg: text, time: data.message.createdAt, unread: false },
+        }));
+      }
+    } catch {}
+    setChatSending(false);
+  };
+
+  const closeChat = () => {
+    setChatRequest(null);
+    setChatMessages([]);
+    setChatInput('');
+  };
+
+  const deleteChat = async () => {
+    if (!chatRequest) return;
+    const token = localStorage.getItem('staybuddy_token');
+    try {
+      await fetch(`/api/messages/${chatRequest._id}`, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      setChatMessages([]);
+      setConversations(prev => {
+        const next = { ...prev };
+        delete next[chatRequest._id];
+        return next;
+      });
+      closeChat();
+    } catch {}
+  };
+
 
 
   const content = {
@@ -340,6 +497,8 @@ export default function OwnerDashboard() {
       dashboard: "Owner Dashboard",
       myListings: "My Listings",
       bookingRequests: "Inquiries",
+      messages: "Messages",
+      noMessages: "No conversations yet",
       profile: "Profile",
       logout: "Logout",
       addNewListing: "Add New Listing",
@@ -353,14 +512,12 @@ export default function OwnerDashboard() {
       roomType: "Room Type",
       moveInDate: "Move-in Date",
       status: "Status",
-      pending: "Pending",
-      approved: "Approved",
-      rejected: "Rejected",
-      pendingApproval: "Pending Approval",
-      respond: "Respond",
-      approve: "Approve",
-      reject: "Reject",
       noRequests: "No inquiries yet",
+      statusNew: "New",
+      statusContacted: "Contacted",
+      statusInterested: "Interested",
+      statusBooked: "Booked",
+      statusClosed: "Closed",
       profileSettings: "Profile Settings",
       fullName: "Full Name",
       email: "Email",
@@ -377,6 +534,8 @@ export default function OwnerDashboard() {
       dashboard: "Tableau de bord propriétaire",
       myListings: "Mes annonces",
       bookingRequests: "Demandes",
+      messages: "Messages",
+      noMessages: "Aucune conversation",
       profile: "Profil",
       logout: "Déconnexion",
       addNewListing: "Ajouter une annonce",
@@ -390,14 +549,12 @@ export default function OwnerDashboard() {
       roomType: "Type de chambre",
       moveInDate: "Date d'emménagement",
       status: "Statut",
-      pending: "En attente",
-      approved: "Approuvé",
-      rejected: "Rejeté",
-      pendingApproval: "En attente d'approbation",
-      respond: "Répondre",
-      approve: "Approuver",
-      reject: "Rejeter",
       noRequests: "Aucune demande",
+      statusNew: "Nouveau",
+      statusContacted: "Contacté",
+      statusInterested: "Intéressé",
+      statusBooked: "Réservé",
+      statusClosed: "Fermé",
       profileSettings: "Paramètres du profil",
       fullName: "Nom complet",
       email: "Email",
@@ -415,18 +572,40 @@ export default function OwnerDashboard() {
   const tc = content[language];
 
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "pending":
-      case "pending approval":
-        return "bg-yellow-100 text-yellow-700";
-      case "accepted":
-      case "approved":
-        return "bg-green-100 text-green-700";
-      case "rejected":
-        return "bg-red-100 text-red-700";
-      default:
-        return "bg-gray-100 text-gray-700";
+    switch (status) {
+      case "new":        return "bg-blue-100 text-blue-700";
+      case "contacted":  return "bg-amber-100 text-amber-700";
+      case "interested": return "bg-violet-100 text-violet-700";
+      case "booked":     return "bg-emerald-100 text-emerald-700";
+      case "closed":     return "bg-gray-100 text-gray-500";
+      default:           return "bg-gray-100 text-gray-600";
     }
+  };
+
+  const getStatusLabel = (status: string) => {
+    const map: Record<string, string> = {
+      new: tc.statusNew,
+      contacted: tc.statusContacted,
+      interested: tc.statusInterested,
+      booked: tc.statusBooked,
+      closed: tc.statusClosed,
+    };
+    return map[status] || status;
+  };
+
+  const updateInquiryStatus = async (id: string, status: string) => {
+    const token = localStorage.getItem('staybuddy_token');
+    try {
+      const res = await fetch(`/api/contact-requests/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setContactRequests(prev => prev.map(r => r._id === id ? { ...r, status } : r));
+      }
+    } catch {}
   };
 
   const openEdit = (listing: any) => {
@@ -623,7 +802,7 @@ export default function OwnerDashboard() {
       <div className="max-w-[1500px] mx-auto px-4 sm:px-6 py-8">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar */}
-          <div className="lg:w-64 flex-shrink-0">
+          <div className="lg:w-80 flex-shrink-0">
             <div className="bg-white rounded-2xl shadow-md p-4 sticky top-4">
               <nav className="space-y-2">
                 <button
@@ -638,7 +817,15 @@ export default function OwnerDashboard() {
                   <span className="font-medium">{tc.myListings}</span>
                 </button>
                 <button
-                  onClick={() => setActiveTab("requests")}
+                  onClick={() => {
+                    setActiveTab("requests");
+                    // mark all current inquiries as seen
+                    setSeenInquiryIds(prev => {
+                      const updated = new Set(prev);
+                      contactRequests.forEach((r: any) => updated.add(r._id));
+                      return updated;
+                    });
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
                     activeTab === "requests"
                       ? "bg-primary text-white"
@@ -647,9 +834,27 @@ export default function OwnerDashboard() {
                 >
                   <Calendar className="w-5 h-5" />
                   <span className="font-medium">{tc.bookingRequests}</span>
-                  {contactRequests.filter((r: any) => r.status === 'pending').length > 0 && (
+                  {contactRequests.filter((r: any) => !seenInquiryIds.has(r._id)).length > 0 && (
                     <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                      {contactRequests.filter((r: any) => r.status === 'pending').length}
+                      {contactRequests.filter((r: any) => !seenInquiryIds.has(r._id)).length}
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab("messages");
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                    activeTab === "messages"
+                      ? "bg-primary text-white"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <MessageSquare className="w-5 h-5" />
+                  <span className="font-medium">{tc.messages}</span>
+                  {Object.values(conversations).filter(c => c.unread).length > 0 && (
+                    <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                      {Object.values(conversations).filter(c => c.unread).length}
                     </span>
                   )}
                 </button>
@@ -1482,173 +1687,85 @@ export default function OwnerDashboard() {
                 ) : contactRequests.length > 0 ? (
                   <div className="space-y-4">
                     {contactRequests.map((req: any) => (
-                      <div key={req._id} className="bg-white rounded-2xl shadow-md p-6">
-                        {/* Header */}
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
-                          <div className="flex-1">
-                            <h3 className="text-lg font-bold text-gray-900 mb-1">{req.fullName}</h3>
-                            <p className="text-sm text-gray-600 mb-1">
-                              {tc.propertyName}: <span className="font-medium">{req.propertyTitle || "—"}</span>
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              {new Date(req.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}{' '}
-                              {new Date(req.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
-                            </p>
-                          </div>
-                          <span className={`self-start px-4 py-1.5 rounded-full text-sm font-medium ${getStatusColor(req.status)}`}>
-                            {req.status === "pending" ? tc.pending : req.status === "accepted" ? tc.approved : tc.rejected}
-                          </span>
-                        </div>
-
-                        {/* Details grid */}
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 bg-gray-50 rounded-xl mb-4">
-                          {req.roomType && (
-                            <div>
-                              <p className="text-xs text-gray-500">{tc.roomType}</p>
-                              <p className="text-sm font-semibold text-gray-900">{req.roomType}</p>
-                            </div>
-                          )}
-                          {req.moveInDate && (
-                            <div>
-                              <p className="text-xs text-gray-500">{tc.moveInDate}</p>
-                              <p className="text-sm font-semibold text-gray-900">{req.moveInDate}</p>
-                            </div>
-                          )}
-                          {req.stayDuration && (
-                            <div>
-                              <p className="text-xs text-gray-500">{language === "fr" ? "Durée" : "Stay Duration"}</p>
-                              <p className="text-sm font-semibold text-gray-900">{req.stayDuration}</p>
-                            </div>
-                          )}
-                          {req.budgetRange && (
-                            <div>
-                              <p className="text-xs text-gray-500">{language === "fr" ? "Budget" : "Budget"}</p>
-                              <p className="text-sm font-semibold text-gray-900">{req.budgetRange}</p>
-                            </div>
-                          )}
-                          {req.occupation && (
-                            <div>
-                              <p className="text-xs text-gray-500">{language === "fr" ? "Profession" : "Occupation"}</p>
-                              <p className="text-sm font-semibold text-gray-900">{req.occupation}</p>
-                            </div>
-                          )}
-                          {req.gender && (
-                            <div>
-                              <p className="text-xs text-gray-500">{language === "fr" ? "Genre" : "Gender"}</p>
-                              <p className="text-sm font-semibold text-gray-900">{req.gender}</p>
-                            </div>
-                          )}
-                          {req.numberOfOccupants && (
-                            <div>
-                              <p className="text-xs text-gray-500">{language === "fr" ? "Occupants" : "Occupants"}</p>
-                              <p className="text-sm font-semibold text-gray-900">{req.numberOfOccupants}</p>
-                            </div>
-                          )}
-                          {req.foodPreference && (
-                            <div>
-                              <p className="text-xs text-gray-500">{language === "fr" ? "Alimentation" : "Food"}</p>
-                              <p className="text-sm font-semibold text-gray-900">{req.foodPreference}</p>
-                            </div>
-                          )}
-                          {req.needParking && (
-                            <div>
-                              <p className="text-xs text-gray-500">{language === "fr" ? "Parking" : "Parking"}</p>
-                              <p className="text-sm font-semibold text-gray-900">{req.needParking}</p>
-                            </div>
-                          )}
-                          {req.companyCollege && (
-                            <div>
-                              <p className="text-xs text-gray-500">{language === "fr" ? "Société/École" : "Company/College"}</p>
-                              <p className="text-sm font-semibold text-gray-900">{req.companyCollege}</p>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Message */}
-                        {req.message && (
-                          <div className="bg-gray-50 rounded-xl p-4 mb-4">
-                            <p className="text-xs font-semibold text-gray-500 uppercase mb-1">{language === "fr" ? "Message" : "Message"}</p>
-                            <p className="text-sm text-gray-800">{req.message}</p>
-                          </div>
-                        )}
-
-                        {/* Contact Info */}
-                        <div className="flex flex-wrap gap-3 mb-4">
+                      <div key={req._id} className="bg-white rounded-2xl shadow-md p-5">
+                        {/* Single info row: name + phone + email + status */}
+                        <div className="flex flex-wrap items-center gap-3 mb-4">
+                          <h3 className="text-base font-bold text-gray-900 flex-shrink-0">{req.fullName}</h3>
                           {(req.phone || req.renter?.phoneNumber) && (
-                            <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
-                              <Phone className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                              <span className="text-sm font-medium text-blue-800">{req.phone || req.renter?.phoneNumber}</span>
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 border border-blue-100 rounded-lg flex-shrink-0">
+                              <Phone className="w-3.5 h-3.5 text-blue-600" />
+                              <span className="text-xs font-medium text-blue-800">{req.phone || req.renter?.phoneNumber}</span>
                             </div>
                           )}
                           {(req.email || req.renter?.email) && (
-                            <div className="flex items-center gap-2 px-3 py-2 bg-purple-50 border border-purple-200 rounded-lg">
-                              <Mail className="w-4 h-4 text-purple-600 flex-shrink-0" />
-                              <span className="text-sm font-medium text-purple-800">{req.email || req.renter?.email}</span>
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-purple-50 border border-purple-100 rounded-lg flex-shrink-0">
+                              <Mail className="w-3.5 h-3.5 text-purple-600" />
+                              <span className="text-xs font-medium text-purple-800">{req.email || req.renter?.email}</span>
                             </div>
                           )}
+                          {/* Status badge dropdown — pushed to end */}
+                          <div className="ml-auto flex-shrink-0 relative">
+                            <select
+                              value={req.status || 'new'}
+                              onChange={e => updateInquiryStatus(req._id, e.target.value)}
+                              className={`appearance-none pl-3 pr-7 py-1.5 rounded-full text-xs font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary border-0 ${getStatusColor(req.status || 'new')}`}
+                              style={{ backgroundImage: 'none' }}
+                            >
+                              <option value="new">{tc.statusNew}</option>
+                              <option value="contacted">{tc.statusContacted}</option>
+                              <option value="interested">{tc.statusInterested}</option>
+                              <option value="booked">{tc.statusBooked}</option>
+                              <option value="closed">{tc.statusClosed}</option>
+                            </select>
+                            <ChevronDown className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-60" />
+                          </div>
                         </div>
 
-                        {/* Actions */}
+                        {/* Property + date */}
+                        <div className="flex items-center gap-3 mb-4">
+                          <p className="text-sm text-gray-500 truncate flex-1">{req.propertyTitle || "—"}</p>
+                          <p className="text-xs text-gray-400 flex-shrink-0">
+                            {new Date(req.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}{' · '}
+                            {new Date(req.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+
+                        {/* Action buttons */}
                         <div className="flex flex-wrap gap-2">
-                          {req.status === "accepted" ? (
-                            <>
-                              {req.phone && (
-                                <a
-                                  href={`https://wa.me/${req.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${req.fullName}, your inquiry for "${req.propertyTitle}" has been accepted. Let's connect!`)}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
-                                >
-                                  <MessageSquare className="w-4 h-4" />
-                                  {language === "fr" ? "Chat WhatsApp" : "Chat on WhatsApp"}
-                                </a>
-                              )}
-                              {req.phone && (
-                                <a
-                                  href={`tel:${req.phone}`}
-                                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                                >
-                                  <Phone className="w-4 h-4" />
-                                  {language === "fr" ? "Appeler" : "Call"}
-                                </a>
-                              )}
-                            </>
-                          ) : req.status === "pending" ? (
-                            <>
-                              {req.phone && (
-                                <a
-                                  href={`tel:${req.phone}`}
-                                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                                >
-                                  <Phone className="w-4 h-4" />
-                                  {language === "fr" ? "Appeler" : "Call"}
-                                </a>
-                              )}
-                              <button
-                                onClick={() => handleRequestAction(req._id, "accepted")}
-                                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-                              >
-                                {tc.approve}
-                              </button>
-                              <button
-                                onClick={() => handleRequestAction(req._id, "rejected")}
-                                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
-                              >
-                                {tc.reject}
-                              </button>
-                            </>
-                          ) : (
-                            /* rejected — just show call if phone available */
-                            req.phone && (
-                              <a
-                                href={`tel:${req.phone}`}
-                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                              >
-                                <Phone className="w-4 h-4" />
-                                {language === "fr" ? "Appeler" : "Call"}
-                              </a>
-                            )
+                          <button
+                            onClick={() => openChat(req)}
+                            className="flex items-center gap-1.5 px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-xs font-medium"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                            {language === "fr" ? "Chat" : "Chat"}
+                          </button>
+                          {req.phone && (
+                            <a
+                              href={`https://wa.me/${req.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${req.fullName}, regarding your inquiry for "${req.propertyTitle}".`)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-xs font-medium"
+                            >
+                              <MessageSquare className="w-3.5 h-3.5" />
+                              {language === "fr" ? "WhatsApp" : "WhatsApp"}
+                            </a>
                           )}
+                          {req.phone && (
+                            <a
+                              href={`tel:${req.phone}`}
+                              className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium"
+                            >
+                              <Phone className="w-3.5 h-3.5" />
+                              {language === "fr" ? "Appeler" : "Call"}
+                            </a>
+                          )}
+                          <button
+                            onClick={() => setSelectedInquiry(req)}
+                            className="flex items-center gap-1.5 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-xs font-medium ml-auto"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            {language === "fr" ? "Voir" : "View"}
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -1662,6 +1779,63 @@ export default function OwnerDashboard() {
               </div>
             )}
 
+            {/* Messages */}
+            {activeTab === "messages" && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">{tc.messages}</h2>
+                {contactRequests.filter(r => conversations[r._id]).length === 0 ? (
+                  <div className="bg-white rounded-2xl shadow-md p-12 text-center">
+                    <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-600">{tc.noMessages}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {contactRequests
+                      .filter(r => conversations[r._id])
+                      .map((req: any) => {
+                        const conv = conversations[req._id];
+                        return (
+                          <div
+                            key={req._id}
+                            onClick={() => { openChat(req); }}
+                            className={`bg-white rounded-2xl shadow-md p-5 flex items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow ${conv.unread ? 'border-l-4 border-primary' : ''}`}
+                          >
+                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                              <User className="w-6 h-6 text-primary" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-1">
+                                <p className={`truncate ${conv.unread ? 'font-bold text-gray-900' : 'font-semibold text-gray-900'}`}>{req.fullName}</p>
+                                <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
+                                  {new Date(conv.time).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-500 truncate">{req.propertyTitle}</p>
+                              <p className={`text-sm truncate mt-0.5 ${conv.unread ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>{conv.lastMsg}</p>
+                            </div>
+                            {conv.unread && (
+                              <span className="w-2.5 h-2.5 bg-primary rounded-full flex-shrink-0" />
+                            )}
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                const token = localStorage.getItem('staybuddy_token');
+                                await fetch(`/api/messages/${req._id}`, { method: 'DELETE', headers: token ? { Authorization: `Bearer ${token}` } : {} });
+                                setConversations(prev => { const n = { ...prev }; delete n[req._id]; return n; });
+                              }}
+                              className="p-2 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                              title="Delete conversation"
+                            >
+                              <Trash2 className="w-4 h-4 text-red-400" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Profile */}
             {activeTab === "profile" && (
               <ProfileSection user={user} tc={tc} language={language} />
@@ -1669,6 +1843,193 @@ export default function OwnerDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Chat Modal */}
+      {chatRequest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={closeChat} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col" style={{ height: '80vh', maxHeight: '600px' }}>
+            {/* Header */}
+            <div className="flex items-center gap-3 p-4 border-b border-gray-200 flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <User className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-gray-900 truncate">{chatRequest.fullName}</p>
+                <p className="text-xs text-gray-500 truncate">{chatRequest.propertyTitle}</p>
+              </div>
+              <button onClick={deleteChat} className="p-2 hover:bg-red-50 rounded-lg transition-colors" title={language === 'fr' ? 'Supprimer la conversation' : 'Delete conversation'}>
+                <Trash2 className="w-4 h-4 text-red-400" />
+              </button>
+              <button onClick={closeChat} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* TTL notice */}
+            <div className="px-4 py-2 bg-amber-50 border-b border-amber-100 flex-shrink-0">
+              <p className="text-xs text-amber-700 text-center">
+                {language === 'fr' ? '⏳ Les messages sont automatiquement supprimés après 7 jours.' : '⏳ Messages are automatically cleared after 7 days.'}
+              </p>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {chatLoading ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : chatMessages.length === 0 ? (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-gray-400 text-sm">{language === 'fr' ? 'Aucun message. Commencez la conversation.' : 'No messages yet. Start the conversation.'}</p>
+                </div>
+              ) : (
+                chatMessages.map((msg: any) => {
+                  const isOwner = msg.senderRole === 'landlord';
+                  return (
+                    <div key={msg._id} className={`flex ${isOwner ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${isOwner ? 'bg-primary text-white rounded-br-sm' : 'bg-gray-100 text-gray-900 rounded-bl-sm'}`}>
+                        <p>{msg.text}</p>
+                        <p className={`text-xs mt-1 ${isOwner ? 'text-white/70' : 'text-gray-400'}`}>
+                          {new Date(msg.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Input */}
+            <div className="p-4 border-t border-gray-200 flex-shrink-0">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={e => setChatInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); } }}
+                  placeholder={language === 'fr' ? 'Écrire un message...' : 'Type a message...'}
+                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                />
+                <button
+                  onClick={sendChatMessage}
+                  disabled={chatSending || !chatInput.trim()}
+                  className="px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Inquiry Detail Modal */}
+      {selectedInquiry && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setSelectedInquiry(null)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b border-gray-200 sticky top-0 bg-white rounded-t-2xl z-10">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">{selectedInquiry.fullName}</h3>
+                <p className="text-sm text-gray-500">{selectedInquiry.propertyTitle}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(selectedInquiry.status || 'new')}`}>
+                  {getStatusLabel(selectedInquiry.status || 'new')}
+                </span>
+                <button onClick={() => setSelectedInquiry(null)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-5 space-y-5">
+              {/* Date */}
+              <p className="text-xs text-gray-400">
+                {new Date(selectedInquiry.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}{' · '}
+                {new Date(selectedInquiry.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+              </p>
+
+              {/* Contact */}
+              <div className="flex flex-wrap gap-2">
+                {(selectedInquiry.phone || selectedInquiry.renter?.phoneNumber) && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-lg">
+                    <Phone className="w-3.5 h-3.5 text-blue-600" />
+                    <span className="text-xs font-medium text-blue-800">{selectedInquiry.phone || selectedInquiry.renter?.phoneNumber}</span>
+                  </div>
+                )}
+                {(selectedInquiry.email || selectedInquiry.renter?.email) && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 border border-purple-100 rounded-lg">
+                    <Mail className="w-3.5 h-3.5 text-purple-600" />
+                    <span className="text-xs font-medium text-purple-800">{selectedInquiry.email || selectedInquiry.renter?.email}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Details grid */}
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: language === 'fr' ? 'Type de chambre' : 'Room Type', value: selectedInquiry.roomType },
+                  { label: language === 'fr' ? 'Emménagement' : 'Move-in Date', value: selectedInquiry.moveInDate },
+                  { label: language === 'fr' ? 'Durée' : 'Stay Duration', value: selectedInquiry.stayDuration },
+                  { label: language === 'fr' ? 'Budget' : 'Budget', value: selectedInquiry.budgetRange },
+                  { label: language === 'fr' ? 'Profession' : 'Occupation', value: selectedInquiry.occupation },
+                  { label: language === 'fr' ? 'Genre' : 'Gender', value: selectedInquiry.gender },
+                  { label: language === 'fr' ? 'Occupants' : 'Occupants', value: selectedInquiry.numberOfOccupants },
+                  { label: language === 'fr' ? 'Alimentation' : 'Food', value: selectedInquiry.foodPreference },
+                  { label: language === 'fr' ? 'Parking' : 'Parking', value: selectedInquiry.needParking },
+                  { label: language === 'fr' ? 'Société/École' : 'Company/College', value: selectedInquiry.companyCollege },
+                ].filter(d => d.value).map((d, i) => (
+                  <div key={i} className="bg-gray-50 rounded-xl p-3">
+                    <p className="text-xs text-gray-500 mb-0.5">{d.label}</p>
+                    <p className="text-sm font-semibold text-gray-900">{d.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Message */}
+              {selectedInquiry.message && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-gray-500 uppercase mb-2">{language === 'fr' ? 'Message' : 'Message'}</p>
+                  <p className="text-sm text-gray-800 leading-relaxed">{selectedInquiry.message}</p>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+                <button
+                  onClick={() => { openChat(selectedInquiry); setSelectedInquiry(null); }}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  {language === 'fr' ? 'Chat' : 'Chat'}
+                </button>
+                {selectedInquiry.phone && (
+                  <a
+                    href={`https://wa.me/${selectedInquiry.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${selectedInquiry.fullName}, regarding your inquiry for "${selectedInquiry.propertyTitle}".`)}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    WhatsApp
+                  </a>
+                )}
+                {selectedInquiry.phone && (
+                  <a
+                    href={`tel:${selectedInquiry.phone}`}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                  >
+                    <Phone className="w-4 h-4" />
+                    {language === 'fr' ? 'Appeler' : 'Call'}
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (

@@ -22,7 +22,7 @@ export interface IContactRequest extends Document {
   // meta
   propertyTitle: string;
   propertyLocation: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: 'new' | 'contacted' | 'interested' | 'booked' | 'closed';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -48,7 +48,7 @@ const ContactRequestSchema = new Schema<IContactRequest>(
     message:          { type: String, required: true },
     propertyTitle:    { type: String, required: true },
     propertyLocation: { type: String, required: true },
-    status:           { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' },
+    status:           { type: String, enum: ['new', 'contacted', 'interested', 'booked', 'closed'], default: 'new' },
   },
   { timestamps: true }
 );

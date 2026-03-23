@@ -13,8 +13,8 @@ export async function PATCH(
     const authUser = await authenticateUser(req);
 
     const { status } = await req.json();
-    if (!['accepted', 'rejected'].includes(status)) {
-      return NextResponse.json({ error: 'status must be accepted or rejected' }, { status: 400 });
+    if (!['new', 'contacted', 'interested', 'booked', 'closed'].includes(status)) {
+      return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
 
     const request = await ContactRequest.findById(params.id);
