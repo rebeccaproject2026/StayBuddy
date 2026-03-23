@@ -54,6 +54,8 @@ export default function PostPropertyPage() {
   const [pincode, setPincode] = useState("");
   const [landmark, setLandmark] = useState("");
   const [googleMapLink, setGoogleMapLink] = useState("");
+  const [nearbyPlaces, setNearbyPlaces] = useState<string[]>([]);
+  const [nearbyPlaceInput, setNearbyPlaceInput] = useState("");
   const [operationalSince, setOperationalSince] = useState("");
   const [pgPresentIn, setPgPresentIn] = useState<PGPresentIn>(null);
   const [pgName, setPgName] = useState("");
@@ -459,6 +461,7 @@ export default function PostPropertyPage() {
         tenantWashroomImages: tenantWashroomBase64,
         tenantCommonAreaImages: tenantCommonAreaBase64,
         view360Url: view360Url || undefined,
+        nearbyPlaces: nearbyPlaces.length > 0 ? nearbyPlaces : undefined,
       };
 
       // PG-specific fields
@@ -1053,6 +1056,60 @@ export default function PostPropertyPage() {
                       <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
                       <span>{t.googleMapHelper}</span>
                     </p>
+                  </div>
+
+                  {/* Nearby Places */}
+                  <div>
+                    <label className="block text-gray-700 font-medium mb-2">{t.nearbyPlacesLabel}</label>
+                    <p className="text-xs text-gray-500 mb-2">{t.nearbyPlacesHelper}</p>
+                    <div className="flex gap-2 mb-3">
+                      <input
+                        type="text"
+                        value={nearbyPlaceInput}
+                        onChange={(e) => setNearbyPlaceInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const val = nearbyPlaceInput.trim();
+                            if (val && !nearbyPlaces.includes(val)) {
+                              setNearbyPlaces(prev => [...prev, val]);
+                            }
+                            setNearbyPlaceInput('');
+                          }
+                        }}
+                        placeholder={t.nearbyPlacesPlaceholder}
+                        className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const val = nearbyPlaceInput.trim();
+                          if (val && !nearbyPlaces.includes(val)) {
+                            setNearbyPlaces(prev => [...prev, val]);
+                          }
+                          setNearbyPlaceInput('');
+                        }}
+                        className="px-4 py-3 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors font-medium"
+                      >
+                        Add
+                      </button>
+                    </div>
+                    {nearbyPlaces.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {nearbyPlaces.map((place, i) => (
+                          <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium">
+                            {place}
+                            <button
+                              type="button"
+                              onClick={() => setNearbyPlaces(prev => prev.filter((_, idx) => idx !== i))}
+                              className="hover:text-red-500 transition-colors"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 

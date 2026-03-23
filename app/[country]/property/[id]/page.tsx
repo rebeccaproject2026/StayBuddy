@@ -658,8 +658,22 @@ export default function PropertyDetailsPage() {
                   )}
                 </>
               )}
-
-              {/* Amenities */}
+              {/* Nearby Places */}
+              {property.nearbyPlaces && property.nearbyPlaces.length > 0 && (
+                <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
+                  <h3 className="text-xs sm:text-sm font-semibold text-gray-500 mb-3 sm:mb-4">
+                    {language === 'fr' ? 'LIEUX À PROXIMITÉ' : 'NEARBY PLACES'}
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {property.nearbyPlaces.map((place: string, i: number) => (
+                      <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-xs sm:text-sm font-medium">
+                        <MapPin className="w-3 h-3 flex-shrink-0" />
+                        {place}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
               {amenitiesList.length > 0 && (
                 <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
                   <h3 className="text-xs sm:text-sm font-semibold text-gray-500 mb-3 sm:mb-4">{t.amenities}</h3>

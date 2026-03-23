@@ -22,6 +22,7 @@ import {
   Eye,
   ArrowLeft,
   Phone,
+  Mail,
 } from "lucide-react";
 
 function ProfileSection({ user, tc, language }: { user: any; tc: any; language: string }) {
@@ -334,31 +335,11 @@ export default function OwnerDashboard() {
 
 
 
-  const messages = [
-    {
-      id: 1,
-      tenantName: "Rahul Sharma",
-      propertyName: "Sunshine PG",
-      lastMessage: "Is the room still available?",
-      time: "2 hours ago",
-      unread: true,
-    },
-    {
-      id: 2,
-      tenantName: "Priya Patel",
-      propertyName: "Green Valley Apartment",
-      lastMessage: "Thank you! I'll visit tomorrow.",
-      time: "1 day ago",
-      unread: false,
-    },
-  ];
-
   const content = {
     en: {
       dashboard: "Owner Dashboard",
       myListings: "My Listings",
-      messages: "Messages",
-      bookingRequests: "Booking Requests",
+      bookingRequests: "Inquiries",
       profile: "Profile",
       logout: "Logout",
       addNewListing: "Add New Listing",
@@ -379,10 +360,7 @@ export default function OwnerDashboard() {
       respond: "Respond",
       approve: "Approve",
       reject: "Reject",
-      noRequests: "No booking requests",
-      lastMessage: "Last Message",
-      reply: "Reply",
-      noMessages: "No messages",
+      noRequests: "No inquiries yet",
       profileSettings: "Profile Settings",
       fullName: "Full Name",
       email: "Email",
@@ -398,8 +376,7 @@ export default function OwnerDashboard() {
     fr: {
       dashboard: "Tableau de bord propriétaire",
       myListings: "Mes annonces",
-      messages: "Messages",
-      bookingRequests: "Demandes de réservation",
+      bookingRequests: "Demandes",
       profile: "Profil",
       logout: "Déconnexion",
       addNewListing: "Ajouter une annonce",
@@ -421,9 +398,6 @@ export default function OwnerDashboard() {
       approve: "Approuver",
       reject: "Rejeter",
       noRequests: "Aucune demande",
-      lastMessage: "Dernier message",
-      reply: "Répondre",
-      noMessages: "Aucun message",
       profileSettings: "Paramètres du profil",
       fullName: "Nom complet",
       email: "Email",
@@ -662,22 +636,6 @@ export default function OwnerDashboard() {
                 >
                   <Home className="w-5 h-5" />
                   <span className="font-medium">{tc.myListings}</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab("messages")}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                    activeTab === "messages"
-                      ? "bg-primary text-white"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  <MessageSquare className="w-5 h-5" />
-                  <span className="font-medium">{tc.messages}</span>
-                  {messages.filter(m => m.unread).length > 0 && (
-                    <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                      {messages.filter(m => m.unread).length}
-                    </span>
-                  )}
                 </button>
                 <button
                   onClick={() => setActiveTab("requests")}
@@ -1511,44 +1469,7 @@ export default function OwnerDashboard() {
               </div>
             )}
 
-            {/* Messages */}
-            {activeTab === "messages" && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">{tc.messages}</h2>
-                {messages.length > 0 ? (
-                  <div className="space-y-4">
-                    {messages.map((message) => (
-                      <div key={message.id} className={`bg-white rounded-2xl shadow-md p-6 ${message.unread ? 'border-l-4 border-primary' : ''}`}>
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="text-lg font-bold text-gray-900">{message.tenantName}</h3>
-                              {message.unread && (
-                                <span className="w-2 h-2 bg-primary rounded-full"></span>
-                              )}
-                            </div>
-                            <p className="text-sm text-gray-600">{message.propertyName}</p>
-                          </div>
-                          <span className="text-xs text-gray-500">{message.time}</span>
-                        </div>
-                        <p className="text-gray-800 mb-4">{message.lastMessage}</p>
-                        <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
-                          <Send className="w-4 h-4" />
-                          {tc.reply}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-white rounded-2xl shadow-md p-12 text-center">
-                    <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-600">{tc.noMessages}</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Booking Requests */}
+            {/* Inquiries */}
             {activeTab === "requests" && (
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">{tc.bookingRequests}</h2>
@@ -1570,7 +1491,8 @@ export default function OwnerDashboard() {
                               {tc.propertyName}: <span className="font-medium">{req.propertyTitle || "—"}</span>
                             </p>
                             <p className="text-sm text-gray-500">
-                              {new Date(req.createdAt).toLocaleDateString()}
+                              {new Date(req.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}{' '}
+                              {new Date(req.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                             </p>
                           </div>
                           <span className={`self-start px-4 py-1.5 rounded-full text-sm font-medium ${getStatusColor(req.status)}`}>
@@ -1650,19 +1572,58 @@ export default function OwnerDashboard() {
                           </div>
                         )}
 
+                        {/* Contact Info */}
+                        <div className="flex flex-wrap gap-3 mb-4">
+                          {(req.phone || req.renter?.phoneNumber) && (
+                            <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+                              <Phone className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                              <span className="text-sm font-medium text-blue-800">{req.phone || req.renter?.phoneNumber}</span>
+                            </div>
+                          )}
+                          {(req.email || req.renter?.email) && (
+                            <div className="flex items-center gap-2 px-3 py-2 bg-purple-50 border border-purple-200 rounded-lg">
+                              <Mail className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                              <span className="text-sm font-medium text-purple-800">{req.email || req.renter?.email}</span>
+                            </div>
+                          )}
+                        </div>
+
                         {/* Actions */}
                         <div className="flex flex-wrap gap-2">
-                          {req.phone && (
-                            <a
-                              href={`tel:${req.phone}`}
-                              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                            >
-                              <Phone className="w-4 h-4" />
-                              {language === "fr" ? "Appeler" : "Call"}
-                            </a>
-                          )}
-                          {req.status === "pending" && (
+                          {req.status === "accepted" ? (
                             <>
+                              {req.phone && (
+                                <a
+                                  href={`https://wa.me/${req.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${req.fullName}, your inquiry for "${req.propertyTitle}" has been accepted. Let's connect!`)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
+                                >
+                                  <MessageSquare className="w-4 h-4" />
+                                  {language === "fr" ? "Chat WhatsApp" : "Chat on WhatsApp"}
+                                </a>
+                              )}
+                              {req.phone && (
+                                <a
+                                  href={`tel:${req.phone}`}
+                                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                                >
+                                  <Phone className="w-4 h-4" />
+                                  {language === "fr" ? "Appeler" : "Call"}
+                                </a>
+                              )}
+                            </>
+                          ) : req.status === "pending" ? (
+                            <>
+                              {req.phone && (
+                                <a
+                                  href={`tel:${req.phone}`}
+                                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                                >
+                                  <Phone className="w-4 h-4" />
+                                  {language === "fr" ? "Appeler" : "Call"}
+                                </a>
+                              )}
                               <button
                                 onClick={() => handleRequestAction(req._id, "accepted")}
                                 className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
@@ -1676,6 +1637,17 @@ export default function OwnerDashboard() {
                                 {tc.reject}
                               </button>
                             </>
+                          ) : (
+                            /* rejected — just show call if phone available */
+                            req.phone && (
+                              <a
+                                href={`tel:${req.phone}`}
+                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                              >
+                                <Phone className="w-4 h-4" />
+                                {language === "fr" ? "Appeler" : "Call"}
+                              </a>
+                            )
                           )}
                         </div>
                       </div>

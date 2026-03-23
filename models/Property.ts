@@ -68,6 +68,7 @@ export interface IProperty extends Document {
   societyAmenities?: string[];
   tenantsPrefer?: string[];
   localityDescription?: string;
+  nearbyPlaces?: string[];
   // Common fields
   uspCategory?: string;
   uspText?: string;
@@ -161,6 +162,7 @@ const PropertySchema: Schema = new Schema<IProperty>({
   societyAmenities: [{ type: String }],
   tenantsPrefer: [{ type: String }],
   localityDescription: { type: String },
+  nearbyPlaces: [{ type: String }],
   uspCategory: { type: String },
   uspText: { type: String },
   pgDescription: { type: String },
@@ -179,7 +181,7 @@ const PropertySchema: Schema = new Schema<IProperty>({
 // Force re-register if schema is missing new fields (handles Next.js hot-reload cache)
 if (mongoose.models.Property) {
   const existing = mongoose.models.Property;
-  if (!existing.schema.path('areaName') || !existing.schema.path('state')) {
+  if (!existing.schema.path('areaName') || !existing.schema.path('state') || !existing.schema.path('nearbyPlaces')) {
     delete (mongoose.models as any).Property;
   }
 }
