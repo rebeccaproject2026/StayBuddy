@@ -20,14 +20,17 @@ import {
   Lock,
   Mail,
   Phone,
+  Home,
   X,
+  ChevronDown,
 } from "lucide-react";
 
 export default function TenantDashboard() {
   const { language, t } = useLanguage();
-  const { user, isLoading, isAuthenticated, token } = useAuth();
+  const { user, isLoading, isAuthenticated, token, logout } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("saved");
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [savedProperties, setSavedProperties] = useState<any[]>([]);
   const [favLoading, setFavLoading] = useState(false);
   const [myRequests, setMyRequests] = useState<any[]>([]);
@@ -429,26 +432,25 @@ export default function TenantDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
+      <div className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-[1500px] mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
             <h1 className="text-2xl font-bold text-primary">{tc.dashboard}</h1>
             <Link
               href="/"
-              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-primary transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg transition-colors font-medium text-sm"
             >
-              <LogOut className="w-5 h-5" />
-              <span className="hidden sm:inline">{tc.logout}</span>
+              <Home className="w-4 h-4" />
+              <span>{language === "fr" ? "Accueil" : "Back to Home"}</span>
             </Link>
           </div>
         </div>
       </div>
 
-      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 py-8">
-        <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
           {/* Sidebar */}
-          <div className="lg:w-80 flex-shrink-0">
-            <div className="bg-white rounded-2xl shadow-md p-4 sticky top-4">
+          <div className="lg:w-72 flex-shrink-0">
+            <div className="bg-white shadow-md p-4 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto flex flex-col">
               <nav className="space-y-2">
                 <button
                   onClick={() => setActiveTab("saved")}
@@ -501,23 +503,66 @@ export default function TenantDashboard() {
                     </span>
                   )}
                 </button>
-                <button
-                  onClick={() => setActiveTab("profile")}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                    activeTab === "profile"
-                      ? "bg-primary text-white"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  <User className="w-5 h-5" />
-                  <span className="font-medium">{tc.profile}</span>
-                </button>
               </nav>
+
+              {/* Profile card */}
+              <div className="mt-auto pt-4 border-t border-gray-100 relative">
+                <button
+                  onClick={() => setProfileMenuOpen(p => !p)}
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-left group ${profileMenuOpen ? "bg-primary/5" : "hover:bg-primary/5"}`}
+                >
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm">
+                    <span className="text-white font-bold text-sm">
+                      {user?.fullName?.charAt(0)?.toUpperCase() || "U"}
+                    </span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-gray-900 truncate">{user?.fullName || "—"}</p>
+                    <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                  </div>
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${profileMenuOpen ? "bg-primary text-white" : "bg-gray-100 text-gray-400 group-hover:bg-primary/10 group-hover:text-primary"}`}>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${profileMenuOpen ? "rotate-180" : ""}`} />
+                  </div>
+                </button>
+
+                {profileMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setProfileMenuOpen(false)} />
+                    <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-20">
+                      {/* User info header */}
+                      <div className="px-4 py-3 bg-gradient-to-r from-primary/5 to-primary/10 border-b border-primary/10">
+                        <p className="text-xs font-semibold text-primary uppercase tracking-wide">
+                          {language === "fr" ? "Connecté en tant que" : "Signed in as"}
+                        </p>
+                        <p className="text-sm font-bold text-gray-900 truncate mt-0.5">{user?.fullName}</p>
+                      </div>
+                      <button
+                        onClick={() => { setActiveTab("profile"); setProfileMenuOpen(false); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors group/item"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-gray-100 group-hover/item:bg-primary/10 flex items-center justify-center transition-colors">
+                          <User className="w-3.5 h-3.5 text-gray-500 group-hover/item:text-primary transition-colors" />
+                        </div>
+                        <span className="font-medium">{language === "fr" ? "Voir le profil" : "View Profile"}</span>
+                      </button>
+                      <button
+                        onClick={() => { setProfileMenuOpen(false); logout(); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100 group/item"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-red-50 group-hover/item:bg-red-100 flex items-center justify-center transition-colors">
+                          <LogOut className="w-3.5 h-3.5 text-red-500" />
+                        </div>
+                        <span className="font-medium">{language === "fr" ? "Déconnexion" : "Logout"}</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Main Content */}
-          <div className="flex-1">
+          <div className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0">
             {/* Saved Properties */}
             {activeTab === "saved" && (
               <div className="space-y-4">
@@ -861,7 +906,6 @@ export default function TenantDashboard() {
               </div>
             )}
           </div>
-        </div>
       </div>
 
       {/* Chat Modal */}

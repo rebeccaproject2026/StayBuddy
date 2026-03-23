@@ -226,10 +226,11 @@ function ProfileSection({ user, tc, language }: { user: any; tc: any; language: 
 
 export default function OwnerDashboard() {
   const { language, t } = useLanguage();
-  const { user, isLoading, isAuthenticated } = useAuth();
+  const { user, isLoading, isAuthenticated, logout } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("listings");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const currencySymbol = t("currency.symbol");
 
   const [myListings, setMyListings] = useState<any[]>([]);
@@ -835,26 +836,25 @@ export default function OwnerDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
+      <div className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-[1500px] mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
             <h1 className="text-2xl font-bold text-primary">{tc.dashboard}</h1>
             <Link
               href="/"
-              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-primary transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg transition-colors font-medium text-sm"
             >
-              <LogOut className="w-5 h-5" />
-              <span className="hidden sm:inline">{tc.logout}</span>
+              <Home className="w-4 h-4" />
+              <span>{language === "fr" ? "Accueil" : "Back to Home"}</span>
             </Link>
           </div>
         </div>
       </div>
 
-      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 py-8">
-        <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
           {/* Sidebar */}
-          <div className="lg:w-80 flex-shrink-0">
-            <div className="bg-white rounded-2xl shadow-md p-4 sticky top-4">
+          <div className="lg:w-72 flex-shrink-0">
+            <div className="bg-white shadow-md p-4 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto flex flex-col">
               <nav className="space-y-2">
                 <button
                   onClick={() => setActiveTab("listings")}
@@ -909,23 +909,70 @@ export default function OwnerDashboard() {
                     </span>
                   )}
                 </button>
-                <button
-                  onClick={() => setActiveTab("profile")}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                    activeTab === "profile"
-                      ? "bg-primary text-white"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  <User className="w-5 h-5" />
-                  <span className="font-medium">{tc.profile}</span>
-                </button>
               </nav>
+
+              {/* Profile card */}
+              <div className="mt-auto pt-4 border-t border-gray-100 relative">
+                <button
+                  onClick={() => setProfileMenuOpen(p => !p)}
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-left group ${profileMenuOpen ? "bg-primary/5" : "hover:bg-primary/5"}`}
+                >
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm">
+                    {user?.profileImage ? (
+                      <Image src={user.profileImage} alt={user.fullName} width={40} height={40} className="object-cover w-full h-full" />
+                    ) : (
+                      <span className="text-white font-bold text-sm">
+                        {user?.fullName?.charAt(0)?.toUpperCase() || "U"}
+                      </span>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-gray-900 truncate">{user?.fullName || "—"}</p>
+                    <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                  </div>
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${profileMenuOpen ? "bg-primary text-white" : "bg-gray-100 text-gray-400 group-hover:bg-primary/10 group-hover:text-primary"}`}>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${profileMenuOpen ? "rotate-180" : ""}`} />
+                  </div>
+                </button>
+
+                {profileMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setProfileMenuOpen(false)} />
+                    <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-20">
+                      {/* User info header */}
+                      <div className="px-4 py-3 bg-gradient-to-r from-primary/5 to-primary/10 border-b border-primary/10">
+                        <p className="text-xs font-semibold text-primary uppercase tracking-wide">
+                          {language === "fr" ? "Connecté en tant que" : "Signed in as"}
+                        </p>
+                        <p className="text-sm font-bold text-gray-900 truncate mt-0.5">{user?.fullName}</p>
+                      </div>
+                      <button
+                        onClick={() => { setActiveTab("profile"); setProfileMenuOpen(false); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors group/item"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-gray-100 group-hover/item:bg-primary/10 flex items-center justify-center transition-colors">
+                          <User className="w-3.5 h-3.5 text-gray-500 group-hover/item:text-primary transition-colors" />
+                        </div>
+                        <span className="font-medium">{language === "fr" ? "Voir le profil" : "View Profile"}</span>
+                      </button>
+                      <button
+                        onClick={() => { setProfileMenuOpen(false); logout(); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100 group/item"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-red-50 group-hover/item:bg-red-100 flex items-center justify-center transition-colors">
+                          <LogOut className="w-3.5 h-3.5 text-red-500" />
+                        </div>
+                        <span className="font-medium">{language === "fr" ? "Déconnexion" : "Logout"}</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Main Content */}
-          <div className="flex-1">
+          <div className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0">
             {/* My Listings */}
             {activeTab === "listings" && (
               <div className="space-y-6">
@@ -2122,101 +2169,119 @@ export default function OwnerDashboard() {
                       </div>
                     )}
 
-                    {/* List View */}
+                    {/* List View — Table */}
                     {viewMode === "list" && (
-                      <div className="space-y-4">
-                        {myListings.map((listing) => (
-                          <div key={listing._id} className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow">
-                            <div className="flex flex-col md:flex-row gap-4 md:gap-6">
-                              <div className="relative w-full h-48 md:w-48 md:h-32 flex-shrink-0">
-                                <Image
-                                  src={listing.images?.[0] || "/owner.png"}
-                                  alt={listing.title}
-                                  fill
-                                  className="object-cover rounded-lg"
-                                />
-                                <span className={`absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-medium ${
-                                  listing.propertyType === "PG" ? "bg-blue-500 text-white" : "bg-green-500 text-white"
-                                }`}>
-                                  {listing.propertyType}
-                                </span>
-                              </div>
-
-                              <div className="flex-1">
-                                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-3">
-                                  <div>
-                                    <h3 className="text-xl font-bold text-gray-900 mb-1">
-                                      {listing.propertyType === "Tenant" && listing.societyName ? listing.societyName : listing.title}
-                                    </h3>
-                                    <div className="flex items-center gap-2 text-gray-600 mb-2">
-                                      <MapPin className="w-4 h-4" />
-                                      <span className="text-sm">{listing.location}</span>
-                                    </div>
-                                    <p className="text-sm text-gray-500">{listing.fullAddress}</p>
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center gap-2 mb-4">
-                                  <span className="text-2xl font-bold text-primary">
-                                    {currencySymbol} {listing.price?.toLocaleString()}
-                                  </span>
-                                  <span className="text-gray-600 text-sm">/month</span>
-                                </div>
-
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                                  <div className="p-3 bg-gray-50 rounded-lg">
-                                    <p className="text-sm text-gray-600">Total Rooms</p>
-                                    <p className="font-bold text-gray-900">
-                                      {listing.propertyType === "PG" && listing.roomDetails
-                                        ? Object.values(listing.roomDetails as Record<string, any>).reduce((s: number, r: any) => s + (parseInt(r.totalRooms) || 0), 0)
-                                        : listing.rooms}
-                                    </p>
-                                  </div>
-                                  <div className="p-3 bg-gray-50 rounded-lg">
-                                    <p className="text-sm text-gray-600">Available</p>
-                                    <p className="font-bold text-green-600">
-                                      {listing.propertyType === "PG" && listing.roomDetails
-                                        ? Object.values(listing.roomDetails as Record<string, any>).reduce((s: number, r: any) => s + (parseInt(r.availableRooms) || 0), 0)
-                                        : listing.rooms}
-                                    </p>
-                                  </div>
-                                  <div className="p-3 bg-gray-50 rounded-lg">
-                                    <p className="text-sm text-gray-600">Area</p>
-                                    <p className="font-bold text-gray-900">{listing.area} m²</p>
-                                  </div>
-                                  <div className="p-3 bg-gray-50 rounded-lg">
-                                    <p className="text-sm text-gray-600">Category</p>
-                                    <p className="font-bold text-gray-900">{listing.category}</p>
-                                  </div>
-                                </div>
-
-                                <div className="flex flex-wrap gap-2">
-                                  <button
+                      <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-primary/10">
+                                <th className="text-left px-5 py-4 text-xs font-bold text-primary uppercase tracking-wide">Property</th>
+                                <th className="text-left px-4 py-4 text-xs font-bold text-primary uppercase tracking-wide hidden md:table-cell">Location</th>
+                                <th className="text-left px-4 py-4 text-xs font-bold text-primary uppercase tracking-wide">Rent</th>
+                                <th className="text-left px-4 py-4 text-xs font-bold text-primary uppercase tracking-wide hidden sm:table-cell">Rooms</th>
+                                <th className="text-left px-4 py-4 text-xs font-bold text-primary uppercase tracking-wide hidden lg:table-cell">Available</th>
+                                <th className="text-left px-4 py-4 text-xs font-bold text-primary uppercase tracking-wide hidden lg:table-cell">Type</th>
+                                <th className="text-right px-5 py-4 text-xs font-bold text-primary uppercase tracking-wide">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                              {myListings.map((listing, idx) => {
+                                const totalRooms = listing.propertyType === "PG" && listing.roomDetails
+                                  ? Object.values(listing.roomDetails as Record<string, any>).reduce((s: number, r: any) => s + (parseInt(r.totalRooms) || 0), 0)
+                                  : listing.rooms;
+                                const availableRooms = listing.propertyType === "PG" && listing.roomDetails
+                                  ? Object.values(listing.roomDetails as Record<string, any>).reduce((s: number, r: any) => s + (parseInt(r.availableRooms) || 0), 0)
+                                  : listing.rooms;
+                                return (
+                                  <tr
+                                    key={listing._id}
+                                    className={`group hover:bg-primary/5 transition-colors cursor-pointer ${idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}
                                     onClick={() => setSelectedListing(listing)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm sm:text-base"
                                   >
-                                    <Eye className="w-4 h-4" />
-                                    {tc.viewDetails}
-                                  </button>
-                                  <button
-                                    onClick={() => openEdit(listing)}
-                                    className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
-                                  >
-                                    <Edit className="w-4 h-4" />
-                                    {tc.edit}
-                                  </button>
-                                  <button
-                                    onClick={() => setDeleteConfirmId(listing._id)}
-                                    className="flex items-center gap-2 px-4 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition-colors text-sm sm:text-base"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                    {tc.delete}
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                                    {/* Property */}
+                                    <td className="px-5 py-4">
+                                      <div className="flex items-center gap-3">
+                                        <div className="relative w-12 h-12 flex-shrink-0 rounded-xl overflow-hidden">
+                                          <Image
+                                            src={listing.images?.[0] || "/owner.png"}
+                                            alt={listing.title}
+                                            fill
+                                            className="object-cover"
+                                          />
+                                        </div>
+                                        <div className="min-w-0">
+                                          <p className="font-semibold text-gray-900 truncate max-w-[160px] group-hover:text-primary transition-colors">
+                                            {listing.propertyType === "Tenant" && listing.societyName ? listing.societyName : listing.title}
+                                          </p>
+                                          <p className="text-xs text-gray-400 truncate max-w-[160px] md:hidden">{listing.areaName}, {listing.location}</p>
+                                        </div>
+                                      </div>
+                                    </td>
+                                    {/* Location */}
+                                    <td className="px-4 py-4 hidden md:table-cell">
+                                      <div className="flex items-center gap-1.5 text-gray-600">
+                                        <MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                                        <span className="truncate max-w-[160px]">{[listing.areaName, listing.location].filter(Boolean).join(", ")}</span>
+                                      </div>
+                                    </td>
+                                    {/* Rent */}
+                                    <td className="px-4 py-4">
+                                      <span className="font-bold text-primary">{currencySymbol} {listing.price?.toLocaleString()}</span>
+                                      <span className="text-gray-400 text-xs">/mo</span>
+                                    </td>
+                                    {/* Rooms */}
+                                    <td className="px-4 py-4 hidden sm:table-cell">
+                                      <span className="font-semibold text-gray-900">{totalRooms}</span>
+                                    </td>
+                                    {/* Available */}
+                                    <td className="px-4 py-4 hidden lg:table-cell">
+                                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${Number(availableRooms) > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
+                                        {availableRooms} {Number(availableRooms) > 0 ? "available" : "full"}
+                                      </span>
+                                    </td>
+                                    {/* Type */}
+                                    <td className="px-4 py-4 hidden lg:table-cell">
+                                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${listing.propertyType === "PG" ? "bg-blue-100 text-blue-700" : "bg-emerald-100 text-emerald-700"}`}>
+                                        {listing.propertyType}
+                                      </span>
+                                    </td>
+                                    {/* Actions */}
+                                    <td className="px-5 py-4 text-right" onClick={e => e.stopPropagation()}>
+                                      <div className="flex items-center justify-end gap-1.5">
+                                        <button
+                                          onClick={() => setSelectedListing(listing)}
+                                          className="p-2 rounded-lg text-gray-500 hover:bg-primary hover:text-white transition-colors"
+                                          title={tc.viewDetails}
+                                        >
+                                          <Eye className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                          onClick={() => openEdit(listing)}
+                                          className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                                          title={tc.edit}
+                                        >
+                                          <Edit className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                          onClick={() => setDeleteConfirmId(listing._id)}
+                                          className="p-2 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors"
+                                          title={tc.delete}
+                                        >
+                                          <Trash2 className="w-4 h-4" />
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
+                          <p className="text-xs text-gray-500">{myListings.length} {myListings.length === 1 ? "listing" : "listings"}</p>
+                          <p className="text-xs text-gray-400">Click a row to view details</p>
+                        </div>
                       </div>
                     )}
                     </>
@@ -2398,7 +2463,6 @@ export default function OwnerDashboard() {
               <ProfileSection user={user} tc={tc} language={language} />
             )}
           </div>
-        </div>
       </div>
 
       {/* Chat Modal */}
