@@ -2,19 +2,19 @@
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, MapPin, Search, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, Search, SlidersHorizontal } from "lucide-react";
 import { Menu } from "@headlessui/react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface FilterState {
   category: "PG" | "Tenant";
-  location: string;
+  search: string;
   minPrice: number;
   maxPrice: number;
-  pgFor: "Girls" | "Boys" | "Both" | null;
-  tenant: "Student" | "Professional" | "Both" | null;
+  pgFor: "Male" | "Female" | "Both" | null;
+  tenant: "Students" | "Professionals" | "Both" | null;
   occupancy: "Single" | "Double" | "Triple" | "Four" | null;
-  propertyType: "Flat" | "House" | "1BHK" | "2BHK" | "3BHK" | "4BHK" | null;
+  propertyType: "Villa" | "Flat" | "House" | "Penthouse" | null;
   city: string | null;
 }
 
@@ -26,7 +26,7 @@ export default function FilterSection() {
   
   const [filters, setFilters] = useState<FilterState>({
     category: "PG",
-    location: "",
+    search: "",
     minPrice: 0,
     maxPrice: 50000,
     pgFor: null,
@@ -39,28 +39,20 @@ export default function FilterSection() {
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const categories = ["PG", "Tenant"] as const;
-  const pgForOptions = ["Girls", "Boys", "Both"] as const;
-  const tenantOptions = ["Student", "Professional", "Both"] as const;
+  const pgForOptions = ["Male", "Female", "Both"] as const;
+  const tenantOptions = ["Students", "Professionals", "Both"] as const;
   const occupancyOptions = ["Single", "Double", "Triple", "Four"] as const;
   const propertyTypes = [
+    "Villa",
     "Flat",
     "House",
-    "1BHK",
-    "2BHK",
-    "3BHK",
-    "4BHK",
+    "Penthouse",
   ] as const;
 
-  // City options based on country
+  // City options based on country — must match values stored in property.location
   const indiaCities = [
-    "Navrangpura",
-    "Vastrapur",
-    "Satellite",
-    "Vesu",
-    "Adajan",
-    "Alkapuri",
-    "Info City",
-    "Sector 21",
+    "Ahmedabad",
+    "Gandhinagar",
   ] as const;
 
   const franceCities = [
@@ -93,9 +85,9 @@ export default function FilterSection() {
       params.set("tab", "tenant");
     }
     
-    // Add location as search query
-    if (filters.location) {
-      params.set("search", filters.location);
+    // Add search query (property name or city)
+    if (filters.search) {
+      params.set("search", filters.search);
     }
     
     // Add price range
@@ -122,13 +114,13 @@ export default function FilterSection() {
       params.set("propertyType", filters.propertyType);
     }
     
-    // Add city
+    // Add city filter (from advanced filters)
     if (filters.city) {
       params.set("city", filters.city);
     }
     
     // Navigate to properties page with filters
-    router.push(`/properties?${params.toString()}`);
+    router.push(`/${country}/properties?${params.toString()}`);
   };
 
   const handlePriceChange = (type: "min" | "max", value: number) => {
@@ -179,17 +171,16 @@ export default function FilterSection() {
             </Menu>
           </div>
 
-          {/* Location Input */}
+          {/* Search Input */}
           <div className="col-span-1 sm:col-span-2 lg:col-span-8">
             <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
               <input
                 type="text"
-                value={filters.location}
-                onChange={(e) =>
-                  setFilters({ ...filters, location: e.target.value })
-                }
-                placeholder={t("filters.location")}
+                value={filters.search}
+                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                placeholder="Search by property name or city..."
                 className="w-full pl-9 sm:pl-11 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 outline-none"
               />
             </div>
@@ -317,7 +308,7 @@ export default function FilterSection() {
                               : "bg-white text-gray-700 border-gray-200 hover:bg-primary-light"
                           }`}
                         >
-                          {getTranslatedOption(option)}
+                          {option}
                         </motion.button>
                       ))}
                     </div>
@@ -347,7 +338,7 @@ export default function FilterSection() {
                             : "bg-white text-gray-700 border-gray-200 hover:bg-primary-light"
                         }`}
                       >
-                        {getTranslatedOption(option)}
+                        {option}
                       </motion.button>
                     ))}
                   </div>

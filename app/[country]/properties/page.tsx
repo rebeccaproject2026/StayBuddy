@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, Suspense, useCallback } from "react";
-import { useSearchParams, useParams } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useParams, useRouter } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import PropertyCard from "@/components/PropertyCard";
 import SubscribeSection from "@/components/SubscribeSection";
@@ -35,6 +35,7 @@ function PropertiesPageContent() {
   const { language } = useLanguage();
   const searchParams = useSearchParams();
   const params = useParams();
+  const router = useRouter();
   const country = (params?.country as string) || "in";
 
   const [properties, setProperties] = useState<any[]>([]);
@@ -54,6 +55,8 @@ function PropertiesPageContent() {
   const [occupancy, setOccupancy] = useState<string[]>([]);
   const [pgFor, setPgFor] = useState<string[]>([]);
   const [selectedCities, setSelectedCities] = useState<string[]>([]);
+  const [tenantPref, setTenantPref] = useState<string[]>([]);
+  const [propCategory, setPropCategory] = useState<string[]>([]);
   const [verifiedPG, setVerifiedPG] = useState(false);
 
   // Temp filter states (drawer)
@@ -61,9 +64,11 @@ function PropertiesPageContent() {
   const [tempOccupancy, setTempOccupancy] = useState<string[]>([]);
   const [tempPgFor, setTempPgFor] = useState<string[]>([]);
   const [tempSelectedCities, setTempSelectedCities] = useState<string[]>([]);
+  const [tempTenantPref, setTempTenantPref] = useState<string[]>([]);
+  const [tempPropCategory, setTempPropCategory] = useState<string[]>([]);
   const [tempVerifiedPG, setTempVerifiedPG] = useState(false);
 
-  // Apply URL params on mount
+  // Sync URL params → state AND fetch in one effect to avoid race condition
   useEffect(() => {
     const tab = searchParams.get("tab");
     const search = searchParams.get("search");
@@ -71,70 +76,86 @@ function PropertiesPageContent() {
     const maxPrice = searchParams.get("maxPrice");
     const pgForParam = searchParams.get("pgFor");
     const cityParam = searchParams.get("city");
-    if (tab === "pg" || tab === "tenant") setActiveTab(tab);
-    if (search) setSearchQuery(search);
-    if (minPrice && maxPrice) {
-      const range = [parseInt(minPrice), parseInt(maxPrice)];
-      setPriceRange(range);
-      setTempPriceRange(range);
-    }
+    const occupancyParam = searchParams.get("occupancy");
+    const tenantParam = searchParams.get("tenant");
+    const propCategoryParam = searchParams.get("propertyType");
+
+    const resolvedTab: PropertyType = tab === "pg" ? "pg" : tab === "tenant" ? "tenant" : "all";
+    setActiveTab(resolvedTab);
+    setSearchQuery(search || "");
+    const resolvedMin = minPrice ? parseInt(minPrice) : 0;
+    const resolvedMax = maxPrice ? parseInt(maxPrice) : 200000;
+    setPriceRange([resolvedMin, resolvedMax]);
+    setTempPriceRange([resolvedMin, resolvedMax]);
     if (pgForParam) { setPgFor([pgForParam]); setTempPgFor([pgForParam]); }
+    else { setPgFor([]); setTempPgFor([]); }
     if (cityParam) { setSelectedCities([cityParam]); setTempSelectedCities([cityParam]); }
-  }, [searchParams]);
+    else { setSelectedCities([]); setTempSelectedCities([]); }
+    if (occupancyParam) { setOccupancy([occupancyParam]); setTempOccupancy([occupancyParam]); }
+    else { setOccupancy([]); setTempOccupancy([]); }
+    if (tenantParam) { setTenantPref([tenantParam]); setTempTenantPref([tenantParam]); }
+    else { setTenantPref([]); setTempTenantPref([]); }
+    if (propCategoryParam) { setPropCategory([propCategoryParam]); setTempPropCategory([propCategoryParam]); }
+    else { setPropCategory([]); setTempPropCategory([]); }
 
-  // Fetch from API
-  const fetchProperties = useCallback(async () => {
-    setLoading(true);
-    try {
-      const qs = new URLSearchParams();
-      qs.set("country", country);
-      qs.set("page", String(currentPage));
-      qs.set("limit", String(itemsPerPage));
-      if (activeTab === "pg") qs.set("type", "PG");
-      if (activeTab === "tenant") qs.set("type", "Tenant");
-      if (priceRange[0] > 0) qs.set("minPrice", String(priceRange[0]));
-      if (priceRange[1] < 200000) qs.set("maxPrice", String(priceRange[1]));
-
-      const res = await fetch(`/api/properties?${qs.toString()}`);
-      const data = await res.json();
-      if (data.success) {
-        setProperties(data.properties || []);
-        setTotal(data.pagination?.total || 0);
+    // Fetch using resolved values directly — no stale state
+    const doFetch = async () => {
+      setLoading(true);
+      try {
+        const qs = new URLSearchParams();
+        qs.set("country", country);
+        qs.set("page", String(currentPage));
+        qs.set("limit", String(itemsPerPage));
+        if (resolvedTab === "pg") qs.set("type", "PG");
+        if (resolvedTab === "tenant") qs.set("type", "Tenant");
+        if (resolvedMin > 0) qs.set("minPrice", String(resolvedMin));
+        if (resolvedMax < 200000) qs.set("maxPrice", String(resolvedMax));
+        const res = await fetch(`/api/properties?${qs.toString()}`);
+        const data = await res.json();
+        if (data.success) {
+          setProperties(data.properties || []);
+          setTotal(data.pagination?.total || 0);
+        }
+      } catch {
+        setProperties([]);
+      } finally {
+        setLoading(false);
       }
-    } catch {
-      setProperties([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [country, currentPage, activeTab, priceRange]);
+    };
+    doFetch();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, country, currentPage]);
 
-  useEffect(() => { fetchProperties(); }, [fetchProperties]);
-
+  // Re-fetch when user changes tab or price filter manually (not from URL nav)
   const content = {
     en: {
       title: "All Properties", subtitle: "Find your perfect home from our extensive collection",
-      search: "Search by location, price, or property type...", sortBy: "Sort by",
+      search: "Search by property name, location, or price...", sortBy: "Sort by",
       filters: "Filters", showing: "Showing", properties: "properties",
       clearAll: "Clear All Filter", applyFilters: "Apply Filters",
       tabs: { all: "All Properties", pg: "PG", tenant: "Tenant" },
       sort: { "price-low": "Price: Low to High", "price-high": "Price: High to Low", "newest": "Newest First", "rooms": "Most Rooms" },
-      filterSections: { occupancy: "Occupancy", pgFor: "PG For", price: "Price", city: "City", verifiedPG: "Verified PG" },
+      filterSections: { occupancy: "Occupancy", pgFor: "PG For", price: "Price", city: "City", verifiedPG: "Verified PG", preferredTenants: "Preferred Tenants", propertyType: "Property Type" },
       occupancyOptions: ["Single", "Double", "Triple", "Four", "Other"],
-      pgForOptions: ["Girls", "Boys", "Both"],
+      pgForOptions: ["Male", "Female", "Both"],
+      tenantPrefOptions: ["Students", "Professionals", "Both"],
+      propertyTypeOptions: ["Villa", "Flat", "House", "Penthouse"],
       cities: ["Ahmedabad", "Gandhinagar"],
       noResults: "No properties found matching your criteria.",
       loading: "Loading properties...",
     },
     fr: {
       title: "Toutes les propriétés", subtitle: "Trouvez votre maison parfaite dans notre vaste collection",
-      search: "Rechercher par emplacement, prix ou type...", sortBy: "Trier par",
+      search: "Rechercher par nom, emplacement ou prix...", sortBy: "Trier par",
       filters: "Filtres", showing: "Affichage", properties: "propriétés",
       clearAll: "Effacer tous les filtres", applyFilters: "Appliquer les filtres",
       tabs: { all: "Toutes les propriétés", pg: "PG", tenant: "Locataire" },
       sort: { "price-low": "Prix: Bas à Élevé", "price-high": "Prix: Élevé à Bas", "newest": "Plus récent d'abord", "rooms": "Plus de chambres" },
-      filterSections: { occupancy: "Occupation", pgFor: "PG Pour", price: "Prix", city: "Ville", verifiedPG: "PG vérifié" },
+      filterSections: { occupancy: "Occupation", pgFor: "PG Pour", price: "Prix", city: "Ville", verifiedPG: "PG vérifié", preferredTenants: "Locataires préférés", propertyType: "Type de propriété" },
       occupancyOptions: ["Simple", "Double", "Triple", "Quatre", "Autre"],
-      pgForOptions: ["Filles", "Garçons", "Les deux"],
+      pgForOptions: ["Male", "Female", "Both"],
+      tenantPrefOptions: ["Students", "Professionals", "Both"],
+      propertyTypeOptions: ["Villa", "Flat", "House", "Penthouse"],
       cities: ["Ahmedabad", "Gandhinagar"],
       noResults: "Aucune propriété trouvée.",
       loading: "Chargement...",
@@ -157,17 +178,23 @@ function PropertiesPageContent() {
     setTempPgFor(pgFor);
     setTempPriceRange(priceRange);
     setTempSelectedCities(selectedCities);
+    setTempTenantPref(tenantPref);
+    setTempPropCategory(propCategory);
     setTempVerifiedPG(verifiedPG);
     setShowFilters(true);
   };
 
   const applyFilters = () => {
-    setOccupancy(tempOccupancy);
-    setPgFor(tempPgFor);
-    setPriceRange(tempPriceRange);
-    setSelectedCities(tempSelectedCities);
-    setVerifiedPG(tempVerifiedPG);
-    setCurrentPage(1);
+    const qs = new URLSearchParams(searchParams.toString());
+    if (tempOccupancy.length > 0) qs.set("occupancy", tempOccupancy[0]); else qs.delete("occupancy");
+    if (tempPgFor.length > 0) qs.set("pgFor", tempPgFor[0]); else qs.delete("pgFor");
+    if (tempSelectedCities.length > 0) qs.set("city", tempSelectedCities[0]); else qs.delete("city");
+    if (tempTenantPref.length > 0) qs.set("tenant", tempTenantPref[0]); else qs.delete("tenant");
+    if (tempPropCategory.length > 0) qs.set("propertyType", tempPropCategory[0]); else qs.delete("propertyType");
+    if (tempPriceRange[0] > 0) qs.set("minPrice", String(tempPriceRange[0])); else qs.delete("minPrice");
+    if (tempPriceRange[1] < 200000) qs.set("maxPrice", String(tempPriceRange[1])); else qs.delete("maxPrice");
+    qs.delete("page");
+    router.push(`?${qs.toString()}`);
     setShowFilters(false);
   };
 
@@ -176,15 +203,24 @@ function PropertiesPageContent() {
     setTempPgFor([]);
     setTempPriceRange([0, 200000]);
     setTempSelectedCities([]);
+    setTempTenantPref([]);
+    setTempPropCategory([]);
     setTempVerifiedPG(false);
+    router.push("?");
+    setShowFilters(false);
   };
 
-  // Client-side filtering on top of API results (search, occupancy, city)
+  // Client-side filtering on top of API results
   let filtered = properties.filter(p => {
     const q = searchQuery.toLowerCase().trim();
     const matchesSearch = !q ||
       p.title?.toLowerCase().includes(q) ||
+      p.pgName?.toLowerCase().includes(q) ||
+      p.societyName?.toLowerCase().includes(q) ||
       p.location?.toLowerCase().includes(q) ||
+      p.areaName?.toLowerCase().includes(q) ||
+      p.fullAddress?.toLowerCase().includes(q) ||
+      p.landmark?.toLowerCase().includes(q) ||
       p.propertyType?.toLowerCase().includes(q) ||
       String(p.price).includes(q);
 
@@ -196,10 +232,32 @@ function PropertiesPageContent() {
       return true;
     });
 
-    const matchesCity = selectedCities.length === 0 ||
-      selectedCities.some(c => p.location?.toLowerCase().includes(c.toLowerCase()));
+    const matchesPgFor = pgFor.length === 0 || pgFor.some(g =>
+      p.pgFor?.toLowerCase() === g.toLowerCase() ||
+      p.preferredGender?.toLowerCase() === g.toLowerCase() ||
+      p.pgFor?.toLowerCase() === "both" ||
+      p.preferredGender?.toLowerCase() === "both" ||
+      g.toLowerCase() === "both"
+    );
 
-    return matchesSearch && matchesOccupancy && matchesCity;
+    const matchesCity = selectedCities.length === 0 ||
+      selectedCities.some(c =>
+        p.location?.toLowerCase().includes(c.toLowerCase()) ||
+        p.areaName?.toLowerCase().includes(c.toLowerCase()) ||
+        p.fullAddress?.toLowerCase().includes(c.toLowerCase())
+      );
+
+    const matchesTenantPref = tenantPref.length === 0 || tenantPref.some(tp =>
+      p.tenantPreference?.toLowerCase() === tp.toLowerCase() ||
+      p.tenantPreference?.toLowerCase() === "both" ||
+      tp.toLowerCase() === "both"
+    );
+
+    const matchesPropCategory = propCategory.length === 0 || propCategory.some(cat =>
+      p.category?.toLowerCase() === cat.toLowerCase()
+    );
+
+    return matchesSearch && matchesOccupancy && matchesPgFor && matchesCity && matchesTenantPref && matchesPropCategory;
   });
 
   // Client-side sort
@@ -210,12 +268,15 @@ function PropertiesPageContent() {
     return 0;
   });
 
-  const totalPages = Math.ceil(total / itemsPerPage);
-  const activeFilterCount = occupancy.length + pgFor.length + selectedCities.length + (verifiedPG ? 1 : 0);
+  const totalPages = Math.ceil(filtered.length > 0 ? total / itemsPerPage : 0);
+  const activeFilterCount = occupancy.length + pgFor.length + selectedCities.length + tenantPref.length + propCategory.length + (verifiedPG ? 1 : 0) + (priceRange[0] > 0 || priceRange[1] < 200000 ? 1 : 0);
 
   const handleTabChange = (tab: PropertyType) => {
-    setActiveTab(tab);
-    setCurrentPage(1);
+    const qs = new URLSearchParams(searchParams.toString());
+    if (tab === "all") qs.delete("tab");
+    else qs.set("tab", tab);
+    qs.delete("page");
+    router.push(`?${qs.toString()}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -309,6 +370,32 @@ function PropertiesPageContent() {
                 </div>
               </div>
 
+              {/* Preferred Tenants */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-700 mb-3">{t.filterSections.preferredTenants}</h3>
+                <div className="flex flex-wrap gap-2">
+                  {t.tenantPrefOptions.map(opt => (
+                    <button key={opt} onClick={() => toggleFilter(tempTenantPref, setTempTenantPref, opt)}
+                      className={`px-4 py-2 rounded-lg border-2 transition-colors ${tempTenantPref.includes(opt) ? "bg-primary text-white border-primary" : "bg-white text-gray-700 border-gray-300 hover:border-primary"}`}>
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Property Type */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-700 mb-3">{t.filterSections.propertyType}</h3>
+                <div className="flex flex-wrap gap-2">
+                  {t.propertyTypeOptions.map(opt => (
+                    <button key={opt} onClick={() => toggleFilter(tempPropCategory, setTempPropCategory, opt)}
+                      className={`px-4 py-2 rounded-lg border-2 transition-colors ${tempPropCategory.includes(opt) ? "bg-primary text-white border-primary" : "bg-white text-gray-700 border-gray-300 hover:border-primary"}`}>
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Price Range */}
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-700 mb-3">{t.filterSections.price}</h3>
@@ -365,7 +452,8 @@ function PropertiesPageContent() {
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="mb-6">
           <p className="text-gray-600">
-            {t.showing} <span className="font-semibold text-gray-900">{total}</span> {t.properties}
+            {t.showing} <span className="font-semibold text-gray-900">{filtered.length}</span>
+            {filtered.length !== total && <span className="text-gray-400"> of {total}</span>} {t.properties}
           </p>
         </div>
 
