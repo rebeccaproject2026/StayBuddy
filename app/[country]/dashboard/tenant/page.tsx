@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
 import Image from "next/image";
 import {
@@ -25,11 +26,126 @@ import {
   ChevronDown,
 } from "lucide-react";
 
+function RequestCard({
+  req, status, sc, statusLabel, hasUnread, lastConv, language, tc, onChat,
+}: {
+  req: any;
+  status: string;
+  sc: { bg: string; text: string; border: string; dot: string };
+  statusLabel: string;
+  hasUnread: boolean;
+  lastConv: any;
+  language: string;
+  tc: any;
+  onChat: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className={`bg-white rounded-2xl border-l-4 border border-gray-100 shadow-sm transition-all duration-200 hover:shadow-md overflow-hidden ${sc.border} ${hasUnread ? 'ring-1 ring-primary/20' : ''}`}>
+      {/* Header row — always visible */}
+      <button
+        onClick={() => setExpanded(p => !p)}
+        className="w-full flex items-center gap-3 px-4 py-3.5 text-left group"
+      >
+        {/* Status dot */}
+        <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${sc.dot}`} />
+
+        {/* Main info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className={`text-sm font-semibold truncate ${hasUnread ? 'text-gray-900' : 'text-gray-800'}`}>
+              {req.propertyTitle}
+            </p>
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${sc.bg} ${sc.text}`}>
+              {statusLabel}
+            </span>
+            {hasUnread && (
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary text-white flex-shrink-0 animate-pulse">
+                {language === 'fr' ? 'Nouveau message' : 'New message'}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+            <span className="text-xs text-gray-400">
+              {new Date(req.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+            </span>
+            {req.roomType && <><span className="text-xs text-gray-300">·</span><span className="text-xs text-gray-500 capitalize">{req.roomType}</span></>}
+            {req.moveInDate && <><span className="text-xs text-gray-300">·</span><span className="text-xs text-gray-500">{req.moveInDate}</span></>}
+            {req.budgetRange && <><span className="text-xs text-gray-300">·</span><span className="text-xs text-gray-500">{req.budgetRange}</span></>}
+          </div>
+        </div>
+
+        {/* Expand chevron */}
+        <ChevronDown className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} />
+      </button>
+
+      {/* Expanded details */}
+      {expanded && (
+        <div className="px-4 pb-4 border-t border-gray-50">
+          {/* Detail chips */}
+          <div className="flex flex-wrap gap-2 mt-3 mb-3">
+            {[
+              { label: language === 'fr' ? 'Type' : 'Room', value: req.roomType },
+              { label: language === 'fr' ? 'Emménagement' : 'Move-in', value: req.moveInDate },
+              { label: language === 'fr' ? 'Durée' : 'Duration', value: req.stayDuration ? `${req.stayDuration} mo` : null },
+              { label: language === 'fr' ? 'Budget' : 'Budget', value: req.budgetRange },
+              { label: language === 'fr' ? 'Occupation' : 'Occupation', value: req.occupation },
+              { label: language === 'fr' ? 'Genre' : 'Gender', value: req.gender },
+            ].filter(d => d.value).map((d, i) => (
+              <div key={i} className="flex items-center gap-1 bg-gray-50 rounded-lg px-2.5 py-1.5">
+                <span className="text-xs text-gray-400">{d.label}:</span>
+                <span className="text-xs font-semibold text-gray-700 capitalize">{d.value}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Message */}
+          {req.message && (
+            <div className="bg-gray-50 rounded-xl px-3 py-2.5 mb-3">
+              <p className="text-xs text-gray-400 font-medium mb-1 uppercase tracking-wide">{tc.messageSent}</p>
+              <p className="text-sm text-gray-700 leading-relaxed">{req.message}</p>
+            </div>
+          )}
+
+          {/* Last conversation preview */}
+          {lastConv && (
+            <div className={`rounded-xl px-3 py-2.5 mb-3 ${hasUnread ? 'bg-primary/5 border border-primary/10' : 'bg-blue-50'}`}>
+              <p className="text-xs text-gray-400 font-medium mb-1 uppercase tracking-wide">
+                {language === 'fr' ? 'Dernier message' : 'Last message'}
+              </p>
+              <p className={`text-sm leading-relaxed ${hasUnread ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
+                {lastConv.lastMsg}
+              </p>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-2">
+            <button
+              onClick={onChat}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                hasUnread
+                  ? 'bg-primary text-white hover:bg-primary-dark shadow-sm shadow-primary/20'
+                  : 'bg-gray-900 text-white hover:bg-gray-700'
+              }`}
+            >
+              <MessageSquare className="w-4 h-4" />
+              {hasUnread ? (language === 'fr' ? 'Répondre' : 'Reply') : (language === 'fr' ? 'Ouvrir le chat' : 'Open Chat')}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function TenantDashboard() {
   const { language, t } = useLanguage();
   const { user, isLoading, isAuthenticated, token, logout } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("saved");
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'saved');
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [savedProperties, setSavedProperties] = useState<any[]>([]);
   const [favLoading, setFavLoading] = useState(false);
@@ -633,53 +749,73 @@ export default function TenantDashboard() {
             )}
 
             {/* My Requests */}
-            {activeTab === "requests" && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">{tc.myRequests}</h2>
+            {activeTab === "requests" && (() => {
+              const statusColorMap: Record<string, { bg: string; text: string; border: string; dot: string }> = {
+                new:        { bg: 'bg-blue-50',    text: 'text-blue-700',   border: 'border-l-blue-500',   dot: 'bg-blue-500' },
+                contacted:  { bg: 'bg-amber-50',   text: 'text-amber-700',  border: 'border-l-amber-500',  dot: 'bg-amber-500' },
+                interested: { bg: 'bg-violet-50',  text: 'text-violet-700', border: 'border-l-violet-500', dot: 'bg-violet-500' },
+                booked:     { bg: 'bg-emerald-50', text: 'text-emerald-700',border: 'border-l-emerald-500',dot: 'bg-emerald-500' },
+                closed:     { bg: 'bg-gray-50',    text: 'text-gray-500',   border: 'border-l-gray-400',   dot: 'bg-gray-400' },
+              };
+              const statusLabelMap: Record<string, string> = {
+                new:        language === 'fr' ? 'Nouveau'   : 'New',
+                contacted:  language === 'fr' ? 'Contacté'  : 'Contacted',
+                interested: language === 'fr' ? 'Intéressé' : 'Interested',
+                booked:     language === 'fr' ? 'Réservé'   : 'Booked',
+                closed:     language === 'fr' ? 'Fermé'     : 'Closed',
+              };
+              return (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-2xl font-bold text-gray-900">{tc.myRequests}</h2>
+                  {myRequests.length > 0 && (
+                    <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full font-medium">
+                      {myRequests.length} {myRequests.length === 1 ? (language === 'fr' ? 'demande' : 'request') : (language === 'fr' ? 'demandes' : 'requests')}
+                    </span>
+                  )}
+                </div>
+
                 {requestsLoading ? (
-                  <div className="space-y-4">
-                    {[...Array(2)].map((_, i) => <div key={i} className="bg-white rounded-2xl shadow-md h-32 animate-pulse" />)}
-                  </div>
-                ) : myRequests.length > 0 ? (
-                  <div className="space-y-4">
-                    {myRequests.map((req: any) => (
-                      <div key={req._id} className="bg-white rounded-2xl shadow-md p-6">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
-                          <div className="flex-1">
-                            <h3 className="text-lg font-bold text-gray-900 mb-1">{req.propertyTitle}</h3>
-                            <p className="text-sm text-gray-500">{tc.date}: {new Date(req.createdAt).toLocaleDateString()}</p>
-                          </div>
-                        </div>
-                        <div className="grid sm:grid-cols-2 gap-3 text-sm mb-3">
-                          <div><span className="text-gray-500">Room Type:</span> <span className="font-medium capitalize">{req.roomType}</span></div>
-                          <div><span className="text-gray-500">Move-in:</span> <span className="font-medium">{req.moveInDate}</span></div>
-                          <div><span className="text-gray-500">Duration:</span> <span className="font-medium">{req.stayDuration} months</span></div>
-                          <div><span className="text-gray-500">Budget:</span> <span className="font-medium">{req.budgetRange}</span></div>
-                        </div>
-                        <div className="bg-gray-50 rounded-lg p-3">
-                          <p className="text-sm font-medium text-gray-700 mb-1">{tc.messageSent}:</p>
-                          <p className="text-sm text-gray-800">{req.message}</p>
-                        </div>
-                        <div className="mt-3">
-                          <button
-                            onClick={() => { openChat(req); setActiveTab('messages'); }}
-                            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium"
-                          >
-                            <MessageSquare className="w-4 h-4" />
-                            {tc.reply}
-                          </button>
-                        </div>
-                      </div>
+                  <div className="space-y-3">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="bg-white rounded-2xl h-20 animate-pulse border border-gray-100" />
                     ))}
                   </div>
+                ) : myRequests.length > 0 ? (
+                  <div className="space-y-2">
+                    {myRequests.map((req: any) => {
+                      const status = req.status || 'new';
+                      const sc = statusColorMap[status] || statusColorMap.new;
+                      const hasUnread = conversations[req._id]?.unread;
+                      const lastConv = conversations[req._id];
+                      return (
+                        <RequestCard
+                          key={req._id}
+                          req={req}
+                          status={status}
+                          sc={sc}
+                          statusLabel={statusLabelMap[status] || status}
+                          hasUnread={hasUnread}
+                          lastConv={lastConv}
+                          language={language}
+                          tc={tc}
+                          onChat={() => { openChat(req); setActiveTab('messages'); }}
+                        />
+                      );
+                    })}
+                  </div>
                 ) : (
-                  <div className="bg-white rounded-2xl shadow-md p-12 text-center">
-                    <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-600">{tc.noRequests}</p>
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-16 text-center">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <MessageSquare className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <p className="text-gray-500 font-medium">{tc.noRequests}</p>
+                    <p className="text-gray-400 text-sm mt-1">{language === 'fr' ? 'Contactez un propriétaire pour commencer.' : 'Contact a property owner to get started.'}</p>
                   </div>
                 )}
               </div>
-            )}
+              );
+            })()}
 
             {/* My Bookings */}
             {activeTab === "bookings" && (

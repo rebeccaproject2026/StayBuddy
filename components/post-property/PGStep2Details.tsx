@@ -4,8 +4,8 @@ import { Check } from "lucide-react";
 
 type RoomCategory = "Single" | "Double" | "Triple" | "Four" | "Other";
 type RoomDetails = {
-  totalRooms: string;
-  availableRooms: string;
+  totalBeds: string;
+  availableBeds: string;
   monthlyRent: string;
   securityDeposit: string;
   facilities: string[];
@@ -140,29 +140,29 @@ export default function PGStep2Details({
             {t.roomDetailsFor} {category} {t.roomCategoriesTitle.split(" ")[0]}
           </h3>
           <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
-            <div data-field={`room_${category}_totalRooms`}>
-              <label className="block text-gray-700 font-medium mb-2">Total Rooms<span className="text-red-500">*</span></label>
+            <div data-field={`room_${category}_totalBeds`}>
+              <label className="block text-gray-700 font-medium mb-2">Total Beds<span className="text-red-500">*</span></label>
               <input
                 type="text"
                 inputMode="numeric"
-                value={roomDetails[category].totalRooms}
-                onChange={(e) => updateRoomDetail(category, "totalRooms", e.target.value.replace(/\D/g, ""))}
-                placeholder="Enter total rooms"
-                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors[`room_${category}_totalRooms`] ? "border-red-400" : "border-gray-200"}`}
+                value={roomDetails[category].totalBeds}
+                onChange={(e) => updateRoomDetail(category, "totalBeds", e.target.value.replace(/\D/g, ""))}
+                placeholder="Enter total beds"
+                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors[`room_${category}_totalBeds`] ? "border-red-400" : "border-gray-200"}`}
               />
-              <FieldError name={`room_${category}_totalRooms`} />
+              <FieldError name={`room_${category}_totalBeds`} />
             </div>
-            <div data-field={`room_${category}_availableRooms`}>
-              <label className="block text-gray-700 font-medium mb-2">Available Rooms<span className="text-red-500">*</span></label>
+            <div data-field={`room_${category}_availableBeds`}>
+              <label className="block text-gray-700 font-medium mb-2">Available Beds<span className="text-red-500">*</span></label>
               <input
                 type="text"
                 inputMode="numeric"
-                value={roomDetails[category].availableRooms}
-                onChange={(e) => updateRoomDetail(category, "availableRooms", e.target.value.replace(/\D/g, ""))}
-                placeholder="Enter available rooms"
-                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors[`room_${category}_availableRooms`] ? "border-red-400" : "border-gray-200"}`}
+                value={roomDetails[category].availableBeds}
+                onChange={(e) => updateRoomDetail(category, "availableBeds", e.target.value.replace(/\D/g, ""))}
+                placeholder="Enter available beds"
+                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors[`room_${category}_availableBeds`] ? "border-red-400" : "border-gray-200"}`}
               />
-              <FieldError name={`room_${category}_availableRooms`} />
+              <FieldError name={`room_${category}_availableBeds`} />
             </div>
           </div>
           <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">

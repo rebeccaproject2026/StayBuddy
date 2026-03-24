@@ -21,8 +21,8 @@ type PropertyCategory = "Villa" | "Flat" | "House" | "Penthouse" | null;
 type PGPresentIn = "An Independent Building" | "An Independent Flats" | "Present In A Society" | null;
 type RoomCategory = "Single" | "Double" | "Triple" | "Four" | "Other";
 type RoomDetails = {
-  totalRooms: string;
-  availableRooms: string;
+  totalBeds: string;
+  availableBeds: string;
   monthlyRent: string;
   securityDeposit: string;
   facilities: string[];
@@ -54,6 +54,8 @@ export default function PostPropertyPage() {
   const [pincode, setPincode] = useState("");
   const [landmark, setLandmark] = useState("");
   const [googleMapLink, setGoogleMapLink] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
   const [nearbyPlaces, setNearbyPlaces] = useState<{ name: string; distance: string }[]>([]);
   const [nearbyPlaceInput, setNearbyPlaceInput] = useState("");
   const [nearbyDistanceInput, setNearbyDistanceInput] = useState("");
@@ -62,11 +64,11 @@ export default function PostPropertyPage() {
   const [pgName, setPgName] = useState("");
   const [selectedRoomCategories, setSelectedRoomCategories] = useState<RoomCategory[]>([]);
   const [roomDetails, setRoomDetails] = useState<Record<RoomCategory, RoomDetails>>({
-    Single: { totalRooms: "", availableRooms: "", monthlyRent: "", securityDeposit: "", facilities: [] },
-    Double: { totalRooms: "", availableRooms: "", monthlyRent: "", securityDeposit: "", facilities: [] },
-    Triple: { totalRooms: "", availableRooms: "", monthlyRent: "", securityDeposit: "", facilities: [] },
-    Four:   { totalRooms: "", availableRooms: "", monthlyRent: "", securityDeposit: "", facilities: [] },
-    Other:  { totalRooms: "", availableRooms: "", monthlyRent: "", securityDeposit: "", facilities: [] },
+    Single: { totalBeds: "", availableBeds: "", monthlyRent: "", securityDeposit: "", facilities: [] },
+    Double: { totalBeds: "", availableBeds: "", monthlyRent: "", securityDeposit: "", facilities: [] },
+    Triple: { totalBeds: "", availableBeds: "", monthlyRent: "", securityDeposit: "", facilities: [] },
+    Four:   { totalBeds: "", availableBeds: "", monthlyRent: "", securityDeposit: "", facilities: [] },
+    Other:  { totalBeds: "", availableBeds: "", monthlyRent: "", securityDeposit: "", facilities: [] },
   });
   
   // Step 2: Property Details (Tenant)
@@ -115,8 +117,8 @@ export default function PostPropertyPage() {
   const [uspText, setUspText] = useState("");
   const [pgDescription, setPgDescription] = useState("");
   
-  // PG Room Images with status
-  const [roomImages, setRoomImages] = useState<Array<{ id: string; name: string; status: 'vacant' | 'occupied'; file: File | null }>>([]);
+  // PG Room Images
+  const [roomImages, setRoomImages] = useState<Array<{ id: string; name: string; file: File | null }>>([]);
   const [kitchenImages, setKitchenImages] = useState<File[]>([]);
   const [washroomImages, setWashroomImages] = useState<File[]>([]);
   const [commonAreaImages, setCommonAreaImages] = useState<File[]>([]);
@@ -155,11 +157,8 @@ export default function PostPropertyPage() {
       .required("Pincode is required")
       .matches(/^\d{6}$/, "Pincode must be exactly 6 digits"),
     landmark: yup.string().trim().required("Landmark is required").min(2, "Landmark must be at least 2 characters"),
-    googleMapLink: yup
-      .string()
-      .trim()
-      .required("Google Map link is required")
-      .url("Please enter a valid URL (e.g. https://maps.google.com/...)"),
+    latitude: yup.string().trim().optional(),
+    longitude: yup.string().trim().optional(),
     operationalSince: yup.string().trim().required("PG operational since is required"),
     pgPresentIn: yup.string().nullable().required("Please select where the PG is present"),
     pgName: yup.string().trim().required("PG name is required"),
@@ -179,11 +178,8 @@ export default function PostPropertyPage() {
       .required("Pincode is required")
       .matches(/^\d{6}$/, "Pincode must be exactly 6 digits"),
     landmark: yup.string().trim().required("Landmark is required").min(2, "Landmark must be at least 2 characters"),
-    googleMapLink: yup
-      .string()
-      .trim()
-      .required("Google Map link is required")
-      .url("Please enter a valid URL (e.g. https://maps.google.com/...)"),
+    latitude: yup.string().trim().optional(),
+    longitude: yup.string().trim().optional(),
     flatsInProject: yup.string().required("Please select number of flats in project"),
     bedrooms: yup.string().required("Please select number of bedrooms"),
     bathrooms: yup.string().required("Please select number of bathrooms"),
@@ -289,7 +285,8 @@ export default function PostPropertyPage() {
         state,
         pincode,
         landmark,
-        googleMapLink,
+        latitude,
+        longitude,
         operationalSince,
         pgPresentIn,
         pgName,
@@ -300,8 +297,8 @@ export default function PostPropertyPage() {
       const roomErrors: Record<string, string> = {};
       for (const category of selectedRoomCategories) {
         const details = roomDetails[category];
-        if (!details.totalRooms) roomErrors[`room_${category}_totalRooms`] = "Total rooms is required";
-        if (!details.availableRooms) roomErrors[`room_${category}_availableRooms`] = "Available rooms is required";
+        if (!details.totalBeds) roomErrors[`room_${category}_totalBeds`] = "Total beds is required";
+        if (!details.availableBeds) roomErrors[`room_${category}_availableBeds`] = "Available beds is required";
         if (!details.monthlyRent) roomErrors[`room_${category}_monthlyRent`] = "Monthly rent is required";
         else if (parseInt(details.monthlyRent) <= 0) roomErrors[`room_${category}_monthlyRent`] = "Monthly rent must be greater than 0";
         if (!details.securityDeposit) roomErrors[`room_${category}_securityDeposit`] = "Security deposit is required";
@@ -318,7 +315,8 @@ export default function PostPropertyPage() {
         state,
         pincode,
         landmark,
-        googleMapLink,
+        latitude,
+        longitude,
         flatsInProject,
         bedrooms,
         bathrooms,
@@ -406,7 +404,6 @@ export default function PostPropertyPage() {
         roomImages.map(async (r) => ({
           id: r.id,
           name: r.name,
-          status: r.status,
           image: r.file ? await toBase64(r.file) : undefined,
         }))
       );
@@ -438,7 +435,8 @@ export default function PostPropertyPage() {
         state,
         pincode,
         landmark,
-        googleMapLink,
+        latitude: latitude || undefined,
+        longitude: longitude || undefined,
         title: propertyType === 'PG' ? pgName || `${selectedCity.split(',')[0]} PG` : `${propertyCategory} in ${selectedCity.split(',')[0]}`,
         category: propertyCategory || (propertyType === 'PG' ? 'PG' : 'Flat'),
         rentalPeriod: 'Monthly',
@@ -673,7 +671,6 @@ export default function PostPropertyPage() {
     const newRoom = {
       id: `room-${Date.now()}`,
       name: `Room ${roomImages.length + 1}`,
-      status: 'vacant' as const,
       file: null
     };
     setRoomImages(prev => [...prev, newRoom]);
@@ -1041,22 +1038,50 @@ export default function PostPropertyPage() {
                       <FieldError name="landmark" />
                     </div>
                   </div>
-                  <div data-field="googleMapLink">
+                  <div data-field="coordinates">
                     <label className="block text-gray-700 font-medium mb-2">
-                      {t.googleMapLabel}<span className="text-red-500">*</span>
+                      Location Coordinates <span className="text-gray-400 text-sm font-normal">(optional)</span>
                     </label>
-                    <input 
-                      type="url" 
-                      value={googleMapLink} 
-                      onChange={(e) => setGoogleMapLink(e.target.value)} 
-                      placeholder={t.googleMapPlaceholder} 
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors.googleMapLink ? 'border-red-400' : 'border-gray-200'}`}
-                    />
-                    <FieldError name="googleMapLink" />
-                    <p className="text-sm text-gray-500 mt-1 flex items-start gap-1">
-                      <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                      <span>{t.googleMapHelper}</span>
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      <div data-field="latitude">
+                        <label className="block text-xs text-gray-500 mb-1">Latitude</label>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={latitude}
+                          onChange={(e) => setLatitude(e.target.value)}
+                          placeholder="e.g. 23.0225"
+                          className="w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors border-gray-200"
+                        />
+                      </div>
+                      <div data-field="longitude">
+                        <label className="block text-xs text-gray-500 mb-1">Longitude</label>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={longitude}
+                          onChange={(e) => setLongitude(e.target.value)}
+                          placeholder="e.g. 72.5714"
+                          className="w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors border-gray-200"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-400 flex items-center gap-1 mb-3">
+                      <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                      Open Google Maps, right-click your location, and copy the coordinates shown.
                     </p>
+                    {latitude && longitude && !isNaN(parseFloat(latitude)) && !isNaN(parseFloat(longitude)) && (
+                      <div className="rounded-xl overflow-hidden border border-gray-200 h-48">
+                        <iframe
+                          src={`https://maps.google.com/maps?q=${encodeURIComponent(latitude)},${encodeURIComponent(longitude)}&z=15&output=embed`}
+                          width="100%"
+                          height="100%"
+                          style={{ border: 0 }}
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {/* Nearby Places */}

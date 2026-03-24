@@ -300,9 +300,7 @@ export default function PropertyDetailsPage() {
   const description = property?.pgDescription || property?.localityDescription || "";
 
   // PG room availability counts
-  const pgRooms: Array<{ id: string; name: string; status?: string; image?: string }> = property?.roomImages || [];
-  const vacantCount = pgRooms.filter(r => r.status === "vacant").length;
-  const occupiedCount = pgRooms.filter(r => r.status === "occupied").length;
+  const pgRooms: Array<{ id: string; name: string; image?: string }> = property?.roomImages || [];
 
   // ── Loading / not found states ─────────────────────────────────────────────
   if (loading) {
@@ -348,36 +346,8 @@ export default function PropertyDetailsPage() {
             >
               <Image src={imgSrc} alt={property.title} fill className="object-cover" priority />
 
-              {/* PG room status overlay */}
-              {isIndia && property.propertyType === "PG" && selectedSpaceType === "rooms" && currentImg?.status && (
-                <>
-                  <div className="absolute top-3 right-3 sm:top-4 sm:right-4 md:top-6 md:right-6 z-20">
-                    {currentImg.status === "occupied" ? (
-                      <span className="px-3 py-1 sm:px-4 sm:py-1.5 bg-red-600 text-white text-xs sm:text-sm font-semibold rounded-full shadow-2xl">{t.sold}</span>
-                    ) : (
-                      <span className="px-3 py-1 sm:px-4 sm:py-1.5 bg-green-600 text-white text-xs sm:text-sm font-semibold rounded-full shadow-2xl">{t.available}</span>
-                    )}
-                  </div>
-                  {currentImg.status === "occupied" && (
-                    <div className="absolute inset-0 bg-red-900/40 flex items-center justify-center z-10">
-                      <span className="text-white text-4xl sm:text-6xl lg:text-8xl font-bold transform -rotate-12 opacity-60 drop-shadow-2xl">{t.sold}</span>
-                    </div>
-                  )}
-                  {currentImg.status === "vacant" && (
-                    <div className="absolute inset-0 bg-green-900/20 flex items-center justify-center z-10">
-                      <span className="text-white text-4xl sm:text-6xl lg:text-8xl font-bold transform -rotate-12 opacity-40 drop-shadow-2xl">{t.available}</span>
-                    </div>
-                  )}
-                  <div className="absolute bottom-16 sm:bottom-20 md:bottom-24 left-3 sm:left-4 md:left-6 z-20">
-                    <div className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg shadow-2xl ${currentImg.status === "occupied" ? "bg-red-600/90 text-white" : "bg-green-600/90 text-white"}`}>
-                      <p className="text-sm sm:text-base font-semibold">{currentImg.name}</p>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Room name label for non-status images */}
-              {currentImg?.name && !(isIndia && property.propertyType === "PG" && selectedSpaceType === "rooms" && currentImg?.status) && (
+              {/* Room name label */}
+              {currentImg?.name && (
                 <div className="absolute bottom-16 sm:bottom-20 md:bottom-24 left-3 sm:left-4 md:left-6 z-20">
                   <div className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg shadow-2xl bg-primary/90 text-white">
                     <p className="text-sm sm:text-base font-semibold">{currentImg.name}</p>
@@ -416,7 +386,7 @@ export default function PropertyDetailsPage() {
                 className={`px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${selectedSpaceType === "rooms" ? "bg-primary text-white shadow-md" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}>
                 {t.rooms}
                 {property.propertyType === "PG" && pgRooms.length > 0 && (
-                  <> (<span className="text-green-300 font-bold">{vacantCount}</span> / <span className="text-red-300 font-bold">{occupiedCount}</span>)</>
+                  <> ({pgRooms.length})</>
                 )}
                 {property.propertyType === "Tenant" && property.tenantRoomImages?.length > 0 && (
                   <> ({property.tenantRoomImages.length})</>
@@ -703,13 +673,13 @@ export default function PropertyDetailsPage() {
                         <div className="flex items-center justify-between mb-3">
                           <h4 className="font-bold text-gray-900 text-base">{category} Bed</h4>
                           <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-semibold rounded-full">
-                            {detail.availableRooms ?? "—"} {language === "fr" ? "dispo" : "available"}
+                            {detail.availableBeds ?? detail.availableRooms ?? "—"} {language === "fr" ? "dispo" : "available"}
                           </span>
                         </div>
                         <div className="space-y-2 mb-3">
                           <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">{language === "fr" ? "Total chambres" : "Total Rooms"}</span>
-                            <span className="font-semibold text-gray-900">{detail.totalRooms ?? "—"}</span>
+                            <span className="text-gray-500">{language === "fr" ? "Total lits" : "Total Beds"}</span>
+                            <span className="font-semibold text-gray-900">{detail.totalBeds ?? detail.totalRooms ?? "—"}</span>
                           </div>
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-500">{t.monthlyRent}</span>
@@ -841,35 +811,15 @@ export default function PropertyDetailsPage() {
                   <span className="text-xs sm:text-sm text-gray-700 line-clamp-2">{property.fullAddress}</span>
                 </div>
                 {(() => {
-                  // Build a proper Google Maps embed URL
-                  const raw = property.googleMapLink || "";
+                  // Build embed URL from lat/lng or fallback to address geocoding
                   let embedSrc = "";
-
-                  if (raw.includes("google.com/maps/embed")) {
-                    // Already an embed URL
-                    embedSrc = raw;
-                  } else if (raw.includes("@")) {
-                    // Standard maps URL with coordinates e.g. /@23.0225,72.5714,15z
-                    const match = raw.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-                    if (match) {
-                      embedSrc = `https://maps.google.com/maps?q=${match[1]},${match[2]}&z=15&output=embed`;
-                    }
-                  } else if (raw.includes("place/")) {
-                    // Place URL — extract place name
-                    const match = raw.match(/place\/([^/]+)/);
-                    if (match) {
-                      const place = decodeURIComponent(match[1]).replace(/\+/g, " ");
-                      embedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(place)}&output=embed`;
-                    }
-                  }
-
-                  // Fallback: geocode by full address
-                  if (!embedSrc) {
+                  if (property.latitude && property.longitude) {
+                    embedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(property.latitude)},${encodeURIComponent(property.longitude)}&z=15&output=embed`;
+                  } else {
                     const query = [property.fullAddress, property.areaName, property.state, property.location]
                       .filter(Boolean).join(", ");
                     embedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
                   }
-
                   return (
                     <div className="w-full h-48 sm:h-56 md:h-64 rounded-lg overflow-hidden">
                       <iframe
@@ -884,9 +834,9 @@ export default function PropertyDetailsPage() {
                     </div>
                   );
                 })()}
-                {property.googleMapLink && (
+                {property.latitude && property.longitude && (
                   <a
-                    href={property.googleMapLink}
+                    href={`https://www.google.com/maps?q=${property.latitude},${property.longitude}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 mt-3 text-xs sm:text-sm text-primary hover:underline"
@@ -945,9 +895,9 @@ export default function PropertyDetailsPage() {
                             <div className="flex items-center gap-2">
                               <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></span>
                               <span className="text-sm font-medium text-gray-700">{category} Bed</span>
-                              {detail.availableRooms && (
+                              {(detail.availableBeds ?? detail.availableRooms) && (
                                 <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full">
-                                  {detail.availableRooms} {language === 'fr' ? 'dispo' : 'avail.'}
+                                  {detail.availableBeds ?? detail.availableRooms} {language === 'fr' ? 'dispo' : 'avail.'}
                                 </span>
                               )}
                             </div>

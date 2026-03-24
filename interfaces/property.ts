@@ -7,7 +7,9 @@ export interface IProperty {
   fullAddress: string;
   pincode: string;
   landmark: string;
-  googleMapLink: string;
+  googleMapLink?: string;
+  latitude?: string;
+  longitude?: string;
   price: number;
   deposit: number;
   rooms: number;

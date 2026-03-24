@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 interface RoomImageItem {
   id: string;
   name: string;
-  status: "vacant" | "occupied";
+  status?: "vacant" | "occupied";
   file: File | null;
 }
 
@@ -82,7 +82,7 @@ export default function PGStep4Images({
         <div className="space-y-3">
           {roomImages.map((room) => (
             <div key={room.id} className="bg-gray-50 rounded-xl p-4 space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">{t.roomName}</label>
                   <input
@@ -92,17 +92,6 @@ export default function PGStep4Images({
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
                     placeholder="e.g., Room 1"
                   />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">{t.roomStatus}</label>
-                  <select
-                    value={room.status}
-                    onChange={(e) => updateRoomImage(room.id, "status", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-                  >
-                    <option value="vacant">{t.vacant}</option>
-                    <option value="occupied">{t.occupied}</option>
-                  </select>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">{t.uploadRoomImage}</label>
@@ -135,9 +124,6 @@ export default function PGStep4Images({
               {room.file && (
                 <div className="relative h-32 rounded-lg overflow-hidden">
                   <img src={URL.createObjectURL(room.file)} alt={room.name} className="w-full h-full object-cover" />
-                  <div className={`absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-semibold ${room.status === "vacant" ? "bg-green-600 text-white" : "bg-red-600 text-white"}`}>
-                    {room.status === "vacant" ? t.vacant : t.occupied}
-                  </div>
                 </div>
               )}
             </div>

@@ -64,8 +64,8 @@ export type AdminLoginInput = z.infer<typeof adminLoginSchema>;
 // ─── Property Validation ────────────────────────────────────────────────────
 
 const roomDetailSchema = z.object({
-  totalRooms: z.string().min(1, 'Total rooms is required'),
-  availableRooms: z.string().min(1, 'Available rooms is required'),
+  totalBeds: z.string().min(1, 'Total beds is required'),
+  availableBeds: z.string().min(1, 'Available beds is required'),
   monthlyRent: z.string().min(1, 'Monthly rent is required'),
   securityDeposit: z.string().min(1, 'Security deposit is required'),
   facilities: z.array(z.string()).default([]),
@@ -99,7 +99,8 @@ export const propertySchema = z.object({
   state: z.string().min(1, 'State is required').trim(),
   pincode: z.string().min(4, 'Pincode is required').trim(),
   landmark: z.string().min(2, 'Landmark is required').trim(),
-  googleMapLink: z.string().min(1, 'Google Maps link is required').trim(),
+  latitude: z.string().optional(),
+  longitude: z.string().optional(),
 
   // ── Pricing (always required) ──────────────────────────────────────────────
   price: z.number({ error: 'Price must be a number' }).min(0, 'Price cannot be negative'),
@@ -208,7 +209,7 @@ export const propertySchema = z.object({
     if (data.selectedRoomCategories && data.roomDetails) {
       for (const cat of data.selectedRoomCategories) {
         const detail = data.roomDetails[cat];
-        if (!detail?.totalRooms || !detail?.monthlyRent || !detail?.securityDeposit) {
+        if (!detail?.totalBeds || !detail?.monthlyRent || !detail?.securityDeposit) {
           ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Room details for ${cat} are incomplete`, path: ['roomDetails'] });
         }
       }

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
 import Image from "next/image";
 import {
@@ -26,6 +27,67 @@ import {
   X,
   ChevronDown,
 } from "lucide-react";
+
+function StatusDropdown({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const selected = options.find((o) => o.value === value) || options[0];
+
+  const colorMap: Record<string, string> = {
+    new: "bg-blue-100 text-blue-700 border-blue-200",
+    contacted: "bg-amber-100 text-amber-700 border-amber-200",
+    interested: "bg-violet-100 text-violet-700 border-violet-200",
+    booked: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    closed: "bg-gray-100 text-gray-500 border-gray-200",
+  };
+
+  return (
+    <div ref={ref} className="relative flex-shrink-0">
+      <button
+        onClick={() => setOpen((p) => !p)}
+        className={`flex items-center gap-1.5 pl-3 pr-2.5 py-1.5 rounded-full text-xs font-semibold border cursor-pointer select-none ${colorMap[value] || colorMap.new}`}
+      >
+        {selected.label}
+        <ChevronDown className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-1.5 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50 min-w-[140px]">
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+              className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors ${
+                opt.value === value
+                  ? "bg-primary text-white"
+                  : "text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function ProfileSection({ user, tc, language }: { user: any; tc: any; language: string }) {
   const [form, setForm] = useState({
@@ -228,7 +290,8 @@ export default function OwnerDashboard() {
   const { language, t } = useLanguage();
   const { user, isLoading, isAuthenticated, logout } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("listings");
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'listings');
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const currencySymbol = t("currency.symbol");
@@ -237,6 +300,9 @@ export default function OwnerDashboard() {
   const [listingsLoading, setListingsLoading] = useState(true);
   const [contactRequests, setContactRequests] = useState<any[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [inquiryPage, setInquiryPage] = useState(1);
+  const INQUIRIES_PER_PAGE = 6;
   const [selectedListing, setSelectedListing] = useState<any | null>(null);
   const [selectedInquiry, setSelectedInquiry] = useState<any | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -624,6 +690,8 @@ export default function OwnerDashboard() {
       pincode: listing.pincode || "",
       landmark: listing.landmark || "",
       googleMapLink: listing.googleMapLink || "",
+      latitude: listing.latitude || "",
+      longitude: listing.longitude || "",
       rooms: String(listing.rooms || ""),
       bathrooms: String(listing.bathrooms || ""),
       area: String(listing.area || ""),
@@ -667,6 +735,7 @@ export default function OwnerDashboard() {
       nearbyDistanceInput: "",
       uspCategory: listing.uspCategory || "",
       uspText: listing.uspText || "",
+      roomDetails: listing.roomDetails ? JSON.parse(JSON.stringify(listing.roomDetails)) : {},
     });
     setEditImages(listing.images || []);
     setEditNewFiles([]);
@@ -786,6 +855,11 @@ export default function OwnerDashboard() {
       updates.societyAmenities = editForm.societyAmenities || [];
       updates.tenantsPrefer = editForm.tenantsPrefer || [];
       if (editForm.localityDescription) updates.localityDescription = editForm.localityDescription;
+    }
+    if (editForm.latitude) updates.latitude = editForm.latitude.trim();
+    if (editForm.longitude) updates.longitude = editForm.longitude.trim();
+    if (editForm.propertyType === "PG" && editForm.roomDetails && Object.keys(editForm.roomDetails).length > 0) {
+      updates.roomDetails = editForm.roomDetails;
     }
     if (editForm.nearbyPlaces?.length > 0) updates.nearbyPlaces = editForm.nearbyPlaces;
     if (editForm.uspCategory) updates.uspCategory = editForm.uspCategory;
@@ -1423,6 +1497,67 @@ export default function OwnerDashboard() {
                                   </div>
                                 )}
                               </div>
+                              {/* Room Details (Bed Availability) */}
+                              {editForm.roomDetails && Object.keys(editForm.roomDetails).length > 0 && (
+                                <div className="sm:col-span-2 space-y-3">
+                                  <label className="block text-sm font-bold text-gray-700">Room / Bed Details</label>
+                                  {Object.entries(editForm.roomDetails).map(([category, detail]: [string, any]) => (
+                                    <div key={category} className="border-2 border-gray-200 rounded-xl p-4 space-y-3 bg-white">
+                                      <p className="text-sm font-semibold text-primary">{category} Bed</p>
+                                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                        <div>
+                                          <label className="block text-xs font-medium text-gray-600 mb-1">Total Beds</label>
+                                          <input
+                                            type="number" min="0"
+                                            value={detail.totalBeds ?? detail.totalRooms ?? ""}
+                                            onChange={e => setEditForm((p: any) => ({
+                                              ...p,
+                                              roomDetails: { ...p.roomDetails, [category]: { ...p.roomDetails[category], totalBeds: e.target.value } }
+                                            }))}
+                                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary bg-white"
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="block text-xs font-medium text-gray-600 mb-1">Available Beds</label>
+                                          <input
+                                            type="number" min="0"
+                                            value={detail.availableBeds ?? detail.availableRooms ?? ""}
+                                            onChange={e => setEditForm((p: any) => ({
+                                              ...p,
+                                              roomDetails: { ...p.roomDetails, [category]: { ...p.roomDetails[category], availableBeds: e.target.value } }
+                                            }))}
+                                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary bg-white"
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="block text-xs font-medium text-gray-600 mb-1">Monthly Rent ({currencySymbol})</label>
+                                          <input
+                                            type="number" min="0"
+                                            value={detail.monthlyRent ?? ""}
+                                            onChange={e => setEditForm((p: any) => ({
+                                              ...p,
+                                              roomDetails: { ...p.roomDetails, [category]: { ...p.roomDetails[category], monthlyRent: e.target.value } }
+                                            }))}
+                                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary bg-white"
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="block text-xs font-medium text-gray-600 mb-1">Security Deposit ({currencySymbol})</label>
+                                          <input
+                                            type="number" min="0"
+                                            value={detail.securityDeposit ?? ""}
+                                            onChange={e => setEditForm((p: any) => ({
+                                              ...p,
+                                              roomDetails: { ...p.roomDetails, [category]: { ...p.roomDetails[category], securityDeposit: e.target.value } }
+                                            }))}
+                                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary bg-white"
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </>)}
 
                             {editForm.propertyType === "Tenant" && (<>
@@ -1587,13 +1722,27 @@ export default function OwnerDashboard() {
                                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white resize-none" />
                             </div>
 
-                            {/* Google Map Link */}
-                            <div className="sm:col-span-2">
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Google Map Link</label>
-                              <input value={editForm.googleMapLink||""} onChange={e => setEditForm(p => ({ ...p, googleMapLink: e.target.value }))}
-                                placeholder="https://maps.google.com/..."
+                            {/* Coordinates */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
+                              <input value={editForm.latitude||""} onChange={e => setEditForm(p => ({ ...p, latitude: e.target.value }))}
+                                placeholder="e.g. 23.0225"
                                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
                             </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
+                              <input value={editForm.longitude||""} onChange={e => setEditForm(p => ({ ...p, longitude: e.target.value }))}
+                                placeholder="e.g. 72.5714"
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                            </div>
+                            {editForm.latitude && editForm.longitude && !isNaN(parseFloat(editForm.latitude)) && !isNaN(parseFloat(editForm.longitude)) && (
+                              <div className="sm:col-span-2 rounded-xl overflow-hidden border border-gray-200 h-44">
+                                <iframe
+                                  src={`https://maps.google.com/maps?q=${encodeURIComponent(editForm.latitude)},${encodeURIComponent(editForm.longitude)}&z=15&output=embed`}
+                                  width="100%" height="100%" style={{ border: 0 }} loading="lazy" referrerPolicy="no-referrer-when-downgrade"
+                                />
+                              </div>
+                            )}
 
                             {/* Nearby Places */}
                             <div className="sm:col-span-2">
@@ -2029,15 +2178,15 @@ export default function OwnerDashboard() {
                                 {Object.entries(selectedListing.roomDetails as Record<string, any>).map(([category, detail]) => (
                                   <div key={category} className="border border-gray-200 rounded-xl p-4 hover:border-primary/40 transition-colors">
                                     <div className="flex items-center justify-between mb-3">
-                                      <h4 className="font-bold text-gray-900 text-sm">{category} Room</h4>
+                                      <h4 className="font-bold text-gray-900 text-sm">{category} Bed</h4>
                                       <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-semibold rounded-full">
-                                        {detail.availableRooms ?? "—"} {language === "fr" ? "dispo" : "available"}
+                                        {detail.availableBeds ?? detail.availableRooms ?? "—"} {language === "fr" ? "dispo" : "available"}
                                       </span>
                                     </div>
                                     <div className="space-y-1.5 mb-3">
                                       <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">Total Rooms</span>
-                                        <span className="font-semibold text-gray-900">{detail.totalRooms ?? "—"}</span>
+                                        <span className="text-gray-500">Total Beds</span>
+                                        <span className="font-semibold text-gray-900">{detail.totalBeds ?? detail.totalRooms ?? "—"}</span>
                                       </div>
                                       <div className="flex justify-between text-sm">
                                         <span className="text-gray-500">Monthly Rent</span>
@@ -2118,10 +2267,10 @@ export default function OwnerDashboard() {
                               </div>
                               <div className="grid grid-cols-3 gap-2 mb-4 text-sm">
                                 <div className="text-center p-2 bg-gray-50 rounded-lg">
-                                  <p className="text-gray-600">Total Rooms</p>
+                                  <p className="text-gray-600">Total Beds</p>
                                   <p className="font-bold text-gray-900">
                                     {listing.propertyType === "PG" && listing.roomDetails
-                                      ? Object.values(listing.roomDetails as Record<string, any>).reduce((s: number, r: any) => s + (parseInt(r.totalRooms) || 0), 0)
+                                      ? Object.values(listing.roomDetails as Record<string, any>).reduce((s: number, r: any) => s + (parseInt(r.totalBeds ?? r.totalRooms) || 0), 0)
                                       : listing.rooms}
                                   </p>
                                 </div>
@@ -2129,7 +2278,7 @@ export default function OwnerDashboard() {
                                   <p className="text-gray-600">Available</p>
                                   <p className="font-bold text-green-600">
                                     {listing.propertyType === "PG" && listing.roomDetails
-                                      ? Object.values(listing.roomDetails as Record<string, any>).reduce((s: number, r: any) => s + (parseInt(r.availableRooms) || 0), 0)
+                                      ? Object.values(listing.roomDetails as Record<string, any>).reduce((s: number, r: any) => s + (parseInt(r.availableBeds ?? r.availableRooms) || 0), 0)
                                       : listing.rooms}
                                   </p>
                                 </div>
@@ -2188,10 +2337,10 @@ export default function OwnerDashboard() {
                             <tbody className="divide-y divide-gray-100">
                               {myListings.map((listing, idx) => {
                                 const totalRooms = listing.propertyType === "PG" && listing.roomDetails
-                                  ? Object.values(listing.roomDetails as Record<string, any>).reduce((s: number, r: any) => s + (parseInt(r.totalRooms) || 0), 0)
+                                  ? Object.values(listing.roomDetails as Record<string, any>).reduce((s: number, r: any) => s + (parseInt(r.totalBeds ?? r.totalRooms) || 0), 0)
                                   : listing.rooms;
                                 const availableRooms = listing.propertyType === "PG" && listing.roomDetails
-                                  ? Object.values(listing.roomDetails as Record<string, any>).reduce((s: number, r: any) => s + (parseInt(r.availableRooms) || 0), 0)
+                                  ? Object.values(listing.roomDetails as Record<string, any>).reduce((s: number, r: any) => s + (parseInt(r.availableBeds ?? r.availableRooms) || 0), 0)
                                   : listing.rooms;
                                 return (
                                   <tr
@@ -2299,7 +2448,47 @@ export default function OwnerDashboard() {
             {/* Inquiries */}
             {activeTab === "requests" && (
               <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">{tc.bookingRequests}</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">{tc.bookingRequests}</h2>
+
+                {/* Status filter tabs */}
+                {!requestsLoading && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {([
+                      { key: 'all', label: language === 'fr' ? 'Tous' : 'All' },
+                      { key: 'new', label: tc.statusNew },
+                      { key: 'contacted', label: tc.statusContacted },
+                      { key: 'interested', label: tc.statusInterested },
+                      { key: 'booked', label: tc.statusBooked },
+                      { key: 'closed', label: tc.statusClosed },
+                    ] as { key: string; label: string }[]).map(({ key, label }) => {
+                      const count = key === 'all' ? contactRequests.length : contactRequests.filter(r => (r.status || 'new') === key).length;
+                      const isActive = statusFilter === key;
+                      const tabColor: Record<string, string> = {
+                        all: isActive ? 'bg-gray-800 text-white' : 'bg-white text-gray-600 hover:bg-gray-50',
+                        new: isActive ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 hover:bg-blue-50',
+                        contacted: isActive ? 'bg-amber-500 text-white' : 'bg-white text-amber-600 hover:bg-amber-50',
+                        interested: isActive ? 'bg-violet-600 text-white' : 'bg-white text-violet-600 hover:bg-violet-50',
+                        booked: isActive ? 'bg-emerald-600 text-white' : 'bg-white text-emerald-600 hover:bg-emerald-50',
+                        closed: isActive ? 'bg-gray-500 text-white' : 'bg-white text-gray-500 hover:bg-gray-50',
+                      };
+                      return (
+                        <button
+                          key={key}
+                          onClick={() => { setStatusFilter(key); setInquiryPage(1); }}
+                          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold border transition-all shadow-sm ${tabColor[key]} ${isActive ? 'border-transparent shadow-md' : 'border-gray-200'}`}
+                        >
+                          {label}
+                          {count > 0 && (
+                            <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                              {count}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
                 {requestsLoading ? (
                   <div className="space-y-4">
                     {[...Array(2)].map((_, i) => (
@@ -2307,8 +2496,16 @@ export default function OwnerDashboard() {
                     ))}
                   </div>
                 ) : contactRequests.length > 0 ? (
+                  (() => {
+                    const filtered = statusFilter === 'all'
+                      ? contactRequests
+                      : contactRequests.filter(r => (r.status || 'new') === statusFilter);
+                    const totalPages = Math.ceil(filtered.length / INQUIRIES_PER_PAGE);
+                    const paginated = filtered.slice((inquiryPage - 1) * INQUIRIES_PER_PAGE, inquiryPage * INQUIRIES_PER_PAGE);
+                    return filtered.length > 0 ? (
+                      <>
                   <div className="space-y-4">
-                    {contactRequests.map((req: any) => (
+                    {paginated.map((req: any) => (
                       <div key={req._id} className="bg-white rounded-2xl shadow-md p-5">
                         {/* Single info row: name + phone + email + status */}
                         <div className="flex flex-wrap items-center gap-3 mb-4">
@@ -2326,20 +2523,18 @@ export default function OwnerDashboard() {
                             </div>
                           )}
                           {/* Status badge dropdown — pushed to end */}
-                          <div className="ml-auto flex-shrink-0 relative">
-                            <select
+                          <div className="ml-auto">
+                            <StatusDropdown
                               value={req.status || 'new'}
-                              onChange={e => updateInquiryStatus(req._id, e.target.value)}
-                              className={`appearance-none pl-3 pr-7 py-1.5 rounded-full text-xs font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary border-0 ${getStatusColor(req.status || 'new')}`}
-                              style={{ backgroundImage: 'none' }}
-                            >
-                              <option value="new">{tc.statusNew}</option>
-                              <option value="contacted">{tc.statusContacted}</option>
-                              <option value="interested">{tc.statusInterested}</option>
-                              <option value="booked">{tc.statusBooked}</option>
-                              <option value="closed">{tc.statusClosed}</option>
-                            </select>
-                            <ChevronDown className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-60" />
+                              onChange={(v) => updateInquiryStatus(req._id, v)}
+                              options={[
+                                { value: 'new', label: tc.statusNew },
+                                { value: 'contacted', label: tc.statusContacted },
+                                { value: 'interested', label: tc.statusInterested },
+                                { value: 'booked', label: tc.statusBooked },
+                                { value: 'closed', label: tc.statusClosed },
+                              ]}
+                            />
                           </div>
                         </div>
 
@@ -2392,6 +2587,54 @@ export default function OwnerDashboard() {
                       </div>
                     ))}
                   </div>
+
+                      {/* Pagination */}
+                      {totalPages > 1 && (
+                        <div className="flex items-center justify-between pt-2">
+                          <p className="text-sm text-gray-500">
+                            {language === 'fr'
+                              ? `${(inquiryPage - 1) * INQUIRIES_PER_PAGE + 1}–${Math.min(inquiryPage * INQUIRIES_PER_PAGE, filtered.length)} sur ${filtered.length}`
+                              : `${(inquiryPage - 1) * INQUIRIES_PER_PAGE + 1}–${Math.min(inquiryPage * INQUIRIES_PER_PAGE, filtered.length)} of ${filtered.length}`}
+                          </p>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => setInquiryPage(p => Math.max(1, p - 1))}
+                              disabled={inquiryPage === 1}
+                              className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                              <ChevronDown className="w-4 h-4 rotate-90" />
+                            </button>
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                              <button
+                                key={page}
+                                onClick={() => setInquiryPage(page)}
+                                className={`w-9 h-9 rounded-lg text-sm font-semibold transition-colors ${
+                                  page === inquiryPage
+                                    ? 'bg-primary text-white'
+                                    : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                }`}
+                              >
+                                {page}
+                              </button>
+                            ))}
+                            <button
+                              onClick={() => setInquiryPage(p => Math.min(totalPages, p + 1))}
+                              disabled={inquiryPage === totalPages}
+                              className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                              <ChevronDown className="w-4 h-4 -rotate-90" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      </>
+                    ) : (
+                      <div className="bg-white rounded-2xl shadow-md p-12 text-center">
+                        <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <p className="text-gray-600">{language === 'fr' ? 'Aucune demande dans cette catégorie.' : 'No inquiries in this category.'}</p>
+                      </div>
+                    );
+                  })()
                 ) : (
                   <div className="bg-white rounded-2xl shadow-md p-12 text-center">
                     <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />

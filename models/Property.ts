@@ -9,7 +9,9 @@ export interface IProperty extends Document {
   state?: string;
   pincode: string;
   landmark: string;
-  googleMapLink: string;
+  googleMapLink?: string;
+  latitude?: string;
+  longitude?: string;
   price: number;
   deposit: number;
   rooms: number;
@@ -28,8 +30,8 @@ export interface IProperty extends Document {
   pgName?: string;
   selectedRoomCategories?: string[];
   roomDetails?: Record<string, {
-    totalRooms: string;
-    availableRooms: string;
+    totalBeds: string;
+    availableBeds: string;
     monthlyRent: string;
     securityDeposit: string;
     facilities: string[];
@@ -113,7 +115,9 @@ const PropertySchema: Schema = new Schema<IProperty>({
   state: { type: String },
   pincode: { type: String, required: true },
   landmark: { type: String, required: true },
-  googleMapLink: { type: String, required: true },
+  googleMapLink: { type: String },
+  latitude: { type: String },
+  longitude: { type: String },
   price: { type: Number, required: true },
   deposit: { type: Number, required: true },
   rooms: { type: Number, required: true },

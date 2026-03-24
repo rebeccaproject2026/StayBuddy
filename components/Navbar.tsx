@@ -98,6 +98,16 @@ export default function Navbar() {
     }
   };
 
+  const getProfileLink = () => {
+    if (!user) return '/dashboard';
+    switch (user.role) {
+      case 'landlord': return '/dashboard/owner?tab=profile';
+      case 'renter':   return '/dashboard/tenant?tab=profile';
+      case 'admin':    return '/dashboard/admin?tab=profile';
+      default:         return '/dashboard';
+    }
+  };
+
   const ProfileAvatar = () => {
     if (user?.profileImage) {
       return (
@@ -261,7 +271,7 @@ export default function Navbar() {
                                 </button>
                               </Link>
 
-                              <Link href="/profile">
+                              <Link href={getProfileLink()}>
                                 <button
                                   onClick={() => setIsProfileMenuOpen(false)}
                                   className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-primary-light hover:text-primary transition-all duration-300"
