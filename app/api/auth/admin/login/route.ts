@@ -1,93 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
-import { adminLoginSchema } from '@/lib/validation';
 import { generateToken } from '@/lib/jwt';
+import { z } from 'zod';
 
-export async function POST(request: NextRequest) {
+const schema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+});
+
+export async function POST(req: NextRequest) {
   try {
-    // Connect to database
     await connectDB();
 
-    // Parse request body
-    const body = await request.json();
+    const body = await req.json();
+    const { email, password } = schema.parse(body);
 
-    // Validate input
-    const validatedData = adminLoginSchema.parse(body);
+    const user = await User.findOne({ email: email.toLowerCase().trim(), role: 'admin' }).select('+password');
 
-    // Find user with password (since password is excluded by default)
-    const user = await User.findOne({ email: validatedData.email }).select('+password');
     if (!user) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Check if user role is admin
-    if (user.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Access denied. Admin privileges required.' },
-        { status: 403 }
-      );
+    const isValid = await user.comparePassword(password);
+    if (!isValid) {
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Compare password
-    const isPasswordValid = await user.comparePassword(validatedData.password);
-    if (!isPasswordValid) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
-    }
-
-    // Generate JWT token
     const token = generateToken({
       userId: user._id.toString(),
       email: user.email,
-      role: user.role,
+      role: 'admin',
       country: user.country,
     });
 
-    // Return success response
-    return NextResponse.json(
-      {
-        message: 'Admin login successful',
-        user: {
-          id: user._id,
-          fullName: user.fullName,
-          email: user.email,
-          phoneNumber: user.phoneNumber,
-          role: user.role,
-          country: user.country,
-          isVerified: user.isVerified,
-          createdAt: user.createdAt,
-        },
-        token,
+    return NextResponse.json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        country: user.country,
       },
-      { status: 200 }
-    );
+    });
   } catch (error: any) {
-    console.error('Admin login error:', error);
-
-    // Handle validation errors
     if (error.name === 'ZodError') {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: error.errors.map((err: any) => ({
-            field: err.path.join('.'),
-            message: err.message,
-          })),
-        },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
     }
-
-    // Handle other errors
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    console.error('[admin/login]', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

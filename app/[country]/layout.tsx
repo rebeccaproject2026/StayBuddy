@@ -16,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const isDashboard = pathname?.includes("/dashboard");
+  const isDashboard = pathname?.includes("/dashboard") || pathname?.includes("/control");
 
   return (
     <html lang="en">

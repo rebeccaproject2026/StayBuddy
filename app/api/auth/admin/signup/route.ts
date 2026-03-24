@@ -2,108 +2,56 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import { z } from 'zod';
-import { generateToken } from '@/lib/jwt';
 
-// Admin signup schema (temporary for testing)
-const adminSignupSchema = z.object({
-  fullName: z.string().min(2).max(100).trim(),
-  email: z.string().email().toLowerCase().trim(),
-  phoneNumber: z.string().regex(/^[\+]?[1-9][\d]{0,15}$/).optional().or(z.literal('')),
+const schema = z.object({
+  fullName: z.string().min(2),
+  email: z.string().email(),
   password: z.string().min(8),
-  confirmPassword: z.string(),
-  country: z.enum(['fr', 'in']),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
+  country: z.enum(['in', 'fr']),
+  secret: z.string().min(1),
 });
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    // Connect to database
     await connectDB();
 
-    // Parse request body
-    const body = await request.json();
+    const body = await req.json();
+    const { fullName, email, password, country, secret } = schema.parse(body);
 
-    // Validate input
-    const validatedData = adminSignupSchema.parse(body);
-
-    // Check if user already exists
-    const existingUser = await User.findOne({ email: validatedData.email });
-    if (existingUser) {
-      return NextResponse.json(
-        { error: 'User with this email already exists' },
-        { status: 400 }
-      );
+    // Read at request time so restarts pick up new env values
+    const ADMIN_SECRET = process.env.ADMIN_SECRET;
+    if (ADMIN_SECRET && secret !== ADMIN_SECRET) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Create new admin user
-    const user = new User({
-      fullName: validatedData.fullName,
-      email: validatedData.email,
-      phoneNumber: validatedData.phoneNumber || undefined,
-      password: validatedData.password,
-      role: 'admin', // Force admin role
-      country: validatedData.country,
+    const emailLower = email.toLowerCase().trim();
+
+    const existing = await User.findOne({ email: emailLower, country });
+    if (existing) {
+      return NextResponse.json({ error: 'User already exists' }, { status: 400 });
+    }
+
+    const admin = new User({
+      fullName,
+      email: emailLower,
+      password,
+      role: 'admin',
+      country,
+      isVerified: true,
+      provider: 'credentials',
     });
 
-    await user.save();
+    await admin.save();
 
-    // Generate JWT token
-    const token = generateToken({
-      userId: user._id.toString(),
-      email: user.email,
-      role: user.role,
-      country: user.country,
-    });
-
-    // Return success response
-    return NextResponse.json(
-      {
-        message: 'Admin user created successfully',
-        user: {
-          id: user._id,
-          fullName: user.fullName,
-          email: user.email,
-          phoneNumber: user.phoneNumber,
-          role: user.role,
-          country: user.country,
-          isVerified: user.isVerified,
-          createdAt: user.createdAt,
-        },
-        token,
-      },
-      { status: 201 }
-    );
+    return NextResponse.json({ message: 'Admin account created' }, { status: 201 });
   } catch (error: any) {
-    console.error('Admin signup error:', error);
-
-    // Handle validation errors
     if (error.name === 'ZodError') {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: error.errors.map((err: any) => ({
-            field: err.path.join('.'),
-            message: err.message,
-          })),
-        },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid input', details: error.errors }, { status: 400 });
     }
-
-    // Handle MongoDB duplicate key error
     if (error.code === 11000) {
-      return NextResponse.json(
-        { error: 'User with this email already exists' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'User already exists' }, { status: 400 });
     }
-
-    // Handle other errors
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    console.error('[admin/signup]', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
