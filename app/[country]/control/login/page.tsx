@@ -40,7 +40,9 @@ export default function AdminLoginPage() {
         localStorage.setItem("staybuddy_user", JSON.stringify(data.user));
       }
 
-      router.push(`/${country}/dashboard/admin`);
+      // Use window.location for a full page reload so AuthContext re-initializes
+      // and picks up the newly stored token from localStorage.
+      window.location.href = `/${country}/dashboard/admin`;
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
