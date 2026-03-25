@@ -26,16 +26,20 @@ import {
   Mail,
   X,
   ChevronDown,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 function StatusDropdown({
   value,
   onChange,
   options,
+  isDark = false,
 }: {
   value: string;
   onChange: (v: string) => void;
   options: { value: string; label: string }[];
+  isDark?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -69,7 +73,7 @@ function StatusDropdown({
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1.5 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50 min-w-[140px]">
+        <div className={`absolute right-0 top-full mt-1.5 rounded-xl shadow-xl border overflow-hidden z-50 min-w-[140px] ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}>
           {options.map((opt) => (
             <button
               key={opt.value}
@@ -77,7 +81,7 @@ function StatusDropdown({
               className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors ${
                 opt.value === value
                   ? "bg-primary text-white"
-                  : "text-gray-700 hover:bg-gray-50"
+                  : isDark ? "text-gray-300 hover:bg-gray-700" : "text-gray-700 hover:bg-gray-50"
               }`}
             >
               {opt.label}
@@ -89,7 +93,7 @@ function StatusDropdown({
   );
 }
 
-function ProfileSection({ user, tc, language }: { user: any; tc: any; language: string }) {
+function ProfileSection({ user, tc, language, isDark = false }: { user: any; tc: any; language: string; isDark?: boolean }) {
   const [form, setForm] = useState({
     fullName: user?.fullName || "",
     email: user?.email || "",
@@ -164,10 +168,10 @@ function ProfileSection({ user, tc, language }: { user: any; tc: any; language: 
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">{tc.profileSettings}</h2>
+      <h2 className={`text-2xl font-bold mb-6 ${isDark ? "text-white" : "text-gray-900"}`}>{tc.profileSettings}</h2>
 
       {/* Avatar + summary card */}
-      <div className="bg-white rounded-2xl shadow-md p-6 flex flex-col sm:flex-row items-center gap-6">
+      <div className={`rounded-2xl shadow-md p-6 flex flex-col sm:flex-row items-center gap-6 ${isDark ? "bg-gray-900" : "bg-white"}`}>
         <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
           {user?.profileImage ? (
             <Image src={user.profileImage} alt={user.fullName} width={80} height={80} className="object-cover w-full h-full" />
@@ -176,11 +180,11 @@ function ProfileSection({ user, tc, language }: { user: any; tc: any; language: 
           )}
         </div>
         <div className="text-center sm:text-left">
-          <p className="text-xl font-bold text-gray-900">{user?.fullName || "—"}</p>
+          <p className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{user?.fullName || "—"}</p>
           <p className="text-gray-500 text-sm">{user?.email}</p>
           <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
             <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full">{roleLabel}</span>
-            <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">{countryLabel}</span>
+            <span className={`px-3 py-1 text-xs font-medium rounded-full ${isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"}`}>{countryLabel}</span>
             <span className={`px-3 py-1 text-xs font-medium rounded-full ${user?.isVerified ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
               {user?.isVerified ? (language === "fr" ? "Vérifié" : "Verified") : (language === "fr" ? "Non vérifié" : "Unverified")}
             </span>
@@ -189,35 +193,35 @@ function ProfileSection({ user, tc, language }: { user: any; tc: any; language: 
       </div>
 
       {/* Personal info */}
-      <div className="bg-white rounded-2xl shadow-md p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">{language === "fr" ? "Informations personnelles" : "Personal Information"}</h3>
+      <div className={`rounded-2xl shadow-md p-6 ${isDark ? "bg-gray-900" : "bg-white"}`}>
+        <h3 className={`text-lg font-bold mb-4 ${isDark ? "text-white" : "text-gray-900"}`}>{language === "fr" ? "Informations personnelles" : "Personal Information"}</h3>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{tc.fullName}</label>
+            <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.fullName}</label>
             <input
               type="text"
               value={form.fullName}
               onChange={(e) => setForm((p) => ({ ...p, fullName: e.target.value }))}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "border-gray-300"}`}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{tc.email}</label>
+            <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.email}</label>
             <input
               type="email"
               value={form.email}
               disabled
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+              className={`w-full px-4 py-3 border rounded-lg cursor-not-allowed ${isDark ? "bg-gray-800 border-gray-700 text-gray-500" : "border-gray-200 bg-gray-50 text-gray-500"}`}
             />
             <p className="text-xs text-gray-400 mt-1">{language === "fr" ? "L'email ne peut pas être modifié." : "Email cannot be changed."}</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{tc.phone}</label>
+            <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.phone}</label>
             <input
               type="tel"
               value={form.phoneNumber}
               onChange={(e) => setForm((p) => ({ ...p, phoneNumber: e.target.value }))}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "border-gray-300"}`}
               placeholder={language === "fr" ? "Numéro de téléphone" : "Phone number"}
             />
           </div>
@@ -236,36 +240,36 @@ function ProfileSection({ user, tc, language }: { user: any; tc: any; language: 
 
       {/* Change password — only for credentials users */}
       {user?.provider === "credentials" && (
-        <div className="bg-white rounded-2xl shadow-md p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">{language === "fr" ? "Changer le mot de passe" : "Change Password"}</h3>
+        <div className={`rounded-2xl shadow-md p-6 ${isDark ? "bg-gray-900" : "bg-white"}`}>
+          <h3 className={`text-lg font-bold mb-4 ${isDark ? "text-white" : "text-gray-900"}`}>{language === "fr" ? "Changer le mot de passe" : "Change Password"}</h3>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">{language === "fr" ? "Mot de passe actuel" : "Current Password"}</label>
+              <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{language === "fr" ? "Mot de passe actuel" : "Current Password"}</label>
               <input
                 type="password"
                 value={pwForm.current}
                 onChange={(e) => setPwForm((p) => ({ ...p, current: e.target.value }))}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "border-gray-300"}`}
                 placeholder={language === "fr" ? "Mot de passe actuel" : "Current password"}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">{language === "fr" ? "Nouveau mot de passe" : "New Password"}</label>
+              <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{language === "fr" ? "Nouveau mot de passe" : "New Password"}</label>
               <input
                 type="password"
                 value={pwForm.next}
                 onChange={(e) => setPwForm((p) => ({ ...p, next: e.target.value }))}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "border-gray-300"}`}
                 placeholder={language === "fr" ? "Nouveau mot de passe" : "New password"}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">{language === "fr" ? "Confirmer le mot de passe" : "Confirm New Password"}</label>
+              <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{language === "fr" ? "Confirmer le mot de passe" : "Confirm New Password"}</label>
               <input
                 type="password"
                 value={pwForm.confirm}
                 onChange={(e) => setPwForm((p) => ({ ...p, confirm: e.target.value }))}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "border-gray-300"}`}
                 placeholder={language === "fr" ? "Confirmer" : "Confirm password"}
               />
             </div>
@@ -294,6 +298,18 @@ export default function OwnerDashboard() {
   const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'listings');
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("owner_theme");
+    setIsDark(saved === "dark");
+  }, []);
+
+  const toggleTheme = () => {
+    const next = !isDark;
+    setIsDark(next);
+    localStorage.setItem("owner_theme", next ? "dark" : "light");
+  };
   const currencySymbol = t("currency.symbol");
 
   const [myListings, setMyListings] = useState<any[]>([]);
@@ -450,10 +466,10 @@ export default function OwnerDashboard() {
   // Show loading while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-gray-950" : "bg-gray-50"}`}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className={isDark ? "text-gray-400" : "text-gray-600"}>Loading...</p>
         </div>
       </div>
     );
@@ -639,13 +655,24 @@ export default function OwnerDashboard() {
   const tc = content[language];
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case "new":        return "bg-blue-100 text-blue-700";
-      case "contacted":  return "bg-amber-100 text-amber-700";
-      case "interested": return "bg-violet-100 text-violet-700";
-      case "booked":     return "bg-emerald-100 text-emerald-700";
-      case "closed":     return "bg-gray-100 text-gray-500";
-      default:           return "bg-gray-100 text-gray-600";
+    if (isDark) {
+      switch (status) {
+        case "new":        return "bg-blue-500/20 text-blue-400";
+        case "contacted":  return "bg-amber-500/20 text-amber-400";
+        case "interested": return "bg-violet-500/20 text-violet-400";
+        case "booked":     return "bg-emerald-500/20 text-emerald-400";
+        case "closed":     return "bg-gray-700 text-gray-400";
+        default:           return "bg-gray-700 text-gray-400";
+      }
+    } else {
+      switch (status) {
+        case "new":        return "bg-blue-100 text-blue-700";
+        case "contacted":  return "bg-amber-100 text-amber-700";
+        case "interested": return "bg-violet-100 text-violet-700";
+        case "booked":     return "bg-emerald-100 text-emerald-700";
+        case "closed":     return "bg-gray-100 text-gray-500";
+        default:           return "bg-gray-100 text-gray-600";
+      }
     }
   };
 
@@ -908,19 +935,28 @@ export default function OwnerDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen ${isDark ? "bg-gray-950" : "bg-gray-50"}`}>
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
+      <div className={`sticky top-0 z-50 shadow-sm border-b ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
         <div className="max-w-[1500px] mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
-            <h1 className="text-2xl font-bold text-primary">{tc.dashboard}</h1>
-            <Link
-              href="/"
-              className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg transition-colors font-medium text-sm"
-            >
-              <Home className="w-4 h-4" />
-              <span>{language === "fr" ? "Accueil" : "Back to Home"}</span>
-            </Link>
+            <h1 className={`text-2xl font-bold ${isDark ? "text-primary-light" : "text-primary"}`}>{tc.dashboard}</h1>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={toggleTheme}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${isDark ? "bg-gray-800 text-yellow-400 hover:bg-gray-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+                title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
+              <Link
+                href="/"
+                className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg transition-colors font-medium text-sm"
+              >
+                <Home className="w-4 h-4" />
+                <span>{language === "fr" ? "Accueil" : "Back to Home"}</span>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -928,14 +964,12 @@ export default function OwnerDashboard() {
       <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
           {/* Sidebar */}
           <div className="lg:w-72 flex-shrink-0">
-            <div className="bg-white shadow-md p-4 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto flex flex-col">
+            <div className={`p-4 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto flex flex-col border-r ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-md"}`}>
               <nav className="space-y-2">
                 <button
                   onClick={() => setActiveTab("listings")}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                    activeTab === "listings"
-                      ? "bg-primary text-white"
-                      : "text-gray-700 hover:bg-gray-100"
+                    activeTab === "listings" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
                   <Home className="w-5 h-5" />
@@ -944,7 +978,6 @@ export default function OwnerDashboard() {
                 <button
                   onClick={() => {
                     setActiveTab("requests");
-                    // mark all current inquiries as seen
                     setSeenInquiryIds(prev => {
                       const updated = new Set(prev);
                       contactRequests.forEach((r: any) => updated.add(r._id));
@@ -952,9 +985,7 @@ export default function OwnerDashboard() {
                     });
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                    activeTab === "requests"
-                      ? "bg-primary text-white"
-                      : "text-gray-700 hover:bg-gray-100"
+                    activeTab === "requests" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
                   <Calendar className="w-5 h-5" />
@@ -966,13 +997,9 @@ export default function OwnerDashboard() {
                   )}
                 </button>
                 <button
-                  onClick={() => {
-                    setActiveTab("messages");
-                  }}
+                  onClick={() => setActiveTab("messages")}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                    activeTab === "messages"
-                      ? "bg-primary text-white"
-                      : "text-gray-700 hover:bg-gray-100"
+                    activeTab === "messages" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
                   <MessageSquare className="w-5 h-5" />
@@ -986,10 +1013,10 @@ export default function OwnerDashboard() {
               </nav>
 
               {/* Profile card */}
-              <div className="mt-auto pt-4 border-t border-gray-100 relative">
+              <div className={`mt-auto pt-4 border-t relative ${isDark ? "border-gray-800" : "border-gray-100"}`}>
                 <button
                   onClick={() => setProfileMenuOpen(p => !p)}
-                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-left group ${profileMenuOpen ? "bg-primary/5" : "hover:bg-primary/5"}`}
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-left group ${profileMenuOpen ? "bg-primary/10" : isDark ? "hover:bg-gray-800" : "hover:bg-primary/5"}`}
                 >
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm">
                     {user?.profileImage ? (
@@ -1001,10 +1028,10 @@ export default function OwnerDashboard() {
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{user?.fullName || "—"}</p>
-                    <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                    <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{user?.fullName || "—"}</p>
+                    <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                   </div>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${profileMenuOpen ? "bg-primary text-white" : "bg-gray-100 text-gray-400 group-hover:bg-primary/10 group-hover:text-primary"}`}>
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${profileMenuOpen ? "bg-primary text-white" : isDark ? "bg-gray-700 text-gray-400 group-hover:bg-gray-600 group-hover:text-gray-200" : "bg-gray-100 text-gray-400 group-hover:bg-primary/10 group-hover:text-primary"}`}>
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform ${profileMenuOpen ? "rotate-180" : ""}`} />
                   </div>
                 </button>
@@ -1012,29 +1039,28 @@ export default function OwnerDashboard() {
                 {profileMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setProfileMenuOpen(false)} />
-                    <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-20">
-                      {/* User info header */}
-                      <div className="px-4 py-3 bg-gradient-to-r from-primary/5 to-primary/10 border-b border-primary/10">
+                    <div className={`absolute bottom-full left-0 right-0 mb-2 rounded-2xl shadow-xl border overflow-hidden z-20 ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-100"}`}>
+                      <div className={`px-4 py-3 border-b ${isDark ? "bg-primary/10 border-primary/20" : "bg-gradient-to-r from-primary/5 to-primary/10 border-primary/10"}`}>
                         <p className="text-xs font-semibold text-primary uppercase tracking-wide">
                           {language === "fr" ? "Connecté en tant que" : "Signed in as"}
                         </p>
-                        <p className="text-sm font-bold text-gray-900 truncate mt-0.5">{user?.fullName}</p>
+                        <p className={`text-sm font-bold truncate mt-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>{user?.fullName}</p>
                       </div>
                       <button
                         onClick={() => { setActiveTab("profile"); setProfileMenuOpen(false); }}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors group/item"
+                        className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors group/item ${isDark ? "text-gray-300 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-primary/5 hover:text-primary"}`}
                       >
-                        <div className="w-7 h-7 rounded-lg bg-gray-100 group-hover/item:bg-primary/10 flex items-center justify-center transition-colors">
-                          <User className="w-3.5 h-3.5 text-gray-500 group-hover/item:text-primary transition-colors" />
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${isDark ? "bg-gray-700 group-hover/item:bg-gray-600" : "bg-gray-100 group-hover/item:bg-primary/10"}`}>
+                          <User className={`w-3.5 h-3.5 transition-colors ${isDark ? "text-gray-400 group-hover/item:text-white" : "text-gray-500 group-hover/item:text-primary"}`} />
                         </div>
                         <span className="font-medium">{language === "fr" ? "Voir le profil" : "View Profile"}</span>
                       </button>
                       <button
                         onClick={() => { setProfileMenuOpen(false); logout(); }}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100 group/item"
+                        className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors border-t group/item ${isDark ? "text-red-400 hover:bg-red-500/10 border-gray-700" : "text-red-600 hover:bg-red-50 border-gray-100"}`}
                       >
-                        <div className="w-7 h-7 rounded-lg bg-red-50 group-hover/item:bg-red-100 flex items-center justify-center transition-colors">
-                          <LogOut className="w-3.5 h-3.5 text-red-500" />
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${isDark ? "bg-red-500/10 group-hover/item:bg-red-500/20" : "bg-red-50 group-hover/item:bg-red-100"}`}>
+                          <LogOut className={`w-3.5 h-3.5 ${isDark ? "text-red-400" : "text-red-500"}`} />
                         </div>
                         <span className="font-medium">{language === "fr" ? "Déconnexion" : "Logout"}</span>
                       </button>
@@ -1051,16 +1077,14 @@ export default function OwnerDashboard() {
             {activeTab === "listings" && (
               <div className="space-y-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">{tc.myListings}</h2>
+                  <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{tc.myListings}</h2>
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
                     {/* View Toggle */}
-                    <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+                    <div className={`flex items-center gap-1 rounded-lg p-1 w-fit ${isDark ? "bg-gray-800" : "bg-gray-100"}`}>
                       <button
                         onClick={() => setViewMode("grid")}
                         className={`p-2 rounded-md transition-colors ${
-                          viewMode === "grid"
-                            ? "bg-white text-primary shadow-sm"
-                            : "text-gray-600 hover:text-gray-900"
+                          viewMode === "grid" ? isDark ? "bg-gray-700 text-primary shadow-sm" : "bg-white text-primary shadow-sm" : isDark ? "text-gray-400 hover:text-gray-200" : "text-gray-600 hover:text-gray-900"
                         }`}
                         title="Grid View"
                       >
@@ -1069,9 +1093,7 @@ export default function OwnerDashboard() {
                       <button
                         onClick={() => setViewMode("list")}
                         className={`p-2 rounded-md transition-colors ${
-                          viewMode === "list"
-                            ? "bg-white text-primary shadow-sm"
-                            : "text-gray-600 hover:text-gray-900"
+                          viewMode === "list" ? isDark ? "bg-gray-700 text-primary shadow-sm" : "bg-white text-primary shadow-sm" : isDark ? "text-gray-400 hover:text-gray-200" : "text-gray-600 hover:text-gray-900"
                         }`}
                         title="List View"
                       >
@@ -1091,12 +1113,12 @@ export default function OwnerDashboard() {
                 {listingsLoading ? (
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {Array.from({ length: 3 }).map((_, i) => (
-                      <div key={i} className="bg-white rounded-2xl shadow-md overflow-hidden animate-pulse">
-                        <div className="h-48 bg-gray-200" />
+                      <div key={i} className={`rounded-2xl overflow-hidden animate-pulse ${isDark ? "bg-gray-800" : "bg-white shadow-md"}`}>
+                        <div className={`h-48 ${isDark ? "bg-gray-700" : "bg-gray-200"}`} />
                         <div className="p-6 space-y-3">
-                          <div className="h-4 bg-gray-200 rounded w-3/4" />
-                          <div className="h-3 bg-gray-200 rounded w-1/2" />
-                          <div className="h-5 bg-gray-200 rounded w-1/3" />
+                          <div className={`h-4 rounded w-3/4 ${isDark ? "bg-gray-700" : "bg-gray-200"}`} />
+                          <div className={`h-3 rounded w-1/2 ${isDark ? "bg-gray-700" : "bg-gray-200"}`} />
+                          <div className={`h-5 rounded w-1/3 ${isDark ? "bg-gray-700" : "bg-gray-200"}`} />
                         </div>
                       </div>
                     ))}
@@ -1105,12 +1127,12 @@ export default function OwnerDashboard() {
                   <>
                     {/* Inline edit panel */}
                     {editingListing ? (
-                      <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+                      <div className={`rounded-2xl overflow-hidden ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white shadow-md"}`}>
                         {/* Header */}
-                        <div className="flex items-center gap-3 p-4 sm:p-6 bg-gradient-to-r from-primary/5 to-transparent border-b border-gray-100">
+                        <div className={`flex items-center gap-3 p-4 sm:p-6 border-b ${isDark ? "bg-gray-800/50 border-gray-700" : "bg-gradient-to-r from-primary/5 to-transparent border-gray-100"}`}>
                           <button
                             onClick={closeEdit}
-                            className="flex items-center gap-2 px-3 py-2 rounded-xl border-2 border-gray-200 text-gray-600 hover:bg-white hover:border-primary/30 transition-all text-sm font-medium"
+                            className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 transition-all text-sm font-medium ${isDark ? "border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500" : "border-gray-200 text-gray-600 hover:bg-white hover:border-primary/30"}`}
                           >
                             <ArrowLeft className="w-4 h-4" />
                             {language === "fr" ? "Retour" : "Back"}
@@ -1119,7 +1141,7 @@ export default function OwnerDashboard() {
                             <span className={`px-3 py-1 rounded-full text-xs font-bold ${editingListing.propertyType === "PG" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"}`}>
                               {editingListing.propertyType}
                             </span>
-                            <span className="text-base font-bold text-gray-900 truncate max-w-xs">
+                            <span className={`text-base font-bold truncate max-w-xs ${isDark ? "text-white" : "text-gray-900"}`}>
                               {editingListing.title}
                             </span>
                           </div>
@@ -1131,97 +1153,97 @@ export default function OwnerDashboard() {
                         <div className="p-4 sm:p-6 space-y-6">
 
                           {/* ── Section: Basic Info ── */}
-                          <div className="bg-gray-50 rounded-2xl p-4 sm:p-5 space-y-4">
+                          <div className={`rounded-2xl p-4 sm:p-5 space-y-4 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
                             <h3 className="text-sm font-bold text-primary uppercase tracking-wide flex items-center gap-2">
                               <span className="w-1 h-4 bg-primary rounded-full inline-block" />
                               Basic Information
                             </h3>
                             <div className="grid sm:grid-cols-2 gap-4">
                             <div className="sm:col-span-2">
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Property Title</label>
+                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Property Title</label>
                               <input value={editForm.title} onChange={e => setEditForm(p => ({ ...p, title: e.target.value }))}
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                             </div>
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Rent ({currencySymbol})</label>
+                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Monthly Rent ({currencySymbol})</label>
                               <input value={editForm.price} onChange={e => setEditForm(p => ({ ...p, price: e.target.value }))}
                                 inputMode="numeric"
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                             </div>
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Security Deposit ({currencySymbol})</label>
+                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Security Deposit ({currencySymbol})</label>
                               <input value={editForm.deposit} onChange={e => setEditForm(p => ({ ...p, deposit: e.target.value }))}
                                 inputMode="numeric"
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                             </div>
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Rooms</label>
+                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Rooms</label>
                               <input value={editForm.rooms} onChange={e => setEditForm(p => ({ ...p, rooms: e.target.value }))}
                                 inputMode="numeric"
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                             </div>
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Bathrooms</label>
+                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Bathrooms</label>
                               <input value={editForm.bathrooms} onChange={e => setEditForm(p => ({ ...p, bathrooms: e.target.value }))}
                                 inputMode="numeric"
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                             </div>
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Area (m²)</label>
+                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Area (m²)</label>
                               <input value={editForm.area} onChange={e => setEditForm(p => ({ ...p, area: e.target.value }))}
                                 inputMode="numeric"
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                             </div>
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Available From</label>
+                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Available From</label>
                               <input value={editForm.availableFrom} onChange={e => setEditForm(p => ({ ...p, availableFrom: e.target.value }))}
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                             </div>
                             </div>
                           </div>
 
                           {/* ── Section: Location ── */}
-                          <div className="bg-gray-50 rounded-2xl p-4 sm:p-5 space-y-4">
+                          <div className={`rounded-2xl p-4 sm:p-5 space-y-4 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
                             <h3 className="text-sm font-bold text-primary uppercase tracking-wide flex items-center gap-2">
                               <span className="w-1 h-4 bg-primary rounded-full inline-block" />
                               Location
                             </h3>
                             <div className="grid sm:grid-cols-2 gap-4">
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>City</label>
                               <input value={editForm.location} onChange={e => setEditForm(p => ({ ...p, location: e.target.value }))}
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                             </div>
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Area / Locality</label>
+                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Area / Locality</label>
                               <input value={editForm.areaName} onChange={e => setEditForm(p => ({ ...p, areaName: e.target.value }))}
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                             </div>
                             <div className="sm:col-span-2">
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Full Address</label>
+                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Full Address</label>
                               <input value={editForm.fullAddress} onChange={e => setEditForm(p => ({ ...p, fullAddress: e.target.value }))}
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                             </div>
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>State</label>
                               <input value={editForm.state} onChange={e => setEditForm(p => ({ ...p, state: e.target.value }))}
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                             </div>
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Pincode</label>
+                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Pincode</label>
                               <input value={editForm.pincode} onChange={e => setEditForm(p => ({ ...p, pincode: e.target.value }))}
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                             </div>
                             <div className="sm:col-span-2">
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Landmark</label>
+                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Landmark</label>
                               <input value={editForm.landmark} onChange={e => setEditForm(p => ({ ...p, landmark: e.target.value }))}
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                             </div>
                             </div>
                           </div>
 
                           {/* ── Type-specific sections ── */}
-                          <div className="bg-gray-50 rounded-2xl p-4 sm:p-5 space-y-4">
+                          <div className={`rounded-2xl p-4 sm:p-5 space-y-4 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
                             <h3 className="text-sm font-bold text-primary uppercase tracking-wide flex items-center gap-2">
                               <span className="w-1 h-4 bg-primary rounded-full inline-block" />
                               {editForm.propertyType === "PG" ? "PG Details" : "Property Details"}
@@ -1231,20 +1253,20 @@ export default function OwnerDashboard() {
                             {editForm.propertyType === "PG" && (<>
                               {/* PG Basic */}
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">PG Name</label>
+                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>PG Name</label>
                                 <input value={editForm.pgName} onChange={e => setEditForm(p => ({ ...p, pgName: e.target.value }))}
-                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Operational Since</label>
+                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Operational Since</label>
                                 <input value={editForm.operationalSince} onChange={e => setEditForm(p => ({ ...p, operationalSince: e.target.value }))}
                                   placeholder="e.g. 2018"
-                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">PG Present In</label>
+                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>PG Present In</label>
                                 <select value={editForm.pgPresentIn} onChange={e => setEditForm(p => ({ ...p, pgPresentIn: e.target.value }))}
-                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white appearance-none cursor-pointer">
+                                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`}>
                                   <option value="">Select</option>
                                   <option value="An Independent Building">An Independent Building</option>
                                   <option value="An Independent Flats">An Independent Flats</option>
@@ -1252,9 +1274,9 @@ export default function OwnerDashboard() {
                                 </select>
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">PG For</label>
+                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>PG For</label>
                                 <select value={editForm.pgFor} onChange={e => setEditForm(p => ({ ...p, pgFor: e.target.value }))}
-                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white appearance-none cursor-pointer">
+                                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`}>
                                   <option value="">Select</option>
                                   <option value="Male">Male</option>
                                   <option value="Female">Female</option>
@@ -1262,9 +1284,9 @@ export default function OwnerDashboard() {
                                 </select>
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Tenant Preference</label>
+                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Tenant Preference</label>
                                 <select value={editForm.tenantPreference} onChange={e => setEditForm(p => ({ ...p, tenantPreference: e.target.value }))}
-                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white appearance-none cursor-pointer">
+                                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`}>
                                   <option value="">Select</option>
                                   <option value="Professionals">Professionals</option>
                                   <option value="Students">Students</option>
@@ -1272,9 +1294,9 @@ export default function OwnerDashboard() {
                                 </select>
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Notice Period</label>
+                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Notice Period</label>
                                 <select value={editForm.noticePeriod} onChange={e => setEditForm(p => ({ ...p, noticePeriod: e.target.value }))}
-                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white appearance-none cursor-pointer">
+                                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`}>
                                   <option value="">Select</option>
                                   <option value="1 Week">1 Week</option>
                                   <option value="15 Days">15 Days</option>
@@ -1284,13 +1306,13 @@ export default function OwnerDashboard() {
                                 </select>
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Gate Closing Time</label>
+                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Gate Closing Time</label>
                                 <input type="time" value={editForm.gateClosingTime} onChange={e => setEditForm(p => ({ ...p, gateClosingTime: e.target.value }))}
-                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                               </div>
                               {/* PG Rules */}
                               <div className="sm:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">PG Rules <span className="text-xs text-gray-400 font-normal">(select what is NOT allowed)</span></label>
+                                <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>PG Rules <span className="text-xs text-gray-400 font-normal">(select what is NOT allowed)</span></label>
                                 <div className="flex flex-wrap gap-2 mb-3">
                                   {[
                                     ...["guardian","nonveg","gender","alcohol","smoking"].map(id => ({
@@ -1304,7 +1326,7 @@ export default function OwnerDashboard() {
                                     const active = (editForm.pgRules||[]).includes(rule.id);
                                     return (
                                       <button key={rule.id} type="button" onClick={() => setEditForm(p => ({ ...p, pgRules: active ? p.pgRules.filter((r:string)=>r!==rule.id) : [...(p.pgRules||[]), rule.id] }))}
-                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
+                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : isDark ? "border-gray-600 text-gray-300 bg-gray-700 hover:border-primary/50" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
                                         {rule.label}
                                       </button>
                                     );
@@ -1314,7 +1336,7 @@ export default function OwnerDashboard() {
                                   <input
                                     type="text"
                                     placeholder="Add custom rule..."
-                                    className="flex-1 px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary transition-colors bg-white"
+                                    className={`flex-1 px-4 py-2.5 border-2 rounded-xl text-sm focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`}
                                     onKeyDown={e => {
                                       if (e.key === "Enter") {
                                         e.preventDefault();
@@ -1338,7 +1360,7 @@ export default function OwnerDashboard() {
                               </div>
                               {/* Services */}
                               <div className="sm:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Services</label>
+                                <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Services</label>
                                 <div className="flex flex-wrap gap-2 mb-3">
                                   {[
                                     ...["laundry","cleaning","warden"].map(id => ({
@@ -1352,7 +1374,7 @@ export default function OwnerDashboard() {
                                     const active = (editForm.services||[]).includes(svc.id);
                                     return (
                                       <button key={svc.id} type="button" onClick={() => setEditForm(p => ({ ...p, services: active ? p.services.filter((x:string)=>x!==svc.id) : [...(p.services||[]), svc.id] }))}
-                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
+                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : isDark ? "border-gray-600 text-gray-300 bg-gray-700 hover:border-primary/50" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
                                         {svc.label}
                                       </button>
                                     );
@@ -1362,7 +1384,7 @@ export default function OwnerDashboard() {
                                   <input
                                     type="text"
                                     placeholder="Add custom service..."
-                                    className="flex-1 px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary transition-colors bg-white"
+                                    className={`flex-1 px-4 py-2.5 border-2 rounded-xl text-sm focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`}
                                     onKeyDown={e => {
                                       if (e.key === "Enter") {
                                         e.preventDefault();
@@ -1386,21 +1408,21 @@ export default function OwnerDashboard() {
                               </div>
                               {/* Food */}
                               <div className="sm:col-span-2">
-                                <label className={`flex items-center gap-3 cursor-pointer p-3 rounded-xl border-2 transition-all w-fit ${editForm.foodProvided ? "border-primary bg-primary/5" : "border-gray-200 bg-white"}`}>
+                                <label className={`flex items-center gap-3 cursor-pointer p-3 rounded-xl border-2 transition-all w-fit ${editForm.foodProvided ? "border-primary bg-primary/5" : isDark ? "border-gray-600 bg-gray-700" : "border-gray-200 bg-white"}`}>
                                   <input type="checkbox" checked={editForm.foodProvided||false} onChange={e => setEditForm(p => ({ ...p, foodProvided: e.target.checked }))}
                                     className="w-4 h-4 text-primary rounded accent-primary" />
-                                  <span className="text-sm font-medium text-gray-700">Food Provided</span>
+                                  <span className={`text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>Food Provided</span>
                                 </label>
                                 {editForm.foodProvided && (
-                                  <div className="mt-3 p-4 bg-orange-50 border border-orange-100 rounded-xl space-y-3">
+                                  <div className={`mt-3 p-4 border rounded-xl space-y-3 ${isDark ? "bg-orange-900/20 border-orange-800/30" : "bg-orange-50 border-orange-100"}`}>
                                     <div>
-                                      <label className="block text-xs font-semibold text-gray-600 mb-2">Meals</label>
+                                      <label className={`block text-xs font-semibold mb-2 ${isDark ? "text-gray-400" : "text-gray-600"}`}>Meals</label>
                                       <div className="flex flex-wrap gap-2">
                                         {["Breakfast","Lunch","Dinner"].map(m => {
                                           const active = (editForm.meals||[]).includes(m);
                                           return (
                                             <button key={m} type="button" onClick={() => setEditForm(p => ({ ...p, meals: active ? p.meals.filter((x:string)=>x!==m) : [...(p.meals||[]), m] }))}
-                                              className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
+                                              className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary" : isDark ? "border-gray-600 text-gray-300 bg-gray-700 hover:border-primary/50" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
                                               {m}
                                             </button>
                                           );
@@ -1408,20 +1430,20 @@ export default function OwnerDashboard() {
                                       </div>
                                     </div>
                                     <div>
-                                      <label className="block text-xs font-semibold text-gray-600 mb-2">Veg / Non-Veg</label>
+                                      <label className={`block text-xs font-semibold mb-2 ${isDark ? "text-gray-400" : "text-gray-600"}`}>Veg / Non-Veg</label>
                                       <div className="flex gap-2">
                                         {["Veg","Veg & Non Veg"].map(opt => (
                                           <button key={opt} type="button" onClick={() => setEditForm(p => ({ ...p, vegNonVeg: opt }))}
-                                            className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${editForm.vegNonVeg===opt ? "bg-primary text-white border-primary" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
+                                            className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${editForm.vegNonVeg===opt ? "bg-primary text-white border-primary" : isDark ? "border-gray-600 text-gray-300 bg-gray-700 hover:border-primary/50" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
                                             {opt}
                                           </button>
                                         ))}
                                       </div>
                                     </div>
                                     <div>
-                                      <label className="block text-xs font-semibold text-gray-600 mb-2">Food Charges</label>
+                                      <label className={`block text-xs font-semibold mb-2 ${isDark ? "text-gray-400" : "text-gray-600"}`}>Food Charges</label>
                                       <select value={editForm.foodCharges||""} onChange={e => setEditForm(p => ({ ...p, foodCharges: e.target.value }))}
-                                        className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary bg-white appearance-none cursor-pointer">
+                                        className={`w-full px-3 py-2.5 border-2 rounded-xl text-sm focus:outline-none focus:border-primary appearance-none cursor-pointer ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`}>
                                         <option value="">Select</option>
                                         <option value="Included in rent">Included in rent</option>
                                         <option value="Per meal Basis">Per meal Basis</option>
@@ -1433,7 +1455,7 @@ export default function OwnerDashboard() {
                               </div>
                               {/* Common Amenities */}
                               <div className="sm:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Common Amenities</label>
+                                <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Common Amenities</label>
                                 <div className="flex flex-wrap gap-2 mb-3">
                                   {[
                                     ...["fridge","kitchen","water","wifi","tv","powerbackup","cctv","gym"].map(id => ({
@@ -1447,7 +1469,7 @@ export default function OwnerDashboard() {
                                     const active = (editForm.commonAmenities||[]).includes(amenity.id);
                                     return (
                                       <button key={amenity.id} type="button" onClick={() => setEditForm(p => ({ ...p, commonAmenities: active ? p.commonAmenities.filter((x:string)=>x!==amenity.id) : [...(p.commonAmenities||[]), amenity.id] }))}
-                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
+                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : isDark ? "border-gray-600 text-gray-300 bg-gray-700 hover:border-primary/50" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
                                         {amenity.label}
                                       </button>
                                     );
@@ -1457,7 +1479,7 @@ export default function OwnerDashboard() {
                                   <input
                                     type="text"
                                     placeholder="Add custom amenity..."
-                                    className="flex-1 px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary transition-colors bg-white"
+                                    className={`flex-1 px-4 py-2.5 border-2 rounded-xl text-sm focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`}
                                     onKeyDown={e => {
                                       if (e.key === "Enter") {
                                         e.preventDefault();
@@ -1481,16 +1503,16 @@ export default function OwnerDashboard() {
                               </div>
                               {/* Parking */}
                               <div className="sm:col-span-2">
-                                <label className={`flex items-center gap-3 cursor-pointer p-3 rounded-xl border-2 transition-all w-fit ${editForm.parkingAvailable ? "border-primary bg-primary/5" : "border-gray-200 bg-white"}`}>
+                                <label className={`flex items-center gap-3 cursor-pointer p-3 rounded-xl border-2 transition-all w-fit ${editForm.parkingAvailable ? "border-primary bg-primary/5" : isDark ? "border-gray-600 bg-gray-700" : "border-gray-200 bg-white"}`}>
                                   <input type="checkbox" checked={editForm.parkingAvailable||false} onChange={e => setEditForm(p => ({ ...p, parkingAvailable: e.target.checked }))}
                                     className="w-4 h-4 text-primary rounded accent-primary" />
-                                  <span className="text-sm font-medium text-gray-700">Parking Available</span>
+                                  <span className={`text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>Parking Available</span>
                                 </label>
                                 {editForm.parkingAvailable && (
                                   <div className="flex gap-2 mt-3">
                                     {["2-Wheeler","Car Parking"].map(opt => (
                                       <button key={opt} type="button" onClick={() => setEditForm(p => ({ ...p, parkingType: opt }))}
-                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${editForm.parkingType===opt ? "bg-primary text-white border-primary" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
+                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${editForm.parkingType===opt ? "bg-primary text-white border-primary" : isDark ? "border-gray-600 text-gray-300 bg-gray-700 hover:border-primary/50" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
                                         {opt}
                                       </button>
                                     ))}
@@ -1500,13 +1522,13 @@ export default function OwnerDashboard() {
                               {/* Room Details (Bed Availability) */}
                               {editForm.roomDetails && Object.keys(editForm.roomDetails).length > 0 && (
                                 <div className="sm:col-span-2 space-y-3">
-                                  <label className="block text-sm font-bold text-gray-700">Room / Bed Details</label>
+                                  <label className={`block text-sm font-bold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Room / Bed Details</label>
                                   {Object.entries(editForm.roomDetails).map(([category, detail]: [string, any]) => (
-                                    <div key={category} className="border-2 border-gray-200 rounded-xl p-4 space-y-3 bg-white">
+                                    <div key={category} className={`border-2 rounded-xl p-4 space-y-3 ${isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-white"}`}>
                                       <p className="text-sm font-semibold text-primary">{category} Bed</p>
                                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                         <div>
-                                          <label className="block text-xs font-medium text-gray-600 mb-1">Total Beds</label>
+                                          <label className={`block text-xs font-medium mb-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}>Total Beds</label>
                                           <input
                                             type="number" min="0"
                                             value={detail.totalBeds ?? detail.totalRooms ?? ""}
@@ -1514,11 +1536,11 @@ export default function OwnerDashboard() {
                                               ...p,
                                               roomDetails: { ...p.roomDetails, [category]: { ...p.roomDetails[category], totalBeds: e.target.value } }
                                             }))}
-                                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary bg-white"
+                                            className={`w-full px-3 py-2 border-2 rounded-xl text-sm focus:outline-none focus:border-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-200"}`}
                                           />
                                         </div>
                                         <div>
-                                          <label className="block text-xs font-medium text-gray-600 mb-1">Available Beds</label>
+                                          <label className={`block text-xs font-medium mb-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}>Available Beds</label>
                                           <input
                                             type="number" min="0"
                                             value={detail.availableBeds ?? detail.availableRooms ?? ""}
@@ -1526,11 +1548,11 @@ export default function OwnerDashboard() {
                                               ...p,
                                               roomDetails: { ...p.roomDetails, [category]: { ...p.roomDetails[category], availableBeds: e.target.value } }
                                             }))}
-                                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary bg-white"
+                                            className={`w-full px-3 py-2 border-2 rounded-xl text-sm focus:outline-none focus:border-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-200"}`}
                                           />
                                         </div>
                                         <div>
-                                          <label className="block text-xs font-medium text-gray-600 mb-1">Monthly Rent ({currencySymbol})</label>
+                                          <label className={`block text-xs font-medium mb-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}>Monthly Rent ({currencySymbol})</label>
                                           <input
                                             type="number" min="0"
                                             value={detail.monthlyRent ?? ""}
@@ -1538,11 +1560,11 @@ export default function OwnerDashboard() {
                                               ...p,
                                               roomDetails: { ...p.roomDetails, [category]: { ...p.roomDetails[category], monthlyRent: e.target.value } }
                                             }))}
-                                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary bg-white"
+                                            className={`w-full px-3 py-2 border-2 rounded-xl text-sm focus:outline-none focus:border-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-200"}`}
                                           />
                                         </div>
                                         <div>
-                                          <label className="block text-xs font-medium text-gray-600 mb-1">Security Deposit ({currencySymbol})</label>
+                                          <label className={`block text-xs font-medium mb-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}>Security Deposit ({currencySymbol})</label>
                                           <input
                                             type="number" min="0"
                                             value={detail.securityDeposit ?? ""}
@@ -1550,7 +1572,7 @@ export default function OwnerDashboard() {
                                               ...p,
                                               roomDetails: { ...p.roomDetails, [category]: { ...p.roomDetails[category], securityDeposit: e.target.value } }
                                             }))}
-                                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary bg-white"
+                                            className={`w-full px-3 py-2 border-2 rounded-xl text-sm focus:outline-none focus:border-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-200"}`}
                                           />
                                         </div>
                                       </div>
@@ -1562,49 +1584,49 @@ export default function OwnerDashboard() {
 
                             {editForm.propertyType === "Tenant" && (<>
                               <div className="sm:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Society Name</label>
+                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Society Name</label>
                                 <input value={editForm.societyName} onChange={e => setEditForm(p => ({ ...p, societyName: e.target.value }))}
-                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Rent ({currencySymbol})</label>
+                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Monthly Rent ({currencySymbol})</label>
                                 <input value={editForm.monthlyRentAmount} onChange={e => setEditForm(p => ({ ...p, monthlyRentAmount: e.target.value }))}
                                   inputMode="numeric"
-                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Security Amount ({currencySymbol})</label>
+                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Security Amount ({currencySymbol})</label>
                                 <input value={editForm.securityAmount} onChange={e => setEditForm(p => ({ ...p, securityAmount: e.target.value }))}
                                   inputMode="numeric"
-                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Maintenance Charges ({currencySymbol})</label>
+                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Maintenance Charges ({currencySymbol})</label>
                                 <input value={editForm.maintenanceCharges} onChange={e => setEditForm(p => ({ ...p, maintenanceCharges: e.target.value }))}
                                   inputMode="numeric"
-                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Maintenance Type</label>
+                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Maintenance Type</label>
                                 <select value={editForm.maintenanceType} onChange={e => setEditForm(p => ({ ...p, maintenanceType: e.target.value }))}
-                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white appearance-none cursor-pointer">
+                                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`}>
                                   <option value="">Select</option>
                                   <option value="Monthly">Monthly</option>
                                   <option value="Yearly">Yearly</option>
                                 </select>
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Balcony</label>
+                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Balcony</label>
                                 <select value={editForm.balcony} onChange={e => setEditForm(p => ({ ...p, balcony: e.target.value }))}
-                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white appearance-none cursor-pointer">
+                                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`}>
                                   <option value="">Select</option>
                                   {["All","1+","2+","3+","4+"].map(o => <option key={o} value={o}>{o}</option>)}
                                 </select>
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Facing</label>
+                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Facing</label>
                                 <select value={editForm.facing} onChange={e => setEditForm(p => ({ ...p, facing: e.target.value }))}
-                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white appearance-none cursor-pointer">
+                                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`}>
                                   <option value="">Select</option>
                                   {["East","West","North","South","North-East","North-West","South-East","South-West"].map(d => (
                                     <option key={d} value={d}>{d}</option>
@@ -1612,24 +1634,24 @@ export default function OwnerDashboard() {
                                 </select>
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Floor No.</label>
+                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Floor No.</label>
                                 <input value={editForm.floorNumber} onChange={e => setEditForm(p => ({ ...p, floorNumber: e.target.value }))}
-                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Total Floors</label>
+                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Total Floors</label>
                                 <input value={editForm.totalFloors} onChange={e => setEditForm(p => ({ ...p, totalFloors: e.target.value }))}
-                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                               </div>
                               {/* Furnishing toggle */}
                               <div className="sm:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Furnishing</label>
+                                <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Furnishing</label>
                                 <div className="flex flex-wrap gap-2">
                                   {["Unfurnished","Semi-Furnished","Fully-Furnished"].map(opt => {
                                     const active = (editForm.furnishing||[]).includes(opt);
                                     return (
                                       <button key={opt} type="button" onClick={() => setEditForm(p => ({ ...p, furnishing: active ? p.furnishing.filter((x:string)=>x!==opt) : [...(p.furnishing||[]), opt] }))}
-                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
+                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : isDark ? "border-gray-600 text-gray-300 bg-gray-700 hover:border-primary/50" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
                                         {opt}
                                       </button>
                                     );
@@ -1638,13 +1660,13 @@ export default function OwnerDashboard() {
                               </div>
                               {/* Additional Rooms */}
                               <div className="sm:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Additional Rooms</label>
+                                <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Additional Rooms</label>
                                 <div className="flex flex-wrap gap-2">
                                   {[{id:"poojaRoom",label:"Pooja Room"},{id:"servantRoom",label:"Servant Room"},{id:"store",label:"Store"},{id:"study",label:"Study"}].map(r => {
                                     const active = (editForm.additionalRooms||[]).includes(r.id);
                                     return (
                                       <button key={r.id} type="button" onClick={() => setEditForm(p => ({ ...p, additionalRooms: active ? p.additionalRooms.filter((x:string)=>x!==r.id) : [...(p.additionalRooms||[]), r.id] }))}
-                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
+                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : isDark ? "border-gray-600 text-gray-300 bg-gray-700 hover:border-primary/50" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
                                         {r.label}
                                       </button>
                                     );
@@ -1653,13 +1675,13 @@ export default function OwnerDashboard() {
                               </div>
                               {/* Overlooking */}
                               <div className="sm:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Overlooking</label>
+                                <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Overlooking</label>
                                 <div className="flex flex-wrap gap-2">
                                   {[{id:"gardenPark",label:"Garden/Park"},{id:"mainRoad",label:"Main Road"},{id:"pool",label:"Pool"}].map(item => {
                                     const active = (editForm.overlooking||[]).includes(item.id);
                                     return (
                                       <button key={item.id} type="button" onClick={() => setEditForm(p => ({ ...p, overlooking: active ? p.overlooking.filter((x:string)=>x!==item.id) : [...(p.overlooking||[]), item.id] }))}
-                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
+                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : isDark ? "border-gray-600 text-gray-300 bg-gray-700 hover:border-primary/50" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
                                         {item.label}
                                       </button>
                                     );
@@ -1668,13 +1690,13 @@ export default function OwnerDashboard() {
                               </div>
                               {/* Society Amenities */}
                               <div className="sm:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Society Amenities</label>
+                                <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Society Amenities</label>
                                 <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
                                   {["Maintenance Staff","Air Conditioned","Park","Piped Gas","Power Back Up","Club House","Gymnasium","Intercom Facility","Internet/Wi-Fi Connectivity","Jogging and Strolling Track","Lift","Reserved Parking","Security","Swimming Pool","Waste Disposal"].map(a => {
                                     const active = (editForm.societyAmenities||[]).includes(a);
                                     return (
                                       <button key={a} type="button" onClick={() => setEditForm(p => ({ ...p, societyAmenities: active ? p.societyAmenities.filter((x:string)=>x!==a) : [...(p.societyAmenities||[]), a] }))}
-                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
+                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : isDark ? "border-gray-600 text-gray-300 bg-gray-700 hover:border-primary/50" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
                                         {a}
                                       </button>
                                     );
@@ -1683,13 +1705,13 @@ export default function OwnerDashboard() {
                               </div>
                               {/* Tenants Prefer */}
                               <div className="sm:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Tenants You Prefer</label>
+                                <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Tenants You Prefer</label>
                                 <div className="flex flex-wrap gap-2">
                                   {[{id:"coupleFamily",label:"Couple/Family"},{id:"vegetarians",label:"Vegetarians"},{id:"withCompanyLease",label:"With Company Lease"},{id:"withoutPets",label:"Without Pets"}].map(t => {
                                     const active = (editForm.tenantsPrefer||[]).includes(t.id);
                                     return (
                                       <button key={t.id} type="button" onClick={() => setEditForm(p => ({ ...p, tenantsPrefer: active ? p.tenantsPrefer.filter((x:string)=>x!==t.id) : [...(p.tenantsPrefer||[]), t.id] }))}
-                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
+                                        className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all ${active ? "bg-primary text-white border-primary shadow-sm" : isDark ? "border-gray-600 text-gray-300 bg-gray-700 hover:border-primary/50" : "border-gray-200 text-gray-600 bg-white hover:border-primary/50"}`}>
                                         {t.label}
                                       </button>
                                     );
@@ -1701,7 +1723,7 @@ export default function OwnerDashboard() {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Locality Description</label>
                                 <textarea value={editForm.localityDescription} onChange={e => setEditForm(p => ({ ...p, localityDescription: e.target.value }))}
                                   rows={3} placeholder="Describe the locality..."
-                                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white resize-none" />
+                                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors resize-none ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                               </div>
                             </>)}
 
@@ -1709,34 +1731,34 @@ export default function OwnerDashboard() {
                           </div>
 
                           {/* ── Section: Description & USP ── */}
-                          <div className="bg-gray-50 rounded-2xl p-4 sm:p-5 space-y-4">
+                          <div className={`rounded-2xl p-4 sm:p-5 space-y-4 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
                             <h3 className="text-sm font-bold text-primary uppercase tracking-wide flex items-center gap-2">
                               <span className="w-1 h-4 bg-primary rounded-full inline-block" />
                               Description & Highlights
                             </h3>
                             <div className="grid sm:grid-cols-2 gap-4">
                             <div className="sm:col-span-2">
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Description</label>
                               <textarea value={editForm.pgDescription} onChange={e => setEditForm(p => ({ ...p, pgDescription: e.target.value }))}
                                 rows={3}
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white resize-none" />
+                                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors resize-none ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                             </div>
 
                             {/* Coordinates */}
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
+                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Latitude</label>
                               <input value={editForm.latitude||""} onChange={e => setEditForm(p => ({ ...p, latitude: e.target.value }))}
                                 placeholder="e.g. 23.0225"
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                             </div>
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
+                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Longitude</label>
                               <input value={editForm.longitude||""} onChange={e => setEditForm(p => ({ ...p, longitude: e.target.value }))}
                                 placeholder="e.g. 72.5714"
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                             </div>
                             {editForm.latitude && editForm.longitude && !isNaN(parseFloat(editForm.latitude)) && !isNaN(parseFloat(editForm.longitude)) && (
-                              <div className="sm:col-span-2 rounded-xl overflow-hidden border border-gray-200 h-44">
+                              <div className={`sm:col-span-2 rounded-xl overflow-hidden border h-44 ${isDark ? "border-gray-700" : "border-gray-200"}`}>
                                 <iframe
                                   src={`https://maps.google.com/maps?q=${encodeURIComponent(editForm.latitude)},${encodeURIComponent(editForm.longitude)}&z=15&output=embed`}
                                   width="100%" height="100%" style={{ border: 0 }} loading="lazy" referrerPolicy="no-referrer-when-downgrade"
@@ -1746,7 +1768,7 @@ export default function OwnerDashboard() {
 
                             {/* Nearby Places */}
                             <div className="sm:col-span-2">
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Nearby Places</label>
+                              <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Nearby Places</label>
                               {(editForm.nearbyPlaces||[]).length > 0 && (
                                 <div className="flex flex-wrap gap-2 mb-3">
                                   {(editForm.nearbyPlaces||[]).map((place: {name:string;distance:string}, i: number) => (
@@ -1763,10 +1785,10 @@ export default function OwnerDashboard() {
                               <div className="flex gap-2">
                                 <input value={editForm.nearbyPlaceInput||""} onChange={e => setEditForm(p => ({ ...p, nearbyPlaceInput: e.target.value }))}
                                   placeholder="Place name"
-                                  className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary transition-colors bg-white" />
+                                  className={`flex-1 px-4 py-3 border-2 rounded-xl text-sm focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                                 <input value={editForm.nearbyDistanceInput||""} onChange={e => setEditForm(p => ({ ...p, nearbyDistanceInput: e.target.value }))}
                                   placeholder="Distance"
-                                  className="w-28 px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary transition-colors bg-white" />
+                                  className={`w-28 px-4 py-3 border-2 rounded-xl text-sm focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                                 <button type="button"
                                   onClick={() => {
                                     const name = (editForm.nearbyPlaceInput||"").trim();
@@ -1781,22 +1803,22 @@ export default function OwnerDashboard() {
 
                             {/* USP */}
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">USP Category</label>
+                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>USP Category</label>
                               <input value={editForm.uspCategory||""} onChange={e => setEditForm(p => ({ ...p, uspCategory: e.target.value }))}
                                 placeholder="e.g. location, price"
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                             </div>
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">USP Text</label>
+                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>USP Text</label>
                               <input value={editForm.uspText||""} onChange={e => setEditForm(p => ({ ...p, uspText: e.target.value }))}
                                 placeholder="Unique selling point..."
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors bg-white" />
+                                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                             </div>
                             </div>
                           </div>
 
                           {/* ── Section: Photos ── */}
-                          <div className="bg-gray-50 rounded-2xl p-4 sm:p-5 space-y-5">
+                          <div className={`rounded-2xl p-4 sm:p-5 space-y-5 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
                             <h3 className="text-sm font-bold text-primary uppercase tracking-wide flex items-center gap-2">
                               <span className="w-1 h-4 bg-primary rounded-full inline-block" />
                               Photos
@@ -1805,7 +1827,7 @@ export default function OwnerDashboard() {
 
                             {/* Room Photos */}
                             <div className="sm:col-span-2">
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Room Photos</label>
+                              <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Room Photos</label>
                               {editRoomImages.length > 0 && (
                                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
                                   {editRoomImages.map((room: any, i: number) => room.image && (
@@ -1831,7 +1853,7 @@ export default function OwnerDashboard() {
                                   ))}
                                 </div>
                               )}
-                              <label className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors text-sm text-gray-500 bg-white">
+                              <label className={`flex items-center gap-2 px-4 py-3 border-2 border-dashed rounded-xl cursor-pointer hover:border-primary transition-colors text-sm ${isDark ? "border-gray-600 text-gray-400 bg-gray-900" : "border-gray-300 text-gray-500 bg-white"}`}>
                                 <Plus className="w-4 h-4 text-primary" /> Add room photos
                                 <input type="file" accept="image/*" multiple className="hidden"
                                   onChange={e => { setEditRoomNewFiles(prev => [...prev, ...Array.from(e.target.files||[])]); e.target.value=""; }} />
@@ -1840,7 +1862,7 @@ export default function OwnerDashboard() {
 
                             {/* Kitchen Photos */}
                             <div className="sm:col-span-2">
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Kitchen Photos</label>
+                              <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Kitchen Photos</label>
                               {editCatImages.kitchen.length > 0 && (
                                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
                                   {editCatImages.kitchen.map((url, i) => (
@@ -1865,7 +1887,7 @@ export default function OwnerDashboard() {
                                   ))}
                                 </div>
                               )}
-                              <label className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors text-sm text-gray-500 bg-white">
+                              <label className={`flex items-center gap-2 px-4 py-3 border-2 border-dashed rounded-xl cursor-pointer hover:border-primary transition-colors text-sm ${isDark ? "border-gray-600 text-gray-400 bg-gray-900" : "border-gray-300 text-gray-500 bg-white"}`}>
                                 <Plus className="w-4 h-4 text-primary" /> Add kitchen photos
                                 <input type="file" accept="image/*" multiple className="hidden"
                                   onChange={e => { setEditCatNewFiles(p => ({ ...p, kitchen: [...p.kitchen, ...Array.from(e.target.files||[])] })); e.target.value=""; }} />
@@ -1874,7 +1896,7 @@ export default function OwnerDashboard() {
 
                             {/* Washroom Photos */}
                             <div className="sm:col-span-2">
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Washroom Photos</label>
+                              <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Washroom Photos</label>
                               {editCatImages.washroom.length > 0 && (
                                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
                                   {editCatImages.washroom.map((url, i) => (
@@ -1899,7 +1921,7 @@ export default function OwnerDashboard() {
                                   ))}
                                 </div>
                               )}
-                              <label className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors text-sm text-gray-500 bg-white">
+                              <label className={`flex items-center gap-2 px-4 py-3 border-2 border-dashed rounded-xl cursor-pointer hover:border-primary transition-colors text-sm ${isDark ? "border-gray-600 text-gray-400 bg-gray-900" : "border-gray-300 text-gray-500 bg-white"}`}>
                                 <Plus className="w-4 h-4 text-primary" /> Add washroom photos
                                 <input type="file" accept="image/*" multiple className="hidden"
                                   onChange={e => { setEditCatNewFiles(p => ({ ...p, washroom: [...p.washroom, ...Array.from(e.target.files||[])] })); e.target.value=""; }} />
@@ -1908,7 +1930,7 @@ export default function OwnerDashboard() {
 
                             {/* Common Area Photos */}
                             <div className="sm:col-span-2">
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Common Area Photos</label>
+                              <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Common Area Photos</label>
                               {editCatImages.commonArea.length > 0 && (
                                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
                                   {editCatImages.commonArea.map((url, i) => (
@@ -1933,7 +1955,7 @@ export default function OwnerDashboard() {
                                   ))}
                                 </div>
                               )}
-                              <label className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors text-sm text-gray-500 bg-white">
+                              <label className={`flex items-center gap-2 px-4 py-3 border-2 border-dashed rounded-xl cursor-pointer hover:border-primary transition-colors text-sm ${isDark ? "border-gray-600 text-gray-400 bg-gray-900" : "border-gray-300 text-gray-500 bg-white"}`}>
                                 <Plus className="w-4 h-4 text-primary" /> Add common area photos
                                 <input type="file" accept="image/*" multiple className="hidden"
                                   onChange={e => { setEditCatNewFiles(p => ({ ...p, commonArea: [...p.commonArea, ...Array.from(e.target.files||[])] })); e.target.value=""; }} />
@@ -1944,7 +1966,7 @@ export default function OwnerDashboard() {
                           </div>
 
                           {editError && (
-                            <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
+                            <div className={`flex items-center gap-2 px-4 py-3 border rounded-xl text-sm text-red-600 ${isDark ? "bg-red-900/20 border-red-800/30" : "bg-red-50 border-red-200"}`}>
                               <span className="font-medium">Error:</span> {editError}
                             </div>
                           )}
@@ -1966,12 +1988,12 @@ export default function OwnerDashboard() {
                         </div>
                       </div>
                     ) : selectedListing ? (
-                      <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+                      <div className={`rounded-2xl shadow-md overflow-hidden ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white"}`}>
                         {/* Header */}
-                        <div className="flex items-center justify-between gap-3 p-4 sm:p-6 border-b border-gray-200">
+                        <div className={`flex items-center justify-between gap-3 p-4 sm:p-6 border-b ${isDark ? "border-gray-800" : "border-gray-200"}`}>
                           <button
                             onClick={() => setSelectedListing(null)}
-                            className="flex items-center gap-2 px-3 py-2 rounded-lg font-semibold border border-gray-600 text-gray-700 hover:bg-gray-50 transition-colors text-sm"
+                            className={`flex items-center gap-2 px-3 py-2 rounded-lg font-semibold border transition-colors text-sm ${isDark ? "border-gray-600 text-gray-300 hover:bg-gray-800" : "border-gray-600 text-gray-700 hover:bg-gray-50"}`}
                           >
                             <ArrowLeft className="w-4 h-4" />
                             {language === "fr" ? "Retour aux annonces" : "Back to listings"}
@@ -1991,7 +2013,7 @@ export default function OwnerDashboard() {
                         <div className="p-4 sm:p-6 space-y-6">
                           {/* Title & location */}
                           <div>
-                            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
+                            <h2 className={`text-xl sm:text-2xl font-bold mb-1 ${isDark ? "text-white" : "text-gray-900"}`}>
                               {selectedListing.propertyType === "Tenant" && selectedListing.societyName ? selectedListing.societyName : selectedListing.title}
                             </h2>
                             <p className="text-sm text-gray-500 flex items-center gap-1">
@@ -2035,9 +2057,9 @@ export default function OwnerDashboard() {
                                 { label: "Overlooking", value: Array.isArray(selectedListing.overlooking) && selectedListing.overlooking.length > 0 ? selectedListing.overlooking.join(", ") : null },
                               ]),
                             ].filter(d => d.value != null && d.value !== "").map((detail, i) => (
-                              <div key={i} className="p-3 bg-gray-50 rounded-lg">
+                              <div key={i} className={`p-3 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
                                 <p className="text-xs text-gray-500 mb-0.5">{detail.label}</p>
-                                <p className="text-sm font-semibold text-gray-900">{String(detail.value)}</p>
+                                <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{String(detail.value)}</p>
                               </div>
                             ))}
                           </div>
@@ -2046,7 +2068,7 @@ export default function OwnerDashboard() {
                           {(selectedListing.pgDescription || selectedListing.localityDescription) && (
                             <div>
                               <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Description</p>
-                              <p className="text-sm text-gray-700 leading-relaxed">
+                              <p className={`text-sm leading-relaxed ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                                 {selectedListing.pgDescription || selectedListing.localityDescription}
                               </p>
                             </div>
@@ -2060,7 +2082,7 @@ export default function OwnerDashboard() {
                                   {selectedListing.uspCategory}
                                 </span>
                               )}
-                              <p className="text-sm text-gray-700 mt-2">{selectedListing.uspText}</p>
+                              <p className={`text-sm mt-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{selectedListing.uspText}</p>
                             </div>
                           )}
 
@@ -2070,7 +2092,7 @@ export default function OwnerDashboard() {
                               <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Amenities</p>
                               <div className="flex flex-wrap gap-2">
                                 {(selectedListing.propertyType === "PG" ? selectedListing.commonAmenities : selectedListing.societyAmenities)?.map((a: string, i: number) => (
-                                  <span key={i} className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">{a}</span>
+                                  <span key={i} className={`px-3 py-1 text-xs rounded-full ${isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-700"}`}>{a}</span>
                                 ))}
                               </div>
                             </div>
@@ -2118,7 +2140,7 @@ export default function OwnerDashboard() {
                           {selectedListing.propertyType === "Tenant" && selectedListing.localityDescription && (
                             <div>
                               <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Locality Description</p>
-                              <p className="text-sm text-gray-700 leading-relaxed">{selectedListing.localityDescription}</p>
+                              <p className={`text-sm leading-relaxed ${isDark ? "text-gray-300" : "text-gray-700"}`}>{selectedListing.localityDescription}</p>
                             </div>
                           )}
 
@@ -2152,7 +2174,7 @@ export default function OwnerDashboard() {
                                   <span className="px-3 py-1 bg-green-50 text-green-700 text-xs rounded-full">{selectedListing.vegNonVeg}</span>
                                 )}
                                 {selectedListing.foodCharges && (
-                                  <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">Charges: {currencySymbol} {selectedListing.foodCharges}</span>
+                                  <span className={`px-3 py-1 text-xs rounded-full ${isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"}`}>Charges: {currencySymbol} {selectedListing.foodCharges}</span>
                                 )}
                               </div>
                             </div>
@@ -2162,7 +2184,7 @@ export default function OwnerDashboard() {
                           {selectedListing.parkingAvailable && (
                             <div>
                               <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Parking</p>
-                              <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                              <span className={`px-3 py-1 text-xs rounded-full ${isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-700"}`}>
                                 {selectedListing.parkingType || "Available"}
                               </span>
                             </div>
@@ -2176,9 +2198,9 @@ export default function OwnerDashboard() {
                               </p>
                               <div className="grid sm:grid-cols-2 gap-3">
                                 {Object.entries(selectedListing.roomDetails as Record<string, any>).map(([category, detail]) => (
-                                  <div key={category} className="border border-gray-200 rounded-xl p-4 hover:border-primary/40 transition-colors">
+                                  <div key={category} className={`border rounded-xl p-4 hover:border-primary/40 transition-colors ${isDark ? "border-gray-700" : "border-gray-200"}`}>
                                     <div className="flex items-center justify-between mb-3">
-                                      <h4 className="font-bold text-gray-900 text-sm">{category} Bed</h4>
+                                      <h4 className={`font-bold text-sm ${isDark ? "text-white" : "text-gray-900"}`}>{category} Bed</h4>
                                       <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-semibold rounded-full">
                                         {detail.availableBeds ?? detail.availableRooms ?? "—"} {language === "fr" ? "dispo" : "available"}
                                       </span>
@@ -2186,7 +2208,7 @@ export default function OwnerDashboard() {
                                     <div className="space-y-1.5 mb-3">
                                       <div className="flex justify-between text-sm">
                                         <span className="text-gray-500">Total Beds</span>
-                                        <span className="font-semibold text-gray-900">{detail.totalBeds ?? detail.totalRooms ?? "—"}</span>
+                                        <span className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{detail.totalBeds ?? detail.totalRooms ?? "—"}</span>
                                       </div>
                                       <div className="flex justify-between text-sm">
                                         <span className="text-gray-500">Monthly Rent</span>
@@ -2195,14 +2217,14 @@ export default function OwnerDashboard() {
                                       {detail.securityDeposit && Number(detail.securityDeposit) > 0 && (
                                         <div className="flex justify-between text-sm">
                                           <span className="text-gray-500">Deposit</span>
-                                          <span className="font-semibold text-gray-900">{currencySymbol} {Number(detail.securityDeposit).toLocaleString()}</span>
+                                          <span className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{currencySymbol} {Number(detail.securityDeposit).toLocaleString()}</span>
                                         </div>
                                       )}
                                     </div>
                                     {detail.facilities?.length > 0 && (
-                                      <div className="flex flex-wrap gap-1.5 pt-2 border-t border-gray-100">
+                                      <div className={`flex flex-wrap gap-1.5 pt-2 border-t ${isDark ? "border-gray-700" : "border-gray-100"}`}>
                                         {detail.facilities.map((f: string, i: number) => (
-                                          <span key={i} className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full capitalize">{f}</span>
+                                          <span key={i} className={`px-2 py-0.5 text-xs rounded-full capitalize ${isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"}`}>{f}</span>
                                         ))}
                                       </div>
                                     )}
@@ -2213,10 +2235,10 @@ export default function OwnerDashboard() {
                           )}
 
                           {/* Actions */}
-                          <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+                          <div className={`flex flex-wrap gap-2 pt-2 border-t ${isDark ? "border-gray-800" : "border-gray-100"}`}>
                             <button
                               onClick={() => { openEdit(selectedListing); setSelectedListing(null); }}
-                              className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                              className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors text-sm ${isDark ? "border-gray-600 text-gray-300 hover:bg-gray-800" : "border-gray-300 text-gray-700 hover:bg-gray-50"}`}
                             >
                               <Edit className="w-4 h-4" />
                               {tc.edit}
@@ -2237,7 +2259,7 @@ export default function OwnerDashboard() {
                     {viewMode === "grid" && (
                       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {myListings.map((listing) => (
-                          <div key={listing._id} className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                          <div key={listing._id} className={`rounded-2xl overflow-hidden hover:shadow-lg transition-shadow ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white shadow-md"}`}>
                             <div className="relative h-48">
                               <Image
                                 src={listing.images?.[0] || "/owner.png"}
@@ -2252,10 +2274,10 @@ export default function OwnerDashboard() {
                               </span>
                             </div>
                             <div className="p-6">
-                              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                              <h3 className={`text-xl font-bold mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>
                                 {listing.propertyType === "Tenant" && listing.societyName ? listing.societyName : listing.title}
                               </h3>
-                              <div className="flex items-center gap-2 text-gray-600 mb-3">
+                              <div className={`flex items-center gap-2 mb-3 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                                 <MapPin className="w-4 h-4" />
                                 <span className="text-sm">{listing.areaName}, {listing.location}, {listing.state}</span>
                               </div>
@@ -2263,28 +2285,28 @@ export default function OwnerDashboard() {
                                 <span className="text-2xl font-bold text-primary">
                                   {currencySymbol} {listing.price?.toLocaleString()}
                                 </span>
-                                <span className="text-gray-600 text-sm">/month</span>
+                                <span className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>/month</span>
                               </div>
                               <div className="grid grid-cols-3 gap-2 mb-4 text-sm">
-                                <div className="text-center p-2 bg-gray-50 rounded-lg">
-                                  <p className="text-gray-600">Total Beds</p>
-                                  <p className="font-bold text-gray-900">
+                                <div className={`text-center p-2 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                                  <p className={isDark ? "text-gray-400" : "text-gray-600"}>Total Beds</p>
+                                  <p className={`font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
                                     {listing.propertyType === "PG" && listing.roomDetails
                                       ? Object.values(listing.roomDetails as Record<string, any>).reduce((s: number, r: any) => s + (parseInt(r.totalBeds ?? r.totalRooms) || 0), 0)
                                       : listing.rooms}
                                   </p>
                                 </div>
-                                <div className="text-center p-2 bg-gray-50 rounded-lg">
-                                  <p className="text-gray-600">Available</p>
+                                <div className={`text-center p-2 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                                  <p className={isDark ? "text-gray-400" : "text-gray-600"}>Available</p>
                                   <p className="font-bold text-green-600">
                                     {listing.propertyType === "PG" && listing.roomDetails
                                       ? Object.values(listing.roomDetails as Record<string, any>).reduce((s: number, r: any) => s + (parseInt(r.availableBeds ?? r.availableRooms) || 0), 0)
                                       : listing.rooms}
                                   </p>
                                 </div>
-                                <div className="text-center p-2 bg-gray-50 rounded-lg">
-                                  <p className="text-gray-600">Area</p>
-                                  <p className="font-bold text-gray-900">{listing.area} m²</p>
+                                <div className={`text-center p-2 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                                  <p className={isDark ? "text-gray-400" : "text-gray-600"}>Area</p>
+                                  <p className={`font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{listing.area} m²</p>
                                 </div>
                               </div>
                               <div className="flex flex-col gap-2">
@@ -2298,7 +2320,7 @@ export default function OwnerDashboard() {
                                 <div className="flex gap-2">
                                   <button
                                     onClick={() => openEdit(listing)}
-                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 border rounded-lg transition-colors text-sm ${isDark ? "border-gray-600 text-gray-300 hover:bg-gray-800" : "border-gray-300 text-gray-700 hover:bg-gray-50"}`}
                                   >
                                     <Edit className="w-4 h-4" />
                                     {tc.edit}
@@ -2320,11 +2342,11 @@ export default function OwnerDashboard() {
 
                     {/* List View — Table */}
                     {viewMode === "list" && (
-                      <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+                      <div className={`rounded-2xl shadow-md overflow-hidden ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white"}`}>
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
                             <thead>
-                              <tr className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-primary/10">
+                              <tr className={`border-b ${isDark ? "bg-gray-800 border-gray-700" : "bg-gradient-to-r from-primary/5 to-primary/10 border-primary/10"}`}>
                                 <th className="text-left px-5 py-4 text-xs font-bold text-primary uppercase tracking-wide">Property</th>
                                 <th className="text-left px-4 py-4 text-xs font-bold text-primary uppercase tracking-wide hidden md:table-cell">Location</th>
                                 <th className="text-left px-4 py-4 text-xs font-bold text-primary uppercase tracking-wide">Rent</th>
@@ -2345,7 +2367,7 @@ export default function OwnerDashboard() {
                                 return (
                                   <tr
                                     key={listing._id}
-                                    className={`group hover:bg-primary/5 transition-colors cursor-pointer ${idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}
+                                    className={`group hover:bg-primary/5 transition-colors cursor-pointer ${idx % 2 === 0 ? isDark ? "bg-gray-900" : "bg-white" : isDark ? "bg-gray-800/50" : "bg-gray-50/50"}`}
                                     onClick={() => setSelectedListing(listing)}
                                   >
                                     {/* Property */}
@@ -2360,16 +2382,16 @@ export default function OwnerDashboard() {
                                           />
                                         </div>
                                         <div className="min-w-0">
-                                          <p className="font-semibold text-gray-900 truncate max-w-[160px] group-hover:text-primary transition-colors">
+                                          <p className={`font-semibold truncate max-w-[160px] group-hover:text-primary transition-colors ${isDark ? "text-white" : "text-gray-900"}`}>
                                             {listing.propertyType === "Tenant" && listing.societyName ? listing.societyName : listing.title}
                                           </p>
-                                          <p className="text-xs text-gray-400 truncate max-w-[160px] md:hidden">{listing.areaName}, {listing.location}</p>
+                                          <p className={`text-xs truncate max-w-[160px] md:hidden ${isDark ? "text-gray-500" : "text-gray-400"}`}>{listing.areaName}, {listing.location}</p>
                                         </div>
                                       </div>
                                     </td>
                                     {/* Location */}
                                     <td className="px-4 py-4 hidden md:table-cell">
-                                      <div className="flex items-center gap-1.5 text-gray-600">
+                                      <div className={`flex items-center gap-1.5 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                                         <MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
                                         <span className="truncate max-w-[160px]">{[listing.areaName, listing.location].filter(Boolean).join(", ")}</span>
                                       </div>
@@ -2377,11 +2399,11 @@ export default function OwnerDashboard() {
                                     {/* Rent */}
                                     <td className="px-4 py-4">
                                       <span className="font-bold text-primary">{currencySymbol} {listing.price?.toLocaleString()}</span>
-                                      <span className="text-gray-400 text-xs">/mo</span>
+                                      <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>/mo</span>
                                     </td>
                                     {/* Rooms */}
                                     <td className="px-4 py-4 hidden sm:table-cell">
-                                      <span className="font-semibold text-gray-900">{totalRooms}</span>
+                                      <span className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{totalRooms}</span>
                                     </td>
                                     {/* Available */}
                                     <td className="px-4 py-4 hidden lg:table-cell">
@@ -2427,9 +2449,9 @@ export default function OwnerDashboard() {
                             </tbody>
                           </table>
                         </div>
-                        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
-                          <p className="text-xs text-gray-500">{myListings.length} {myListings.length === 1 ? "listing" : "listings"}</p>
-                          <p className="text-xs text-gray-400">Click a row to view details</p>
+                        <div className={`px-5 py-3 border-t flex items-center justify-between ${isDark ? "border-gray-800 bg-gray-800/50" : "border-gray-100 bg-gray-50/50"}`}>
+                          <p className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>{myListings.length} {myListings.length === 1 ? "listing" : "listings"}</p>
+                          <p className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>Click a row to view details</p>
                         </div>
                       </div>
                     )}
@@ -2437,9 +2459,9 @@ export default function OwnerDashboard() {
                     )}
                   </>
                 ) : (
-                  <div className="bg-white rounded-2xl shadow-md p-12 text-center">
+                  <div className={`rounded-2xl shadow-md p-12 text-center ${isDark ? "bg-gray-900" : "bg-white"}`}>
                     <Home className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-600">{tc.noListings}</p>
+                    <p className={isDark ? "text-gray-400" : "text-gray-600"}>{tc.noListings}</p>
                   </div>
                 )}
               </div>
@@ -2448,7 +2470,7 @@ export default function OwnerDashboard() {
             {/* Inquiries */}
             {activeTab === "requests" && (
               <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">{tc.bookingRequests}</h2>
+                <h2 className={`text-2xl font-bold mb-4 ${isDark ? "text-white" : "text-gray-900"}`}>{tc.bookingRequests}</h2>
 
                 {/* Status filter tabs */}
                 {!requestsLoading && (
@@ -2492,7 +2514,7 @@ export default function OwnerDashboard() {
                 {requestsLoading ? (
                   <div className="space-y-4">
                     {[...Array(2)].map((_, i) => (
-                      <div key={i} className="bg-white rounded-2xl shadow-md h-40 animate-pulse" />
+                      <div key={i} className={`rounded-2xl shadow-md h-40 animate-pulse ${isDark ? "bg-gray-800" : "bg-white"}`} />
                     ))}
                   </div>
                 ) : contactRequests.length > 0 ? (
@@ -2506,10 +2528,10 @@ export default function OwnerDashboard() {
                       <>
                   <div className="space-y-4">
                     {paginated.map((req: any) => (
-                      <div key={req._id} className="bg-white rounded-2xl shadow-md p-5">
+                      <div key={req._id} className={`rounded-2xl shadow-md p-5 ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white"}`}>
                         {/* Single info row: name + phone + email + status */}
                         <div className="flex flex-wrap items-center gap-3 mb-4">
-                          <h3 className="text-base font-bold text-gray-900 flex-shrink-0">{req.fullName}</h3>
+                          <h3 className={`text-base font-bold flex-shrink-0 ${isDark ? "text-white" : "text-gray-900"}`}>{req.fullName}</h3>
                           {(req.phone || req.renter?.phoneNumber) && (
                             <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 border border-blue-100 rounded-lg flex-shrink-0">
                               <Phone className="w-3.5 h-3.5 text-blue-600" />
@@ -2534,14 +2556,15 @@ export default function OwnerDashboard() {
                                 { value: 'booked', label: tc.statusBooked },
                                 { value: 'closed', label: tc.statusClosed },
                               ]}
+                              isDark={isDark}
                             />
                           </div>
                         </div>
 
                         {/* Property + date */}
                         <div className="flex items-center gap-3 mb-4">
-                          <p className="text-sm text-gray-500 truncate flex-1">{req.propertyTitle || "—"}</p>
-                          <p className="text-xs text-gray-400 flex-shrink-0">
+                          <p className={`text-sm truncate flex-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>{req.propertyTitle || "—"}</p>
+                          <p className={`text-xs flex-shrink-0 ${isDark ? "text-gray-500" : "text-gray-400"}`}>
                             {new Date(req.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}{' · '}
                             {new Date(req.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                           </p>
@@ -2629,16 +2652,16 @@ export default function OwnerDashboard() {
                       )}
                       </>
                     ) : (
-                      <div className="bg-white rounded-2xl shadow-md p-12 text-center">
+                      <div className={`rounded-2xl shadow-md p-12 text-center ${isDark ? "bg-gray-900" : "bg-white"}`}>
                         <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-600">{language === 'fr' ? 'Aucune demande dans cette catégorie.' : 'No inquiries in this category.'}</p>
+                        <p className={isDark ? "text-gray-400" : "text-gray-600"}>{language === 'fr' ? 'Aucune demande dans cette catégorie.' : 'No inquiries in this category.'}</p>
                       </div>
                     );
                   })()
                 ) : (
-                  <div className="bg-white rounded-2xl shadow-md p-12 text-center">
+                  <div className={`rounded-2xl shadow-md p-12 text-center ${isDark ? "bg-gray-900" : "bg-white"}`}>
                     <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-600">{tc.noRequests}</p>
+                    <p className={isDark ? "text-gray-400" : "text-gray-600"}>{tc.noRequests}</p>
                   </div>
                 )}
               </div>
@@ -2647,11 +2670,11 @@ export default function OwnerDashboard() {
             {/* Messages */}
             {activeTab === "messages" && (
               <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">{tc.messages}</h2>
+                <h2 className={`text-2xl font-bold mb-6 ${isDark ? "text-white" : "text-gray-900"}`}>{tc.messages}</h2>
                 {contactRequests.filter(r => conversations[r._id]).length === 0 ? (
-                  <div className="bg-white rounded-2xl shadow-md p-12 text-center">
+                  <div className={`rounded-2xl shadow-md p-12 text-center ${isDark ? "bg-gray-900" : "bg-white"}`}>
                     <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-600">{tc.noMessages}</p>
+                    <p className={isDark ? "text-gray-400" : "text-gray-600"}>{tc.noMessages}</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -2663,20 +2686,20 @@ export default function OwnerDashboard() {
                           <div
                             key={req._id}
                             onClick={() => { openChat(req); }}
-                            className={`bg-white rounded-2xl shadow-md p-5 flex items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow ${conv.unread ? 'border-l-4 border-primary' : ''}`}
+                            className={`rounded-2xl shadow-md p-5 flex items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow ${conv.unread ? 'border-l-4 border-primary' : ''} ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white"}`}
                           >
                             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                               <User className="w-6 h-6 text-primary" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between mb-1">
-                                <p className={`truncate ${conv.unread ? 'font-bold text-gray-900' : 'font-semibold text-gray-900'}`}>{req.fullName}</p>
-                                <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
+                                <p className={`truncate ${conv.unread ? 'font-bold' : 'font-semibold'} ${isDark ? "text-white" : "text-gray-900"}`}>{req.fullName}</p>
+                                <span className={`text-xs flex-shrink-0 ml-2 ${isDark ? "text-gray-500" : "text-gray-400"}`}>
                                   {new Date(conv.time).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
                                 </span>
                               </div>
                               <p className="text-sm text-gray-500 truncate">{req.propertyTitle}</p>
-                              <p className={`text-sm truncate mt-0.5 ${conv.unread ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>{conv.lastMsg}</p>
+                              <p className={`text-sm truncate mt-0.5 ${conv.unread ? 'font-semibold' : ''} ${isDark ? "text-gray-300" : "text-gray-700"}`}>{conv.lastMsg}</p>
                             </div>
                             {conv.unread && (
                               <span className="w-2.5 h-2.5 bg-primary rounded-full flex-shrink-0" />
@@ -2703,7 +2726,7 @@ export default function OwnerDashboard() {
 
             {/* Profile */}
             {activeTab === "profile" && (
-              <ProfileSection user={user} tc={tc} language={language} />
+              <ProfileSection user={user} tc={tc} language={language} isDark={isDark} />
             )}
           </div>
       </div>
@@ -2712,14 +2735,14 @@ export default function OwnerDashboard() {
       {chatRequest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50" onClick={closeChat} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col" style={{ height: '80vh', maxHeight: '600px' }}>
+          <div className={`relative rounded-2xl shadow-2xl w-full max-w-lg flex flex-col ${isDark ? "bg-gray-900" : "bg-white"}`} style={{ height: '80vh', maxHeight: '600px' }}>
             {/* Header */}
-            <div className="flex items-center gap-3 p-4 border-b border-gray-200 flex-shrink-0">
+            <div className={`flex items-center gap-3 p-4 border-b flex-shrink-0 ${isDark ? "border-gray-800" : "border-gray-200"}`}>
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                 <User className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-900 truncate">{chatRequest.fullName}</p>
+                <p className={`font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{chatRequest.fullName}</p>
                 <p className="text-xs text-gray-500 truncate">{chatRequest.propertyTitle}</p>
               </div>
               <button onClick={deleteChat} className="p-2 hover:bg-red-50 rounded-lg transition-colors" title={language === 'fr' ? 'Supprimer la conversation' : 'Delete conversation'}>
@@ -2731,8 +2754,8 @@ export default function OwnerDashboard() {
             </div>
 
             {/* TTL notice */}
-            <div className="px-4 py-2 bg-amber-50 border-b border-amber-100 flex-shrink-0">
-              <p className="text-xs text-amber-700 text-center">
+            <div className={`px-4 py-2 border-b flex-shrink-0 ${isDark ? "bg-amber-900/20 border-amber-800/30" : "bg-amber-50 border-amber-100"}`}>
+              <p className={`text-xs text-center ${isDark ? "text-amber-400" : "text-amber-700"}`}>
                 {language === 'fr' ? '⏳ Les messages sont automatiquement supprimés après 7 jours.' : '⏳ Messages are automatically cleared after 7 days.'}
               </p>
             </div>
@@ -2752,7 +2775,7 @@ export default function OwnerDashboard() {
                   const isOwner = msg.senderRole === 'landlord';
                   return (
                     <div key={msg._id} className={`flex ${isOwner ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${isOwner ? 'bg-primary text-white rounded-br-sm' : 'bg-gray-100 text-gray-900 rounded-bl-sm'}`}>
+                      <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${isOwner ? 'bg-primary text-white rounded-br-sm' : isDark ? 'bg-gray-800 text-gray-100 rounded-bl-sm' : 'bg-gray-100 text-gray-900 rounded-bl-sm'}`}>
                         <p>{msg.text}</p>
                         <p className={`text-xs mt-1 ${isOwner ? 'text-white/70' : 'text-gray-400'}`}>
                           {new Date(msg.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
@@ -2765,7 +2788,7 @@ export default function OwnerDashboard() {
             </div>
 
             {/* Input */}
-            <div className="p-4 border-t border-gray-200 flex-shrink-0">
+            <div className={`p-4 border-t flex-shrink-0 ${isDark ? "border-gray-800" : "border-gray-200"}`}>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -2773,7 +2796,7 @@ export default function OwnerDashboard() {
                   onChange={e => setChatInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); } }}
                   placeholder={language === 'fr' ? 'Écrire un message...' : 'Type a message...'}
-                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  className={`flex-1 px-4 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm ${isDark ? "bg-gray-800 border-gray-700 text-white" : "border-gray-300"}`}
                 />
                 <button
                   onClick={sendChatMessage}
@@ -2792,11 +2815,11 @@ export default function OwnerDashboard() {
       {selectedInquiry && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50" onClick={() => setSelectedInquiry(null)} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+          <div className={`relative rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto ${isDark ? "bg-gray-900" : "bg-white"}`}>
             {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-gray-200 sticky top-0 bg-white rounded-t-2xl z-10">
+            <div className={`flex items-center justify-between p-5 border-b sticky top-0 rounded-t-2xl z-10 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">{selectedInquiry.fullName}</h3>
+                <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{selectedInquiry.fullName}</h3>
                 <p className="text-sm text-gray-500">{selectedInquiry.propertyTitle}</p>
               </div>
               <div className="flex items-center gap-2">
@@ -2846,23 +2869,23 @@ export default function OwnerDashboard() {
                   { label: language === 'fr' ? 'Parking' : 'Parking', value: selectedInquiry.needParking },
                   { label: language === 'fr' ? 'Société/École' : 'Company/College', value: selectedInquiry.companyCollege },
                 ].filter(d => d.value).map((d, i) => (
-                  <div key={i} className="bg-gray-50 rounded-xl p-3">
+                  <div key={i} className={`rounded-xl p-3 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
                     <p className="text-xs text-gray-500 mb-0.5">{d.label}</p>
-                    <p className="text-sm font-semibold text-gray-900">{d.value}</p>
+                    <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{d.value}</p>
                   </div>
                 ))}
               </div>
 
               {/* Message */}
               {selectedInquiry.message && (
-                <div className="bg-gray-50 rounded-xl p-4">
+                <div className={`rounded-xl p-4 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
                   <p className="text-xs font-semibold text-gray-500 uppercase mb-2">{language === 'fr' ? 'Message' : 'Message'}</p>
-                  <p className="text-sm text-gray-800 leading-relaxed">{selectedInquiry.message}</p>
+                  <p className={`text-sm leading-relaxed ${isDark ? "text-gray-300" : "text-gray-800"}`}>{selectedInquiry.message}</p>
                 </div>
               )}
 
               {/* Actions */}
-              <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+              <div className={`flex flex-wrap gap-2 pt-2 border-t ${isDark ? "border-gray-800" : "border-gray-100"}`}>
                 <button
                   onClick={() => { openChat(selectedInquiry); setSelectedInquiry(null); }}
                   className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium"
@@ -2899,14 +2922,14 @@ export default function OwnerDashboard() {
       {deleteConfirmId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50" onClick={() => setDeleteConfirmId(null)} />
-          <div className="relative bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm">
+          <div className={`relative rounded-2xl shadow-xl p-6 w-full max-w-sm ${isDark ? "bg-gray-900" : "bg-white"}`}>
             <div className="flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mx-auto mb-4">
               <Trash2 className="w-6 h-6 text-red-500" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900 text-center mb-2">
+            <h3 className={`text-lg font-bold text-center mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>
               {language === "fr" ? "Supprimer l'annonce ?" : "Delete this property?"}
             </h3>
-            <p className="text-sm text-gray-500 text-center mb-6">
+            <p className={`text-sm text-center mb-6 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
               {language === "fr"
                 ? "Cette action est irréversible. L'annonce sera définitivement supprimée."
                 : "This action cannot be undone. The listing will be permanently removed."}
@@ -2914,7 +2937,7 @@ export default function OwnerDashboard() {
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirmId(null)}
-                className="flex-1 px-4 py-3 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
+                className={`flex-1 px-4 py-3 rounded-xl border transition-colors text-sm font-medium ${isDark ? "border-gray-700 text-gray-300 hover:bg-gray-800" : "border-gray-300 text-gray-700 hover:bg-gray-50"}`}
               >
                 {language === "fr" ? "Annuler" : "Cancel"}
               </button>

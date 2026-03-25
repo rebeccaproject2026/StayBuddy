@@ -21,6 +21,8 @@ import {
   MapPin,
   Filter,
   ChevronDown,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -32,7 +34,19 @@ export default function AdminDashboard() {
   const [userFilter, setUserFilter] = useState("all");
   const [reportFilter, setReportFilter] = useState("pending");
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [isDark, setIsDark] = useState(true);
   const currencySymbol = t("currency.symbol");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("admin_theme");
+    setIsDark(saved ? saved === "dark" : true);
+  }, []);
+
+  const toggleTheme = () => {
+    const next = !isDark;
+    setIsDark(next);
+    localStorage.setItem("admin_theme", next ? "dark" : "light");
+  };
 
   // Authentication check
   useEffect(() => {
@@ -51,10 +65,10 @@ export default function AdminDashboard() {
   // Show loading while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-gray-950" : "bg-gray-50"}`}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className={isDark ? "text-gray-400" : "text-gray-600"}>Loading...</p>
         </div>
       </div>
     );
@@ -191,7 +205,7 @@ export default function AdminDashboard() {
       dashboard: "Admin Dashboard",
       listingsManagement: "Listings Management",
       userManagement: "User Management",
-      reportsModeration: "Reports & Moderation",
+      reportsModeration: "Reports",
       logout: "Logout",
       totalListings: "Total Listings",
       pendingListings: "Pending Listings",
@@ -241,7 +255,7 @@ export default function AdminDashboard() {
       dashboard: "Tableau de bord admin",
       listingsManagement: "Gestion des annonces",
       userManagement: "Gestion des utilisateurs",
-      reportsModeration: "Rapports et modération",
+      reportsModeration: "Rapports",
       logout: "Déconnexion",
       totalListings: "Total des annonces",
       pendingListings: "Annonces en attente",
@@ -292,19 +306,22 @@ export default function AdminDashboard() {
   const tc = content[language];
 
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-700";
-      case "approved":
-      case "active":
-        return "bg-green-100 text-green-700";
-      case "rejected":
-      case "banned":
-        return "bg-red-100 text-red-700";
-      case "reviewed":
-        return "bg-blue-100 text-blue-700";
-      default:
-        return "bg-gray-100 text-gray-700";
+    if (isDark) {
+      switch (status.toLowerCase()) {
+        case "pending": return "bg-yellow-500/20 text-yellow-400";
+        case "approved": case "active": return "bg-green-500/20 text-green-400";
+        case "rejected": case "banned": return "bg-red-500/20 text-red-400";
+        case "reviewed": return "bg-blue-500/20 text-blue-400";
+        default: return "bg-gray-700 text-gray-300";
+      }
+    } else {
+      switch (status.toLowerCase()) {
+        case "pending": return "bg-yellow-100 text-yellow-700";
+        case "approved": case "active": return "bg-green-100 text-green-700";
+        case "rejected": case "banned": return "bg-red-100 text-red-700";
+        case "reviewed": return "bg-blue-100 text-blue-700";
+        default: return "bg-gray-100 text-gray-700";
+      }
     }
   };
 
@@ -327,35 +344,48 @@ export default function AdminDashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen relative ${isDark ? "bg-gray-950" : "bg-gray-50"}`}>
+      {/* Grid background — only in dark mode */}
+      {isDark && (
+        <div className="fixed inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px] pointer-events-none" />
+      )}
       {/* Header */}
-      {/* Header */}
-      <div className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
+      <div className={`sticky top-0 z-50 shadow-lg border-b ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
         <div className="max-w-[1500px] mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-primary">{tc.dashboard}</h1>
+              <h1 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{tc.dashboard}</h1>
             </div>
-            <Link
-              href="/"
-              className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg transition-colors font-medium text-sm"
-            >
-              <Home className="w-4 h-4" />
-              <span>{language === "fr" ? "Accueil" : "Back to Home"}</span>
-            </Link>
+            <div className="flex items-center gap-3">
+              {/* Theme toggle */}
+              <button
+                onClick={toggleTheme}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${isDark ? "bg-gray-800 text-yellow-400 hover:bg-gray-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+                title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
+              <Link
+                href="/"
+                className="flex items-center gap-2 px-4 py-2 bg-primary/20 text-primary hover:bg-primary hover:text-white rounded-lg transition-colors font-medium text-sm"
+              >
+                <Home className="w-4 h-4" />
+                <span>{language === "fr" ? "Accueil" : "Back to Home"}</span>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
+      <div className="relative flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
         {/* Sidebar */}
         <div className="lg:w-72 flex-shrink-0">
-          <div className="bg-white shadow-md p-4 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto flex flex-col">
-            <nav className="space-y-2">
+          <div className={`p-4 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto flex flex-col border-r ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
+            <nav className="space-y-1">
               <button
                 onClick={() => setActiveTab("listings")}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                  activeTab === "listings" ? "bg-primary text-white" : "text-gray-700 hover:bg-gray-100"
+                  activeTab === "listings" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                 }`}
               >
                 <Home className="w-5 h-5" />
@@ -364,7 +394,7 @@ export default function AdminDashboard() {
               <button
                 onClick={() => setActiveTab("users")}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                  activeTab === "users" ? "bg-primary text-white" : "text-gray-700 hover:bg-gray-100"
+                  activeTab === "users" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                 }`}
               >
                 <Users className="w-5 h-5" />
@@ -373,7 +403,7 @@ export default function AdminDashboard() {
               <button
                 onClick={() => setActiveTab("reports")}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                  activeTab === "reports" ? "bg-primary text-white" : "text-gray-700 hover:bg-gray-100"
+                  activeTab === "reports" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                 }`}
               >
                 <Flag className="w-5 h-5" />
@@ -387,10 +417,10 @@ export default function AdminDashboard() {
             </nav>
 
             {/* Profile card */}
-            <div className="mt-auto pt-4 border-t border-gray-100 relative">
+            <div className={`mt-auto pt-4 border-t relative ${isDark ? "border-gray-800" : "border-gray-200"}`}>
               <button
                 onClick={() => setProfileMenuOpen(p => !p)}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-left group ${profileMenuOpen ? "bg-primary/5" : "hover:bg-primary/5"}`}
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-left group ${profileMenuOpen ? "bg-primary/10" : isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"}`}
               >
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm">
                   {user?.profileImage ? (
@@ -402,10 +432,10 @@ export default function AdminDashboard() {
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-gray-900 truncate">{user?.fullName || "—"}</p>
-                  <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                  <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{user?.fullName || "—"}</p>
+                  <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                 </div>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${profileMenuOpen ? "bg-primary text-white" : "bg-gray-100 text-gray-400 group-hover:bg-primary/10 group-hover:text-primary"}`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${profileMenuOpen ? "bg-primary text-white" : isDark ? "bg-gray-700 text-gray-400 group-hover:bg-gray-600 group-hover:text-gray-200" : "bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600"}`}>
                   <ChevronDown className={`w-3.5 h-3.5 transition-transform ${profileMenuOpen ? "rotate-180" : ""}`} />
                 </div>
               </button>
@@ -413,19 +443,19 @@ export default function AdminDashboard() {
               {profileMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setProfileMenuOpen(false)} />
-                  <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-20">
-                    <div className="px-4 py-3 bg-gradient-to-r from-primary/5 to-primary/10 border-b border-primary/10">
+                  <div className={`absolute bottom-full left-0 right-0 mb-2 rounded-2xl shadow-xl border overflow-hidden z-20 ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}>
+                    <div className={`px-4 py-3 border-b ${isDark ? "bg-primary/10 border-primary/20" : "bg-primary/5 border-primary/10"}`}>
                       <p className="text-xs font-semibold text-primary uppercase tracking-wide">
                         {language === "fr" ? "Connecté en tant que" : "Signed in as"}
                       </p>
-                      <p className="text-sm font-bold text-gray-900 truncate mt-0.5">{user?.fullName}</p>
+                      <p className={`text-sm font-bold truncate mt-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>{user?.fullName}</p>
                     </div>
                     <button
                       onClick={() => { setProfileMenuOpen(false); logout(); router.push(`/in/control/login`); }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors group/item"
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors group/item ${isDark ? "text-red-400 hover:bg-red-500/10" : "text-red-600 hover:bg-red-50"}`}
                     >
-                      <div className="w-7 h-7 rounded-lg bg-red-50 group-hover/item:bg-red-100 flex items-center justify-center transition-colors">
-                        <LogOut className="w-3.5 h-3.5 text-red-500" />
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${isDark ? "bg-red-500/10 group-hover/item:bg-red-500/20" : "bg-red-50 group-hover/item:bg-red-100"}`}>
+                        <LogOut className={`w-3.5 h-3.5 ${isDark ? "text-red-400" : "text-red-500"}`} />
                       </div>
                       <span className="font-medium">{language === "fr" ? "Déconnexion" : "Logout"}</span>
                     </button>
@@ -440,37 +470,29 @@ export default function AdminDashboard() {
         <div className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0">
             {/* Stats Cards */}
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-white rounded-2xl shadow-md p-6">
+              <div className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-gray-600 text-sm font-medium">{tc.totalListings}</h3>
+                  <h3 className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>{tc.totalListings}</h3>
                   <Home className="w-8 h-8 text-primary" />
                 </div>
-                <p className="text-3xl font-bold text-gray-900">{stats.totalListings}</p>
-                <div className="mt-2 text-sm text-gray-600">
-                  {stats.pendingListings} {tc.pending}
-                </div>
+                <p className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.totalListings}</p>
+                <div className={`mt-2 text-sm ${isDark ? "text-gray-500" : "text-gray-500"}`}>{stats.pendingListings} {tc.pending}</div>
               </div>
-
-              <div className="bg-white rounded-2xl shadow-md p-6">
+              <div className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-gray-600 text-sm font-medium">{tc.totalUsers}</h3>
+                  <h3 className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>{tc.totalUsers}</h3>
                   <Users className="w-8 h-8 text-primary" />
                 </div>
-                <p className="text-3xl font-bold text-gray-900">{stats.totalUsers}</p>
-                <div className="mt-2 text-sm text-gray-600">
-                  {stats.owners} {tc.owners}, {stats.tenants} {tc.tenants}
-                </div>
+                <p className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.totalUsers}</p>
+                <div className={`mt-2 text-sm ${isDark ? "text-gray-500" : "text-gray-500"}`}>{stats.owners} {tc.owners}, {stats.tenants} {tc.tenants}</div>
               </div>
-
-              <div className="bg-white rounded-2xl shadow-md p-6">
+              <div className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-gray-600 text-sm font-medium">{tc.pendingReports}</h3>
+                  <h3 className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>{tc.pendingReports}</h3>
                   <Flag className="w-8 h-8 text-red-500" />
                 </div>
-                <p className="text-3xl font-bold text-gray-900">{stats.pendingReports}</p>
-                <div className="mt-2 text-sm text-gray-600">
-                  {tc.reportsModeration}
-                </div>
+                <p className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.pendingReports}</p>
+                <div className={`mt-2 text-sm ${isDark ? "text-gray-500" : "text-gray-500"}`}>{tc.reportsModeration}</div>
               </div>
             </div>
 
@@ -478,13 +500,13 @@ export default function AdminDashboard() {
             {activeTab === "listings" && (
               <div className="space-y-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">{tc.listingsManagement}</h2>
+                  <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{tc.listingsManagement}</h2>
                   <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
-                    <Filter className="w-5 h-5 text-gray-600" />
+                    <Filter className={`w-5 h-5 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
                     <select
                       value={listingFilter}
                       onChange={(e) => setListingFilter(e.target.value)}
-                      className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      className={`w-full sm:w-auto px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-gray-200" : "bg-white border-gray-300 text-gray-700"}`}
                     >
                       <option value="all">{tc.all}</option>
                       <option value="pending">{tc.pending}</option>
@@ -497,32 +519,24 @@ export default function AdminDashboard() {
                 {filteredListings.length > 0 ? (
                   <div className="space-y-4">
                     {filteredListings.map((listing) => (
-                      <div key={listing.id} className="bg-white rounded-2xl shadow-md p-6">
+                      <div key={listing.id} className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                         <div className="flex flex-col md:flex-row gap-4 md:gap-6">
                           <div className="relative w-full h-48 md:w-48 md:h-32 flex-shrink-0">
-                            <Image
-                              src={listing.image}
-                              alt={listing.name}
-                              fill
-                              className="object-cover rounded-lg"
-                            />
-                            <span className={`absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-medium ${
-                              listing.type === "PG" ? "bg-blue-500 text-white" : "bg-green-500 text-white"
-                            }`}>
+                            <Image src={listing.image} alt={listing.name} fill className="object-cover rounded-lg" />
+                            <span className={`absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-medium ${listing.type === "PG" ? "bg-blue-500 text-white" : "bg-green-500 text-white"}`}>
                               {listing.type}
                             </span>
                           </div>
-
                           <div className="flex-1">
                             <div className="flex items-start justify-between mb-3">
                               <div>
-                                <h3 className="text-xl font-bold text-gray-900 mb-1">{listing.name}</h3>
-                                <div className="flex items-center gap-2 text-gray-600 mb-2">
+                                <h3 className={`text-xl font-bold mb-1 ${isDark ? "text-white" : "text-gray-900"}`}>{listing.name}</h3>
+                                <div className={`flex items-center gap-2 mb-2 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                                   <MapPin className="w-4 h-4" />
                                   <span className="text-sm">{listing.location}</span>
                                 </div>
-                                <p className="text-sm text-gray-600">
-                                  {tc.ownerName}: <span className="font-medium">{listing.ownerName}</span>
+                                <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                                  {tc.ownerName}: <span className={`font-medium ${isDark ? "text-gray-200" : "text-gray-800"}`}>{listing.ownerName}</span>
                                 </p>
                                 <p className="text-sm text-gray-500">{tc.submittedDate}: {listing.submittedDate}</p>
                               </div>
@@ -530,42 +544,35 @@ export default function AdminDashboard() {
                                 {listing.status === "Pending" ? tc.pending : listing.status === "Approved" ? tc.approved : tc.rejected}
                               </span>
                             </div>
-
                             <div className="grid grid-cols-2 gap-4 mb-4">
-                              <div className="p-3 bg-gray-50 rounded-lg">
-                                <p className="text-sm text-gray-600">{tc.rent}</p>
-                                <p className="font-bold text-gray-900">{currencySymbol} {listing.rent.toLocaleString()}</p>
+                              <div className={`p-3 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                                <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>{tc.rent}</p>
+                                <p className={`font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{currencySymbol} {listing.rent.toLocaleString()}</p>
                               </div>
-                              <div className="p-3 bg-gray-50 rounded-lg">
-                                <p className="text-sm text-gray-600">{tc.rooms}</p>
-                                <p className="font-bold text-gray-900">{listing.rooms}</p>
+                              <div className={`p-3 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                                <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>{tc.rooms}</p>
+                                <p className={`font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{listing.rooms}</p>
                               </div>
                             </div>
-
                             <div className="flex flex-wrap gap-2">
                               {listing.status === "Pending" && (
                                 <>
                                   <button className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                                    <CheckCircle className="w-4 h-4" />
-                                    {tc.approve}
+                                    <CheckCircle className="w-4 h-4" />{tc.approve}
                                   </button>
                                   <button className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                                    <XCircle className="w-4 h-4" />
-                                    {tc.reject}
+                                    <XCircle className="w-4 h-4" />{tc.reject}
                                   </button>
                                 </>
                               )}
                               <button className="flex items-center gap-2 px-4 py-2 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-colors">
-                                <Eye className="w-4 h-4" />
-                                {tc.view}
+                                <Eye className="w-4 h-4" />{tc.view}
                               </button>
-                              <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                                <Edit className="w-4 h-4" />
-                                {tc.edit}
+                              <button className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${isDark ? "border-gray-600 text-gray-300 hover:bg-gray-700" : "border-gray-300 text-gray-700 hover:bg-gray-50"}`}>
+                                <Edit className="w-4 h-4" />{tc.edit}
                               </button>
-                              <button className="flex items-center gap-2 px-4 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition-colors">
-                                <Trash2 className="w-4 h-4" />
-                                {tc.delete}
+                              <button className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${isDark ? "border-red-500/50 text-red-400 hover:bg-red-500/10" : "border-red-300 text-red-500 hover:bg-red-50"}`}>
+                                <Trash2 className="w-4 h-4" />{tc.delete}
                               </button>
                             </div>
                           </div>
@@ -574,9 +581,9 @@ export default function AdminDashboard() {
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-white rounded-2xl shadow-md p-12 text-center">
-                    <Home className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-600">{tc.noListings}</p>
+                  <div className={`rounded-2xl p-12 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                    <Home className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
+                    <p className={isDark ? "text-gray-500" : "text-gray-500"}>{tc.noListings}</p>
                   </div>
                 )}
               </div>
@@ -586,13 +593,13 @@ export default function AdminDashboard() {
             {activeTab === "users" && (
               <div className="space-y-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">{tc.userManagement}</h2>
+                  <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{tc.userManagement}</h2>
                   <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
-                    <Filter className="w-5 h-5 text-gray-600" />
+                    <Filter className={`w-5 h-5 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
                     <select
                       value={userFilter}
                       onChange={(e) => setUserFilter(e.target.value)}
-                      className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      className={`w-full sm:w-auto px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-gray-200" : "bg-white border-gray-300 text-gray-700"}`}
                     >
                       <option value="all">{tc.all}</option>
                       <option value="owners">{tc.owners}</option>
@@ -603,37 +610,39 @@ export default function AdminDashboard() {
                 </div>
 
                 {filteredUsers.length > 0 ? (
-                  <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+                  <div className={`rounded-2xl overflow-hidden border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                     <div className="overflow-x-auto">
                       <table className="w-full">
-                        <thead className="bg-gray-50 border-b border-gray-200">
+                        <thead className={`border-b ${isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
                           <tr>
-                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">{tc.name}</th>
-                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">{tc.email}</th>
-                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">{tc.role}</th>
-                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">{tc.status}</th>
-                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">{tc.verified}</th>
-                            <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">Actions</th>
+                            <th className={`px-6 py-4 text-left text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.name}</th>
+                            <th className={`px-6 py-4 text-left text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.email}</th>
+                            <th className={`px-6 py-4 text-left text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.role}</th>
+                            <th className={`px-6 py-4 text-left text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.status}</th>
+                            <th className={`px-6 py-4 text-left text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.verified}</th>
+                            <th className={`px-6 py-4 text-right text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Actions</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200">
+                        <tbody className={`divide-y ${isDark ? "divide-gray-800" : "divide-gray-100"}`}>
                           {filteredUsers.map((user) => (
-                            <tr key={user.id} className="hover:bg-gray-50">
+                            <tr key={user.id} className={isDark ? "hover:bg-gray-800/50" : "hover:bg-gray-50"}>
                               <td className="px-6 py-4">
                                 <div className="flex items-center gap-3">
                                   <div className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-bold">
                                     {user.name.charAt(0)}
                                   </div>
                                   <div>
-                                    <p className="font-medium text-gray-900">{user.name}</p>
+                                    <p className={`font-medium ${isDark ? "text-white" : "text-gray-900"}`}>{user.name}</p>
                                     <p className="text-sm text-gray-500">Joined: {user.joinedDate}</p>
                                   </div>
                                 </div>
                               </td>
-                              <td className="px-6 py-4 text-gray-700">{user.email}</td>
+                              <td className={`px-6 py-4 ${isDark ? "text-gray-400" : "text-gray-600"}`}>{user.email}</td>
                               <td className="px-6 py-4">
                                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                  user.role === "Owner" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"
+                                  user.role === "Owner"
+                                    ? isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-100 text-blue-700"
+                                    : isDark ? "bg-purple-500/20 text-purple-400" : "bg-purple-100 text-purple-700"
                                 }`}>
                                   {user.role}
                                 </span>
@@ -678,9 +687,9 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-white rounded-2xl shadow-md p-12 text-center">
-                    <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-600">{tc.noUsers}</p>
+                  <div className={`rounded-2xl p-12 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                    <Users className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
+                    <p className="text-gray-500">{tc.noUsers}</p>
                   </div>
                 )}
               </div>
@@ -690,13 +699,13 @@ export default function AdminDashboard() {
             {activeTab === "reports" && (
               <div className="space-y-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">{tc.reportsModeration}</h2>
+                  <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{tc.reportsModeration}</h2>
                   <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
-                    <Filter className="w-5 h-5 text-gray-600" />
+                    <Filter className={`w-5 h-5 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
                     <select
                       value={reportFilter}
                       onChange={(e) => setReportFilter(e.target.value)}
-                      className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      className={`w-full sm:w-auto px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-gray-200" : "bg-white border-gray-300 text-gray-700"}`}
                     >
                       <option value="all">{tc.all}</option>
                       <option value="pending">{tc.pending}</option>
@@ -708,19 +717,19 @@ export default function AdminDashboard() {
                 {filteredReports.length > 0 ? (
                   <div className="space-y-4">
                     {filteredReports.map((report) => (
-                      <div key={report.id} className="bg-white rounded-2xl shadow-md p-6">
+                      <div key={report.id} className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex-1">
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">{report.listingName}</h3>
+                            <h3 className={`text-xl font-bold mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>{report.listingName}</h3>
                             <div className="grid md:grid-cols-2 gap-4 mb-3">
                               <div>
-                                <p className="text-sm text-gray-600">{tc.reportedBy}</p>
-                                <p className="font-medium text-gray-900">{report.reportedBy}</p>
+                                <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>{tc.reportedBy}</p>
+                                <p className={`font-medium ${isDark ? "text-white" : "text-gray-900"}`}>{report.reportedBy}</p>
                                 <p className="text-sm text-gray-500">{report.reporterEmail}</p>
                               </div>
                               <div>
-                                <p className="text-sm text-gray-600">{tc.date}</p>
-                                <p className="font-medium text-gray-900">{report.date}</p>
+                                <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>{tc.date}</p>
+                                <p className={`font-medium ${isDark ? "text-white" : "text-gray-900"}`}>{report.date}</p>
                               </div>
                             </div>
                           </div>
@@ -728,28 +737,23 @@ export default function AdminDashboard() {
                             {report.status === "Pending" ? tc.pending : tc.reviewed}
                           </span>
                         </div>
-
-                        <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                          <p className="text-sm font-medium text-gray-700 mb-1">{tc.reason}:</p>
-                          <p className="text-gray-900 font-semibold mb-2">{report.reason}</p>
-                          <p className="text-sm font-medium text-gray-700 mb-1">{tc.description}:</p>
-                          <p className="text-gray-800">{report.description}</p>
+                        <div className={`rounded-lg p-4 mb-4 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                          <p className={`text-sm font-medium mb-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}>{tc.reason}:</p>
+                          <p className={`font-semibold mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>{report.reason}</p>
+                          <p className={`text-sm font-medium mb-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}>{tc.description}:</p>
+                          <p className={isDark ? "text-gray-300" : "text-gray-700"}>{report.description}</p>
                         </div>
-
                         <div className="flex flex-wrap gap-2">
                           <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
-                            <Eye className="w-4 h-4" />
-                            {tc.viewDetails}
+                            <Eye className="w-4 h-4" />{tc.viewDetails}
                           </button>
                           {report.status === "Pending" && (
                             <>
                               <button className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                                <CheckCircle className="w-4 h-4" />
-                                {tc.markReviewed}
+                                <CheckCircle className="w-4 h-4" />{tc.markReviewed}
                               </button>
                               <button className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                                <Trash2 className="w-4 h-4" />
-                                {tc.delete} Listing
+                                <Trash2 className="w-4 h-4" />{tc.delete} Listing
                               </button>
                             </>
                           )}
@@ -758,9 +762,9 @@ export default function AdminDashboard() {
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-white rounded-2xl shadow-md p-12 text-center">
-                    <Flag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-600">{tc.noReports}</p>
+                  <div className={`rounded-2xl p-12 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                    <Flag className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
+                    <p className="text-gray-500">{tc.noReports}</p>
                   </div>
                 )}
               </div>

@@ -24,6 +24,8 @@ import {
   Home,
   X,
   ChevronDown,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 function RequestCard({
@@ -147,6 +149,18 @@ export default function TenantDashboard() {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'saved');
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("tenant_theme");
+    setIsDark(saved === "dark");
+  }, []);
+
+  const toggleTheme = () => {
+    const next = !isDark;
+    setIsDark(next);
+    localStorage.setItem("tenant_theme", next ? "dark" : "light");
+  };
   const [savedProperties, setSavedProperties] = useState<any[]>([]);
   const [favLoading, setFavLoading] = useState(false);
   const [myRequests, setMyRequests] = useState<any[]>([]);
@@ -369,10 +383,10 @@ export default function TenantDashboard() {
   // Show loading while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-gray-950" : "bg-gray-50"}`}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className={isDark ? "text-gray-400" : "text-gray-600"}>Loading...</p>
         </div>
       </div>
     );
@@ -531,34 +545,46 @@ export default function TenantDashboard() {
   const tc = content[language];
 
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-700";
-      case "replied":
-      case "confirmed":
-        return "bg-green-100 text-green-700";
-      case "closed":
-      case "cancelled":
-        return "bg-red-100 text-red-700";
-      default:
-        return "bg-gray-100 text-gray-700";
+    if (isDark) {
+      switch (status.toLowerCase()) {
+        case "pending": return "bg-yellow-500/20 text-yellow-400";
+        case "replied": case "confirmed": return "bg-green-500/20 text-green-400";
+        case "closed": case "cancelled": return "bg-red-500/20 text-red-400";
+        default: return "bg-gray-700 text-gray-300";
+      }
+    } else {
+      switch (status.toLowerCase()) {
+        case "pending": return "bg-yellow-100 text-yellow-700";
+        case "replied": case "confirmed": return "bg-green-100 text-green-700";
+        case "closed": case "cancelled": return "bg-red-100 text-red-700";
+        default: return "bg-gray-100 text-gray-700";
+      }
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen ${isDark ? "bg-gray-950" : "bg-gray-50"}`}>
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
+      <div className={`sticky top-0 z-50 shadow-sm border-b ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
         <div className="max-w-[1500px] mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
-            <h1 className="text-2xl font-bold text-primary">{tc.dashboard}</h1>
-            <Link
-              href="/"
-              className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg transition-colors font-medium text-sm"
-            >
-              <Home className="w-4 h-4" />
-              <span>{language === "fr" ? "Accueil" : "Back to Home"}</span>
-            </Link>
+            <h1 className={`text-2xl font-bold ${isDark ? "text-primary-light" : "text-primary"}`}>{tc.dashboard}</h1>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={toggleTheme}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${isDark ? "bg-gray-800 text-yellow-400 hover:bg-gray-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+                title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
+              <Link
+                href="/"
+                className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg transition-colors font-medium text-sm"
+              >
+                <Home className="w-4 h-4" />
+                <span>{language === "fr" ? "Accueil" : "Back to Home"}</span>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -566,14 +592,12 @@ export default function TenantDashboard() {
       <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
           {/* Sidebar */}
           <div className="lg:w-72 flex-shrink-0">
-            <div className="bg-white shadow-md p-4 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto flex flex-col">
+            <div className={`p-4 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto flex flex-col border-r ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-md"}`}>
               <nav className="space-y-2">
                 <button
                   onClick={() => setActiveTab("saved")}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                    activeTab === "saved"
-                      ? "bg-primary text-white"
-                      : "text-gray-700 hover:bg-gray-100"
+                    activeTab === "saved" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
                   <Heart className="w-5 h-5" />
@@ -582,9 +606,7 @@ export default function TenantDashboard() {
                 <button
                   onClick={() => setActiveTab("requests")}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                    activeTab === "requests"
-                      ? "bg-primary text-white"
-                      : "text-gray-700 hover:bg-gray-100"
+                    activeTab === "requests" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
                   <MessageSquare className="w-5 h-5" />
@@ -593,22 +615,16 @@ export default function TenantDashboard() {
                 <button
                   onClick={() => setActiveTab("bookings")}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                    activeTab === "bookings"
-                      ? "bg-primary text-white"
-                      : "text-gray-700 hover:bg-gray-100"
+                    activeTab === "bookings" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
                   <Calendar className="w-5 h-5" />
                   <span className="font-medium">{tc.myBookings}</span>
                 </button>
                 <button
-                  onClick={() => {
-                    setActiveTab("messages");
-                  }}
+                  onClick={() => setActiveTab("messages")}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                    activeTab === "messages"
-                      ? "bg-primary text-white"
-                      : "text-gray-700 hover:bg-gray-100"
+                    activeTab === "messages" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
                   <Send className="w-5 h-5" />
@@ -622,10 +638,10 @@ export default function TenantDashboard() {
               </nav>
 
               {/* Profile card */}
-              <div className="mt-auto pt-4 border-t border-gray-100 relative">
+              <div className={`mt-auto pt-4 border-t relative ${isDark ? "border-gray-800" : "border-gray-100"}`}>
                 <button
                   onClick={() => setProfileMenuOpen(p => !p)}
-                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-left group ${profileMenuOpen ? "bg-primary/5" : "hover:bg-primary/5"}`}
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-left group ${profileMenuOpen ? "bg-primary/10" : isDark ? "hover:bg-gray-800" : "hover:bg-primary/5"}`}
                 >
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm">
                     <span className="text-white font-bold text-sm">
@@ -633,10 +649,10 @@ export default function TenantDashboard() {
                     </span>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{user?.fullName || "—"}</p>
-                    <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                    <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{user?.fullName || "—"}</p>
+                    <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                   </div>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${profileMenuOpen ? "bg-primary text-white" : "bg-gray-100 text-gray-400 group-hover:bg-primary/10 group-hover:text-primary"}`}>
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${profileMenuOpen ? "bg-primary text-white" : isDark ? "bg-gray-700 text-gray-400 group-hover:bg-gray-600 group-hover:text-gray-200" : "bg-gray-100 text-gray-400 group-hover:bg-primary/10 group-hover:text-primary"}`}>
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform ${profileMenuOpen ? "rotate-180" : ""}`} />
                   </div>
                 </button>
@@ -644,29 +660,28 @@ export default function TenantDashboard() {
                 {profileMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setProfileMenuOpen(false)} />
-                    <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-20">
-                      {/* User info header */}
-                      <div className="px-4 py-3 bg-gradient-to-r from-primary/5 to-primary/10 border-b border-primary/10">
+                    <div className={`absolute bottom-full left-0 right-0 mb-2 rounded-2xl shadow-xl border overflow-hidden z-20 ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-100"}`}>
+                      <div className={`px-4 py-3 border-b ${isDark ? "bg-primary/10 border-primary/20" : "bg-gradient-to-r from-primary/5 to-primary/10 border-primary/10"}`}>
                         <p className="text-xs font-semibold text-primary uppercase tracking-wide">
                           {language === "fr" ? "Connecté en tant que" : "Signed in as"}
                         </p>
-                        <p className="text-sm font-bold text-gray-900 truncate mt-0.5">{user?.fullName}</p>
+                        <p className={`text-sm font-bold truncate mt-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>{user?.fullName}</p>
                       </div>
                       <button
                         onClick={() => { setActiveTab("profile"); setProfileMenuOpen(false); }}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors group/item"
+                        className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors group/item ${isDark ? "text-gray-300 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-primary/5 hover:text-primary"}`}
                       >
-                        <div className="w-7 h-7 rounded-lg bg-gray-100 group-hover/item:bg-primary/10 flex items-center justify-center transition-colors">
-                          <User className="w-3.5 h-3.5 text-gray-500 group-hover/item:text-primary transition-colors" />
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${isDark ? "bg-gray-700 group-hover/item:bg-gray-600" : "bg-gray-100 group-hover/item:bg-primary/10"}`}>
+                          <User className={`w-3.5 h-3.5 transition-colors ${isDark ? "text-gray-400 group-hover/item:text-white" : "text-gray-500 group-hover/item:text-primary"}`} />
                         </div>
                         <span className="font-medium">{language === "fr" ? "Voir le profil" : "View Profile"}</span>
                       </button>
                       <button
                         onClick={() => { setProfileMenuOpen(false); logout(); }}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100 group/item"
+                        className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors border-t group/item ${isDark ? "text-red-400 hover:bg-red-500/10 border-gray-700" : "text-red-600 hover:bg-red-50 border-gray-100"}`}
                       >
-                        <div className="w-7 h-7 rounded-lg bg-red-50 group-hover/item:bg-red-100 flex items-center justify-center transition-colors">
-                          <LogOut className="w-3.5 h-3.5 text-red-500" />
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${isDark ? "bg-red-500/10 group-hover/item:bg-red-500/20" : "bg-red-50 group-hover/item:bg-red-100"}`}>
+                          <LogOut className={`w-3.5 h-3.5 ${isDark ? "text-red-400" : "text-red-500"}`} />
                         </div>
                         <span className="font-medium">{language === "fr" ? "Déconnexion" : "Logout"}</span>
                       </button>
@@ -682,17 +697,17 @@ export default function TenantDashboard() {
             {/* Saved Properties */}
             {activeTab === "saved" && (
               <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">{tc.savedProperties}</h2>
+                <h2 className={`text-2xl font-bold mb-6 ${isDark ? "text-white" : "text-gray-900"}`}>{tc.savedProperties}</h2>
                 {favLoading ? (
                   <div className="grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {[...Array(3)].map((_, i) => (
-                      <div key={i} className="bg-white rounded-2xl shadow-md h-72 animate-pulse" />
+                      <div key={i} className={`rounded-2xl h-72 animate-pulse ${isDark ? "bg-gray-800" : "bg-white shadow-md"}`} />
                     ))}
                   </div>
                 ) : savedProperties.length > 0 ? (
                   <div className="grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {savedProperties.map((property: any) => (
-                      <div key={property._id} className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                      <div key={property._id} className={`rounded-2xl overflow-hidden hover:shadow-lg transition-shadow border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-md"}`}>
                         <div className="relative h-48">
                           <Image
                             src={property.images?.[0] || "/owner.png"}
@@ -707,10 +722,10 @@ export default function TenantDashboard() {
                           </span>
                         </div>
                         <div className="p-6">
-                          <h3 className="text-xl font-bold text-gray-900 mb-2">
+                          <h3 className={`text-xl font-bold mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>
                             {property.societyName || property.title}
                           </h3>
-                          <div className="flex items-center gap-2 text-gray-600 mb-3">
+                          <div className={`flex items-center gap-2 mb-3 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                             <MapPin className="w-4 h-4" />
                             <span className="text-sm">{[property.areaName, property.location, property.state].filter(Boolean).join(", ")}</span>
                           </div>
@@ -718,7 +733,7 @@ export default function TenantDashboard() {
                             <span className="text-2xl font-bold text-primary">
                               {currencySymbol} {property.price?.toLocaleString()}
                             </span>
-                            <span className="text-gray-600 text-sm">/month</span>
+                            <span className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>/month</span>
                           </div>
                           <div className="flex flex-col sm:flex-row gap-2">
                             <Link
@@ -730,7 +745,7 @@ export default function TenantDashboard() {
                             </Link>
                             <button
                               onClick={() => handleRemoveFavorite(property._id)}
-                              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition-colors"
+                              className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 border rounded-lg transition-colors ${isDark ? "border-red-500/50 text-red-400 hover:bg-red-500/10" : "border-red-500 text-red-500 hover:bg-red-50"}`}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -740,9 +755,9 @@ export default function TenantDashboard() {
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-white rounded-2xl shadow-md p-12 text-center">
-                    <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-600">{tc.noSavedProperties}</p>
+                  <div className={`rounded-2xl p-12 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-md"}`}>
+                    <Heart className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
+                    <p className={isDark ? "text-gray-500" : "text-gray-600"}>{tc.noSavedProperties}</p>
                   </div>
                 )}
               </div>
@@ -767,9 +782,9 @@ export default function TenantDashboard() {
               return (
               <div className="space-y-3">
                 <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-2xl font-bold text-gray-900">{tc.myRequests}</h2>
+                  <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{tc.myRequests}</h2>
                   {myRequests.length > 0 && (
-                    <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full font-medium">
+                    <span className={`text-sm px-3 py-1 rounded-full font-medium ${isDark ? "text-gray-400 bg-gray-800" : "text-gray-500 bg-gray-100"}`}>
                       {myRequests.length} {myRequests.length === 1 ? (language === 'fr' ? 'demande' : 'request') : (language === 'fr' ? 'demandes' : 'requests')}
                     </span>
                   )}
@@ -778,7 +793,7 @@ export default function TenantDashboard() {
                 {requestsLoading ? (
                   <div className="space-y-3">
                     {[...Array(3)].map((_, i) => (
-                      <div key={i} className="bg-white rounded-2xl h-20 animate-pulse border border-gray-100" />
+                      <div key={i} className={`rounded-2xl h-20 animate-pulse border ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"}`} />
                     ))}
                   </div>
                 ) : myRequests.length > 0 ? (
@@ -805,12 +820,12 @@ export default function TenantDashboard() {
                     })}
                   </div>
                 ) : (
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-16 text-center">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <MessageSquare className="w-8 h-8 text-gray-400" />
+                  <div className={`rounded-2xl p-16 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${isDark ? "bg-gray-800" : "bg-gray-100"}`}>
+                      <MessageSquare className={`w-8 h-8 ${isDark ? "text-gray-600" : "text-gray-400"}`} />
                     </div>
-                    <p className="text-gray-500 font-medium">{tc.noRequests}</p>
-                    <p className="text-gray-400 text-sm mt-1">{language === 'fr' ? 'Contactez un propriétaire pour commencer.' : 'Contact a property owner to get started.'}</p>
+                    <p className={`font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{tc.noRequests}</p>
+                    <p className={`text-sm mt-1 ${isDark ? "text-gray-600" : "text-gray-400"}`}>{language === 'fr' ? 'Contactez un propriétaire pour commencer.' : 'Contact a property owner to get started.'}</p>
                   </div>
                 )}
               </div>
@@ -820,44 +835,44 @@ export default function TenantDashboard() {
             {/* My Bookings */}
             {activeTab === "bookings" && (
               <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">{tc.myBookings}</h2>
+                <h2 className={`text-2xl font-bold mb-6 ${isDark ? "text-white" : "text-gray-900"}`}>{tc.myBookings}</h2>
                 {myBookings.length > 0 ? (
                   <div className="space-y-4">
                     {myBookings.map((booking) => (
-                      <div key={booking.id} className="bg-white rounded-2xl shadow-md p-6">
+                      <div key={booking.id} className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-md"}`}>
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
                           <div className="flex-1">
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">{booking.pgName}</h3>
-                            <p className="text-sm text-gray-600 mb-1">
-                              {tc.ownerName}: <span className="font-medium">{booking.ownerName}</span>
+                            <h3 className={`text-xl font-bold mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>{booking.pgName}</h3>
+                            <p className={`text-sm mb-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                              {tc.ownerName}: <span className={`font-medium ${isDark ? "text-gray-200" : "text-gray-800"}`}>{booking.ownerName}</span>
                             </p>
-                            <p className="text-sm text-gray-600">{booking.address}</p>
+                            <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>{booking.address}</p>
                           </div>
                           <span className={`self-start px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
                             {booking.status === "Confirmed" ? tc.confirmed : booking.status === "Pending" ? tc.pending : tc.cancelled}
                           </span>
                         </div>
-                        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                        <div className={`grid sm:grid-cols-2 md:grid-cols-3 gap-4 p-4 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
                           <div>
-                            <p className="text-sm text-gray-600 mb-1">{tc.roomType}</p>
-                            <p className="font-semibold text-gray-900">{booking.roomType}</p>
+                            <p className={`text-sm mb-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}>{tc.roomType}</p>
+                            <p className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{booking.roomType}</p>
                           </div>
                           <div>
-                            <p className="text-sm text-gray-600 mb-1">{tc.rent}</p>
-                            <p className="font-semibold text-gray-900">{currencySymbol} {booking.rent.toLocaleString()}</p>
+                            <p className={`text-sm mb-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}>{tc.rent}</p>
+                            <p className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{currencySymbol} {booking.rent.toLocaleString()}</p>
                           </div>
                           <div>
-                            <p className="text-sm text-gray-600 mb-1">{tc.moveInDate}</p>
-                            <p className="font-semibold text-gray-900">{booking.moveInDate}</p>
+                            <p className={`text-sm mb-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}>{tc.moveInDate}</p>
+                            <p className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{booking.moveInDate}</p>
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-white rounded-2xl shadow-md p-12 text-center">
-                    <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-600">{tc.noBookings}</p>
+                  <div className={`rounded-2xl p-12 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-md"}`}>
+                    <Calendar className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
+                    <p className={isDark ? "text-gray-500" : "text-gray-600"}>{tc.noBookings}</p>
                   </div>
                 )}
               </div>
@@ -866,11 +881,11 @@ export default function TenantDashboard() {
             {/* Messages */}
             {activeTab === "messages" && (
               <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">{tc.messagesTab}</h2>
+                <h2 className={`text-2xl font-bold mb-6 ${isDark ? "text-white" : "text-gray-900"}`}>{tc.messagesTab}</h2>
                 {myRequests.filter((r: any) => conversations[r._id]).length === 0 ? (
-                  <div className="bg-white rounded-2xl shadow-md p-12 text-center">
-                    <Send className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-600">{tc.noMessages}</p>
+                  <div className={`rounded-2xl p-12 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-md"}`}>
+                    <Send className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
+                    <p className={isDark ? "text-gray-500" : "text-gray-600"}>{tc.noMessages}</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -883,20 +898,20 @@ export default function TenantDashboard() {
                           <div
                             key={req._id}
                             onClick={() => openChat(req)}
-                            className={`bg-white rounded-2xl shadow-md p-5 flex items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow ${hasUnread ? 'border-l-4 border-primary' : ''}`}
+                            className={`rounded-2xl p-5 flex items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow border ${hasUnread ? 'border-l-4 border-primary' : ''} ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-md"}`}
                           >
                             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                               <User className="w-6 h-6 text-primary" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between mb-1">
-                                <p className={`truncate ${hasUnread ? 'font-bold text-gray-900' : 'font-semibold text-gray-900'}`}>{req.propertyTitle}</p>
+                                <p className={`truncate ${hasUnread ? 'font-bold' : 'font-semibold'} ${isDark ? "text-white" : "text-gray-900"}`}>{req.propertyTitle}</p>
                                 <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
                                   {new Date(conv.time).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
                                 </span>
                               </div>
                               <p className="text-sm text-gray-500 truncate">{conv.senderName}</p>
-                              <p className={`text-sm truncate mt-0.5 ${hasUnread ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>{conv.lastMsg}</p>
+                              <p className={`text-sm truncate mt-0.5 ${hasUnread ? 'font-semibold' : ''} ${isDark ? "text-gray-300" : "text-gray-700"}`}>{conv.lastMsg}</p>
                             </div>
                             {hasUnread && (
                               <span className="w-2.5 h-2.5 bg-primary rounded-full flex-shrink-0" />
@@ -909,7 +924,7 @@ export default function TenantDashboard() {
                                 setSeenCounts(prev => { const n = { ...prev }; delete n[req._id]; return n; });
                                 setUnreadCounts(prev => { const n = { ...prev }; delete n[req._id]; return n; });
                               }}
-                              className="p-2 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                              className={`p-2 rounded-lg transition-colors flex-shrink-0 ${isDark ? "hover:bg-red-500/10" : "hover:bg-red-50"}`}
                               title="Delete conversation"
                             >
                               <Trash2 className="w-4 h-4 text-red-400" />
@@ -925,115 +940,76 @@ export default function TenantDashboard() {
             {/* Profile */}
             {activeTab === "profile" && (
               <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">{tc.profileSettings}</h2>
+                <h2 className={`text-2xl font-bold mb-6 ${isDark ? "text-white" : "text-gray-900"}`}>{tc.profileSettings}</h2>
                 
-                <div className="bg-white rounded-2xl shadow-md p-6">
+                <div className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-md"}`}>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-6">
                     <div className="relative">
-                      <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center">
-                        <User className="w-12 h-12 text-gray-400" />
+                      <div className={`w-24 h-24 rounded-full flex items-center justify-center ${isDark ? "bg-gray-700" : "bg-gray-200"}`}>
+                        <User className={`w-12 h-12 ${isDark ? "text-gray-500" : "text-gray-400"}`} />
                       </div>
                       <button className="absolute bottom-0 right-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center hover:bg-primary-dark transition-colors">
                         <Camera className="w-4 h-4" />
                       </button>
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900">John Doe</h3>
-                      <p className="text-gray-600">john.doe@example.com</p>
+                      <h3 className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>John Doe</h3>
+                      <p className={isDark ? "text-gray-400" : "text-gray-600"}>john.doe@example.com</p>
                     </div>
                   </div>
 
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {tc.fullName}
-                      </label>
+                      <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.fullName}</label>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input
-                          type="text"
-                          defaultValue="John Doe"
-                          className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
+                        <input type="text" defaultValue="John Doe" className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-white placeholder-gray-600" : "bg-white border-gray-300 text-gray-900"}`} />
                       </div>
                     </div>
-
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {tc.email}
-                      </label>
+                      <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.email}</label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input
-                          type="email"
-                          defaultValue="john.doe@example.com"
-                          className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
+                        <input type="email" defaultValue="john.doe@example.com" className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-white placeholder-gray-600" : "bg-white border-gray-300 text-gray-900"}`} />
                       </div>
                     </div>
-
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {tc.phone}
-                      </label>
+                      <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.phone}</label>
                       <div className="relative">
                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input
-                          type="tel"
-                          defaultValue="+91 99999 99999"
-                          className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
+                        <input type="tel" defaultValue="+91 99999 99999" className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-white placeholder-gray-600" : "bg-white border-gray-300 text-gray-900"}`} />
                       </div>
                     </div>
-
                     <button className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-medium">
                       {tc.saveChanges}
                     </button>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl shadow-md p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">{tc.changePassword}</h3>
+                <div className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-md"}`}>
+                  <h3 className={`text-lg font-bold mb-4 ${isDark ? "text-white" : "text-gray-900"}`}>{tc.changePassword}</h3>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {tc.currentPassword}
-                      </label>
+                      <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.currentPassword}</label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input
-                          type="password"
-                          className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
+                        <input type="password" className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300"}`} />
                       </div>
                     </div>
-
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {tc.newPassword}
-                      </label>
+                      <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.newPassword}</label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input
-                          type="password"
-                          className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
+                        <input type="password" className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300"}`} />
                       </div>
                     </div>
-
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {tc.confirmPassword}
-                      </label>
+                      <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.confirmPassword}</label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input
-                          type="password"
-                          className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
+                        <input type="password" className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300"}`} />
                       </div>
                     </div>
-
                     <button className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-medium">
                       {tc.update}
                     </button>
@@ -1048,27 +1024,27 @@ export default function TenantDashboard() {
       {chatRequest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50" onClick={closeChat} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col" style={{ height: '80vh', maxHeight: '600px' }}>
+          <div className={`relative rounded-2xl shadow-2xl w-full max-w-lg flex flex-col ${isDark ? "bg-gray-900" : "bg-white"}`} style={{ height: '80vh', maxHeight: '600px' }}>
             {/* Header */}
-            <div className="flex items-center gap-3 p-4 border-b border-gray-200 flex-shrink-0">
+            <div className={`flex items-center gap-3 p-4 border-b flex-shrink-0 ${isDark ? "border-gray-800" : "border-gray-200"}`}>
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                 <User className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-900 truncate">{chatRequest.propertyTitle}</p>
+                <p className={`font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{chatRequest.propertyTitle}</p>
                 <p className="text-xs text-gray-500 truncate">{(chatRequest.owner as any)?.fullName || (language === 'fr' ? 'Propriétaire' : 'Owner')}</p>
               </div>
-              <button onClick={deleteChat} className="p-2 hover:bg-red-50 rounded-lg transition-colors" title={language === 'fr' ? 'Supprimer la conversation' : 'Delete conversation'}>
+              <button onClick={deleteChat} className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-red-500/10" : "hover:bg-red-50"}`} title={language === 'fr' ? 'Supprimer la conversation' : 'Delete conversation'}>
                 <Trash2 className="w-4 h-4 text-red-400" />
               </button>
-              <button onClick={closeChat} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <X className="w-5 h-5 text-gray-500" />
+              <button onClick={closeChat} className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"}`}>
+                <X className={`w-5 h-5 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
               </button>
             </div>
 
             {/* TTL notice */}
-            <div className="px-4 py-2 bg-amber-50 border-b border-amber-100 flex-shrink-0">
-              <p className="text-xs text-amber-700 text-center">
+            <div className={`px-4 py-2 border-b flex-shrink-0 ${isDark ? "bg-amber-500/10 border-amber-500/20" : "bg-amber-50 border-amber-100"}`}>
+              <p className={`text-xs text-center ${isDark ? "text-amber-400" : "text-amber-700"}`}>
                 {language === 'fr' ? '⏳ Les messages sont automatiquement supprimés après 7 jours.' : '⏳ Messages are automatically cleared after 7 days.'}
               </p>
             </div>
@@ -1088,7 +1064,7 @@ export default function TenantDashboard() {
                   const isMe = msg.senderRole === 'renter';
                   return (
                     <div key={msg._id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${isMe ? 'bg-primary text-white rounded-br-sm' : 'bg-gray-100 text-gray-900 rounded-bl-sm'}`}>
+                      <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${isMe ? 'bg-primary text-white rounded-br-sm' : isDark ? 'bg-gray-800 text-gray-100 rounded-bl-sm' : 'bg-gray-100 text-gray-900 rounded-bl-sm'}`}>
                         <p>{msg.text}</p>
                         <p className={`text-xs mt-1 ${isMe ? 'text-white/70' : 'text-gray-400'}`}>
                           {new Date(msg.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
@@ -1101,7 +1077,7 @@ export default function TenantDashboard() {
             </div>
 
             {/* Input */}
-            <div className="p-4 border-t border-gray-200 flex-shrink-0">
+            <div className={`p-4 border-t flex-shrink-0 ${isDark ? "border-gray-800" : "border-gray-200"}`}>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -1109,7 +1085,7 @@ export default function TenantDashboard() {
                   onChange={e => setChatInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); } }}
                   placeholder={language === 'fr' ? 'Écrire un message...' : 'Type a message...'}
-                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  className={`flex-1 px-4 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm ${isDark ? "bg-gray-800 border-gray-700 text-white placeholder-gray-500" : "bg-white border-gray-300 text-gray-900"}`}
                 />
                 <button
                   onClick={sendChatMessage}
