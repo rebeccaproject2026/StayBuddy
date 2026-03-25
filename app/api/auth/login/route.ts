@@ -42,6 +42,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Block blocked users
+    if (user.isBlocked) {
+      return NextResponse.json(
+        { error: 'Your account has been blocked. Please contact support.' },
+        { status: 403 }
+      );
+    }
+
     // Compare password
     const isPasswordValid = await user.comparePassword(validatedData.password);
     if (!isPasswordValid) {

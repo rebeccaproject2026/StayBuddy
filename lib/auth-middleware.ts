@@ -25,6 +25,7 @@ export async function authenticateUser(request: NextRequest) {
       const decoded = verifyToken(token);
       const user = await User.findById(decoded.userId);
       if (!user) throw new Error('User not found');
+      if (user.isBlocked) throw new Error('Account blocked');
       return {
         id: user._id.toString(),
         email: user.email,

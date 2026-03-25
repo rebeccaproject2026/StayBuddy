@@ -10,6 +10,7 @@ export interface IUser extends Document {
   role: 'renter' | 'landlord' | 'admin';
   country: 'fr' | 'in';
   isVerified: boolean;
+  isBlocked: boolean;
   provider: 'credentials' | 'google';
   googleId?: string;
   profileImage?: string;
@@ -76,6 +77,10 @@ const userSchema = new Schema<IUser>(
       required: [true, 'Country is required']
     },
     isVerified: {
+      type: Boolean,
+      default: false
+    },
+    isBlocked: {
       type: Boolean,
       default: false
     },
@@ -152,15 +157,12 @@ userSchema.static('findByEmailWithPassword', function(email: string) {
 let User: IUserModel;
 
 try {
-  // Try to get existing model
   User = mongoose.model<IUser, IUserModel>('User');
-  // If it exists but doesn't have otpCode, delete and re-register
-  if (!User.schema.path('otpCode')) {
+  if (!User.schema.path('otpCode') || !User.schema.path('isBlocked')) {
     delete (mongoose.models as any).User;
     User = mongoose.model<IUser, IUserModel>('User', userSchema);
   }
 } catch {
-  // Model doesn't exist yet, register it
   User = mongoose.model<IUser, IUserModel>('User', userSchema);
 }
 

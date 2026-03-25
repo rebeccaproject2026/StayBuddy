@@ -46,6 +46,7 @@ interface AdminProperty {
   _id: string;
   title: string;
   propertyType: "PG" | "Tenant";
+  country: string;
   location: string;
   areaName?: string;
   state?: string;
@@ -71,6 +72,7 @@ interface AdminUser {
   role: 'renter' | 'landlord' | 'admin';
   country: string;
   isVerified: boolean;
+  isBlocked: boolean;
   provider: string;
   createdAt: string;
 }
@@ -81,7 +83,9 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("listings");
   const [listingFilter, setListingFilter] = useState("all");
+  const [listingCountry, setListingCountry] = useState("all");
   const [userFilter, setUserFilter] = useState("all");
+  const [userCountry, setUserCountry] = useState("all");
   const [reportFilter, setReportFilter] = useState("pending");
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [isDark, setIsDark] = useState(true);
@@ -220,6 +224,24 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error("Failed to update report:", err);
+    }
+  };
+
+  const handleToggleBlock = async (userId: string, block: boolean) => {
+    const token = localStorage.getItem("staybuddy_token");
+    if (!token) return;
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ userId, isBlocked: block }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAllUsers(prev => prev.map(u => u._id === userId ? { ...u, isBlocked: data.isBlocked } : u));
+      }
+    } catch (err) {
+      console.error("Failed to toggle block:", err);
     }
   };
 
@@ -398,21 +420,29 @@ export default function AdminDashboard() {
   };
 
   const filteredListings = properties.filter(p => {
-    if (listingFilter === "pg") return p.propertyType === "PG";
-    if (listingFilter === "tenant") return p.propertyType === "Tenant";
-    if (listingFilter === "verified") return p.isVerified;
-    return true;
+    const typeMatch = (() => {
+      if (listingFilter === "pg") return p.propertyType === "PG";
+      if (listingFilter === "tenant") return p.propertyType === "Tenant";
+      if (listingFilter === "verified") return p.isVerified;
+      return true;
+    })();
+    const countryMatch = listingCountry === "all" || p.country === listingCountry;
+    return typeMatch && countryMatch;
   });
 
   const totalListingPages = Math.ceil(filteredListings.length / PAGE_SIZE);
   const pagedListings = filteredListings.slice((listingPage - 1) * PAGE_SIZE, listingPage * PAGE_SIZE);
 
   const filteredUsers = allUsers.filter(u => {
-    if (userFilter === "landlord") return u.role === "landlord";
-    if (userFilter === "renter") return u.role === "renter";
-    if (userFilter === "verified") return u.isVerified;
-    if (userFilter === "unverified") return !u.isVerified;
-    return true;
+    const roleMatch = (() => {
+      if (userFilter === "landlord") return u.role === "landlord";
+      if (userFilter === "renter") return u.role === "renter";
+      if (userFilter === "verified") return u.isVerified;
+      if (userFilter === "unverified") return !u.isVerified;
+      return true;
+    })();
+    const countryMatch = userCountry === "all" || u.country === userCountry;
+    return roleMatch && countryMatch;
   });
 
   const totalUserPages = Math.ceil(filteredUsers.length / USER_PAGE_SIZE);
@@ -594,6 +624,15 @@ export default function AdminDashboard() {
                       <option value="pg">PG</option>
                       <option value="tenant">Tenant</option>
                       <option value="verified">Verified</option>
+                    </select>
+                    <select
+                      value={listingCountry}
+                      onChange={(e) => { setListingCountry(e.target.value); setListingPage(1); }}
+                      className={`px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-gray-200" : "bg-white border-gray-300 text-gray-700"}`}
+                    >
+                      <option value="all">All Countries</option>
+                      <option value="in">🇮🇳 India</option>
+                      <option value="fr">🇫🇷 France</option>
                     </select>
                   </div>
                 </div>
@@ -803,6 +842,15 @@ export default function AdminDashboard() {
                       <option value="verified">Verified</option>
                       <option value="unverified">Unverified</option>
                     </select>
+                    <select
+                      value={userCountry}
+                      onChange={(e) => { setUserCountry(e.target.value); setUserPage(1); }}
+                      className={`px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-gray-200" : "bg-white border-gray-300 text-gray-700"}`}
+                    >
+                      <option value="all">All Countries</option>
+                      <option value="in">🇮🇳 India</option>
+                      <option value="fr">🇫🇷 France</option>
+                    </select>
                   </div>
                 </div>
 
@@ -823,8 +871,10 @@ export default function AdminDashboard() {
                               <th className={`px-4 py-3 text-left font-semibold hidden md:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Phone</th>
                               <th className={`px-4 py-3 text-left font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.role}</th>
                               <th className={`px-4 py-3 text-left font-semibold hidden sm:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Provider</th>
+                              <th className={`px-4 py-3 text-left font-semibold hidden sm:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Country</th>
                               <th className={`px-4 py-3 text-center font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.verified}</th>
                               <th className={`px-4 py-3 text-left font-semibold hidden md:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Joined</th>
+                              <th className={`px-4 py-3 text-center font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Block</th>
                             </tr>
                           </thead>
                           <tbody className={`divide-y ${isDark ? "divide-gray-800" : "divide-gray-100"}`}>
@@ -841,10 +891,15 @@ export default function AdminDashboard() {
                                   <td className={`px-4 py-3 text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>{rowNum}</td>
                                   <td className="px-4 py-3">
                                     <div className="flex items-center gap-2.5">
-                                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${u.isBlocked ? "bg-red-500" : "bg-primary"}`}>
                                         {initials}
                                       </div>
-                                      <span className={`font-medium text-sm ${isDark ? "text-white" : "text-gray-900"}`}>{u.fullName}</span>
+                                      <div>
+                                        <span className={`font-medium text-sm ${isDark ? "text-white" : "text-gray-900"}`}>{u.fullName}</span>
+                                        {u.isBlocked && (
+                                          <span className="ml-2 px-1.5 py-0.5 bg-red-500/20 text-red-400 text-xs rounded font-semibold">Blocked</span>
+                                        )}
+                                      </div>
                                     </div>
                                   </td>
                                   <td className={`px-4 py-3 hidden sm:table-cell text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}>{u.email}</td>
@@ -863,6 +918,11 @@ export default function AdminDashboard() {
                                       {u.provider}
                                     </span>
                                   </td>
+                                  <td className={`px-4 py-3 hidden sm:table-cell text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                                    <span className={`px-2 py-0.5 rounded text-xs uppercase font-semibold ${u.country === "in" ? isDark ? "bg-orange-500/20 text-orange-400" : "bg-orange-100 text-orange-700" : isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-100 text-blue-700"}`}>
+                                      {u.country === "in" ? "🇮🇳 IN" : u.country === "fr" ? "🇫🇷 FR" : u.country}
+                                    </span>
+                                  </td>
                                   <td className="px-4 py-3 text-center">
                                     {u.isVerified
                                       ? <CheckCircle className="w-4 h-4 text-green-500 mx-auto" />
@@ -870,6 +930,20 @@ export default function AdminDashboard() {
                                   </td>
                                   <td className={`px-4 py-3 hidden md:table-cell text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                                     {new Date(u.createdAt).toLocaleDateString()}
+                                  </td>
+                                  <td className="px-4 py-3 text-center">
+                                    {u.role !== 'admin' && (
+                                      <button
+                                        onClick={() => handleToggleBlock(u._id, !u.isBlocked)}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                                          u.isBlocked
+                                            ? isDark ? "bg-green-600 hover:bg-green-700 text-white" : "bg-green-600 hover:bg-green-700 text-white"
+                                            : isDark ? "bg-red-600 hover:bg-red-700 text-white" : "bg-red-600 hover:bg-red-700 text-white"
+                                        }`}
+                                      >
+                                        {u.isBlocked ? "Unblock" : "Block"}
+                                      </button>
+                                    )}
                                   </td>
                                 </tr>
                               );
