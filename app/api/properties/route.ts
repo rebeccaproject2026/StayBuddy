@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
     console.log('[POST /api/properties] Starting Cloudinary uploads...');
     let mainImages, kitchenImgs, washroomImgs, commonAreaImgs,
         tenantKitchenImgs, tenantWashroomImgs, tenantCommonAreaImgs,
-        pgRoomImgs, tenantRoomImgs;
+        pgRoomImgs, tenantRoomImgs, verificationImgs;
     try {
       [
         mainImages,
@@ -131,6 +131,7 @@ export async function POST(req: NextRequest) {
         tenantCommonAreaImgs,
         pgRoomImgs,
         tenantRoomImgs,
+        verificationImgs,
       ] = await Promise.all([
         uploadImages(data.images, 'properties'),
         uploadImages(data.kitchenImages ?? [], 'properties/kitchen'),
@@ -141,6 +142,7 @@ export async function POST(req: NextRequest) {
         uploadImages(data.tenantCommonAreaImages ?? [], 'properties/common'),
         uploadRoomImages(data.roomImages ?? [], 'properties/rooms'),
         uploadRoomImages(data.tenantRoomImages ?? [], 'properties/rooms'),
+        uploadImages(data.verificationImages ?? [], 'properties/verification'),
       ]);
       console.log('[POST /api/properties] Cloudinary uploads complete');
     } catch (uploadError: any) {
@@ -165,6 +167,8 @@ export async function POST(req: NextRequest) {
       tenantCommonAreaImages: tenantCommonAreaImgs,
       roomImages: pgRoomImgs,
       tenantRoomImages: tenantRoomImgs,
+      verificationImages: verificationImgs,
+      isVerified: verificationImgs && verificationImgs.length > 0,
       createdBy: authUser.id,
     });
 
@@ -233,6 +237,7 @@ export async function GET(req: NextRequest) {
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
+        .populate('createdBy', 'fullName email phoneNumber createdAt')
         .lean(),
       Property.countDocuments(filter),
     ]);

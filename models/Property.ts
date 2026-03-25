@@ -92,6 +92,8 @@ export interface IProperty extends Document {
   tenantWashroomImages?: string[];
   tenantCommonAreaImages?: string[];
   view360Url?: string;
+  verificationImages?: string[];
+  isVerified?: boolean;
   createdBy: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -179,6 +181,8 @@ const PropertySchema: Schema = new Schema<IProperty>({
   tenantWashroomImages: [{ type: String }],
   tenantCommonAreaImages: [{ type: String }],
   view360Url: { type: String },
+  verificationImages: [{ type: String }],
+  isVerified: { type: Boolean, default: false },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
 }, { timestamps: true });
 

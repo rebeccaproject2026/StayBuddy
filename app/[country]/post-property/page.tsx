@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, X, MapPin, Check } from "lucide-react";
+import { ArrowLeft, X, MapPin, Check, ShieldCheck } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import * as yup from "yup";
 import PGStep2Details from "@/components/post-property/PGStep2Details";
@@ -130,6 +130,9 @@ export default function PostPropertyPage() {
   const [tenantCommonAreaImages, setTenantCommonAreaImages] = useState<File[]>([]);
   const [view360Url, setView360Url] = useState("");
   
+  // Step 5: Verification Documents
+  const [verificationImages, setVerificationImages] = useState<File[]>([]);
+
   const [error, setError] = useState("");
 
   // Per-field validation errors
@@ -363,6 +366,12 @@ export default function PostPropertyPage() {
       return;
     }
     setError("");
+    setStep(5);
+    scrollToTop();
+  };
+
+  const handleSubmitStep5 = async () => {
+    setError("");
     setIsSubmitting(true);
 
     try {
@@ -461,6 +470,7 @@ export default function PostPropertyPage() {
         tenantCommonAreaImages: tenantCommonAreaBase64,
         view360Url: view360Url || undefined,
         nearbyPlaces: nearbyPlaces.length > 0 ? nearbyPlaces : undefined,
+        verificationImages: await Promise.all(verificationImages.map(toBase64)),
       };
 
       // PG-specific fields
@@ -552,7 +562,7 @@ export default function PostPropertyPage() {
         duration: 3000,
         position: 'top-center',
       });
-      setStep(5);
+      setStep(6);
       scrollToTop();
     } catch (err: any) {
       setError(err.message || 'Something went wrong. Please try again.');
@@ -758,7 +768,7 @@ export default function PostPropertyPage() {
 
   // Auto redirect after success
   useEffect(() => {
-    if (step === 5) {
+    if (step === 6) {
       const timer = setTimeout(() => {
         router.push(`/${country}`);
       }, 3000);
@@ -777,20 +787,20 @@ export default function PostPropertyPage() {
         {/* Progress Indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-center gap-2">
-            {[1, 2, 3, 4].map((s) => (
+            {[1, 2, 3, 4, 5].map((s) => (
               <div key={s} className="flex items-center">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
                   step === s ? 'bg-primary text-white scale-110' : 
                   step > s ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'
                 }`}>
                   {step > s ? <Check className="w-5 h-5" /> : s}
                 </div>
-                {s < 4 && <div className={`w-7 esm:w-10 md:w-12 h-1 ${step > s ? 'bg-green-500' : 'bg-gray-200'}`}></div>}
+                {s < 5 && <div className={`w-7 esm:w-10 md:w-12 h-1 ${step > s ? 'bg-green-500' : 'bg-gray-200'}`}></div>}
               </div>
             ))}
           </div>
           <div className="text-center mt-4">
-            <p className="text-sm text-gray-600">Step {step} of 4</p>
+            <p className="text-sm text-gray-600">Step {step} of 5</p>
           </div>
         </div>
 
@@ -1446,8 +1456,89 @@ export default function PostPropertyPage() {
               </div>
             )}
 
-            {/* STEP 5: Success */}
+            {/* STEP 5: Property Verification */}
             {step === 5 && (
+              <div className="space-y-6">
+                <button onClick={handleBack} className="flex items-center gap-2 text-gray-600 hover:text-primary transition-colors mb-4">
+                  <ArrowLeft className="w-5 h-5" />{t.back}
+                </button>
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-primary mb-2">Verify Your Property</h2>
+                  <p className="text-gray-600 mb-2">Upload documents to get a verified badge on your listing. This builds trust with potential tenants.</p>
+                  <p className="text-sm text-gray-500">Accepted: electricity bill, property tax receipt, ownership deed, or any government-issued property ID proof.</p>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-3">
+                  <ShieldCheck className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-blue-800">Why verify?</p>
+                    <p className="text-sm text-blue-700">Verified properties get a green Verified badge on the listing card, increasing visibility and tenant trust.</p>
+                  </div>
+                </div>
+
+                {/* Upload area */}
+                <div className="space-y-4">
+                  <label className="block text-gray-700 font-semibold">Verification Documents <span className="text-gray-400 font-normal text-sm">(optional — skip to post without verification)</span></label>
+                  <div
+                    className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-primary transition-colors cursor-pointer"
+                    onClick={() => document.getElementById('verification-upload')?.click()}
+                  >
+                    <ShieldCheck className="w-10 h-10 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-600 font-medium mb-1">Click to upload verification documents</p>
+                    <p className="text-xs text-gray-400">JPG, PNG, PDF accepted · Max 5 files</p>
+                    <input
+                      id="verification-upload"
+                      type="file"
+                      accept="image/*,.pdf"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files) {
+                          const newFiles = Array.from(e.target.files).slice(0, 5 - verificationImages.length);
+                          setVerificationImages(prev => [...prev, ...newFiles].slice(0, 5));
+                        }
+                      }}
+                    />
+                  </div>
+
+                  {verificationImages.length > 0 && (
+                    <div className="space-y-2">
+                      {verificationImages.map((file, i) => (
+                        <div key={i} className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <ShieldCheck className="w-4 h-4 text-green-600 flex-shrink-0" />
+                            <span className="text-sm text-gray-700 truncate max-w-xs">{file.name}</span>
+                            <span className="text-xs text-gray-400">({(file.size / 1024).toFixed(0)} KB)</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setVerificationImages(prev => prev.filter((_, idx) => idx !== i))}
+                            className="text-red-400 hover:text-red-600 transition-colors ml-2"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {error && <p className="text-red-500 text-sm">{error}</p>}
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={handleSubmitStep5}
+                    disabled={isSubmitting}
+                    className="flex-1 py-4 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition-colors shadow-lg hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? 'Posting...' : verificationImages.length > 0 ? 'Submit with Verification' : 'Submit Property'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 6: Success */}
+            {step === 6 && (
               <div className="flex flex-col items-center justify-center space-y-8 py-12">
                 <div className="w-32 h-32 rounded-full bg-primary/20 flex items-center justify-center animate-bounce">
                   <Check className="w-16 h-16 text-primary" />

@@ -27,6 +27,7 @@ interface Property {
   priceStatus?: string;
   averageRating?: number | null;
   reviewsCount?: number;
+  isVerified?: boolean;
 }
 
 export default function PropertyListings() {
@@ -219,6 +220,7 @@ export default function PropertyListings() {
                   }
                   type={property.propertyType}
                   isNew={property.isNew}
+                  verified={property.isVerified}
                   rating={property.averageRating ?? undefined}
                   reviewsCount={property.reviewsCount}
                   isFavorite={favoriteIds.has(property._id)}

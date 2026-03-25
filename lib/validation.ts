@@ -177,6 +177,7 @@ export const propertySchema = z.object({
   tenantWashroomImages: z.array(z.string()).optional(),
   tenantCommonAreaImages: z.array(z.string()).optional(),
   view360Url: z.string().optional().or(z.literal('')),
+  verificationImages: z.array(z.string()).optional(),
 
   // ── Misc ──────────────────────────────────────────────────────────────────
   rules: z.record(z.string(), z.string()).optional(),

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
@@ -12,7 +12,6 @@ import {
   Flag,
   LogOut,
   Eye,
-  Edit,
   Trash2,
   CheckCircle,
   XCircle,
@@ -21,21 +20,89 @@ import {
   MapPin,
   Filter,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Sun,
   Moon,
+  X,
+  ShieldCheck,
+  Phone,
+  Mail,
+  Calendar,
+  Building2,
+  Loader2,
+  AlertTriangle,
 } from "lucide-react";
+
+interface PropertyOwner {
+  _id: string;
+  fullName: string;
+  email: string;
+  phoneNumber?: string;
+  createdAt: string;
+}
+
+interface AdminProperty {
+  _id: string;
+  title: string;
+  propertyType: "PG" | "Tenant";
+  location: string;
+  areaName?: string;
+  state?: string;
+  price: number;
+  rooms: number;
+  images: string[];
+  isVerified?: boolean;
+  pgDescription?: string;
+  fullAddress?: string;
+  pincode?: string;
+  landmark?: string;
+  category?: string;
+  posterType?: string;
+  createdAt: string;
+  createdBy: string | PropertyOwner;
+}
+
+interface AdminUser {
+  _id: string;
+  fullName: string;
+  email: string;
+  phoneNumber?: string;
+  role: 'renter' | 'landlord' | 'admin';
+  country: string;
+  isVerified: boolean;
+  provider: string;
+  createdAt: string;
+}
 
 export default function AdminDashboard() {
   const { language, t } = useLanguage();
   const { user, isLoading, isAuthenticated, logout } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("listings");
-  const [listingFilter, setListingFilter] = useState("pending");
+  const [listingFilter, setListingFilter] = useState("all");
   const [userFilter, setUserFilter] = useState("all");
   const [reportFilter, setReportFilter] = useState("pending");
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [isDark, setIsDark] = useState(true);
   const currencySymbol = t("currency.symbol");
+
+  // Real property data
+  const [properties, setProperties] = useState<AdminProperty[]>([]);
+  const [propertiesLoading, setPropertiesLoading] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<AdminProperty | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  // Pagination
+  const PAGE_SIZE = 10;
+  const USER_PAGE_SIZE = 12;
+  const [listingPage, setListingPage] = useState(1);
+
+  // Real user data
+  const [allUsers, setAllUsers] = useState<AdminUser[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [userPage, setUserPage] = useState(1);
 
   useEffect(() => {
     const saved = localStorage.getItem("admin_theme");
@@ -62,6 +129,76 @@ export default function AdminDashboard() {
     }
   }, [user, isLoading, isAuthenticated, router]);
 
+  // Fetch all properties with owner info
+  const fetchProperties = useCallback(async () => {
+    const token = localStorage.getItem("staybuddy_token");
+    if (!token) return;
+    setPropertiesLoading(true);
+    try {
+      const res = await fetch("/api/properties?limit=100", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setProperties(data.properties);
+      }
+    } catch (err) {
+      console.error("Failed to fetch properties:", err);
+    } finally {
+      setPropertiesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated && user?.role === "admin") {
+      fetchProperties();
+    }
+  }, [isAuthenticated, user, fetchProperties]);
+
+  const fetchUsers = useCallback(async () => {
+    const token = localStorage.getItem("staybuddy_token");
+    if (!token) return;
+    setUsersLoading(true);
+    try {
+      const res = await fetch("/api/admin/users", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) setAllUsers(data.users);
+    } catch (err) {
+      console.error("Failed to fetch users:", err);
+    } finally {
+      setUsersLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated && user?.role === "admin") {
+      fetchUsers();
+    }
+  }, [isAuthenticated, user, fetchUsers]);
+
+  const handleDeleteProperty = async (propertyId: string) => {
+    const token = localStorage.getItem("staybuddy_token");
+    if (!token) return;
+    setDeletingId(propertyId);
+    try {
+      const res = await fetch(`/api/properties/${propertyId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setProperties(prev => prev.filter(p => p._id !== propertyId));
+        if (selectedProperty?._id === propertyId) setSelectedProperty(null);
+      }
+    } catch (err) {
+      console.error("Delete failed:", err);
+    } finally {
+      setDeletingId(null);
+      setDeleteConfirmId(null);
+    }
+  };
+
   // Show loading while checking authentication
   if (isLoading) {
     return (
@@ -79,124 +216,17 @@ export default function AdminDashboard() {
     return null;
   }
 
-  // Mock data - in real app, this would come from API
-  const listings = [
-    {
-      id: 1,
-      name: "Sunshine PG",
-      type: "PG",
-      image: "/owner.png",
-      rent: 8000,
-      location: "Ahmedabad, Gujarat",
-      ownerName: "Rajesh Kumar",
-      ownerEmail: "rajesh@example.com",
-      status: "Pending",
-      submittedDate: "2024-03-08",
-      rooms: 12,
-    },
-    {
-      id: 2,
-      name: "Green Valley Apartment",
-      type: "Tenant",
-      image: "/owner.png",
-      rent: 25000,
-      location: "Mumbai, Maharashtra",
-      ownerName: "Priya Sharma",
-      ownerEmail: "priya@example.com",
-      status: "Approved",
-      submittedDate: "2024-03-05",
-      rooms: 3,
-    },
-    {
-      id: 3,
-      name: "Comfort PG",
-      type: "PG",
-      image: "/owner.png",
-      rent: 7500,
-      location: "Pune, Maharashtra",
-      ownerName: "Amit Patel",
-      ownerEmail: "amit@example.com",
-      status: "Rejected",
-      submittedDate: "2024-03-07",
-      rooms: 8,
-    },
-  ];
-
-  const users = [
-    {
-      id: 1,
-      name: "Rajesh Kumar",
-      email: "rajesh@example.com",
-      role: "Owner",
-      status: "Active",
-      verified: true,
-      joinedDate: "2024-01-15",
-      listings: 3,
-    },
-    {
-      id: 2,
-      name: "Priya Sharma",
-      email: "priya@example.com",
-      role: "Owner",
-      status: "Active",
-      verified: true,
-      joinedDate: "2024-02-10",
-      listings: 2,
-    },
-    {
-      id: 3,
-      name: "Rahul Verma",
-      email: "rahul@example.com",
-      role: "Tenant",
-      status: "Active",
-      verified: false,
-      joinedDate: "2024-03-01",
-      listings: 0,
-    },
-    {
-      id: 4,
-      name: "Suspicious User",
-      email: "fake@example.com",
-      role: "Owner",
-      status: "Banned",
-      verified: false,
-      joinedDate: "2024-03-05",
-      listings: 0,
-    },
-  ];
-
   const reports = [
-    {
-      id: 1,
-      listingName: "Fake PG Listing",
-      listingId: 5,
-      reportedBy: "John Doe",
-      reporterEmail: "john@example.com",
-      reason: "Fake listing with incorrect information",
-      date: "2024-03-08",
-      status: "Pending",
-      description: "This listing has fake photos and the address doesn't exist.",
-    },
-    {
-      id: 2,
-      listingName: "Sunshine PG",
-      listingId: 1,
-      reportedBy: "Jane Smith",
-      reporterEmail: "jane@example.com",
-      reason: "Misleading amenities",
-      date: "2024-03-07",
-      status: "Reviewed",
-      description: "The listing claims to have amenities that are not available.",
-    },
+    { id: 1, listingName: "Fake PG Listing", listingId: 5, reportedBy: "John Doe", reporterEmail: "john@example.com", reason: "Fake listing with incorrect information", date: "2024-03-08", status: "Pending", description: "This listing has fake photos and the address doesn't exist." },
+    { id: 2, listingName: "Sunshine PG", listingId: 1, reportedBy: "Jane Smith", reporterEmail: "jane@example.com", reason: "Misleading amenities", date: "2024-03-07", status: "Reviewed", description: "The listing claims to have amenities that are not available." },
   ];
 
   const stats = {
-    totalListings: listings.length,
-    pendingListings: listings.filter(l => l.status === "Pending").length,
-    approvedListings: listings.filter(l => l.status === "Approved").length,
-    totalUsers: users.length,
-    owners: users.filter(u => u.role === "Owner").length,
-    tenants: users.filter(u => u.role === "Tenant").length,
+    totalListings: properties.length,
+    verifiedListings: properties.filter(p => p.isVerified).length,
+    totalUsers: allUsers.length,
+    owners: allUsers.filter(u => u.role === "landlord").length,
+    tenants: allUsers.filter(u => u.role === "renter").length,
     pendingReports: reports.filter(r => r.status === "Pending").length,
   };
 
@@ -325,18 +355,26 @@ export default function AdminDashboard() {
     }
   };
 
-  const filteredListings = listings.filter(listing => {
-    if (listingFilter === "all") return true;
-    return listing.status.toLowerCase() === listingFilter.toLowerCase();
-  });
-
-  const filteredUsers = users.filter(user => {
-    if (userFilter === "all") return true;
-    if (userFilter === "owners") return user.role === "Owner";
-    if (userFilter === "tenants") return user.role === "Tenant";
-    if (userFilter === "banned") return user.status === "Banned";
+  const filteredListings = properties.filter(p => {
+    if (listingFilter === "pg") return p.propertyType === "PG";
+    if (listingFilter === "tenant") return p.propertyType === "Tenant";
+    if (listingFilter === "verified") return p.isVerified;
     return true;
   });
+
+  const totalListingPages = Math.ceil(filteredListings.length / PAGE_SIZE);
+  const pagedListings = filteredListings.slice((listingPage - 1) * PAGE_SIZE, listingPage * PAGE_SIZE);
+
+  const filteredUsers = allUsers.filter(u => {
+    if (userFilter === "landlord") return u.role === "landlord";
+    if (userFilter === "renter") return u.role === "renter";
+    if (userFilter === "verified") return u.isVerified;
+    if (userFilter === "unverified") return !u.isVerified;
+    return true;
+  });
+
+  const totalUserPages = Math.ceil(filteredUsers.length / USER_PAGE_SIZE);
+  const pagedUsers = filteredUsers.slice((userPage - 1) * USER_PAGE_SIZE, userPage * USER_PAGE_SIZE);
 
   const filteredReports = reports.filter(report => {
     if (reportFilter === "all") return true;
@@ -344,6 +382,7 @@ export default function AdminDashboard() {
   });
 
   return (
+    <>
     <div className={`min-h-screen relative ${isDark ? "bg-gray-950" : "bg-gray-50"}`}>
       {/* Grid background — only in dark mode */}
       {isDark && (
@@ -476,7 +515,7 @@ export default function AdminDashboard() {
                   <Home className="w-8 h-8 text-primary" />
                 </div>
                 <p className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.totalListings}</p>
-                <div className={`mt-2 text-sm ${isDark ? "text-gray-500" : "text-gray-500"}`}>{stats.pendingListings} {tc.pending}</div>
+                <div className={`mt-2 text-sm ${isDark ? "text-gray-500" : "text-gray-500"}`}>{stats.verifiedListings} verified</div>
               </div>
               <div className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                 <div className="flex items-center justify-between mb-2">
@@ -484,7 +523,7 @@ export default function AdminDashboard() {
                   <Users className="w-8 h-8 text-primary" />
                 </div>
                 <p className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.totalUsers}</p>
-                <div className={`mt-2 text-sm ${isDark ? "text-gray-500" : "text-gray-500"}`}>{stats.owners} {tc.owners}, {stats.tenants} {tc.tenants}</div>
+                <div className={`mt-2 text-sm ${isDark ? "text-gray-500" : "text-gray-500"}`}>{stats.owners} landlords, {stats.tenants} renters</div>
               </div>
               <div className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                 <div className="flex items-center justify-between mb-2">
@@ -498,91 +537,206 @@ export default function AdminDashboard() {
 
             {/* Listings Management */}
             {activeTab === "listings" && (
-              <div className="space-y-6">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+              <div className="space-y-4">
+                {/* Header */}
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{tc.listingsManagement}</h2>
-                  <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
-                    <Filter className={`w-5 h-5 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
+                  <div className="flex items-center gap-2">
+                    <Filter className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
                     <select
                       value={listingFilter}
-                      onChange={(e) => setListingFilter(e.target.value)}
-                      className={`w-full sm:w-auto px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-gray-200" : "bg-white border-gray-300 text-gray-700"}`}
+                      onChange={(e) => { setListingFilter(e.target.value); setListingPage(1); }}
+                      className={`px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-gray-200" : "bg-white border-gray-300 text-gray-700"}`}
                     >
                       <option value="all">{tc.all}</option>
-                      <option value="pending">{tc.pending}</option>
-                      <option value="approved">{tc.approved}</option>
-                      <option value="rejected">{tc.rejected}</option>
+                      <option value="pg">PG</option>
+                      <option value="tenant">Tenant</option>
+                      <option value="verified">Verified</option>
                     </select>
                   </div>
                 </div>
 
-                {filteredListings.length > 0 ? (
-                  <div className="space-y-4">
-                    {filteredListings.map((listing) => (
-                      <div key={listing.id} className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
-                        <div className="flex flex-col md:flex-row gap-4 md:gap-6">
-                          <div className="relative w-full h-48 md:w-48 md:h-32 flex-shrink-0">
-                            <Image src={listing.image} alt={listing.name} fill className="object-cover rounded-lg" />
-                            <span className={`absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-medium ${listing.type === "PG" ? "bg-blue-500 text-white" : "bg-green-500 text-white"}`}>
-                              {listing.type}
-                            </span>
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-start justify-between mb-3">
-                              <div>
-                                <h3 className={`text-xl font-bold mb-1 ${isDark ? "text-white" : "text-gray-900"}`}>{listing.name}</h3>
-                                <div className={`flex items-center gap-2 mb-2 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                                  <MapPin className="w-4 h-4" />
-                                  <span className="text-sm">{listing.location}</span>
-                                </div>
-                                <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
-                                  {tc.ownerName}: <span className={`font-medium ${isDark ? "text-gray-200" : "text-gray-800"}`}>{listing.ownerName}</span>
-                                </p>
-                                <p className="text-sm text-gray-500">{tc.submittedDate}: {listing.submittedDate}</p>
-                              </div>
-                              <span className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(listing.status)}`}>
-                                {listing.status === "Pending" ? tc.pending : listing.status === "Approved" ? tc.approved : tc.rejected}
-                              </span>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4 mb-4">
-                              <div className={`p-3 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
-                                <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>{tc.rent}</p>
-                                <p className={`font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{currencySymbol} {listing.rent.toLocaleString()}</p>
-                              </div>
-                              <div className={`p-3 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
-                                <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>{tc.rooms}</p>
-                                <p className={`font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{listing.rooms}</p>
-                              </div>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {listing.status === "Pending" && (
-                                <>
-                                  <button className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                                    <CheckCircle className="w-4 h-4" />{tc.approve}
-                                  </button>
-                                  <button className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                                    <XCircle className="w-4 h-4" />{tc.reject}
-                                  </button>
-                                </>
-                              )}
-                              <button className="flex items-center gap-2 px-4 py-2 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-colors">
-                                <Eye className="w-4 h-4" />{tc.view}
-                              </button>
-                              <button className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${isDark ? "border-gray-600 text-gray-300 hover:bg-gray-700" : "border-gray-300 text-gray-700 hover:bg-gray-50"}`}>
-                                <Edit className="w-4 h-4" />{tc.edit}
-                              </button>
-                              <button className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${isDark ? "border-red-500/50 text-red-400 hover:bg-red-500/10" : "border-red-300 text-red-500 hover:bg-red-50"}`}>
-                                <Trash2 className="w-4 h-4" />{tc.delete}
-                              </button>
-                            </div>
-                          </div>
+                {propertiesLoading ? (
+                  <div className="flex items-center justify-center py-20">
+                    <Loader2 className={`w-8 h-8 animate-spin ${isDark ? "text-gray-400" : "text-gray-500"}`} />
+                  </div>
+                ) : filteredListings.length > 0 ? (
+                  <>
+                    {/* Table */}
+                    <div className={`rounded-2xl border overflow-hidden ${isDark ? "border-gray-800" : "border-gray-200"}`}>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className={`border-b ${isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
+                              <th className={`px-4 py-3 text-left font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>#</th>
+                              <th className={`px-4 py-3 text-left font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Property</th>
+                              <th className={`px-4 py-3 text-left font-semibold hidden md:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Location</th>
+                              <th className={`px-4 py-3 text-left font-semibold hidden lg:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Owner</th>
+                              <th className={`px-4 py-3 text-left font-semibold hidden lg:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Contact</th>
+                              <th className={`px-4 py-3 text-right font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Price</th>
+                              <th className={`px-4 py-3 text-left font-semibold hidden sm:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Date</th>
+                              <th className={`px-4 py-3 text-center font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className={`divide-y ${isDark ? "divide-gray-800" : "divide-gray-100"}`}>
+                            {pagedListings.map((property, idx) => {
+                              const owner = typeof property.createdBy === "object" ? property.createdBy as PropertyOwner : null;
+                              const img = property.images?.[0] || "/owner.png";
+                              const rowNum = (listingPage - 1) * PAGE_SIZE + idx + 1;
+                              return (
+                                <tr key={property._id} className={`transition-colors ${isDark ? "bg-gray-900 hover:bg-gray-800" : "bg-white hover:bg-gray-50"}`}>
+                                  {/* # */}
+                                  <td className={`px-4 py-3 text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>{rowNum}</td>
+
+                                  {/* Property */}
+                                  <td className="px-4 py-3">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                      <div className="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200">
+                                        <Image src={img} alt={property.title} fill className="object-cover" />
+                                      </div>
+                                      <div className="min-w-0">
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                          <span className={`px-1.5 py-0.5 rounded text-xs font-semibold text-white ${property.propertyType === "PG" ? "bg-blue-600" : "bg-green-600"}`}>
+                                            {property.propertyType}
+                                          </span>
+                                          {property.isVerified && (
+                                            <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-emerald-600 text-white text-xs font-semibold rounded">
+                                              <ShieldCheck className="w-2.5 h-2.5" /> Verified
+                                            </span>
+                                          )}
+                                        </div>
+                                        <p className={`font-semibold truncate max-w-[160px] mt-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>{property.title}</p>
+                                      </div>
+                                    </div>
+                                  </td>
+
+                                  {/* Location */}
+                                  <td className={`px-4 py-3 hidden md:table-cell ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                                    <div className="flex items-center gap-1 max-w-[160px]">
+                                      <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                                      <span className="truncate text-xs">{[property.areaName, property.location].filter(Boolean).join(", ")}</span>
+                                    </div>
+                                  </td>
+
+                                  {/* Owner */}
+                                  <td className={`px-4 py-3 hidden lg:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                                    <span className="font-medium text-xs">{owner?.fullName || "—"}</span>
+                                  </td>
+
+                                  {/* Contact */}
+                                  <td className={`px-4 py-3 hidden lg:table-cell ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                                    <div className="space-y-0.5">
+                                      {owner?.email && <div className="flex items-center gap-1 text-xs"><Mail className="w-3 h-3" />{owner.email}</div>}
+                                      {owner?.phoneNumber && <div className="flex items-center gap-1 text-xs"><Phone className="w-3 h-3" />{owner.phoneNumber}</div>}
+                                    </div>
+                                  </td>
+
+                                  {/* Price */}
+                                  <td className="px-4 py-3 text-right">
+                                    <span className="font-bold text-primary text-sm">{currencySymbol}{property.price.toLocaleString()}</span>
+                                  </td>
+
+                                  {/* Date */}
+                                  <td className={`px-4 py-3 hidden sm:table-cell text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                                    {new Date(property.createdAt).toLocaleDateString()}
+                                  </td>
+
+                                  {/* Actions */}
+                                  <td className="px-4 py-3">
+                                    <div className="flex items-center justify-center gap-1.5">
+                                      <button
+                                        onClick={() => setSelectedProperty(property)}
+                                        className="flex items-center gap-1 px-2.5 py-1.5 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-colors text-xs font-medium"
+                                      >
+                                        <Eye className="w-3.5 h-3.5" /> View
+                                      </button>
+                                      {deleteConfirmId === property._id ? (
+                                        <div className="flex items-center gap-1">
+                                          <button
+                                            onClick={() => handleDeleteProperty(property._id)}
+                                            disabled={deletingId === property._id}
+                                            className="flex items-center gap-1 px-2.5 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs font-medium disabled:opacity-60"
+                                          >
+                                            {deletingId === property._id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                                            Yes
+                                          </button>
+                                          <button
+                                            onClick={() => setDeleteConfirmId(null)}
+                                            className={`px-2.5 py-1.5 rounded-lg text-xs border transition-colors ${isDark ? "border-gray-600 text-gray-300 hover:bg-gray-700" : "border-gray-300 text-gray-600 hover:bg-gray-100"}`}
+                                          >
+                                            No
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <button
+                                          onClick={() => setDeleteConfirmId(property._id)}
+                                          className={`flex items-center gap-1 px-2.5 py-1.5 border rounded-lg transition-colors text-xs font-medium ${isDark ? "border-red-500/50 text-red-400 hover:bg-red-500/10" : "border-red-300 text-red-500 hover:bg-red-50"}`}
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" /> Delete
+                                        </button>
+                                      )}
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Pagination */}
+                    {totalListingPages > 1 && (
+                      <div className="flex items-center justify-between pt-2">
+                        <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                          Showing {(listingPage - 1) * PAGE_SIZE + 1}–{Math.min(listingPage * PAGE_SIZE, filteredListings.length)} of {filteredListings.length}
+                        </p>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => setListingPage(p => Math.max(1, p - 1))}
+                            disabled={listingPage === 1}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40 ${isDark ? "border border-gray-700 text-gray-300 hover:bg-gray-700" : "border border-gray-300 text-gray-600 hover:bg-gray-100"}`}
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </button>
+                          {Array.from({ length: totalListingPages }, (_, i) => i + 1)
+                            .filter(p => p === 1 || p === totalListingPages || Math.abs(p - listingPage) <= 1)
+                            .reduce<(number | "...")[]>((acc, p, i, arr) => {
+                              if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push("...");
+                              acc.push(p);
+                              return acc;
+                            }, [])
+                            .map((item, i) =>
+                              item === "..." ? (
+                                <span key={`ellipsis-${i}`} className={`w-8 h-8 flex items-center justify-center text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>…</span>
+                              ) : (
+                                <button
+                                  key={item}
+                                  onClick={() => setListingPage(item as number)}
+                                  className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
+                                    listingPage === item
+                                      ? "bg-primary text-white"
+                                      : isDark ? "border border-gray-700 text-gray-300 hover:bg-gray-700" : "border border-gray-300 text-gray-600 hover:bg-gray-100"
+                                  }`}
+                                >
+                                  {item}
+                                </button>
+                              )
+                            )}
+                          <button
+                            onClick={() => setListingPage(p => Math.min(totalListingPages, p + 1))}
+                            disabled={listingPage === totalListingPages}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40 ${isDark ? "border border-gray-700 text-gray-300 hover:bg-gray-700" : "border border-gray-300 text-gray-600 hover:bg-gray-100"}`}
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    )}
+                  </>
                 ) : (
                   <div className={`rounded-2xl p-12 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
-                    <Home className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
+                    <Building2 className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
                     <p className={isDark ? "text-gray-500" : "text-gray-500"}>{tc.noListings}</p>
                   </div>
                 )}
@@ -591,101 +745,147 @@ export default function AdminDashboard() {
 
             {/* User Management */}
             {activeTab === "users" && (
-              <div className="space-y-6">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+              <div className="space-y-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{tc.userManagement}</h2>
-                  <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
-                    <Filter className={`w-5 h-5 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
+                  <div className="flex items-center gap-2">
+                    <Filter className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
                     <select
                       value={userFilter}
-                      onChange={(e) => setUserFilter(e.target.value)}
-                      className={`w-full sm:w-auto px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-gray-200" : "bg-white border-gray-300 text-gray-700"}`}
+                      onChange={(e) => { setUserFilter(e.target.value); setUserPage(1); }}
+                      className={`px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-gray-200" : "bg-white border-gray-300 text-gray-700"}`}
                     >
                       <option value="all">{tc.all}</option>
-                      <option value="owners">{tc.owners}</option>
-                      <option value="tenants">{tc.tenants}</option>
-                      <option value="banned">{tc.banned}</option>
+                      <option value="landlord">Landlords</option>
+                      <option value="renter">Renters</option>
+                      <option value="verified">Verified</option>
+                      <option value="unverified">Unverified</option>
                     </select>
                   </div>
                 </div>
 
-                {filteredUsers.length > 0 ? (
-                  <div className={`rounded-2xl overflow-hidden border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className={`border-b ${isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
-                          <tr>
-                            <th className={`px-6 py-4 text-left text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.name}</th>
-                            <th className={`px-6 py-4 text-left text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.email}</th>
-                            <th className={`px-6 py-4 text-left text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.role}</th>
-                            <th className={`px-6 py-4 text-left text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.status}</th>
-                            <th className={`px-6 py-4 text-left text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.verified}</th>
-                            <th className={`px-6 py-4 text-right text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className={`divide-y ${isDark ? "divide-gray-800" : "divide-gray-100"}`}>
-                          {filteredUsers.map((user) => (
-                            <tr key={user.id} className={isDark ? "hover:bg-gray-800/50" : "hover:bg-gray-50"}>
-                              <td className="px-6 py-4">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-bold">
-                                    {user.name.charAt(0)}
-                                  </div>
-                                  <div>
-                                    <p className={`font-medium ${isDark ? "text-white" : "text-gray-900"}`}>{user.name}</p>
-                                    <p className="text-sm text-gray-500">Joined: {user.joinedDate}</p>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className={`px-6 py-4 ${isDark ? "text-gray-400" : "text-gray-600"}`}>{user.email}</td>
-                              <td className="px-6 py-4">
-                                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                  user.role === "Owner"
-                                    ? isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-100 text-blue-700"
-                                    : isDark ? "bg-purple-500/20 text-purple-400" : "bg-purple-100 text-purple-700"
-                                }`}>
-                                  {user.role}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4">
-                                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(user.status)}`}>
-                                  {user.status === "Active" ? tc.active : tc.banned}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4">
-                                {user.verified ? (
-                                  <CheckCircle className="w-5 h-5 text-green-600" />
-                                ) : (
-                                  <XCircle className="w-5 h-5 text-gray-400" />
-                                )}
-                              </td>
-                              <td className="px-6 py-4">
-                                <div className="flex items-center justify-end gap-2">
-                                  {!user.verified && user.status === "Active" && (
-                                    <button className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
-                                      <Shield className="w-4 h-4" />
-                                      {tc.verify}
-                                    </button>
-                                  )}
-                                  {user.status === "Active" ? (
-                                    <button className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm">
-                                      <Ban className="w-4 h-4" />
-                                      {tc.ban}
-                                    </button>
-                                  ) : (
-                                    <button className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
-                                      <CheckCircle className="w-4 h-4" />
-                                      {tc.unban}
-                                    </button>
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                {usersLoading ? (
+                  <div className="flex items-center justify-center py-20">
+                    <Loader2 className={`w-8 h-8 animate-spin ${isDark ? "text-gray-400" : "text-gray-500"}`} />
                   </div>
+                ) : filteredUsers.length > 0 ? (
+                  <>
+                    <div className={`rounded-2xl border overflow-hidden ${isDark ? "border-gray-800" : "border-gray-200"}`}>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className={`border-b ${isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
+                              <th className={`px-4 py-3 text-left font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>#</th>
+                              <th className={`px-4 py-3 text-left font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.name}</th>
+                              <th className={`px-4 py-3 text-left font-semibold hidden sm:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.email}</th>
+                              <th className={`px-4 py-3 text-left font-semibold hidden md:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Phone</th>
+                              <th className={`px-4 py-3 text-left font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.role}</th>
+                              <th className={`px-4 py-3 text-left font-semibold hidden sm:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Provider</th>
+                              <th className={`px-4 py-3 text-center font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.verified}</th>
+                              <th className={`px-4 py-3 text-left font-semibold hidden md:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Joined</th>
+                            </tr>
+                          </thead>
+                          <tbody className={`divide-y ${isDark ? "divide-gray-800" : "divide-gray-100"}`}>
+                            {pagedUsers.map((u, idx) => {
+                              const rowNum = (userPage - 1) * USER_PAGE_SIZE + idx + 1;
+                              const initials = u.fullName?.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) || "?";
+                              const roleColor = u.role === "landlord"
+                                ? isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-100 text-blue-700"
+                                : u.role === "admin"
+                                ? isDark ? "bg-purple-500/20 text-purple-400" : "bg-purple-100 text-purple-700"
+                                : isDark ? "bg-green-500/20 text-green-400" : "bg-green-100 text-green-700";
+                              return (
+                                <tr key={u._id} className={`transition-colors ${isDark ? "bg-gray-900 hover:bg-gray-800" : "bg-white hover:bg-gray-50"}`}>
+                                  <td className={`px-4 py-3 text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>{rowNum}</td>
+                                  <td className="px-4 py-3">
+                                    <div className="flex items-center gap-2.5">
+                                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                        {initials}
+                                      </div>
+                                      <span className={`font-medium text-sm ${isDark ? "text-white" : "text-gray-900"}`}>{u.fullName}</span>
+                                    </div>
+                                  </td>
+                                  <td className={`px-4 py-3 hidden sm:table-cell text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}>{u.email}</td>
+                                  <td className={`px-4 py-3 hidden md:table-cell text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                                    {u.phoneNumber ? (
+                                      <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{u.phoneNumber}</span>
+                                    ) : <span className="text-gray-500">—</span>}
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${roleColor}`}>
+                                      {u.role}
+                                    </span>
+                                  </td>
+                                  <td className={`px-4 py-3 hidden sm:table-cell text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                                    <span className={`px-2 py-0.5 rounded text-xs capitalize ${isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"}`}>
+                                      {u.provider}
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-3 text-center">
+                                    {u.isVerified
+                                      ? <CheckCircle className="w-4 h-4 text-green-500 mx-auto" />
+                                      : <XCircle className="w-4 h-4 text-gray-400 mx-auto" />}
+                                  </td>
+                                  <td className={`px-4 py-3 hidden md:table-cell text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                                    {new Date(u.createdAt).toLocaleDateString()}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Pagination */}
+                    {totalUserPages > 1 && (
+                      <div className="flex items-center justify-between pt-2">
+                        <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                          Showing {(userPage - 1) * USER_PAGE_SIZE + 1}–{Math.min(userPage * USER_PAGE_SIZE, filteredUsers.length)} of {filteredUsers.length}
+                        </p>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => setUserPage(p => Math.max(1, p - 1))}
+                            disabled={userPage === 1}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40 ${isDark ? "border border-gray-700 text-gray-300 hover:bg-gray-700" : "border border-gray-300 text-gray-600 hover:bg-gray-100"}`}
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </button>
+                          {Array.from({ length: totalUserPages }, (_, i) => i + 1)
+                            .filter(p => p === 1 || p === totalUserPages || Math.abs(p - userPage) <= 1)
+                            .reduce<(number | "...")[]>((acc, p, i, arr) => {
+                              if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push("...");
+                              acc.push(p);
+                              return acc;
+                            }, [])
+                            .map((item, i) =>
+                              item === "..." ? (
+                                <span key={`ellipsis-${i}`} className={`w-8 h-8 flex items-center justify-center text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>…</span>
+                              ) : (
+                                <button
+                                  key={item}
+                                  onClick={() => setUserPage(item as number)}
+                                  className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
+                                    userPage === item
+                                      ? "bg-primary text-white"
+                                      : isDark ? "border border-gray-700 text-gray-300 hover:bg-gray-700" : "border border-gray-300 text-gray-600 hover:bg-gray-100"
+                                  }`}
+                                >
+                                  {item}
+                                </button>
+                              )
+                            )}
+                          <button
+                            onClick={() => setUserPage(p => Math.min(totalUserPages, p + 1))}
+                            disabled={userPage === totalUserPages}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40 ${isDark ? "border border-gray-700 text-gray-300 hover:bg-gray-700" : "border border-gray-300 text-gray-600 hover:bg-gray-100"}`}
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className={`rounded-2xl p-12 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                     <Users className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
@@ -772,5 +972,120 @@ export default function AdminDashboard() {
           </div>
         </div>
     </div>
+
+      {/* Property Detail Modal */}
+      {selectedProperty && (() => {
+        const prop = selectedProperty;
+        const owner = typeof prop.createdBy === "object" ? prop.createdBy as PropertyOwner : null;
+        return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedProperty(null)}>
+          <div
+            className={`w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className={`flex items-center justify-between p-5 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+              <div className="flex items-center gap-3">
+                <h2 className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{prop.title}</h2>
+                {prop.isVerified && (
+                  <span className="flex items-center gap-1 px-2 py-0.5 bg-green-600 text-white text-xs font-semibold rounded-full">
+                    <ShieldCheck className="w-3 h-3" /> Verified
+                  </span>
+                )}
+              </div>
+              <button onClick={() => setSelectedProperty(null)} className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isDark ? "hover:bg-gray-700 text-gray-400" : "hover:bg-gray-100 text-gray-500"}`}>
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Image */}
+            {prop.images?.[0] && (
+              <div className="relative h-56 w-full">
+                <Image src={prop.images[0]} alt={prop.title} fill className="object-cover" />
+              </div>
+            )}
+
+            <div className="p-5 space-y-5">
+              {/* Property Info */}
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: "Type", value: prop.propertyType },
+                  { label: "Category", value: prop.category || "—" },
+                  { label: "Price", value: `${currencySymbol}${prop.price.toLocaleString()}/mo` },
+                  { label: "Rooms", value: prop.rooms },
+                  { label: "Posted by", value: prop.posterType || "—" },
+                  { label: "Listed on", value: new Date(prop.createdAt).toLocaleDateString() },
+                ].map(({ label, value }) => (
+                  <div key={label} className={`p-3 rounded-xl ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                    <p className={`text-xs mb-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>{label}</p>
+                    <p className={`font-semibold text-sm ${isDark ? "text-white" : "text-gray-900"}`}>{String(value)}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Address */}
+              <div className={`p-4 rounded-xl ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                <p className={`text-xs font-semibold uppercase tracking-wide mb-2 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Address</p>
+                <p className={`text-sm ${isDark ? "text-gray-200" : "text-gray-700"}`}>
+                  {[prop.fullAddress, prop.areaName, prop.location, prop.state, prop.pincode].filter(Boolean).join(", ")}
+                </p>
+                {prop.landmark && (
+                  <p className={`text-xs mt-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Landmark: {prop.landmark}</p>
+                )}
+              </div>
+
+              {/* Owner Info */}
+              {owner && (
+                <div className={`p-4 rounded-xl border ${isDark ? "bg-gray-800 border-gray-700" : "bg-blue-50 border-blue-100"}`}>
+                  <p className={`text-xs font-semibold uppercase tracking-wide mb-3 ${isDark ? "text-gray-400" : "text-blue-600"}`}>Owner Information</p>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Users className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-blue-500"}`} />
+                      <span className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>{owner.fullName}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Mail className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-blue-500"}`} />
+                      <span className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>{owner.email}</span>
+                    </div>
+                    {owner.phoneNumber && (
+                      <div className="flex items-center gap-2">
+                        <Phone className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-blue-500"}`} />
+                        <span className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>{owner.phoneNumber}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Description */}
+              {prop.pgDescription && (
+                <div className={`p-4 rounded-xl ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                  <p className={`text-xs font-semibold uppercase tracking-wide mb-2 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Description</p>
+                  <p className={`text-sm leading-relaxed ${isDark ? "text-gray-300" : "text-gray-700"}`}>{prop.pgDescription}</p>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-2">
+                <Link
+                  href={`/property/${prop._id}`}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-primary text-primary rounded-xl hover:bg-primary hover:text-white transition-colors text-sm font-medium"
+                  onClick={() => setSelectedProperty(null)}
+                >
+                  <Eye className="w-4 h-4" /> View Public Page
+                </Link>
+                <button
+                  onClick={() => { setSelectedProperty(null); setDeleteConfirmId(prop._id); }}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors text-sm font-medium"
+                >
+                  <Trash2 className="w-4 h-4" /> Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        );
+      })()}
+    </>
   );
 }
