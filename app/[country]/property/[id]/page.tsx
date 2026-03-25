@@ -35,6 +35,15 @@ export default function PropertyDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
+  // Report state
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDescription, setReportDescription] = useState("");
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportDone, setReportDone] = useState(false);
+
+  const REPORT_REASONS = ["Fake listing", "Incorrect information", "Misleading photos", "Already rented", "Scam / fraud", "Other"];
+
   const currencySymbol = translate('currency.symbol');
   const monthText = translate('currency.perMonth');
 
@@ -279,6 +288,33 @@ export default function PropertyDetailsPage() {
     const subject = encodeURIComponent(`Property: ${property?.title}`);
     const body = encodeURIComponent(`I found this property:\n\n${property?.title}\n${property?.location}\n\n${window.location.href}`);
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  };
+
+  const handleSubmitReport = async () => {
+    if (!reportReason) { toast.error("Please select a reason"); return; }
+    if (reportDescription.trim().length < 10) { toast.error("Please provide more details"); return; }
+    setReportSubmitting(true);
+    try {
+      const res = await fetch(`/api/properties/${propertyId}/report`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ reason: reportReason, description: reportDescription }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setReportDone(true);
+        toast.success("Report submitted. Thank you!");
+      } else {
+        toast.error(data.error || "Failed to submit report");
+      }
+    } catch {
+      toast.error("Something went wrong");
+    } finally {
+      setReportSubmitting(false);
+    }
   };
 
   // ── Derived display values ─────────────────────────────────────────────────
@@ -982,9 +1018,23 @@ export default function PropertyDetailsPage() {
                   <div className="mt-6 pt-6 border-t border-gray-200">
                     <p className="text-sm text-gray-600 text-center">{t.anyConcerns}</p>
                     <p className="text-sm text-center">
-                      <button className="text-red-600 hover:text-red-700 font-semibold">{t.reportIt}</button>{" "}
+                      {user?.role === 'renter' ? (
+                        <button
+                          onClick={() => { setShowReportModal(true); setReportDone(false); setReportReason(""); setReportDescription(""); }}
+                          className="text-red-600 hover:text-red-700 font-semibold"
+                        >
+                          {t.reportIt}
+                        </button>
+                      ) : (
+                        <span className="text-red-600 font-semibold">{t.reportIt}</span>
+                      )}{" "}
                       <span className="text-gray-600">{t.toOurTeam}</span>
                     </p>
+                    {!isAuthenticated && (
+                      <p className="text-xs text-gray-400 text-center mt-1">
+                        <Link href={`/${country}/login`} className="text-primary underline">Login</Link> as a tenant to report
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1049,6 +1099,65 @@ export default function PropertyDetailsPage() {
                   <button onClick={handleShareEmail} className="py-3 px-4 bg-gray-700 hover:bg-gray-800 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"><Mail className="w-5 h-5" />Email</button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowReportModal(false)}>
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 border-b border-gray-200">
+              <h2 className="text-lg font-bold text-gray-900">Report this property</h2>
+              <button onClick={() => setShowReportModal(false)} className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="p-5">
+              {reportDone ? (
+                <div className="text-center py-6">
+                  <CheckCircle className="w-14 h-14 text-green-500 mx-auto mb-3" />
+                  <p className="text-lg font-semibold text-gray-900 mb-1">Report submitted</p>
+                  <p className="text-sm text-gray-500">Our team will review it shortly. Thank you.</p>
+                  <button onClick={() => setShowReportModal(false)} className="mt-5 px-6 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm">Close</button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Reason <span className="text-red-500">*</span></label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {REPORT_REASONS.map(r => (
+                        <button
+                          key={r}
+                          onClick={() => setReportReason(r)}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors text-left ${reportReason === r ? "border-red-500 bg-red-50 text-red-700" : "border-gray-200 text-gray-700 hover:border-gray-300"}`}
+                        >
+                          {r}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Details <span className="text-red-500">*</span></label>
+                    <textarea
+                      value={reportDescription}
+                      onChange={e => setReportDescription(e.target.value)}
+                      placeholder="Describe the issue in detail..."
+                      rows={4}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-red-400 resize-none"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">{reportDescription.length}/1000</p>
+                  </div>
+                  <button
+                    onClick={handleSubmitReport}
+                    disabled={reportSubmitting}
+                    className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-60 text-sm"
+                  >
+                    {reportSubmitting ? "Submitting..." : "Submit Report"}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
