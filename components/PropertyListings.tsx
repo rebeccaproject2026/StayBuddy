@@ -90,7 +90,11 @@ export default function PropertyListings() {
     if (!isAuthenticated || !token) {
       toast.error("Please login to save favorites");
       router.push(`/${country}/login`);
-      throw new Error("unauthenticated"); // causes PropertyCard to revert the optimistic update
+      throw new Error("unauthenticated");
+    }
+    if (user?.role === 'landlord') {
+      toast.error("Landlords cannot save favorites");
+      throw new Error("not-allowed");
     }
     const res = await fetch('/api/auth/favorites', {
       method: 'POST',
@@ -229,7 +233,7 @@ export default function PropertyListings() {
                   rating={property.averageRating ?? undefined}
                   reviewsCount={property.reviewsCount}
                   isFavorite={favoriteIds.has(property._id)}
-                  onToggleFavorite={handleToggleFavorite}
+                  onToggleFavorite={user?.role === 'landlord' ? undefined : handleToggleFavorite}
                 />
               </div>
             ))}

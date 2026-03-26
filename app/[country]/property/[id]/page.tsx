@@ -121,6 +121,10 @@ export default function PropertyDetailsPage() {
       router.push(`/${country}/login`);
       return;
     }
+    if (user?.role === 'landlord') {
+      toast.error("Landlords cannot save favorites");
+      return;
+    }
     if (isTogglingFav) return;
     setIsTogglingFav(true);
     const newState = !isFavorite;
@@ -492,6 +496,7 @@ export default function PropertyDetailsPage() {
                     <span className="line-clamp-2">{property.fullAddress}, {property.areaName}, {property.state}</span>
                   </p>
                 </div>
+                {user?.role !== 'landlord' && (
                 <button onClick={handleToggleFavorite}
                   disabled={isTogglingFav}
                   className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl text-xs sm:text-sm md:text-base font-semibold transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-70 ${isFavorite ? 'bg-red-50 border-2 border-red-500 text-red-600 hover:bg-red-100' : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-primary hover:bg-primary/5 hover:text-primary'}`}>
@@ -499,6 +504,7 @@ export default function PropertyDetailsPage() {
                   <span className="whitespace-nowrap hidden sm:inline">{t.addToFavorites}</span>
                   <span className="whitespace-nowrap sm:hidden">Favorite</span>
                 </button>
+                )}
               </div>
 
               {/* Description */}
@@ -1025,10 +1031,12 @@ export default function PropertyDetailsPage() {
                         >
                           {t.reportIt}
                         </button>
-                      ) : (
+                      ) : !isAuthenticated ? (
                         <span className="text-red-600 font-semibold">{t.reportIt}</span>
-                      )}{" "}
-                      <span className="text-gray-600">{t.toOurTeam}</span>
+                      ) : null}{" "}
+                      {(user?.role === 'renter' || !isAuthenticated) && (
+                        <span className="text-gray-600">{t.toOurTeam}</span>
+                      )}
                     </p>
                     {!isAuthenticated && (
                       <p className="text-xs text-gray-400 text-center mt-1">

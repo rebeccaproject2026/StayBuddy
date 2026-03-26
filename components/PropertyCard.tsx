@@ -191,7 +191,8 @@ export default function PropertyCard({
             )}
           </div>
 
-          {/* Favorite Button */}
+          {/* Favorite Button — only for renters (hidden when onToggleFavorite is not provided) */}
+          {onToggleFavorite !== undefined && (
           <button
             onClick={toggleFavorite}
             disabled={isTogglingFav}
@@ -202,6 +203,7 @@ export default function PropertyCard({
                 }`}
             />
           </button>
+          )}
 
           {/* Image Indicators */}
           {images.length > 1 && (

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Mail, CheckCircle, AlertCircle, Bell, Sparkles } from "lucide-react";
+import { motion, useInView } from "framer-motion";
 
 export default function SubscribeSection() {
   const { language } = useLanguage();
@@ -10,6 +11,8 @@ export default function SubscribeSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-80px" });
 
   const content = {
     en: {
@@ -23,11 +26,7 @@ export default function SubscribeSection() {
       errorMessage: "Something went wrong. Please try again.",
       invalidEmail: "Please enter a valid email address",
       privacyText: "We respect your privacy. Unsubscribe anytime.",
-      features: [
-        "Instant notifications",
-        "No spam guarantee",
-        "Free forever"
-      ]
+      features: ["Instant notifications", "No spam guarantee", "Free forever"],
     },
     fr: {
       badge: "Restez informé",
@@ -40,110 +39,97 @@ export default function SubscribeSection() {
       errorMessage: "Une erreur s'est produite. Veuillez réessayer.",
       invalidEmail: "Veuillez entrer une adresse e-mail valide",
       privacyText: "Nous respectons votre vie privée. Désabonnez-vous à tout moment.",
-      features: [
-        "Notifications instantanées",
-        "Garantie sans spam",
-        "Gratuit pour toujours"
-      ]
-    }
+      features: ["Notifications instantanées", "Garantie sans spam", "Gratuit pour toujours"],
+    },
   };
 
-  const t = content[language];
+  const t = content[language as keyof typeof content] || content.en;
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validateEmail(email)) {
       setSubmitStatus("error");
       setErrorMessage(t.invalidEmail);
-      setTimeout(() => {
-        setSubmitStatus("idle");
-        setErrorMessage("");
-      }, 3000);
+      setTimeout(() => { setSubmitStatus("idle"); setErrorMessage(""); }, 3000);
       return;
     }
-
     setIsSubmitting(true);
     setSubmitStatus("idle");
-
-    // Simulate API call
     try {
       await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Here you would make an actual API call to save the subscription
-      // await fetch('/api/subscribe', { method: 'POST', body: JSON.stringify({ email }) });
-
       setSubmitStatus("success");
       setEmail("");
-
-      // Reset success message after 5 seconds
-      setTimeout(() => {
-        setSubmitStatus("idle");
-      }, 5000);
-    } catch (error) {
+      setTimeout(() => setSubmitStatus("idle"), 5000);
+    } catch {
       setSubmitStatus("error");
       setErrorMessage(t.errorMessage);
-
-      setTimeout(() => {
-        setSubmitStatus("idle");
-        setErrorMessage("");
-      }, 3000);
+      setTimeout(() => { setSubmitStatus("idle"); setErrorMessage(""); }, 3000);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <section className="relative px-4 sm:px-6 md:px-4 py-8 sm:py-10 md:py-10 overflow-hidden">
+    <section className="relative px-4 sm:px-6 md:px-4 py-8 sm:py-10 md:py-10 overflow-hidden" ref={ref}>
       <div className="relative max-w-7xl mx-auto">
-        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden"
+        >
           <div className="grid md:grid-cols-5 gap-0">
-            {/* Left Side - Info */}
-            <div className="md:col-span-2 bg-gradient-to-br from-primary to-primary-dark p-6 sm:p-8 md:p-10 text-white flex flex-col justify-center">
+            {/* Left — Info */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={isInView ? { opacity: 1, x: 0 } : {}}
+              transition={{ duration: 0.6, delay: 0.15, ease: "easeOut" }}
+              className="md:col-span-2 bg-gradient-to-br from-primary to-primary-dark p-6 sm:p-8 md:p-10 text-white flex flex-col justify-center"
+            >
               <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full mb-4 w-fit">
                 <Sparkles className="w-4 h-4" />
                 <span className="text-xs font-semibold">{t.badge}</span>
               </div>
-
-              <h2 className="text-xl esm:text-2xl sm:text-3xl md:text-3xl font-bold mb-3 leading-tight">
-                {t.title}
-              </h2>
-
-              <p className="text-white/90 text-xs esm:text-sm sm:text-base md:text-base mb-5 esm:mb-6 md:mb-6 leading-relaxed">
-                {t.subtitle}
-              </p>
-
-              {/* Features */}
+              <h2 className="text-xl esm:text-2xl sm:text-3xl md:text-3xl font-bold mb-3 leading-tight">{t.title}</h2>
+              <p className="text-white/90 text-xs esm:text-sm sm:text-base mb-5 esm:mb-6 leading-relaxed">{t.subtitle}</p>
               <div className="space-y-2.5">
                 {t.features.map((feature, index) => (
-                  <div key={index} className="flex items-center gap-2.5">
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -15 }}
+                    animate={isInView ? { opacity: 1, x: 0 } : {}}
+                    transition={{ duration: 0.4, delay: 0.3 + index * 0.1, ease: "easeOut" }}
+                    className="flex items-center gap-2.5"
+                  >
                     <div className="w-4 h-4 esm:w-5 esm:h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
                       <CheckCircle className="w-3 h-3 esm:w-3.5 esm:h-3.5 text-white" />
                     </div>
-                    <span className="text-xs esm:text-sm sm:text-sm md:text-sm text-white/95">{feature}</span>
-                  </div>
+                    <span className="text-xs esm:text-sm text-white/95">{feature}</span>
+                  </motion.div>
                 ))}
               </div>
-            </div>
+            </motion.div>
 
-            {/* Right Side - Form */}
-            <div className="md:col-span-3 p-6 sm:p-8 md:p-10 flex flex-col justify-center">
+            {/* Right — Form */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              animate={isInView ? { opacity: 1, x: 0 } : {}}
+              transition={{ duration: 0.6, delay: 0.25, ease: "easeOut" }}
+              className="md:col-span-3 p-6 sm:p-8 md:p-10 flex flex-col justify-center"
+            >
               <div className="mb-4 flex items-start gap-3 esm:gap-4">
-                <div className="w-12 h-12 esm:w-14 esm:h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 flex-shrink-0">
+                <motion.div
+                  whileHover={{ rotate: 15, scale: 1.1 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                  className="w-12 h-12 esm:w-14 esm:h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 flex-shrink-0"
+                >
                   <Bell className="w-6 h-6 esm:w-7 esm:h-7 text-primary" />
-                </div>
+                </motion.div>
                 <div>
-                  <h3 className="text-lg esm:text-xl sm:text-2xl md:text-2xl font-bold text-gray-900">
-                    Subscribe for Updates
-                  </h3>
-                  <p className="text-xs esm:text-sm md:text-sm text-gray-600">
-                    Join our community and never miss an opportunity
-                  </p>
+                  <h3 className="text-lg esm:text-xl sm:text-2xl font-bold text-gray-900">Subscribe for Updates</h3>
+                  <p className="text-xs esm:text-sm text-gray-600">Join our community and never miss an opportunity</p>
                 </div>
               </div>
 
@@ -161,51 +147,49 @@ export default function SubscribeSection() {
                   />
                 </div>
 
-                <button
+                <motion.button
                   type="submit"
                   disabled={isSubmitting || submitStatus === "success"}
+                  whileHover={!isSubmitting && submitStatus !== "success" ? { scale: 1.02 } : {}}
+                  whileTap={!isSubmitting && submitStatus !== "success" ? { scale: 0.97 } : {}}
                   className="w-full py-3 esm:py-3.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
                   {isSubmitting ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      {t.subscribing}
-                    </>
+                    <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />{t.subscribing}</>
                   ) : submitStatus === "success" ? (
-                    <>
-                      <CheckCircle className="w-5 h-5" />
-                      Subscribed!
-                    </>
+                    <><CheckCircle className="w-5 h-5" />Subscribed!</>
                   ) : (
-                    <>
-                      <Bell className="w-5 h-5" />
-                      {t.subscribeButton}
-                    </>
+                    <><Bell className="w-5 h-5" />{t.subscribeButton}</>
                   )}
-                </button>
+                </motion.button>
 
-                {/* Status Messages */}
                 {submitStatus === "success" && (
-                  <div className="flex items-start gap-2 p-3.5 bg-green-50 border border-green-200 rounded-xl">
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-start gap-2 p-3.5 bg-green-50 border border-green-200 rounded-xl"
+                  >
                     <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <p className="text-sm text-green-800">{t.successMessage}</p>
-                  </div>
+                  </motion.div>
                 )}
 
                 {submitStatus === "error" && (
-                  <div className="flex items-start gap-2 p-3.5 bg-red-50 border border-red-200 rounded-xl">
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-start gap-2 p-3.5 bg-red-50 border border-red-200 rounded-xl"
+                  >
                     <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                     <p className="text-sm text-red-800">{errorMessage}</p>
-                  </div>
+                  </motion.div>
                 )}
 
-                <p className="text-xs text-center text-gray-500">
-                  {t.privacyText}
-                </p>
+                <p className="text-xs text-center text-gray-500">{t.privacyText}</p>
               </form>
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
