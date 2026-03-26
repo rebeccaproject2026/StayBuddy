@@ -2272,6 +2272,16 @@ export default function OwnerDashboard() {
                               }`}>
                                 {listing.propertyType}
                               </span>
+                              {listing.approvalStatus === "pending" && (
+                                <span className="absolute top-4 left-4 px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-500 text-white">
+                                  Pending Review
+                                </span>
+                              )}
+                              {listing.approvalStatus === "rejected" && (
+                                <span className="absolute top-4 left-4 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500 text-white">
+                                  Rejected
+                                </span>
+                              )}
                             </div>
                             <div className="p-6">
                               <h3 className={`text-xl font-bold mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>

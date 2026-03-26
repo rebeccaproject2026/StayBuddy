@@ -5,6 +5,7 @@ import Review from '@/models/Review';
 import cloudinary from '@/lib/cloudinary';
 import { authenticateUser } from '@/lib/auth-middleware';
 import { propertySchema } from '@/lib/validation';
+import { sendPropertyRequestEmail } from '@/lib/email';
 
 // Increase body size limit for image uploads
 export const config = {
@@ -168,11 +169,28 @@ export async function POST(req: NextRequest) {
       roomImages: pgRoomImgs,
       tenantRoomImages: tenantRoomImgs,
       verificationImages: verificationImgs,
-      isVerified: verificationImgs && verificationImgs.length > 0,
+      isVerified: false,           // always false until admin explicitly verifies
+      approvalStatus: 'pending',   // always pending until admin approves
       createdBy: authUser.id,
     });
 
     console.log('[POST /api/properties] Saved nearbyPlaces:', JSON.stringify((property as any).nearbyPlaces));
+
+    // Send notification email to admin (fire-and-forget — don't block the response)
+    const User = (await import('@/models/User')).default;
+    const owner = await User.findById(authUser.id).select('fullName email').lean();
+    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    sendPropertyRequestEmail(
+      (owner as any)?.fullName || 'Unknown',
+      (owner as any)?.email || authUser.email,
+      (property as any).title,
+      (property as any).propertyType,
+      (property as any).location,
+      (property as any).price,
+      ((property as any).verificationImages?.length ?? 0) > 0,
+      `${baseUrl}/in/dashboard/admin`
+    ).catch(err => console.error('[email] Property request notification failed:', err));
+
     return NextResponse.json({ success: true, property }, { status: 201 });
   } catch (error: any) {
     console.error('[POST /api/properties]', error);
@@ -230,6 +248,13 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
       filter.createdBy = authUser.id;
+      // Show all statuses for owner's own properties (so they can see pending ones)
+    } else {
+      // Public listing — only show approved properties (or legacy ones with no approvalStatus)
+      filter.$or = [
+        { approvalStatus: 'approved' },
+        { approvalStatus: { $exists: false } },
+      ];
     }
 
     const [properties, total] = await Promise.all([

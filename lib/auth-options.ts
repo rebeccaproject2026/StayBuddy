@@ -20,6 +20,8 @@ export const authOptions: NextAuthOptions = {
         const cookieStore = await cookies();
         const pendingCountry = cookieStore.get('pending_country')?.value;
         const country = ['fr', 'in'].includes(pendingCountry || '') ? pendingCountry! : 'in';
+        const pendingRole = cookieStore.get('pending_role')?.value;
+        const role = pendingRole === 'landlord' ? 'landlord' : 'renter';
 
         // Look up by email + country so /in and /fr are separate accounts
         const existingUser = await User.findOne({ email: user.email, country });
@@ -36,7 +38,7 @@ export const authOptions: NextAuthOptions = {
         const newUser = new User({
           fullName: user.name,
           email: user.email,
-          role: 'renter',
+          role,
           country,
           isVerified: true,
           provider: 'google',

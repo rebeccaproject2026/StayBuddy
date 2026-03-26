@@ -44,12 +44,12 @@ export default function PropertyDetailsPage() {
 
   const REPORT_REASONS = ["Fake listing", "Incorrect information", "Misleading photos", "Already rented", "Scam / fraud", "Other"];
 
-  const currencySymbol = translate('currency.symbol');
   const monthText = translate('currency.perMonth');
 
   const propertyId = params.id as string;
   const country = params.country as string;
   const isIndia = country?.toLowerCase() === 'in' || country?.toLowerCase() === 'india';
+  const currencySymbol = country === 'fr' ? '€' : '₹';
 
   // Fetch property from API
   useEffect(() => {

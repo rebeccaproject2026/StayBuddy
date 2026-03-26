@@ -28,6 +28,12 @@ import {
   ShieldCheck,
   Phone,
   Mail,
+  ClipboardList,
+  Clock,
+  CheckCheck,
+  XOctagon,
+  MessageSquare,
+  Building2 as BuildingIcon,
   Calendar,
   Building2,
   Loader2,
@@ -54,12 +60,14 @@ interface AdminProperty {
   rooms: number;
   images: string[];
   isVerified?: boolean;
+  approvalStatus: 'pending' | 'approved' | 'rejected';
   pgDescription?: string;
   fullAddress?: string;
   pincode?: string;
   landmark?: string;
   category?: string;
   posterType?: string;
+  verificationImages?: string[];
   createdAt: string;
   createdBy: string | PropertyOwner;
 }
@@ -91,7 +99,7 @@ export default function AdminDashboard() {
   const [isDark, setIsDark] = useState(true);
   const currencySymbol = t("currency.symbol");
 
-  // Real property data
+  // Real property data (approved — for listings tab)
   const [properties, setProperties] = useState<AdminProperty[]>([]);
   const [propertiesLoading, setPropertiesLoading] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<AdminProperty | null>(null);
@@ -111,6 +119,13 @@ export default function AdminDashboard() {
   // Real reports data
   const [allReports, setAllReports] = useState<any[]>([]);
   const [reportsLoading, setReportsLoading] = useState(false);
+
+  // Property requests (pending)
+  const [requests, setRequests] = useState<AdminProperty[]>([]);
+  const [requestsLoading, setRequestsLoading] = useState(false);
+  const [requestFilter, setRequestFilter] = useState("pending");
+  const [actioningId, setActioningId] = useState<string | null>(null);
+  const [viewingRequest, setViewingRequest] = useState<AdminProperty | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem("admin_theme");
@@ -137,19 +152,17 @@ export default function AdminDashboard() {
     }
   }, [user, isLoading, isAuthenticated, router]);
 
-  // Fetch all properties with owner info
+  // Fetch approved properties (listings tab)
   const fetchProperties = useCallback(async () => {
     const token = localStorage.getItem("staybuddy_token");
     if (!token) return;
     setPropertiesLoading(true);
     try {
-      const res = await fetch("/api/properties?limit=100", {
+      const res = await fetch("/api/admin/properties?status=approved", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (data.success) {
-        setProperties(data.properties);
-      }
+      if (data.success) setProperties(data.properties);
     } catch (err) {
       console.error("Failed to fetch properties:", err);
     } finally {
@@ -157,11 +170,36 @@ export default function AdminDashboard() {
     }
   }, []);
 
-  useEffect(() => {
-    if (isAuthenticated && user?.role === "admin") {
-      fetchProperties();
+  // Fetch all property requests
+  const fetchRequests = useCallback(async () => {
+    const token = localStorage.getItem("staybuddy_token");
+    if (!token) return;
+    setRequestsLoading(true);
+    try {
+      const res = await fetch("/api/admin/properties", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) setRequests(data.properties);
+    } catch (err) {
+      console.error("Failed to fetch requests:", err);
+    } finally {
+      setRequestsLoading(false);
     }
-  }, [isAuthenticated, user, fetchProperties]);
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated || user?.role !== "admin") return;
+    fetchProperties();
+    fetchRequests();
+
+    // Poll for new property requests every 30 seconds
+    const interval = setInterval(() => {
+      fetchRequests();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, user, fetchProperties, fetchRequests]);
 
   const fetchUsers = useCallback(async () => {
     const token = localStorage.getItem("staybuddy_token");
@@ -266,6 +304,39 @@ export default function AdminDashboard() {
     }
   };
 
+  const handlePropertyAction = async (propertyId: string, action: 'approve' | 'reject' | 'verify') => {
+    const token = localStorage.getItem("staybuddy_token");
+    if (!token) return;
+    setActioningId(propertyId);
+    try {
+      const res = await fetch(`/api/admin/properties/${propertyId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const updated = data.property as AdminProperty;
+        // Update requests list
+        setRequests(prev => prev.map(p => p._id === propertyId ? { ...p, ...updated } : p));
+        // If approved, switch filter to "approved" so the property stays visible with Verify button
+        if (action === 'approve') {
+          setRequestFilter("approved");
+          setProperties(prev => prev.some(p => p._id === propertyId) ? prev.map(p => p._id === propertyId ? { ...p, ...updated } : p) : [updated, ...prev]);
+        }
+        if (action === 'verify') {
+          setRequests(prev => prev.map(p => p._id === propertyId ? { ...p, isVerified: true } : p));
+          setProperties(prev => prev.map(p => p._id === propertyId ? { ...p, isVerified: true } : p));
+        }
+        if (viewingRequest?._id === propertyId) setViewingRequest(prev => prev ? { ...prev, ...updated } : null);
+      }
+    } catch (err) {
+      console.error("Action failed:", err);
+    } finally {
+      setActioningId(null);
+    }
+  };
+
   // Show loading while checking authentication
   if (isLoading) {
     return (
@@ -292,6 +363,7 @@ export default function AdminDashboard() {
     owners: allUsers.filter(u => u.role === "landlord").length,
     tenants: allUsers.filter(u => u.role === "renter").length,
     pendingReports: allReports.filter(r => r.status === "pending").length,
+    pendingRequests: requests.filter(r => r.approvalStatus === "pending").length,
   };
 
   const content = {
@@ -523,6 +595,18 @@ export default function AdminDashboard() {
                   <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                     {stats.pendingReports}
                   </span>
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab("requests")}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                  activeTab === "requests" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                }`}
+              >
+                <ClipboardList className="w-5 h-5" />
+                <span className="font-medium">Property Requests</span>
+                {stats.pendingRequests > 0 && (
+                  <span className="ml-auto bg-yellow-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{stats.pendingRequests}</span>
                 )}
               </button>
             </nav>
@@ -1138,6 +1222,209 @@ export default function AdminDashboard() {
                 )}
               </div>
             )}
+
+            {/* Property Requests */}
+            {activeTab === "requests" && (
+              <div className="space-y-4">
+                {/* Header */}
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Property Requests</h2>
+                    <p className={`text-sm mt-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Review and approve new property listing submissions</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={fetchRequests}
+                      disabled={requestsLoading}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm transition-colors disabled:opacity-50 ${isDark ? "border-gray-700 text-gray-300 hover:bg-gray-700" : "border-gray-300 text-gray-600 hover:bg-gray-100"}`}
+                      title="Refresh"
+                    >
+                      <Loader2 className={`w-3.5 h-3.5 ${requestsLoading ? "animate-spin" : ""}`} />
+                      Refresh
+                    </button>
+                    <Filter className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
+                    <select
+                      value={requestFilter}
+                      onChange={e => setRequestFilter(e.target.value)}
+                      className={`px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-gray-200" : "bg-white border-gray-300 text-gray-700"}`}
+                    >
+                      <option value="all">All</option>
+                      <option value="pending">Pending</option>
+                      <option value="approved">Approved</option>
+                      <option value="rejected">Rejected</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Summary cards */}
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { label: "Pending", count: requests.filter(r => r.approvalStatus === "pending").length, icon: Clock, color: "text-yellow-400", bg: isDark ? "bg-yellow-500/10 border-yellow-500/20" : "bg-yellow-50 border-yellow-200" },
+                    { label: "Approved", count: requests.filter(r => r.approvalStatus === "approved").length, icon: CheckCheck, color: "text-green-400", bg: isDark ? "bg-green-500/10 border-green-500/20" : "bg-green-50 border-green-200" },
+                    { label: "Rejected", count: requests.filter(r => r.approvalStatus === "rejected").length, icon: XOctagon, color: "text-red-400", bg: isDark ? "bg-red-500/10 border-red-500/20" : "bg-red-50 border-red-200" },
+                  ].map(({ label, count, icon: Icon, color, bg }) => (
+                    <div key={label} className={`rounded-xl p-4 border flex items-center gap-3 ${bg}`}>
+                      <Icon className={`w-5 h-5 flex-shrink-0 ${color}`} />
+                      <div>
+                        <p className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{count}</p>
+                        <p className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>{label}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {requestsLoading ? (
+                  <div className="flex items-center justify-center py-20">
+                    <Loader2 className={`w-8 h-8 animate-spin ${isDark ? "text-gray-400" : "text-gray-500"}`} />
+                  </div>
+                ) : (() => {
+                  const filtered = requests.filter(r => requestFilter === "all" || r.approvalStatus === requestFilter);
+                  return filtered.length > 0 ? (
+                    <div className={`rounded-2xl border overflow-hidden ${isDark ? "border-gray-800" : "border-gray-200"}`}>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className={`border-b ${isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
+                              <th className={`px-4 py-3 text-left font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>#</th>
+                              <th className={`px-4 py-3 text-left font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Property</th>
+                              <th className={`px-4 py-3 text-left font-semibold hidden md:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Owner</th>
+                              <th className={`px-4 py-3 text-left font-semibold hidden sm:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Location</th>
+                              <th className={`px-4 py-3 text-left font-semibold hidden lg:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Docs</th>
+                              <th className={`px-4 py-3 text-right font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Price</th>
+                              <th className={`px-4 py-3 text-left font-semibold hidden sm:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Submitted</th>
+                              <th className={`px-4 py-3 text-center font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Status</th>
+                              <th className={`px-4 py-3 text-center font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className={`divide-y ${isDark ? "divide-gray-800" : "divide-gray-100"}`}>
+                            {filtered.map((req, idx) => {
+                              const owner = typeof req.createdBy === "object" ? req.createdBy as PropertyOwner : null;
+                              const img = req.images?.[0] || "/owner.png";
+                              const hasDocs = (req.verificationImages?.length ?? 0) > 0;
+                              const isActioning = actioningId === req._id;
+                              const statusStyle =
+                                req.approvalStatus === "pending"
+                                  ? isDark ? "bg-yellow-500/20 text-yellow-400" : "bg-yellow-100 text-yellow-700"
+                                  : req.approvalStatus === "approved"
+                                  ? isDark ? "bg-green-500/20 text-green-400" : "bg-green-100 text-green-700"
+                                  : isDark ? "bg-red-500/20 text-red-400" : "bg-red-100 text-red-700";
+                              return (
+                                <tr key={req._id} className={`transition-colors ${isDark ? "bg-gray-900 hover:bg-gray-800" : "bg-white hover:bg-gray-50"}`}>
+                                  <td className={`px-4 py-3 text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>{idx + 1}</td>
+
+                                  {/* Property */}
+                                  <td className="px-4 py-3">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                      <div className="relative w-10 h-10 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200">
+                                        <Image src={img} alt={req.title} fill className="object-cover" />
+                                      </div>
+                                      <div className="min-w-0">
+                                        <span className={`px-1.5 py-0.5 rounded text-xs font-semibold text-white ${req.propertyType === "PG" ? "bg-blue-600" : "bg-green-600"}`}>{req.propertyType}</span>
+                                        <p className={`font-semibold text-xs truncate max-w-[140px] mt-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>{req.title}</p>
+                                      </div>
+                                    </div>
+                                  </td>
+
+                                  {/* Owner */}
+                                  <td className={`px-4 py-3 hidden md:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                                    <p className="text-xs font-medium">{owner?.fullName || "—"}</p>
+                                    <p className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>{owner?.email}</p>
+                                  </td>
+
+                                  {/* Location */}
+                                  <td className={`px-4 py-3 hidden sm:table-cell text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                                    <div className="flex items-center gap-1">
+                                      <MapPin className="w-3 h-3 flex-shrink-0" />
+                                      <span className="truncate max-w-[120px]">{[req.areaName, req.location].filter(Boolean).join(", ")}</span>
+                                    </div>
+                                  </td>
+
+                                  {/* Docs */}
+                                  <td className="px-4 py-3 hidden lg:table-cell text-center">
+                                    {hasDocs ? (
+                                      <span className="flex items-center gap-1 text-xs text-green-500 font-medium">
+                                        <ShieldCheck className="w-3.5 h-3.5" /> {req.verificationImages!.length} doc{req.verificationImages!.length > 1 ? "s" : ""}
+                                      </span>
+                                    ) : (
+                                      <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>None</span>
+                                    )}
+                                  </td>
+
+                                  {/* Price */}
+                                  <td className="px-4 py-3 text-right">
+                                    <span className="font-bold text-primary text-sm">{currencySymbol}{req.price.toLocaleString()}</span>
+                                  </td>
+
+                                  {/* Submitted */}
+                                  <td className={`px-4 py-3 hidden sm:table-cell text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                                    {new Date(req.createdAt).toLocaleDateString()}
+                                  </td>
+
+                                  {/* Status */}
+                                  <td className="px-4 py-3 text-center">
+                                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${statusStyle}`}>{req.approvalStatus}</span>
+                                  </td>
+
+                                  {/* Actions */}
+                                  <td className="px-4 py-3">
+                                    <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                                      <button
+                                        onClick={() => setViewingRequest(req)}
+                                        className="flex items-center gap-1 px-2.5 py-1.5 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-colors text-xs font-medium"
+                                      >
+                                        <Eye className="w-3.5 h-3.5" /> View
+                                      </button>
+                                      {req.approvalStatus === "pending" && (
+                                        <>
+                                          <button
+                                            onClick={() => handlePropertyAction(req._id, "approve")}
+                                            disabled={isActioning}
+                                            className="flex items-center gap-1 px-2.5 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs font-medium disabled:opacity-60"
+                                          >
+                                            {isActioning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />} Approve
+                                          </button>
+                                          <button
+                                            onClick={() => handlePropertyAction(req._id, "reject")}
+                                            disabled={isActioning}
+                                            className={`flex items-center gap-1 px-2.5 py-1.5 border rounded-lg transition-colors text-xs font-medium disabled:opacity-60 ${isDark ? "border-red-500/50 text-red-400 hover:bg-red-500/10" : "border-red-300 text-red-500 hover:bg-red-50"}`}
+                                          >
+                                            <XCircle className="w-3.5 h-3.5" /> Reject
+                                          </button>
+                                        </>
+                                      )}
+                                      {req.approvalStatus === "approved" && !req.isVerified && (
+                                        <button
+                                          onClick={() => handlePropertyAction(req._id, "verify")}
+                                          disabled={isActioning}
+                                          className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-xs font-medium disabled:opacity-60"
+                                        >
+                                          {isActioning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />} Verify
+                                        </button>
+                                      )}
+                                      {req.approvalStatus === "approved" && req.isVerified && (
+                                        <span className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600/20 text-emerald-400 rounded-lg text-xs font-medium">
+                                          <ShieldCheck className="w-3.5 h-3.5" /> Verified
+                                        </span>
+                                      )}
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={`rounded-2xl p-12 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                      <ClipboardList className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
+                      <p className={`font-semibold mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>No property requests</p>
+                      <p className={`text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>New submissions will appear here for review</p>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
           </div>
         </div>
     </div>
@@ -1253,6 +1540,131 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+        );
+      })()}
+
+      {/* Request Detail Modal */}
+      {viewingRequest && (() => {
+        const req = viewingRequest;
+        const owner = typeof req.createdBy === "object" ? req.createdBy as PropertyOwner : null;
+        const hasDocs = (req.verificationImages?.length ?? 0) > 0;
+        const isActioning = actioningId === req._id;
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setViewingRequest(null)}>
+            <div className={`w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`} onClick={e => e.stopPropagation()}>
+              {/* Header */}
+              <div className={`flex items-center justify-between p-5 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                <div className="flex items-center gap-2">
+                  <h2 className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{req.title}</h2>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${
+                    req.approvalStatus === "pending" ? isDark ? "bg-yellow-500/20 text-yellow-400" : "bg-yellow-100 text-yellow-700"
+                    : req.approvalStatus === "approved" ? isDark ? "bg-green-500/20 text-green-400" : "bg-green-100 text-green-700"
+                    : isDark ? "bg-red-500/20 text-red-400" : "bg-red-100 text-red-700"
+                  }`}>{req.approvalStatus}</span>
+                  {req.isVerified && <span className="flex items-center gap-1 px-2 py-0.5 bg-emerald-600 text-white text-xs font-semibold rounded-full"><ShieldCheck className="w-3 h-3" /> Verified</span>}
+                </div>
+                <button onClick={() => setViewingRequest(null)} className={`w-8 h-8 rounded-full flex items-center justify-center ${isDark ? "hover:bg-gray-700 text-gray-400" : "hover:bg-gray-100 text-gray-500"}`}>
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Property image */}
+              {req.images?.[0] && (
+                <div className="relative h-48 w-full">
+                  <Image src={req.images[0]} alt={req.title} fill className="object-cover" />
+                </div>
+              )}
+
+              <div className="p-5 space-y-4">
+                {/* Details grid */}
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: "Type", value: req.propertyType },
+                    { label: "Price", value: `${currencySymbol}${req.price.toLocaleString()}/mo` },
+                    { label: "Location", value: [req.areaName, req.location].filter(Boolean).join(", ") || "—" },
+                    { label: "Submitted", value: new Date(req.createdAt).toLocaleDateString() },
+                  ].map(({ label, value }) => (
+                    <div key={label} className={`p-3 rounded-xl ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                      <p className={`text-xs mb-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>{label}</p>
+                      <p className={`font-semibold text-sm ${isDark ? "text-white" : "text-gray-900"}`}>{value}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Owner */}
+                {owner && (
+                  <div className={`p-4 rounded-xl border ${isDark ? "bg-gray-800 border-gray-700" : "bg-blue-50 border-blue-100"}`}>
+                    <p className={`text-xs font-semibold uppercase tracking-wide mb-2 ${isDark ? "text-gray-400" : "text-blue-600"}`}>Owner</p>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                      <span className="flex items-center gap-1"><Users className={`w-3.5 h-3.5 ${isDark ? "text-gray-400" : "text-blue-500"}`} /><span className={`font-medium ${isDark ? "text-white" : "text-gray-900"}`}>{owner.fullName}</span></span>
+                      <span className="flex items-center gap-1"><Mail className={`w-3.5 h-3.5 ${isDark ? "text-gray-400" : "text-blue-500"}`} /><span className={isDark ? "text-gray-300" : "text-gray-700"}>{owner.email}</span></span>
+                      {owner.phoneNumber && <span className="flex items-center gap-1"><Phone className={`w-3.5 h-3.5 ${isDark ? "text-gray-400" : "text-blue-500"}`} /><span className={isDark ? "text-gray-300" : "text-gray-700"}>{owner.phoneNumber}</span></span>}
+                    </div>
+                  </div>
+                )}
+
+                {/* Verification documents */}
+                <div className={`p-4 rounded-xl border ${isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
+                  <p className={`text-xs font-semibold uppercase tracking-wide mb-3 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Verification Documents</p>
+                  {hasDocs ? (
+                    <div className="grid grid-cols-3 gap-2">
+                      {req.verificationImages!.map((url, i) => (
+                        <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="relative h-20 rounded-lg overflow-hidden bg-gray-200 block hover:opacity-80 transition-opacity">
+                          <Image src={url} alt={`Doc ${i + 1}`} fill className="object-cover" />
+                        </a>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className={`text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>No verification documents uploaded.</p>
+                  )}
+                </div>
+
+                {/* Description */}
+                {req.pgDescription && (
+                  <div className={`p-4 rounded-xl ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                    <p className={`text-xs font-semibold uppercase tracking-wide mb-2 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Description</p>
+                    <p className={`text-sm leading-relaxed ${isDark ? "text-gray-300" : "text-gray-700"}`}>{req.pgDescription}</p>
+                  </div>
+                )}
+
+                {/* Action buttons */}
+                <div className="flex gap-3 pt-1">
+                  {req.approvalStatus === "pending" && (
+                    <>
+                      <button
+                        onClick={() => handlePropertyAction(req._id, "approve")}
+                        disabled={isActioning}
+                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors text-sm font-semibold disabled:opacity-60"
+                      >
+                        {isActioning ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />} Approve
+                      </button>
+                      <button
+                        onClick={() => handlePropertyAction(req._id, "reject")}
+                        disabled={isActioning}
+                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors text-sm font-semibold disabled:opacity-60"
+                      >
+                        <XCircle className="w-4 h-4" /> Reject
+                      </button>
+                    </>
+                  )}
+                  {req.approvalStatus === "approved" && !req.isVerified && (
+                    <button
+                      onClick={() => handlePropertyAction(req._id, "verify")}
+                      disabled={isActioning}
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors text-sm font-semibold disabled:opacity-60"
+                    >
+                      {isActioning ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />} Mark as Verified
+                    </button>
+                  )}
+                  {req.approvalStatus === "approved" && req.isVerified && (
+                    <div className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-emerald-600/20 text-emerald-400 rounded-xl text-sm font-semibold">
+                      <ShieldCheck className="w-4 h-4" /> Property Verified
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         );
       })()}
     </>

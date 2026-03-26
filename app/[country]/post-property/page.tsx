@@ -247,20 +247,63 @@ export default function PostPropertyPage() {
       <p className="text-red-500 text-xs mt-1" data-field={`${name}-error`}>{fieldErrors[name]}</p>
     ) : null;
 
-  // Indian cities used for location suggestions in the city field
-  const cities = [
+  // Cities list based on country
+  const indianCities = [
     "Ahmedabad, Gujarat",
+    "Surat, Gujarat",
+    "Vadodara, Gujarat",
+    "Rajkot, Gujarat",
     "Gandhinagar, Gujarat",
+    "Mumbai, Maharashtra",
+    "Pune, Maharashtra",
+    "Nagpur, Maharashtra",
+    "Nashik, Maharashtra",
+    "Delhi, Delhi",
+    "Noida, Uttar Pradesh",
+    "Gurgaon, Haryana",
+    "Bengaluru, Karnataka",
+    "Hyderabad, Telangana",
+    "Chennai, Tamil Nadu",
+    "Kolkata, West Bengal",
+    "Jaipur, Rajasthan",
+    "Lucknow, Uttar Pradesh",
+    "Chandigarh, Punjab",
+    "Indore, Madhya Pradesh",
   ];
+
+  const frenchCities = [
+    "Paris, Île-de-France",
+    "Lyon, Auvergne-Rhône-Alpes",
+    "Marseille, Provence-Alpes-Côte d'Azur",
+    "Toulouse, Occitanie",
+    "Nice, Provence-Alpes-Côte d'Azur",
+    "Nantes, Pays de la Loire",
+    "Strasbourg, Grand Est",
+    "Montpellier, Occitanie",
+    "Bordeaux, Nouvelle-Aquitaine",
+    "Lille, Hauts-de-France",
+    "Rennes, Bretagne",
+    "Reims, Grand Est",
+    "Le Havre, Normandie",
+    "Saint-Étienne, Auvergne-Rhône-Alpes",
+    "Toulon, Provence-Alpes-Côte d'Azur",
+    "Grenoble, Auvergne-Rhône-Alpes",
+    "Dijon, Bourgogne-Franche-Comté",
+    "Angers, Pays de la Loire",
+    "Nîmes, Occitanie",
+    "Villeurbanne, Auvergne-Rhône-Alpes",
+  ];
+
+  const cities = country === "fr" ? frenchCities : indianCities;
 
   const t = getPostPropertyContent(user?.fullName?.split(' ')[0] || '')[language as 'en' | 'fr'] ?? getPostPropertyContent('').en;
   const filteredCities = cities.filter(c => 
     c.toLowerCase().includes(city.toLowerCase())
   );
   
-  // Currency symbol based on language from translations
+  // Currency symbol based on country (direct — avoids hydration timing issues with LanguageContext)
   const { t: translate } = useLanguage();
-  const currencySymbol = translate('currency.symbol');
+  const currencySymbol = country === "fr" ? "€" : "₹";
 
   // Handler functions
   const scrollToTop = () => {
@@ -558,7 +601,7 @@ export default function PostPropertyPage() {
         return;
       }
 
-      toast.success('Property posted successfully!', {
+      toast.success('Property submitted for review!', {
         duration: 3000,
         position: 'top-center',
       });
@@ -1543,10 +1586,28 @@ export default function PostPropertyPage() {
                 <div className="w-32 h-32 rounded-full bg-primary/20 flex items-center justify-center animate-bounce">
                   <Check className="w-16 h-16 text-primary" />
                 </div>
-                <div className="text-center space-y-3">
-                  <h2 className="text-3xl md:text-4xl font-bold text-primary">{t.congratulations}</h2>
-                  <p className="text-xl text-gray-600">{t.propertyPosted}</p>
-                  <p className="text-sm text-gray-500 mt-4">Redirecting to home page...</p>
+                <div className="text-center space-y-3 max-w-md">
+                  <h2 className="text-3xl md:text-4xl font-bold text-primary">
+                    {language === 'fr' ? 'Soumis avec succès !' : 'Submitted Successfully!'}
+                  </h2>
+                  <p className="text-lg text-gray-700 font-medium">
+                    {language === 'fr'
+                      ? 'Votre propriété est en cours d\'examen.'
+                      : 'Your property is under review.'}
+                  </p>
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-left mt-4">
+                    <p className="text-sm text-yellow-800 font-semibold mb-1">
+                      {language === 'fr' ? 'Que se passe-t-il ensuite ?' : 'What happens next?'}
+                    </p>
+                    <ul className="text-sm text-yellow-700 space-y-1 list-disc list-inside">
+                      <li>{language === 'fr' ? 'Notre équipe examinera votre annonce.' : 'Our team will review your listing.'}</li>
+                      <li>{language === 'fr' ? 'Une fois approuvée, elle sera visible sur le site.' : 'Once approved, it will be visible on the website.'}</li>
+                      <li>{language === 'fr' ? 'Vous pouvez suivre le statut dans votre tableau de bord.' : 'You can track the status in your dashboard.'}</li>
+                    </ul>
+                  </div>
+                  <p className="text-sm text-gray-400 mt-4">
+                    {language === 'fr' ? 'Redirection vers la page d\'accueil...' : 'Redirecting to home page...'}
+                  </p>
                 </div>
               </div>
             )}

@@ -32,7 +32,7 @@ interface Property {
 
 export default function PropertyListings() {
   const { t } = useLanguage();
-  const { isAuthenticated, token } = useAuth();
+  const { isAuthenticated, token, user } = useAuth();
   const params = useParams();
   const router = useRouter();
   const country = (params?.country as string) || "in";
@@ -186,11 +186,16 @@ export default function PropertyListings() {
           </div>
         ) : properties.length === 0 ? (
           <div className="text-center py-16 text-gray-500">
-            No properties found. Be the first to{" "}
-            <Link href="/post-property" className="text-primary font-medium underline">
-              post one
-            </Link>
-            .
+            No properties found.{" "}
+            {isAuthenticated && user?.role === "landlord" && (
+              <>
+                Be the first to{" "}
+                <Link href="/post-property" className="text-primary font-medium underline">
+                  post one
+                </Link>
+                .
+              </>
+            )}
           </div>
         ) : (
           <div

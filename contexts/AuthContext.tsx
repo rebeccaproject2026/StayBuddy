@@ -135,8 +135,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Extract country from current URL path (e.g. /fr/login → fr)
       const pathParts = window.location.pathname.split('/').filter(Boolean);
       const country = ['fr', 'in'].includes(pathParts[0]) ? pathParts[0] : 'in';
-      // Store country in a cookie so the server-side signIn callback can read it
+      // Store country and role in cookies so the server-side signIn callback can read them
       document.cookie = `pending_country=${country}; path=/; max-age=300; SameSite=Lax`;
+      document.cookie = `pending_role=${role}; path=/; max-age=300; SameSite=Lax`;
       await nextAuthSignIn('google', { callbackUrl: `/${country}` });
     } catch (error) {
       console.error('Google login error:', error);

@@ -25,7 +25,7 @@ function mapProperty(p: any) {
     images: (p.images || []) as string[],
     type: p.propertyType as "PG" | "Tenant",
     isNew: false,
-    verified: false,
+    verified: !!p.isVerified,
     rating: p.averageRating ?? undefined,
     reviewsCount: p.reviewsCount ?? 0,
   };

@@ -94,6 +94,7 @@ export interface IProperty extends Document {
   view360Url?: string;
   verificationImages?: string[];
   isVerified?: boolean;
+  approvalStatus: 'pending' | 'approved' | 'rejected';
   createdBy: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -183,6 +184,7 @@ const PropertySchema: Schema = new Schema<IProperty>({
   view360Url: { type: String },
   verificationImages: [{ type: String }],
   isVerified: { type: Boolean, default: false },
+  approvalStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
 }, { timestamps: true });
 
