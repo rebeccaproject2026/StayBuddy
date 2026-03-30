@@ -5,7 +5,7 @@ import Review from '@/models/Review';
 import cloudinary from '@/lib/cloudinary';
 import { authenticateUser } from '@/lib/auth-middleware';
 import { propertySchema } from '@/lib/validation';
-import { sendPropertyRequestEmail } from '@/lib/email';
+import { sendPropertyRequestEmail, sendNewPropertyEmail } from '@/lib/email';
 
 // Increase body size limit for image uploads
 export const config = {
@@ -190,6 +190,16 @@ export async function POST(req: NextRequest) {
       ((property as any).verificationImages?.length ?? 0) > 0,
       `${baseUrl}/in/dashboard/admin`
     ).catch(err => console.error('[email] Property request notification failed:', err));
+
+    // Notify subscribers about the new property (fire-and-forget)
+    sendNewPropertyEmail({
+      _id: (property as any)._id.toString(),
+      title: (property as any).title,
+      location: (property as any).location,
+      price: (property as any).price,
+      propertyType: (property as any).propertyType,
+      country: (property as any).country,
+    }).catch(err => console.error('[email] Subscriber new-property notification failed:', err));
 
     return NextResponse.json({ success: true, property }, { status: 201 });
   } catch (error: any) {

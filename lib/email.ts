@@ -312,3 +312,207 @@ export async function sendAccountBlockedEmail(
     `,
   });
 }
+
+// ─── Subscriber Emails ────────────────────────────────────────────────────────
+
+export async function sendSubscribeConfirmationEmail(
+  email: string,
+  city?: string,
+  propertyType?: string
+) {
+  const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(email)}`;
+  const prefsText = [city, propertyType].filter(Boolean).join(' · ') || 'All properties';
+
+  await transporter.sendMail({
+    from: `"StayBuddy" <${process.env.SMTP_USER}>`,
+    to: email,
+    subject: '✅ You\'re subscribed to StayBuddy alerts!',
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px;background:#f9fafb;border-radius:12px;">
+        <div style="text-align:center;margin-bottom:24px;">
+          <h1 style="color:#4f46e5;font-size:28px;margin:0;">StayBuddy</h1>
+        </div>
+        <div style="background:white;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+          <h2 style="color:#111827;font-size:20px;margin-top:0;">You're all set! 🎉</h2>
+          <p style="color:#6b7280;line-height:1.6;">
+            You'll now receive instant alerts when new properties matching your preferences become available.
+          </p>
+          <div style="background:#eff6ff;border-radius:10px;padding:16px;margin:20px 0;">
+            <p style="color:#1e40af;font-size:14px;margin:0;font-weight:600;">Your preferences: ${prefsText}</p>
+          </div>
+          <p style="color:#9ca3af;font-size:12px;margin-top:24px;">
+            Don't want alerts? <a href="${unsubscribeUrl}" style="color:#4f46e5;">Unsubscribe here</a>
+          </p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+/**
+ * Send new property alert to matching subscribers.
+ * Batches sends to avoid overwhelming the SMTP server.
+ */
+export async function sendNewPropertyEmail(property: {
+  _id: string;
+  title: string;
+  location: string;
+  price: number;
+  propertyType: string;
+  country?: string;
+}) {
+  const Subscriber = (await import('@/models/Subscriber')).default;
+  const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  const country = property.country || 'in';
+  const propertyUrl = `${baseUrl}/${country}/property/${property._id}`;
+
+  // Build smart filter
+  const filter: Record<string, any> = { isActive: true };
+  const orConditions: any[] = [
+    { 'preferences.city': { $exists: false } },
+    { 'preferences.city': '' },
+    { 'preferences.city': null },
+  ];
+  if (property.location) orConditions.push({ 'preferences.city': new RegExp(property.location, 'i') });
+
+  const typeOrConditions: any[] = [
+    { 'preferences.propertyType': { $exists: false } },
+    { 'preferences.propertyType': null },
+  ];
+  if (property.propertyType) typeOrConditions.push({ 'preferences.propertyType': property.propertyType });
+
+  filter.$and = [{ $or: orConditions }, { $or: typeOrConditions }];
+
+  const subscribers = await Subscriber.find(filter).select('email').lean() as any[];
+  if (subscribers.length === 0) return;
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;background:#f9fafb;border-radius:12px;">
+      <div style="text-align:center;margin-bottom:24px;">
+        <h1 style="color:#4f46e5;font-size:28px;margin:0;">StayBuddy</h1>
+      </div>
+      <div style="background:white;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+        <h2 style="color:#111827;font-size:20px;margin-top:0;">New Property Available! 🏠</h2>
+        <p style="color:#6b7280;line-height:1.6;">A new listing matching your preferences just went live.</p>
+        <div style="background:#f3f4f6;border-radius:10px;padding:20px;margin:20px 0;">
+          <table style="width:100%;border-collapse:collapse;">
+            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;width:120px;">Property</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${property.title}</td></tr>
+            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Location</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${property.location}</td></tr>
+            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Type</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${property.propertyType}</td></tr>
+            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Price</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">₹${property.price.toLocaleString()} / month</td></tr>
+          </table>
+        </div>
+        <div style="text-align:center;margin-top:24px;">
+          <a href="${propertyUrl}" style="display:inline-block;background:#4f46e5;color:white;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;">
+            View Property →
+          </a>
+        </div>
+      </div>
+      <p style="color:#9ca3af;font-size:12px;text-align:center;margin-top:16px;">
+        You're receiving this because you subscribed to StayBuddy alerts.
+        <a href="${baseUrl}/api/unsubscribe?email=__EMAIL__" style="color:#4f46e5;">Unsubscribe</a>
+      </p>
+    </div>
+  `;
+
+  // Send in batches of 50 to avoid SMTP rate limits
+  const BATCH = 50;
+  for (let i = 0; i < subscribers.length; i += BATCH) {
+    const batch = subscribers.slice(i, i + BATCH);
+    await Promise.allSettled(
+      batch.map((sub: any) =>
+        transporter.sendMail({
+          from: `"StayBuddy" <${process.env.SMTP_USER}>`,
+          to: sub.email,
+          subject: `New ${property.propertyType} in ${property.location} — StayBuddy`,
+          html: html.replace('__EMAIL__', encodeURIComponent(sub.email)),
+        })
+      )
+    );
+  }
+}
+
+/**
+ * Send vacancy alert to matching subscribers.
+ * Triggered when a property's available rooms increase.
+ */
+export async function sendVacancyAlert(property: {
+  _id: string;
+  title: string;
+  location: string;
+  price: number;
+  propertyType: string;
+  country?: string;
+}) {
+  const Subscriber = (await import('@/models/Subscriber')).default;
+  const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  const country = property.country || 'in';
+  const propertyUrl = `${baseUrl}/${country}/property/${property._id}`;
+
+  const filter: Record<string, any> = { isActive: true };
+  const orConditions: any[] = [
+    { 'preferences.city': { $exists: false } },
+    { 'preferences.city': '' },
+    { 'preferences.city': null },
+  ];
+  if (property.location) orConditions.push({ 'preferences.city': new RegExp(property.location, 'i') });
+
+  const typeOrConditions: any[] = [
+    { 'preferences.propertyType': { $exists: false } },
+    { 'preferences.propertyType': null },
+  ];
+  if (property.propertyType) typeOrConditions.push({ 'preferences.propertyType': property.propertyType });
+
+  filter.$and = [{ $or: orConditions }, { $or: typeOrConditions }];
+
+  const subscribers = await Subscriber.find(filter).select('email').lean() as any[];
+  if (subscribers.length === 0) return;
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;background:#f9fafb;border-radius:12px;">
+      <div style="text-align:center;margin-bottom:24px;">
+        <h1 style="color:#4f46e5;font-size:28px;margin:0;">StayBuddy</h1>
+      </div>
+      <div style="background:white;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+        <div style="background:#fef3c7;border-radius:10px;padding:12px 16px;margin-bottom:20px;text-align:center;">
+          <p style="color:#92400e;font-weight:700;font-size:15px;margin:0;">🔔 Room Available Now!</p>
+        </div>
+        <h2 style="color:#111827;font-size:20px;margin-top:0;">A room just opened up</h2>
+        <p style="color:#6b7280;line-height:1.6;">A vacancy matching your preferences is now available. Act fast — rooms fill up quickly!</p>
+        <div style="background:#f3f4f6;border-radius:10px;padding:20px;margin:20px 0;">
+          <table style="width:100%;border-collapse:collapse;">
+            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;width:120px;">Property</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${property.title}</td></tr>
+            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Location</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${property.location}</td></tr>
+            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Type</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${property.propertyType}</td></tr>
+            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Price</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">₹${property.price.toLocaleString()} / month</td></tr>
+          </table>
+        </div>
+        <div style="text-align:center;margin-top:24px;">
+          <a href="${propertyUrl}" style="display:inline-block;background:#f59e0b;color:white;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;">
+            Book Now →
+          </a>
+        </div>
+      </div>
+      <p style="color:#9ca3af;font-size:12px;text-align:center;margin-top:16px;">
+        You're receiving this because you subscribed to StayBuddy alerts.
+        <a href="${baseUrl}/api/unsubscribe?email=__EMAIL__" style="color:#4f46e5;">Unsubscribe</a>
+      </p>
+    </div>
+  `;
+
+  const BATCH = 50;
+  for (let i = 0; i < subscribers.length; i += BATCH) {
+    const batch = subscribers.slice(i, i + BATCH);
+    await Promise.allSettled(
+      batch.map((sub: any) =>
+        transporter.sendMail({
+          from: `"StayBuddy" <${process.env.SMTP_USER}>`,
+          to: sub.email,
+          subject: `🔔 Room Available Now — ${property.title} in ${property.location}`,
+          html: html.replace('__EMAIL__', encodeURIComponent(sub.email)),
+        })
+      )
+    );
+  }
+}

@@ -46,10 +46,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   const { data: session, status } = useSession();
 
   const isAuthenticated = !!user && !!token;
+
+  // Sync from localStorage immediately after mount (avoids hydration mismatch)
+  useEffect(() => {
+    setIsMounted(true);
+    const storedToken = localStorage.getItem('staybuddy_token');
+    const storedUser = localStorage.getItem('staybuddy_user');
+    if (storedToken && storedUser) {
+      try {
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+      } catch {
+        localStorage.removeItem('staybuddy_token');
+        localStorage.removeItem('staybuddy_user');
+      }
+    } else {
+      // No stored credentials — not loading anymore
+      if (status !== 'loading') setIsLoading(false);
+    }
+  }, []);
 
   // Load user data from localStorage and NextAuth session
   useEffect(() => {
@@ -73,55 +93,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           return;
         }
 
-        // Fallback to custom auth
+        // Fallback to custom auth — state already initialized from localStorage
         const storedToken = localStorage.getItem('staybuddy_token');
-        const storedUser = localStorage.getItem('staybuddy_user');
 
-        console.log('AuthContext - Loading user data on mount');
-        console.log('AuthContext - Stored token exists:', !!storedToken);
-        console.log('AuthContext - Stored user exists:', !!storedUser);
+        if (storedToken) {
+          // Verify token is still valid in the background
+          try {
+            const response = await fetch('/api/auth/me', {
+              headers: { 'Authorization': `Bearer ${storedToken}` },
+            });
 
-        if (storedToken && storedUser) {
-          setToken(storedToken);
-          setUser(JSON.parse(storedUser));
-
-          console.log('AuthContext - Verifying token with /api/auth/me');
-
-          // Verify token is still valid
-          const response = await fetch('/api/auth/me', {
-            headers: {
-              'Authorization': `Bearer ${storedToken}`,
-            },
-          });
-
-          console.log('AuthContext - Token verification response status:', response.status);
-
-          if (!response.ok) {
-            console.log('AuthContext - Token invalid, clearing storage');
-            // Token is invalid, clear storage
-            localStorage.removeItem('staybuddy_token');
-            localStorage.removeItem('staybuddy_user');
-            setToken(null);
-            setUser(null);
-          } else {
-            const result = await response.json();
-            console.log('AuthContext - Token valid, user data:', result.user);
-            setUser(result.user);
+            if (!response.ok) {
+              localStorage.removeItem('staybuddy_token');
+              localStorage.removeItem('staybuddy_user');
+              setToken(null);
+              setUser(null);
+            } else {
+              const result = await response.json();
+              setUser(result.user);
+              localStorage.setItem('staybuddy_user', JSON.stringify(result.user));
+            }
+          } catch {
+            // Network error — keep existing state, don't log out
           }
-        } else {
-          console.log('AuthContext - No stored token or user found');
         }
       } catch (error) {
         console.error('AuthContext - Error loading user data:', error);
-        localStorage.removeItem('staybuddy_token');
-        localStorage.removeItem('staybuddy_user');
-        setToken(null);
-        setUser(null);
       } finally {
-        if (status !== 'loading') {
-          console.log('AuthContext - Setting isLoading to false');
-          setIsLoading(false);
-        }
+        setIsLoading(false);
       }
     };
 

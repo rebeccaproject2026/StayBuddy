@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "@/components/LocalizedLink";
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Globe, LogOut, Settings, LayoutDashboard, ChevronDown } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -47,8 +47,11 @@ export default function Navbar() {
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [notifCount, setNotifCount] = useState(0);
+  const [mounted, setMounted] = useState(false);
   const { language, setLanguage, t } = useLanguage();
   const { user, isAuthenticated, logout, isLoading } = useAuth();
+
+  useEffect(() => { setMounted(true); }, []);
 
   const langMenuRef = useRef<HTMLDivElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -158,11 +161,6 @@ export default function Navbar() {
     );
   };
 
-  const menuItems = [
-    isAuthenticated && user?.role === "landlord" ? "list" : null,
-    "lang",
-    "auth",
-  ].filter(Boolean);
 
   return (
     <motion.nav
@@ -284,7 +282,13 @@ export default function Navbar() {
             </motion.div>
 
             {/* Auth Section */}
-            {!isLoading && (
+            {!mounted ? (
+              /* Static placeholder — identical on server and client, prevents hydration mismatch */
+              <div className="flex items-center space-x-3">
+                <div className="w-16 h-9 rounded-lg bg-gray-100" />
+                <div className="w-20 h-9 rounded-lg bg-gray-100" />
+              </div>
+            ) : (!isLoading || !user) && (
               <motion.div
                 custom={2}
                 variants={navItemVariants}

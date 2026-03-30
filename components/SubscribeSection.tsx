@@ -2,14 +2,18 @@
 
 import { useState, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Mail, CheckCircle, AlertCircle, Bell, Sparkles } from "lucide-react";
+import { Mail, CheckCircle, AlertCircle, Bell, Sparkles, MapPin, Home } from "lucide-react";
 import { motion, useInView } from "framer-motion";
+
+const CITIES = ["Ahmedabad", "Surat", "Vadodara", "Gandhinagar", "Rajkot", "Paris", "Lyon", "Marseille"];
 
 export default function SubscribeSection() {
   const { language } = useLanguage();
   const [email, setEmail] = useState("");
+  const [city, setCity] = useState("");
+  const [propertyType, setPropertyType] = useState<"" | "PG" | "Tenant">("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error" | "duplicate">("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-80px" });
@@ -20,32 +24,38 @@ export default function SubscribeSection() {
       title: "Never Miss a Vacant Room",
       subtitle: "Get instant email alerts when new rooms matching your preferences become available",
       emailPlaceholder: "Enter your email address",
+      cityPlaceholder: "Any city",
       subscribeButton: "Subscribe Now",
       subscribing: "Subscribing...",
       successMessage: "Successfully subscribed! Check your email for confirmation.",
+      duplicateMessage: "You're already subscribed with this email.",
       errorMessage: "Something went wrong. Please try again.",
       invalidEmail: "Please enter a valid email address",
       privacyText: "We respect your privacy. Unsubscribe anytime.",
       features: ["Instant notifications", "No spam guarantee", "Free forever"],
+      anyType: "Any type",
     },
     fr: {
       badge: "Restez informé",
       title: "Ne manquez jamais une chambre vacante",
       subtitle: "Recevez des alertes par e-mail instantanées lorsque de nouvelles chambres correspondant à vos préférences deviennent disponibles",
       emailPlaceholder: "Entrez votre adresse e-mail",
+      cityPlaceholder: "Toute ville",
       subscribeButton: "S'abonner maintenant",
       subscribing: "Abonnement en cours...",
       successMessage: "Abonnement réussi! Vérifiez votre e-mail pour confirmation.",
+      duplicateMessage: "Vous êtes déjà abonné avec cet e-mail.",
       errorMessage: "Une erreur s'est produite. Veuillez réessayer.",
       invalidEmail: "Veuillez entrer une adresse e-mail valide",
       privacyText: "Nous respectons votre vie privée. Désabonnez-vous à tout moment.",
       features: ["Notifications instantanées", "Garantie sans spam", "Gratuit pour toujours"],
+      anyType: "Tout type",
     },
   };
 
   const t = content[language as keyof typeof content] || content.en;
 
-  const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validateEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,10 +68,25 @@ export default function SubscribeSection() {
     setIsSubmitting(true);
     setSubmitStatus("idle");
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, city: city || undefined, propertyType: propertyType || undefined }),
+      });
+      const data = await res.json();
+
+      if (res.status === 409 || data.error === "already_subscribed") {
+        setSubmitStatus("duplicate");
+        setTimeout(() => setSubmitStatus("idle"), 5000);
+        return;
+      }
+      if (!res.ok) throw new Error(data.error || "Failed");
+
       setSubmitStatus("success");
       setEmail("");
-      setTimeout(() => setSubmitStatus("idle"), 5000);
+      setCity("");
+      setPropertyType("");
+      setTimeout(() => setSubmitStatus("idle"), 6000);
     } catch {
       setSubmitStatus("error");
       setErrorMessage(t.errorMessage);
@@ -133,7 +158,8 @@ export default function SubscribeSection() {
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-3">
+                {/* Email */}
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
@@ -142,9 +168,38 @@ export default function SubscribeSection() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder={t.emailPlaceholder}
                     disabled={isSubmitting || submitStatus === "success"}
-                    className="w-full pl-11 esm:pl-12 pr-4 py-3 esm:py-3.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed text-sm sm:text-base"
+                    className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
                     required
                   />
+                </div>
+
+                {/* Preferences row */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <select
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      disabled={isSubmitting || submitStatus === "success"}
+                      className="w-full pl-9 pr-3 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors disabled:bg-gray-100 text-sm appearance-none bg-white"
+                    >
+                      <option value="">{t.cityPlaceholder}</option>
+                      {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div className="relative">
+                    <Home className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <select
+                      value={propertyType}
+                      onChange={(e) => setPropertyType(e.target.value as "" | "PG" | "Tenant")}
+                      disabled={isSubmitting || submitStatus === "success"}
+                      className="w-full pl-9 pr-3 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors disabled:bg-gray-100 text-sm appearance-none bg-white"
+                    >
+                      <option value="">{t.anyType}</option>
+                      <option value="PG">PG</option>
+                      <option value="Tenant">Flat / Tenant</option>
+                    </select>
+                  </div>
                 </div>
 
                 <motion.button
@@ -152,7 +207,7 @@ export default function SubscribeSection() {
                   disabled={isSubmitting || submitStatus === "success"}
                   whileHover={!isSubmitting && submitStatus !== "success" ? { scale: 1.02 } : {}}
                   whileTap={!isSubmitting && submitStatus !== "success" ? { scale: 0.97 } : {}}
-                  className="w-full py-3 esm:py-3.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
+                  className="w-full py-3 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
                 >
                   {isSubmitting ? (
                     <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />{t.subscribing}</>
@@ -164,22 +219,24 @@ export default function SubscribeSection() {
                 </motion.button>
 
                 {submitStatus === "success" && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-start gap-2 p-3.5 bg-green-50 border border-green-200 rounded-xl"
-                  >
+                  <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                    className="flex items-start gap-2 p-3.5 bg-green-50 border border-green-200 rounded-xl">
                     <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <p className="text-sm text-green-800">{t.successMessage}</p>
                   </motion.div>
                 )}
 
+                {submitStatus === "duplicate" && (
+                  <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                    className="flex items-start gap-2 p-3.5 bg-blue-50 border border-blue-200 rounded-xl">
+                    <Bell className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-blue-800">{t.duplicateMessage}</p>
+                  </motion.div>
+                )}
+
                 {submitStatus === "error" && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-start gap-2 p-3.5 bg-red-50 border border-red-200 rounded-xl"
-                  >
+                  <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                    className="flex items-start gap-2 p-3.5 bg-red-50 border border-red-200 rounded-xl">
                     <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                     <p className="text-sm text-red-800">{errorMessage}</p>
                   </motion.div>
