@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import { authenticateUser } from '@/lib/auth-middleware';
+import { sendAccountBlockedEmail } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,7 +58,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { userId, isBlocked } = await req.json();
+    const { userId, isBlocked, reason } = await req.json();
     if (!userId || typeof isBlocked !== 'boolean') {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
@@ -68,6 +69,15 @@ export async function PATCH(req: NextRequest) {
 
     user.isBlocked = isBlocked;
     await user.save();
+
+    // Send email notification when blocking
+    if (isBlocked && reason && user.email) {
+      try {
+        await sendAccountBlockedEmail(user.email, user.fullName, reason);
+      } catch (emailErr) {
+        console.error('[Block email failed]', emailErr);
+      }
+    }
 
     return NextResponse.json({ success: true, isBlocked: user.isBlocked });
   } catch (error) {
