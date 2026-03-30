@@ -20,7 +20,17 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const users = await User.find({})
+    const { searchParams } = new URL(req.url);
+    const country = searchParams.get('country'); // in | fr
+
+    const filter: Record<string, any> = {};
+    
+    // Filter by country if provided
+    if (country) {
+      filter.country = country;
+    }
+
+    const users = await User.find(filter)
       .select('-password -otpCode -otpExpires -resetPasswordToken -resetPasswordExpires')
       .sort({ createdAt: -1 })
       .lean();

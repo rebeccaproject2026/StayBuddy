@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
 import Image from "next/image";
 import {
@@ -38,7 +38,24 @@ import {
   Building2,
   Loader2,
   AlertTriangle,
+  BarChart3,
+  TrendingUp,
 } from "lucide-react";
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 interface PropertyOwner {
   _id: string;
@@ -89,11 +106,14 @@ export default function AdminDashboard() {
   const { language, t } = useLanguage();
   const { user, isLoading, isAuthenticated, logout } = useAuth();
   const router = useRouter();
+  const params = useParams();
+  const currentCountry = (params?.country as string) || "in";
+  
   const [activeTab, setActiveTab] = useState("listings");
   const [listingFilter, setListingFilter] = useState("all");
-  const [listingCountry, setListingCountry] = useState("all");
+  const [listingCountry, setListingCountry] = useState(currentCountry);
   const [userFilter, setUserFilter] = useState("all");
-  const [userCountry, setUserCountry] = useState("all");
+  const [userCountry, setUserCountry] = useState(currentCountry);
   const [reportFilter, setReportFilter] = useState("pending");
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [isDark, setIsDark] = useState(true);
@@ -127,6 +147,9 @@ export default function AdminDashboard() {
   const [actioningId, setActioningId] = useState<string | null>(null);
   const [viewingRequest, setViewingRequest] = useState<AdminProperty | null>(null);
 
+  // Document lightbox
+  const [viewingDoc, setViewingDoc] = useState<string | null>(null);
+
   useEffect(() => {
     const saved = localStorage.getItem("admin_theme");
     setIsDark(saved ? saved === "dark" : true);
@@ -158,7 +181,7 @@ export default function AdminDashboard() {
     if (!token) return;
     setPropertiesLoading(true);
     try {
-      const res = await fetch("/api/admin/properties?status=approved", {
+      const res = await fetch(`/api/admin/properties?status=approved&country=${currentCountry}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -168,7 +191,7 @@ export default function AdminDashboard() {
     } finally {
       setPropertiesLoading(false);
     }
-  }, []);
+  }, [currentCountry]);
 
   // Fetch all property requests
   const fetchRequests = useCallback(async () => {
@@ -176,7 +199,7 @@ export default function AdminDashboard() {
     if (!token) return;
     setRequestsLoading(true);
     try {
-      const res = await fetch("/api/admin/properties", {
+      const res = await fetch(`/api/admin/properties?country=${currentCountry}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -186,7 +209,7 @@ export default function AdminDashboard() {
     } finally {
       setRequestsLoading(false);
     }
-  }, []);
+  }, [currentCountry]);
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== "admin") return;
@@ -206,7 +229,7 @@ export default function AdminDashboard() {
     if (!token) return;
     setUsersLoading(true);
     try {
-      const res = await fetch("/api/admin/users", {
+      const res = await fetch(`/api/admin/users?country=${currentCountry}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -216,7 +239,7 @@ export default function AdminDashboard() {
     } finally {
       setUsersLoading(false);
     }
-  }, []);
+  }, [currentCountry]);
 
   useEffect(() => {
     if (isAuthenticated && user?.role === "admin") {
@@ -229,7 +252,7 @@ export default function AdminDashboard() {
     if (!token) return;
     setReportsLoading(true);
     try {
-      const res = await fetch("/api/admin/reports", {
+      const res = await fetch(`/api/admin/reports?country=${currentCountry}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -239,7 +262,7 @@ export default function AdminDashboard() {
     } finally {
       setReportsLoading(false);
     }
-  }, []);
+  }, [currentCountry]);
 
   useEffect(() => {
     if (isAuthenticated && user?.role === "admin") {
@@ -498,8 +521,8 @@ export default function AdminDashboard() {
       if (listingFilter === "verified") return p.isVerified;
       return true;
     })();
-    const countryMatch = listingCountry === "all" || p.country === listingCountry;
-    return typeMatch && countryMatch;
+    // Country filtering is now done at API level
+    return typeMatch;
   });
 
   const totalListingPages = Math.ceil(filteredListings.length / PAGE_SIZE);
@@ -513,8 +536,8 @@ export default function AdminDashboard() {
       if (userFilter === "unverified") return !u.isVerified;
       return true;
     })();
-    const countryMatch = userCountry === "all" || u.country === userCountry;
-    return roleMatch && countryMatch;
+    // Country filtering is now done at API level
+    return roleMatch;
   });
 
   const totalUserPages = Math.ceil(filteredUsers.length / USER_PAGE_SIZE);
@@ -538,6 +561,9 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
               <h1 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{tc.dashboard}</h1>
+              <div className={`px-3 py-1.5 rounded-lg border text-sm font-semibold ${isDark ? "bg-gray-800 border-gray-700 text-gray-200" : "bg-gray-100 border-gray-300 text-gray-700"}`}>
+                {currentCountry === "in" ? "🇮🇳 India" : currentCountry === "fr" ? "🇫🇷 France" : currentCountry.toUpperCase()}
+              </div>
             </div>
             <div className="flex items-center gap-3">
               {/* Theme toggle */}
@@ -609,6 +635,15 @@ export default function AdminDashboard() {
                   <span className="ml-auto bg-yellow-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{stats.pendingRequests}</span>
                 )}
               </button>
+              <button
+                onClick={() => setActiveTab("analytics")}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                  activeTab === "analytics" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                }`}
+              >
+                <BarChart3 className="w-5 h-5" />
+                <span className="font-medium">Analytics</span>
+              </button>
             </nav>
 
             {/* Profile card */}
@@ -667,11 +702,14 @@ export default function AdminDashboard() {
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
               <div className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>{tc.totalListings}</h3>
+                  <h3 className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>Total Property Listed</h3>
                   <Home className="w-8 h-8 text-primary" />
                 </div>
                 <p className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.totalListings}</p>
-                <div className={`mt-2 text-sm ${isDark ? "text-gray-500" : "text-gray-500"}`}>{stats.verifiedListings} verified</div>
+                <div className={`mt-2 text-sm flex items-center gap-1.5 font-medium text-green-500`}>
+                  <CheckCircle className="w-4 h-4" />
+                  {stats.verifiedListings} verified
+                </div>
               </div>
               <div className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                 <div className="flex items-center justify-between mb-2">
@@ -679,7 +717,16 @@ export default function AdminDashboard() {
                   <Users className="w-8 h-8 text-primary" />
                 </div>
                 <p className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.totalUsers}</p>
-                <div className={`mt-2 text-sm ${isDark ? "text-gray-500" : "text-gray-500"}`}>{stats.owners} landlords, {stats.tenants} renters</div>
+                <div className={`mt-3 flex items-center gap-3`}>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-400 font-medium text-sm">
+                    <Building2 className="w-4 h-4" />
+                    {stats.owners} landlords
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yellow-500/20 text-yellow-400 font-medium text-sm">
+                    <Users className="w-4 h-4" />
+                    {stats.tenants} renters
+                  </div>
+                </div>
               </div>
               <div className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                 <div className="flex items-center justify-between mb-2">
@@ -709,15 +756,9 @@ export default function AdminDashboard() {
                       <option value="tenant">Tenant</option>
                       <option value="verified">Verified</option>
                     </select>
-                    <select
-                      value={listingCountry}
-                      onChange={(e) => { setListingCountry(e.target.value); setListingPage(1); }}
-                      className={`px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-gray-200" : "bg-white border-gray-300 text-gray-700"}`}
-                    >
-                      <option value="all">All Countries</option>
-                      <option value="in">🇮🇳 India</option>
-                      <option value="fr">🇫🇷 France</option>
-                    </select>
+                    <div className={`px-3 py-1.5 rounded-lg border text-sm font-medium ${isDark ? "bg-gray-800 border-gray-700 text-gray-200" : "bg-white border-gray-300 text-gray-700"}`}>
+                      {currentCountry === "in" ? "🇮🇳 India" : currentCountry === "fr" ? "🇫🇷 France" : currentCountry.toUpperCase()}
+                    </div>
                   </div>
                 </div>
 
@@ -926,15 +967,9 @@ export default function AdminDashboard() {
                       <option value="verified">Verified</option>
                       <option value="unverified">Unverified</option>
                     </select>
-                    <select
-                      value={userCountry}
-                      onChange={(e) => { setUserCountry(e.target.value); setUserPage(1); }}
-                      className={`px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-gray-200" : "bg-white border-gray-300 text-gray-700"}`}
-                    >
-                      <option value="all">All Countries</option>
-                      <option value="in">🇮🇳 India</option>
-                      <option value="fr">🇫🇷 France</option>
-                    </select>
+                    <div className={`px-3 py-1.5 rounded-lg border text-sm font-medium ${isDark ? "bg-gray-800 border-gray-700 text-gray-200" : "bg-white border-gray-300 text-gray-700"}`}>
+                      {currentCountry === "in" ? "🇮🇳 India" : currentCountry === "fr" ? "🇫🇷 France" : currentCountry.toUpperCase()}
+                    </div>
                   </div>
                 </div>
 
@@ -1425,6 +1460,194 @@ export default function AdminDashboard() {
                 })()}
               </div>
             )}
+
+            {/* Analytics Tab */}
+            {activeTab === "analytics" && (() => {
+              // Build monthly data from real data (last 6 months)
+              const now = new Date();
+              const months = Array.from({ length: 6 }, (_, i) => {
+                const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+                return {
+                  label: d.toLocaleString("default", { month: "short" }),
+                  year: d.getFullYear(),
+                  month: d.getMonth(),
+                };
+              });
+
+              const monthlyData = months.map(({ label, year, month }) => {
+                const propCount = requests.filter(p => {
+                  const d = new Date(p.createdAt);
+                  return d.getFullYear() === year && d.getMonth() === month;
+                }).length;
+                const userCount = allUsers.filter(u => {
+                  const d = new Date(u.createdAt);
+                  return d.getFullYear() === year && d.getMonth() === month;
+                }).length;
+                const reportCount = allReports.filter(r => {
+                  const d = new Date(r.createdAt);
+                  return d.getFullYear() === year && d.getMonth() === month;
+                }).length;
+                return { month: label, Properties: propCount, Users: userCount, Reports: reportCount };
+              });
+
+              const propertyTypeData = [
+                { name: "PG", value: requests.filter(p => p.propertyType === "PG").length, color: "#3b82f6" },
+                { name: "Tenant", value: requests.filter(p => p.propertyType === "Tenant").length, color: "#22c55e" },
+              ];
+
+              const approvalData = [
+                { name: "Approved", value: requests.filter(r => r.approvalStatus === "approved").length, color: "#22c55e" },
+                { name: "Pending", value: requests.filter(r => r.approvalStatus === "pending").length, color: "#eab308" },
+                { name: "Rejected", value: requests.filter(r => r.approvalStatus === "rejected").length, color: "#ef4444" },
+              ];
+
+              const userRoleData = [
+                { name: "Landlords", value: stats.owners, color: "#3b82f6" },
+                { name: "Renters", value: stats.tenants, color: "#eab308" },
+              ];
+
+              const reportStatusData = [
+                { name: "Pending", value: allReports.filter(r => r.status === "pending").length, color: "#eab308" },
+                { name: "Reviewed", value: allReports.filter(r => r.status === "reviewed").length, color: "#22c55e" },
+                { name: "Dismissed", value: allReports.filter(r => r.status === "dismissed").length, color: "#6b7280" },
+              ];
+
+              const tooltipStyle = {
+                backgroundColor: isDark ? "#1f2937" : "#ffffff",
+                border: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
+                borderRadius: "12px",
+                color: isDark ? "#f9fafb" : "#111827",
+              };
+
+              const axisColor = isDark ? "#6b7280" : "#9ca3af";
+              const gridColor = isDark ? "#1f2937" : "#f3f4f6";
+
+              const CustomTooltip = ({ active, payload, label }: any) => {
+                if (!active || !payload?.length) return null;
+                return (
+                  <div style={tooltipStyle} className="px-4 py-3 shadow-xl text-sm">
+                    <p className="font-semibold mb-2">{label}</p>
+                    {payload.map((entry: any) => (
+                      <div key={entry.name} className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: entry.color }} />
+                        <span className={isDark ? "text-gray-300" : "text-gray-600"}>{entry.name}:</span>
+                        <span className="font-bold">{entry.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              };
+
+              const PieTooltip = ({ active, payload }: any) => {
+                if (!active || !payload?.length) return null;
+                return (
+                  <div style={tooltipStyle} className="px-4 py-3 shadow-xl text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: payload[0].payload.color }} />
+                      <span className="font-semibold">{payload[0].name}:</span>
+                      <span className="font-bold">{payload[0].value}</span>
+                    </div>
+                  </div>
+                );
+              };
+
+              return (
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3">
+                    <TrendingUp className="w-6 h-6 text-primary" />
+                    <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Analytics</h2>
+                    <div className={`px-3 py-1 rounded-lg text-xs font-medium ${isDark ? "bg-gray-800 text-gray-400" : "bg-gray-100 text-gray-500"}`}>
+                      {currentCountry === "in" ? "🇮🇳 India" : "🇫🇷 France"} · Last 6 months
+                    </div>
+                  </div>
+
+                  {/* Overview bar — quick numbers */}
+
+                  {/* Monthly trend — Area chart */}
+                  <div className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                    <h3 className={`text-base font-semibold mb-5 ${isDark ? "text-white" : "text-gray-900"}`}>Monthly Activity Trend</h3>
+                    <ResponsiveContainer width="100%" height={260}>
+                      <AreaChart data={monthlyData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="gradProps" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                          </linearGradient>
+                          <linearGradient id="gradUsers" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                          </linearGradient>
+                          <linearGradient id="gradReports" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+                        <XAxis dataKey="month" tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />
+                        <Area type="monotone" dataKey="Properties" stroke="#6366f1" strokeWidth={2.5} fill="url(#gradProps)" dot={{ r: 4, fill: "#6366f1" }} activeDot={{ r: 6 }} />
+                        <Area type="monotone" dataKey="Users" stroke="#3b82f6" strokeWidth={2.5} fill="url(#gradUsers)" dot={{ r: 4, fill: "#3b82f6" }} activeDot={{ r: 6 }} />
+                        <Area type="monotone" dataKey="Reports" stroke="#ef4444" strokeWidth={2.5} fill="url(#gradReports)" dot={{ r: 4, fill: "#ef4444" }} activeDot={{ r: 6 }} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  {/* Bar chart — monthly breakdown */}
+                  <div className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                    <h3 className={`text-base font-semibold mb-5 ${isDark ? "text-white" : "text-gray-900"}`}>Monthly Breakdown</h3>
+                    <ResponsiveContainer width="100%" height={240}>
+                      <BarChart data={monthlyData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }} barCategoryGap="30%">
+                        <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                        <XAxis dataKey="month" tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ fill: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)" }} />
+                        <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />
+                        <Bar dataKey="Properties" fill="#6366f1" radius={[6, 6, 0, 0]} />
+                        <Bar dataKey="Users" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+                        <Bar dataKey="Reports" fill="#ef4444" radius={[6, 6, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  {/* Pie charts row */}
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {/* Approval status */}
+                    <div className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                      <h3 className={`text-base font-semibold mb-5 ${isDark ? "text-white" : "text-gray-900"}`}>Approval Status</h3>
+                      <ResponsiveContainer width="100%" height={220}>
+                        <PieChart>
+                          <Pie data={approvalData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={4} dataKey="value" animationBegin={0} animationDuration={800}>
+                            {approvalData.map((entry, i) => (
+                              <Cell key={i} fill={entry.color} stroke="transparent" />
+                            ))}
+                          </Pie>
+                          <Tooltip content={<PieTooltip />} />
+                          <Legend wrapperStyle={{ fontSize: 12 }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    {/* Report status */}
+                    <div className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                      <h3 className={`text-base font-semibold mb-5 ${isDark ? "text-white" : "text-gray-900"}`}>Report Status</h3>
+                      <ResponsiveContainer width="100%" height={220}>
+                        <PieChart>
+                          <Pie data={reportStatusData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={4} dataKey="value" animationBegin={0} animationDuration={800}>
+                            {reportStatusData.map((entry, i) => (
+                              <Cell key={i} fill={entry.color} stroke="transparent" />
+                            ))}
+                          </Pie>
+                          <Tooltip content={<PieTooltip />} />
+                          <Legend wrapperStyle={{ fontSize: 12 }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
     </div>
@@ -1521,6 +1744,35 @@ export default function AdminDashboard() {
                 </div>
               )}
 
+              {/* Verification Documents */}
+              <div className={`p-4 rounded-xl border ${isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
+                <div className="flex items-center gap-2 mb-3">
+                  <ShieldCheck className={`w-4 h-4 ${prop.isVerified ? "text-emerald-500" : isDark ? "text-gray-400" : "text-gray-400"}`} />
+                  <p className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-500"}`}>Verification Documents</p>
+                  {prop.isVerified && <span className="px-2 py-0.5 bg-emerald-600 text-white text-xs font-semibold rounded-full">Verified</span>}
+                </div>
+                {(prop.verificationImages?.length ?? 0) > 0 ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    {prop.verificationImages!.map((url, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={e => { e.stopPropagation(); setViewingDoc(url); }}
+                        className="group relative h-20 rounded-lg overflow-hidden bg-gray-200 block cursor-pointer"
+                        title="Click to view document"
+                      >
+                        <Image src={url} alt={`Document ${i + 1}`} fill className="object-cover group-hover:opacity-75 transition-opacity" />
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-lg">
+                          <Eye className="w-5 h-5 text-white" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className={`text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>No verification documents uploaded.</p>
+                )}
+              </div>
+
               {/* Actions */}
               <div className="flex gap-3 pt-2">
                 <Link
@@ -1609,9 +1861,18 @@ export default function AdminDashboard() {
                   {hasDocs ? (
                     <div className="grid grid-cols-3 gap-2">
                       {req.verificationImages!.map((url, i) => (
-                        <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="relative h-20 rounded-lg overflow-hidden bg-gray-200 block hover:opacity-80 transition-opacity">
-                          <Image src={url} alt={`Doc ${i + 1}`} fill className="object-cover" />
-                        </a>
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={e => { e.stopPropagation(); setViewingDoc(url); }}
+                          className="group relative h-20 rounded-lg overflow-hidden bg-gray-200 block cursor-pointer"
+                          title="Click to view document"
+                        >
+                          <Image src={url} alt={`Doc ${i + 1}`} fill className="object-cover group-hover:opacity-75 transition-opacity" />
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-lg">
+                            <Eye className="w-5 h-5 text-white" />
+                          </div>
+                        </button>
                       ))}
                     </div>
                   ) : (
@@ -1667,6 +1928,37 @@ export default function AdminDashboard() {
           </div>
         );
       })()}
+      {/* Document Lightbox */}
+      {viewingDoc && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-sm"
+          onClick={() => setViewingDoc(null)}
+        >
+          <button
+            onClick={() => setViewingDoc(null)}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center p-4" onClick={e => e.stopPropagation()}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={viewingDoc}
+              alt="Verification document"
+              className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl"
+            />
+          </div>
+          <a
+            href={viewingDoc}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={e => e.stopPropagation()}
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            <Eye className="w-4 h-4" /> Open original
+          </a>
+        </div>
+      )}
     </>
   );
 }

@@ -20,11 +20,23 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const reports = await Report.find({})
-      .populate('property', 'title location images propertyType')
+    const { searchParams } = new URL(req.url);
+    const country = searchParams.get('country'); // in | fr
+
+    // First get reports, then filter by property country if needed
+    let reports = await Report.find({})
+      .populate('property', 'title location images propertyType country')
       .populate('reportedBy', 'fullName email')
       .sort({ createdAt: -1 })
       .lean();
+
+    // Filter by country if provided (filter based on property's country)
+    if (country) {
+      reports = reports.filter(report => {
+        const property = report.property as any;
+        return property && property.country === country;
+      });
+    }
 
     return NextResponse.json({ success: true, reports });
   } catch (error) {

@@ -23,8 +23,15 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const status = searchParams.get('status'); // pending | approved | rejected | all
+    const country = searchParams.get('country'); // in | fr
 
     const filter: Record<string, any> = {};
+    
+    // Filter by country if provided
+    if (country) {
+      filter.country = country;
+    }
+    
     if (status && status !== 'all') {
       if (status === 'approved') {
         // Include both explicitly approved AND legacy properties (no approvalStatus field)
