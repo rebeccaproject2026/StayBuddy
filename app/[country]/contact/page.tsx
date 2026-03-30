@@ -143,7 +143,7 @@ export default function ContactPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/60 to-black/70"></div>
         
         {/* Content */}
-        <div className="relative h-full flex items-center justify-center px-6">
+        <div className="relative h-full flex pt-20 justify-center px-6">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -161,7 +161,7 @@ export default function ContactPage() {
       </div>
 
       {/* Contact Form Section - Overlapping */}
-      <div className="max-w-7xl mx-auto px-6 -mt-32 relative z-10 pb-16">
+      <div className="max-w-7xl mx-auto px-6 -mt-60 relative z-10 pb-16">
         <div className="grid lg:grid-cols-3 gap-8 items-start">
           {/* Contact Form */}
           <div className="lg:col-span-2 h-full">
