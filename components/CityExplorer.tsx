@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 interface CityCardProps {
   name: string;
@@ -112,76 +113,41 @@ export default function CityExplorer() {
   const country = params?.country as string;
 
   const indianCities = [
-    {
-      name: "Ahmedabad",
-      propertyCount: 742,
-      image: "https://images.unsplash.com/photo-1580655653885-65763b2597d0",
-      size: "large" as const,
-      trending: true,
-    },
-    {
-      name: "Surat",
-      propertyCount: 418,
-      image: "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?q=80&w=2070&auto=format&fit=crop",
-      size: "medium" as const,
-    },
-    {
-      name: "Vadodara",
-      propertyCount: 312,
-      image: "https://images.unsplash.com/photo-1587474260584-136574528ed5?q=80&w=2070&auto=format&fit=crop",
-      size: "medium" as const,
-      trending: true,
-    },
-    {
-      name: "Gandhinagar",
-      propertyCount: 189,
-      image: "https://images.unsplash.com/photo-1596176530529-78163a4f7af2?q=80&w=2070&auto=format&fit=crop",
-      size: "small" as const,
-    },
-    {
-      name: "Rajkot",
-      propertyCount: 254,
-      image: "https://images.unsplash.com/photo-1595658658481-d53d3f999875?q=80&w=2070&auto=format&fit=crop",
-      size: "small" as const,
-    },
+    { name: "Ahmedabad", image: "https://images.unsplash.com/photo-1580655653885-65763b2597d0", size: "large" as const, trending: true },
+    { name: "Surat", image: "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?q=80&w=2070&auto=format&fit=crop", size: "medium" as const },
+    { name: "Vadodara", image: "https://images.unsplash.com/photo-1587474260584-136574528ed5?q=80&w=2070&auto=format&fit=crop", size: "medium" as const, trending: true },
+    { name: "Gandhinagar", image: "https://images.unsplash.com/photo-1596176530529-78163a4f7af2?q=80&w=2070&auto=format&fit=crop", size: "small" as const },
+    { name: "Rajkot", image: "https://images.unsplash.com/photo-1595658658481-d53d3f999875?q=80&w=2070&auto=format&fit=crop", size: "small" as const },
   ];
 
   const frenchCities = [
-    {
-      name: "Paris",
-      propertyCount: 1284,
-      image: "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=2020&auto=format&fit=crop",
-      size: "large" as const,
-      trending: true,
-    },
-    {
-      name: "Lyon",
-      propertyCount: 563,
-      image: "https://images.unsplash.com/photo-1524484485831-a92ffc0de03f?q=80&w=2069&auto=format&fit=crop",
-      size: "medium" as const,
-    },
-    {
-      name: "Marseille",
-      propertyCount: 487,
-      image: "https://images.unsplash.com/photo-1516912481808-3406841bd33c?q=80&w=2044&auto=format&fit=crop",
-      size: "medium" as const,
-      trending: true,
-    },
-    {
-      name: "Toulouse",
-      propertyCount: 321,
-      image: "https://images.unsplash.com/photo-1562979314-bee7453e911c?q=80&w=2070&auto=format&fit=crop",
-      size: "small" as const,
-    },
-    {
-      name: "Nice",
-      propertyCount: 398,
-      image: "https://images.unsplash.com/photo-1533929736458-ca588d08c8be?q=80&w=2070&auto=format&fit=crop",
-      size: "small" as const,
-    },
+    { name: "Paris", image: "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=2020&auto=format&fit=crop", size: "large" as const, trending: true },
+    { name: "Lyon", image: "https://images.unsplash.com/photo-1524484485831-a92ffc0de03f?q=80&w=2069&auto=format&fit=crop", size: "medium" as const },
+    { name: "Marseille", image: "https://images.unsplash.com/photo-1516912481808-3406841bd33c?q=80&w=2044&auto=format&fit=crop", size: "medium" as const, trending: true },
+    { name: "Toulouse", image: "https://images.unsplash.com/photo-1562979314-bee7453e911c?q=80&w=2070&auto=format&fit=crop", size: "small" as const },
+    { name: "Nice", image: "https://images.unsplash.com/photo-1533929736458-ca588d08c8be?q=80&w=2070&auto=format&fit=crop", size: "small" as const },
   ];
 
-  const cities = country === "fr" ? frenchCities : indianCities;
+  const baseCities = country === "fr" ? frenchCities : indianCities;
+
+  const [cityCounts, setCityCounts] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const cityNames = baseCities.map((c) => c.name).join(",");
+    const countryCode = country === "fr" ? "fr" : "in";
+    fetch(`/api/properties/city-stats?country=${countryCode}&cities=${encodeURIComponent(cityNames)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) setCityCounts(data.counts);
+      })
+      .catch(() => {/* silently fall back to 0 */});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [country]);
+
+  const cities = baseCities.map((c) => ({
+    ...c,
+    propertyCount: cityCounts[c.name] ?? 0,
+  }));
 
 
 

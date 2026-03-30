@@ -46,6 +46,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [notifCount, setNotifCount] = useState(0);
   const { language, setLanguage, t } = useLanguage();
   const { user, isAuthenticated, logout, isLoading } = useAuth();
 
@@ -59,6 +60,26 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Poll notification count for landlords and renters every 30s
+  useEffect(() => {
+    if (!isAuthenticated || !user || (user.role !== 'landlord' && user.role !== 'renter')) {
+      setNotifCount(0);
+      return;
+    }
+    const fetchCount = () => {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('staybuddy_token') : null;
+      fetch('/api/notifications/count', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+        .then(r => r.json())
+        .then(data => { if (data.success) setNotifCount(data.total ?? 0); })
+        .catch(() => {});
+    };
+    fetchCount();
+    const interval = setInterval(fetchCount, 30000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, user]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -279,7 +300,24 @@ export default function Navbar() {
                       whileTap={{ scale: 0.97 }}
                       className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-primary transition-colors duration-300 rounded-lg hover:bg-primary-light"
                     >
-                      <ProfileAvatar />
+                      {/* Avatar with notification badge */}
+                      <div className="relative">
+                        <ProfileAvatar />
+                        <AnimatePresence>
+                          {notifCount > 0 && (user.role === 'landlord' || user.role === 'renter') && (
+                            <motion.span
+                              key="avatar-badge"
+                              initial={{ scale: 0, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              exit={{ scale: 0, opacity: 0 }}
+                              transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                              className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none"
+                            >
+                              {notifCount > 99 ? '99+' : notifCount}
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
+                      </div>
                       <span className="font-medium">{user.fullName.split(" ")[0]}</span>
                       <motion.span
                         animate={{ rotate: isProfileMenuOpen ? 180 : 0 }}
@@ -336,6 +374,7 @@ export default function Navbar() {
                                     : user.role === "landlord"
                                     ? "Owner Dashboard"
                                     : "Tenant Dashboard",
+                                badge: (user.role === 'landlord' || user.role === 'renter') && notifCount > 0 ? notifCount : 0,
                                 className:
                                   "text-gray-700 hover:bg-primary-light hover:text-primary",
                               },
@@ -343,6 +382,7 @@ export default function Navbar() {
                                 href: getProfileLink(),
                                 icon: <Settings className="w-5 h-5" />,
                                 label: "Profile Settings",
+                                badge: 0,
                                 className:
                                   "text-gray-700 hover:bg-primary-light hover:text-primary",
                               },
@@ -362,7 +402,21 @@ export default function Navbar() {
                                     className={`w-full flex items-center space-x-3 px-4 py-3 transition-all duration-200 ${item.className}`}
                                   >
                                     {item.icon}
-                                    <span className="font-medium">{item.label}</span>
+                                    <span className="font-medium flex-1 text-left">{item.label}</span>
+                                    <AnimatePresence>
+                                      {item.badge > 0 && (
+                                        <motion.span
+                                          key="dropdown-badge"
+                                          initial={{ scale: 0, opacity: 0 }}
+                                          animate={{ scale: 1, opacity: 1 }}
+                                          exit={{ scale: 0, opacity: 0 }}
+                                          transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                                          className="min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
+                                        >
+                                          {item.badge > 99 ? '99+' : item.badge}
+                                        </motion.span>
+                                      )}
+                                    </AnimatePresence>
                                   </motion.button>
                                 </Link>
                               </motion.div>

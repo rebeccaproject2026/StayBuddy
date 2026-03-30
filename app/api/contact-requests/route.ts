@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       budgetRange, foodPreference, needParking, message,
       propertyTitle: property.title,
       propertyLocation: property.location,
-      status: 'pending',
+      status: 'new',
     });
 
     // Send email notification to owner (fire-and-forget)
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, request }, { status: 201 });
   } catch (err: any) {
     console.error('[POST /api/contact-requests]', err);
-    if (err.message?.includes('token') || err.message?.includes('Authorization')) {
+    if (err.message?.includes('token') || err.message?.includes('Authorization') || err.message?.includes('Authentication')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -85,7 +85,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ success: true, requests });
   } catch (err: any) {
-    if (err.message?.includes('token') || err.message?.includes('Authorization')) {
+    console.error('[GET /api/contact-requests]', err);
+    if (err.message?.includes('token') || err.message?.includes('Authorization') || err.message?.includes('Authentication')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

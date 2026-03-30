@@ -159,7 +159,7 @@ export default function Footer() {
             <h4 className="font-bold text-gray-800 mb-4 esm:mb-6 text-lg esm:text-xl md:text-xl">
               {t.discover.title}
             </h4>
-            <motion.ul className="space-y-2" variants={staggerList} initial="initial" whileInView="whileInView" viewport={{ once: true, margin: "-60px" }}>
+            <motion.ul key={`discover-${language}`} className="space-y-2" variants={staggerList} initial="initial" whileInView="whileInView" viewport={{ once: true, margin: "-60px" }}>
               {[
                 { href: "/properties?tab=pg&pgFor=Girls", label: t.discover.links[0] },
                 { href: "/properties?tab=pg&pgFor=Boys", label: t.discover.links[1] },
@@ -183,7 +183,7 @@ export default function Footer() {
             <h4 className="font-bold text-gray-800 mb-4 esm:mb-6 text-lg esm:text-xl md:text-xl">
               {t.quickLinks.title}
             </h4>
-            <motion.ul className="space-y-2" variants={staggerList} initial="initial" whileInView="whileInView" viewport={{ once: true, margin: "-60px" }}>
+            <motion.ul key={`quicklinks-${language}`} className="space-y-2" variants={staggerList} initial="initial" whileInView="whileInView" viewport={{ once: true, margin: "-60px" }}>
               {[
                 { href: "/about", label: t.quickLinks.links[0] },
                 { href: "/contact", label: t.quickLinks.links[1] },

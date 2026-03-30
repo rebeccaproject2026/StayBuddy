@@ -6,7 +6,7 @@ import User from '@/models/User';
 import { authenticateUser } from '@/lib/auth-middleware';
 import { sendChatMessageEmail } from '@/lib/email';
 
-// GET /api/messages/[requestId] — fetch all messages for a contact request
+// GET /api/messages/[requestId] — fetch all messages and mark them as read
 export async function GET(req: NextRequest, { params }: { params: { requestId: string } }) {
   try {
     await connectDB();
@@ -19,6 +19,16 @@ export async function GET(req: NextRequest, { params }: { params: { requestId: s
     const isOwner = contactReq.owner.toString() === authUser.id;
     const isRenter = contactReq.renter.toString() === authUser.id;
     if (!isOwner && !isRenter) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+    // Mark all messages NOT sent by this user as read — fire-and-forget, never block response
+    Message.updateMany(
+      {
+        contactRequest: requestId,
+        sender: { $ne: authUser.id },
+        readBy: { $ne: authUser.id },
+      },
+      { $addToSet: { readBy: authUser.id } }
+    ).catch(() => {});
 
     const messages = await Message.find({ contactRequest: requestId })
       .sort({ createdAt: 1 })
