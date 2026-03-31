@@ -57,7 +57,7 @@ export default function HomePage() {
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 text-white/90 text-sm font-medium"
             >
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-              Find your perfect stay
+              {t("home.heroBadge")}
             </motion.div>
 
             {/* Heading — word by word */}

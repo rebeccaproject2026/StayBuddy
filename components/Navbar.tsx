@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Globe, LogOut, Settings, LayoutDashboard, ChevronDown } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 
 const navItemVariants = {
@@ -50,6 +51,12 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const { language, setLanguage, t } = useLanguage();
   const { user, isAuthenticated, logout, isLoading } = useAuth();
+  const params = useParams();
+  const urlCountry = params?.country as string;
+
+  // A user is only "active" on the country site they registered for
+  const isCountryMatch = !user || !urlCountry || user.country === urlCountry;
+  const effectivelyAuthenticated = isAuthenticated && isCountryMatch;
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -66,7 +73,7 @@ export default function Navbar() {
 
   // Poll notification count for landlords and renters every 30s
   useEffect(() => {
-    if (!isAuthenticated || !user || (user.role !== 'landlord' && user.role !== 'renter')) {
+    if (!isAuthenticated || !user || !isCountryMatch || (user.role !== 'landlord' && user.role !== 'renter')) {
       setNotifCount(0);
       return;
     }
@@ -202,7 +209,7 @@ export default function Navbar() {
           {/* Right side */}
           <div className="hidden md:flex items-center space-x-4">
             {/* List Property */}
-            {isAuthenticated && user?.role === "landlord" && (
+            {effectivelyAuthenticated && user?.role === "landlord" && (
               <motion.div
                 custom={0}
                 variants={navItemVariants}
@@ -295,7 +302,7 @@ export default function Navbar() {
                 initial="hidden"
                 animate="visible"
               >
-                {isAuthenticated && user ? (
+                {effectivelyAuthenticated && user ? (
                   <div className="relative">
                     <motion.button
                       ref={profileMenuButtonRef}

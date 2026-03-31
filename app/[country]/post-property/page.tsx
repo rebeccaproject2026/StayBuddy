@@ -150,15 +150,20 @@ export default function PostPropertyPage() {
     selectedCity: yup.string().required("Please select a city from the suggestions"),
   });
 
+  const pincodeRule = yup
+    .string()
+    .trim()
+    .required("Pincode is required")
+    .matches(
+      country === "fr" ? /^\d{5}$/ : /^\d{6}$/,
+      country === "fr" ? "Pincode must be exactly 5 digits" : "Pincode must be exactly 6 digits"
+    );
+
   const step2PGSchema = yup.object({
     address: yup.string().trim().required("Full address is required").min(5, "Address must be at least 5 characters"),
     areaName: yup.string().trim().required("Area / Locality is required"),
     state: yup.string().trim().required("State is required"),
-    pincode: yup
-      .string()
-      .trim()
-      .required("Pincode is required")
-      .matches(/^\d{6}$/, "Pincode must be exactly 6 digits"),
+    pincode: pincodeRule,
     landmark: yup.string().trim().required("Landmark is required").min(2, "Landmark must be at least 2 characters"),
     latitude: yup.string().trim().optional(),
     longitude: yup.string().trim().optional(),
@@ -175,11 +180,7 @@ export default function PostPropertyPage() {
     address: yup.string().trim().required("Full address is required").min(5, "Address must be at least 5 characters"),
     areaName: yup.string().trim().required("Area / Locality is required"),
     state: yup.string().trim().required("State is required"),
-    pincode: yup
-      .string()
-      .trim()
-      .required("Pincode is required")
-      .matches(/^\d{6}$/, "Pincode must be exactly 6 digits"),
+    pincode: pincodeRule,
     landmark: yup.string().trim().required("Landmark is required").min(2, "Landmark must be at least 2 characters"),
     latitude: yup.string().trim().optional(),
     longitude: yup.string().trim().optional(),
@@ -1068,11 +1069,12 @@ export default function PostPropertyPage() {
                         type="text"
                         inputMode="numeric"
                         value={pincode}
+                        maxLength={country === "fr" ? 5 : 6}
                         onChange={(e) => {
                           const onlyDigits = e.target.value.replace(/\D/g, "");
                           setPincode(onlyDigits);
                         }}
-                        placeholder={t.pincodePlaceholder}
+                        placeholder={country === "fr" ? "75001" : "380001"}
                         className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors.pincode ? 'border-red-400' : 'border-gray-200'}`}
                       />
                       <FieldError name="pincode" />

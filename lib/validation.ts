@@ -97,7 +97,7 @@ export const propertySchema = z.object({
   fullAddress: z.string().min(5, 'Full address is required').trim(),
   areaName: z.string().min(1, 'Area / locality is required').trim(),
   state: z.string().min(1, 'State is required').trim(),
-  pincode: z.string().min(4, 'Pincode is required').trim(),
+  pincode: z.string().min(1, 'Pincode is required').trim(),
   landmark: z.string().min(2, 'Landmark is required').trim(),
   latitude: z.string().optional(),
   longitude: z.string().optional(),
@@ -188,6 +188,15 @@ export const propertySchema = z.object({
 })
 // ── Conditional PG validations ──────────────────────────────────────────────
 .superRefine((data, ctx) => {
+  // Pincode: 6 digits for India, 5 digits for France
+  const pincodePattern = data.country === 'fr' ? /^\d{5}$/ : /^\d{6}$/;
+  const pincodeMsg = data.country === 'fr'
+    ? 'Pincode must be exactly 5 digits for France'
+    : 'Pincode must be exactly 6 digits for India';
+  if (!pincodePattern.test(data.pincode)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: pincodeMsg, path: ['pincode'] });
+  }
+
   if (data.propertyType === 'PG') {
     if (!data.operationalSince?.trim()) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Operational since is required for PG', path: ['operationalSince'] });

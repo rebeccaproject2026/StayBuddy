@@ -5,7 +5,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Mail, CheckCircle, AlertCircle, Bell, Sparkles, MapPin, Home } from "lucide-react";
 import { motion, useInView } from "framer-motion";
 
-const CITIES = ["Ahmedabad", "Surat", "Vadodara", "Gandhinagar", "Rajkot", "Paris", "Lyon", "Marseille"];
+const CITIES: Record<string, string[]> = {
+  en: ["Ahmedabad", "Surat", "Vadodara", "Gandhinagar", "Rajkot"],
+  fr: ["Paris", "Lyon", "Marseille", "Toulouse", "Nice", "Bordeaux", "Strasbourg"],
+};
 
 export default function SubscribeSection() {
   const { language } = useLanguage();
@@ -34,6 +37,8 @@ export default function SubscribeSection() {
       privacyText: "We respect your privacy. Unsubscribe anytime.",
       features: ["Instant notifications", "No spam guarantee", "Free forever"],
       anyType: "Any type",
+      formTitle: "Subscribe for Updates",
+      formSubtitle: "Join our community and never miss an opportunity",
     },
     fr: {
       badge: "Restez informé",
@@ -50,6 +55,8 @@ export default function SubscribeSection() {
       privacyText: "Nous respectons votre vie privée. Désabonnez-vous à tout moment.",
       features: ["Notifications instantanées", "Garantie sans spam", "Gratuit pour toujours"],
       anyType: "Tout type",
+      formTitle: "S'abonner aux mises à jour",
+      formSubtitle: "Rejoignez notre communauté et ne manquez jamais une opportunité",
     },
   };
 
@@ -153,8 +160,8 @@ export default function SubscribeSection() {
                   <Bell className="w-6 h-6 esm:w-7 esm:h-7 text-primary" />
                 </motion.div>
                 <div>
-                  <h3 className="text-lg esm:text-xl sm:text-2xl font-bold text-gray-900">Subscribe for Updates</h3>
-                  <p className="text-xs esm:text-sm text-gray-600">Join our community and never miss an opportunity</p>
+                  <h3 className="text-lg esm:text-xl sm:text-2xl font-bold text-gray-900">{t.formTitle}</h3>
+                  <p className="text-xs esm:text-sm text-gray-600">{t.formSubtitle}</p>
                 </div>
               </div>
 
@@ -184,7 +191,7 @@ export default function SubscribeSection() {
                       className="w-full pl-9 pr-3 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors disabled:bg-gray-100 text-sm appearance-none bg-white"
                     >
                       <option value="">{t.cityPlaceholder}</option>
-                      {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                      {(CITIES[language] ?? CITIES.en).map((c) => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
                   <div className="relative">
