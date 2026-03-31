@@ -19,7 +19,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       {/* Hero Section with Background Image */}
       <div
-        className="relative min-h-[420px] sm:min-h-[480px] md:min-h-[500px] bg-cover bg-center bg-no-repeat overflow-hidden"
+        className="relative min-h-[420px] sm:min-h-[450px] bg-cover bg-center bg-no-repeat overflow-hidden"
         style={{
           backgroundImage:
             "url('https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop')",

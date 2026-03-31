@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -43,6 +43,50 @@ export default function PropertyDetailsPage() {
   const [reportDone, setReportDone] = useState(false);
 
   const REPORT_REASONS = ["Fake listing", "Incorrect information", "Misleading photos", "Already rented", "Scam / fraud", "Other"];
+
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const sidebar = sidebarRef.current;
+      const content = contentRef.current;
+      if (!sidebar || !content) return;
+
+      const NAVBAR_HEIGHT = 96; // top-24 = 6rem = 96px
+      const contentTop = content.getBoundingClientRect().top + window.scrollY;
+      const contentBottom = contentTop + content.offsetHeight;
+      const sidebarHeight = sidebar.offsetHeight;
+      const scrollY = window.scrollY;
+
+      const startSticky = contentTop - NAVBAR_HEIGHT;
+      const stopSticky = contentBottom - sidebarHeight - NAVBAR_HEIGHT;
+
+      if (scrollY < startSticky) {
+        // Before sticky zone: normal flow
+        sidebar.style.position = 'relative';
+        sidebar.style.top = '0';
+      } else if (scrollY >= startSticky && scrollY < stopSticky) {
+        // In sticky zone: fixed at top
+        sidebar.style.position = 'fixed';
+        sidebar.style.top = `${NAVBAR_HEIGHT}px`;
+        sidebar.style.width = `${sidebar.parentElement?.offsetWidth ?? 0}px`;
+      } else {
+        // Past sticky zone: pin to bottom of parent
+        sidebar.style.position = 'absolute';
+        sidebar.style.top = `${content.offsetHeight - sidebarHeight}px`;
+        sidebar.style.width = '';
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll, { passive: true });
+    handleScroll();
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, []);
 
   const monthText = translate('currency.perMonth');
 
@@ -468,7 +512,7 @@ export default function PropertyDetailsPage() {
       {/* Main Content */}
       <div className="px-4">
         <div className="max-w-7xl mx-auto py-4 sm:py-6 md:py-8">
-          <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+          <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 lg:items-start relative" ref={contentRef}>
             {/* Left Column */}
             <div className="lg:col-span-2">
               {/* Breadcrumb */}
@@ -923,7 +967,7 @@ export default function PropertyDetailsPage() {
 
             {/* Sidebar */}
             <div className="lg:col-span-1">
-              <div className="lg:sticky lg:top-24">
+              <div ref={sidebarRef}>
                 <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-4 sm:p-5 md:p-6 mb-4 sm:mb-6">
                   {/* PG: show per-room-type pricing */}
                   {property.propertyType === 'PG' && property.roomDetails && Object.keys(property.roomDetails).length > 0 ? (
@@ -1048,10 +1092,9 @@ export default function PropertyDetailsPage() {
               </div>
             </div>
           </div>
+          <SubscribeSection />
         </div>
       </div>
-
-      <SubscribeSection />
 
       {/* WhatsApp floating button */}
       <style>{`

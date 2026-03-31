@@ -132,7 +132,7 @@ export default function FilterSection() {
 
   return (
     <div className="px-3 sm:px-4 lg:px-6">
-    <div className="w-full max-w-7xl mx-auto -mt-10 sm:-mt-14 relative z-10">
+    <div className="w-full max-w-7xl mx-auto -mt-10 sm:-mt-16 relative z-10">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

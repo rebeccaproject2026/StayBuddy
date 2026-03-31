@@ -220,9 +220,9 @@ export default function Navbar() {
                 className="flex items-center gap-1.5 px-3 py-2 text-gray-700 hover:text-primary rounded-lg hover:bg-primary-light transition-colors duration-200"
               >
                 <Globe className="w-4 h-4" />
-                <span className="font-medium text-sm">{language.toUpperCase()}</span>
+                <span className="font-medium text-base">{language.toUpperCase()}</span>
                 <motion.span animate={{ rotate: isLangMenuOpen ? 180 : 0 }} transition={{ duration: 0.25 }}>
-                  <ChevronDown className="w-3.5 h-3.5" />
+                  <ChevronDown className="w-4 h-4" />
                 </motion.span>
               </motion.button>
 
@@ -355,7 +355,7 @@ export default function Navbar() {
                       <motion.button
                         whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}
                         transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                        className="px-3 py-2 text-gray-700 hover:text-primary rounded-lg hover:bg-primary-light font-medium text-sm transition-colors duration-200"
+                        className="px-3 py-2 text-gray-700 hover:text-primary rounded-lg hover:bg-primary-light font-semibold text-base transition-colors duration-200"
                       >
                         {t("nav.login")}
                       </motion.button>
@@ -364,7 +364,7 @@ export default function Navbar() {
                       <motion.button
                         whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}
                         transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                        className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium text-sm shadow-md hover:shadow-lg transition-colors duration-200"
+                        className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium text-base shadow-md hover:shadow-lg transition-colors duration-200"
                       >
                         {t("nav.signup")}
                       </motion.button>
