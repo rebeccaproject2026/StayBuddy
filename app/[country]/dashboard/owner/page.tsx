@@ -28,6 +28,8 @@ import {
   ChevronDown,
   Sun,
   Moon,
+  Lock,
+  EyeOff,
 } from "lucide-react";
 
 function StatusDropdown({
@@ -94,34 +96,47 @@ function StatusDropdown({
 }
 
 function ProfileSection({ user, tc, language, isDark = false }: { user: any; tc: any; language: string; isDark?: boolean }) {
+  const { token, updateUser } = useAuth();
   const [form, setForm] = useState({
     fullName: user?.fullName || "",
-    email: user?.email || "",
     phoneNumber: user?.phoneNumber || "",
   });
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  // Track saved name to update avatar card after save
+  const [savedName, setSavedName] = useState(user?.fullName || "");
 
   const [pwForm, setPwForm] = useState({ current: "", next: "", confirm: "" });
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMsg, setPwMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNext, setShowNext] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const handleSaveProfile = async () => {
+    if (!form.fullName.trim()) {
+      setSaveMsg({ type: "error", text: language === "fr" ? "Le nom est requis." : "Full name is required." });
+      return;
+    }
     setSaving(true);
     setSaveMsg(null);
     try {
-      const token = localStorage.getItem("staybuddy_token");
+      const authToken = token && token !== 'nextauth' ? token : localStorage.getItem("staybuddy_token");
       const res = await fetch("/api/auth/me", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         },
-        body: JSON.stringify({ fullName: form.fullName, phoneNumber: form.phoneNumber }),
+        body: JSON.stringify({ fullName: form.fullName.trim(), phoneNumber: form.phoneNumber.trim() }),
       });
       const data = await res.json();
       if (data.success) {
-        setSaveMsg({ type: "success", text: language === "fr" ? "Profil mis à jour." : "Profile updated." });
+        // Update auth context + localStorage so changes persist everywhere
+        updateUser({ fullName: data.user.fullName, phoneNumber: data.user.phoneNumber });
+        setSavedName(data.user.fullName);
+        setSaveMsg({ type: "success", text: language === "fr" ? "Profil mis à jour." : "Profile updated successfully." });
+        setTimeout(() => setSaveMsg(null), 3000);
       } else {
         setSaveMsg({ type: "error", text: data.message || "Failed to update." });
       }
@@ -133,6 +148,14 @@ function ProfileSection({ user, tc, language, isDark = false }: { user: any; tc:
   };
 
   const handleChangePassword = async () => {
+    if (!pwForm.current) {
+      setPwMsg({ type: "error", text: language === "fr" ? "Mot de passe actuel requis." : "Current password is required." });
+      return;
+    }
+    if (pwForm.next.length < 6) {
+      setPwMsg({ type: "error", text: language === "fr" ? "Min. 6 caractères." : "Password must be at least 6 characters." });
+      return;
+    }
     if (pwForm.next !== pwForm.confirm) {
       setPwMsg({ type: "error", text: language === "fr" ? "Les mots de passe ne correspondent pas." : "Passwords do not match." });
       return;
@@ -140,19 +163,20 @@ function ProfileSection({ user, tc, language, isDark = false }: { user: any; tc:
     setPwSaving(true);
     setPwMsg(null);
     try {
-      const token = localStorage.getItem("staybuddy_token");
+      const authToken = token && token !== 'nextauth' ? token : localStorage.getItem("staybuddy_token");
       const res = await fetch("/api/auth/me", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         },
         body: JSON.stringify({ currentPassword: pwForm.current, newPassword: pwForm.next }),
       });
       const data = await res.json();
       if (data.success) {
-        setPwMsg({ type: "success", text: language === "fr" ? "Mot de passe mis à jour." : "Password updated." });
+        setPwMsg({ type: "success", text: language === "fr" ? "Mot de passe mis à jour." : "Password updated successfully." });
         setPwForm({ current: "", next: "", confirm: "" });
+        setTimeout(() => setPwMsg(null), 3000);
       } else {
         setPwMsg({ type: "error", text: data.message || "Failed to update password." });
       }
@@ -165,123 +189,161 @@ function ProfileSection({ user, tc, language, isDark = false }: { user: any; tc:
 
   const countryLabel = user?.country === "fr" ? "France" : user?.country === "in" ? "India" : user?.country || "—";
   const roleLabel = user?.role === "landlord" ? (language === "fr" ? "Propriétaire" : "Owner") : user?.role || "—";
+  const initials = savedName?.charAt(0)?.toUpperCase() || "U";
 
   return (
-    <div className="space-y-6">
-      <h2 className={`text-2xl font-bold mb-6 ${isDark ? "text-white" : "text-gray-900"}`}>{tc.profileSettings}</h2>
+    <div className="space-y-5 max-w-2xl">
+      <h2 className={`text-xl sm:text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{tc.profileSettings}</h2>
 
       {/* Avatar + summary card */}
-      <div className={`rounded-2xl shadow-md p-6 flex flex-col sm:flex-row items-center gap-6 ${isDark ? "bg-gray-900" : "bg-white"}`}>
-        <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
-          {user?.profileImage ? (
-            <Image src={user.profileImage} alt={user.fullName} width={80} height={80} className="object-cover w-full h-full" />
-          ) : (
-            <User className="w-10 h-10 text-primary" />
-          )}
+      <div className={`rounded-2xl p-5 flex items-center gap-4 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
+        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center flex-shrink-0 shadow-md">
+          <span className="text-white font-bold text-xl">{initials}</span>
         </div>
-        <div className="text-center sm:text-left">
-          <p className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{user?.fullName || "—"}</p>
-          <p className="text-gray-500 text-sm">{user?.email}</p>
-          <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
-            <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full">{roleLabel}</span>
-            <span className={`px-3 py-1 text-xs font-medium rounded-full ${isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"}`}>{countryLabel}</span>
-            <span className={`px-3 py-1 text-xs font-medium rounded-full ${user?.isVerified ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
-              {user?.isVerified ? (language === "fr" ? "Vérifié" : "Verified") : (language === "fr" ? "Non vérifié" : "Unverified")}
+        <div className="min-w-0">
+          <p className={`text-base font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{savedName || "—"}</p>
+          <p className="text-sm text-gray-500 truncate">{user?.email}</p>
+          <div className="flex flex-wrap gap-1.5 mt-1.5">
+            <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">{roleLabel}</span>
+            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"}`}>{countryLabel}</span>
+            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${user?.isVerified ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+              {user?.isVerified ? (language === "fr" ? "✓ Vérifié" : "✓ Verified") : (language === "fr" ? "Non vérifié" : "Unverified")}
             </span>
           </div>
         </div>
       </div>
 
       {/* Personal info */}
-      <div className={`rounded-2xl shadow-md p-6 ${isDark ? "bg-gray-900" : "bg-white"}`}>
-        <h3 className={`text-lg font-bold mb-4 ${isDark ? "text-white" : "text-gray-900"}`}>{language === "fr" ? "Informations personnelles" : "Personal Information"}</h3>
+      <div className={`rounded-2xl p-5 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
+        <h3 className={`text-base font-bold mb-4 ${isDark ? "text-white" : "text-gray-900"}`}>
+          {language === "fr" ? "Informations personnelles" : "Personal Information"}
+        </h3>
         <div className="space-y-4">
+          {/* Full Name */}
           <div>
-            <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.fullName}</label>
-            <input
-              type="text"
-              value={form.fullName}
-              onChange={(e) => setForm((p) => ({ ...p, fullName: e.target.value }))}
-              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "border-gray-300"}`}
-            />
+            <label className={`block text-sm font-medium mb-1.5 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+              {tc.fullName} <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                value={form.fullName}
+                onChange={(e) => setForm((p) => ({ ...p, fullName: e.target.value }))}
+                className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${
+                  isDark ? "bg-gray-800 border-gray-700 text-white placeholder-gray-500" : "border-gray-200 focus:border-primary"
+                }`}
+                placeholder={language === "fr" ? "Votre nom complet" : "Your full name"}
+              />
+            </div>
           </div>
+
+          {/* Email — read only */}
           <div>
-            <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.email}</label>
-            <input
-              type="email"
-              value={form.email}
-              disabled
-              className={`w-full px-4 py-3 border rounded-lg cursor-not-allowed ${isDark ? "bg-gray-800 border-gray-700 text-gray-500" : "border-gray-200 bg-gray-50 text-gray-500"}`}
-            />
+            <label className={`block text-sm font-medium mb-1.5 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.email}</label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="email"
+                value={user?.email || ""}
+                disabled
+                className={`w-full pl-10 pr-4 py-3 border rounded-xl cursor-not-allowed ${
+                  isDark ? "bg-gray-800/50 border-gray-700 text-gray-500" : "border-gray-200 bg-gray-50 text-gray-400"
+                }`}
+              />
+            </div>
             <p className="text-xs text-gray-400 mt-1">{language === "fr" ? "L'email ne peut pas être modifié." : "Email cannot be changed."}</p>
           </div>
+
+          {/* Phone */}
           <div>
-            <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.phone}</label>
-            <input
-              type="tel"
-              value={form.phoneNumber}
-              onChange={(e) => setForm((p) => ({ ...p, phoneNumber: e.target.value }))}
-              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "border-gray-300"}`}
-              placeholder={language === "fr" ? "Numéro de téléphone" : "Phone number"}
-            />
+            <label className={`block text-sm font-medium mb-1.5 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{tc.phone}</label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="tel"
+                value={form.phoneNumber}
+                onChange={(e) => setForm((p) => ({ ...p, phoneNumber: e.target.value }))}
+                className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${
+                  isDark ? "bg-gray-800 border-gray-700 text-white placeholder-gray-500" : "border-gray-200 focus:border-primary"
+                }`}
+                placeholder={language === "fr" ? "Numéro de téléphone" : "+91 99999 99999"}
+              />
+            </div>
           </div>
+
           {saveMsg && (
-            <p className={`text-sm font-medium ${saveMsg.type === "success" ? "text-green-600" : "text-red-600"}`}>{saveMsg.text}</p>
+            <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium ${
+              saveMsg.type === "success"
+                ? "bg-green-50 text-green-700 border border-green-200"
+                : "bg-red-50 text-red-700 border border-red-200"
+            }`}>
+              {saveMsg.type === "success" ? "✓" : "✕"} {saveMsg.text}
+            </div>
           )}
+
           <button
             onClick={handleSaveProfile}
             disabled={saving}
-            className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-medium disabled:opacity-60"
+            className="w-full py-3 bg-primary text-white rounded-xl hover:bg-primary/90 active:scale-[0.98] transition-all font-semibold disabled:opacity-60 flex items-center justify-center gap-2"
           >
-            {saving ? "..." : tc.saveChanges}
+            {saving ? (
+              <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> {language === "fr" ? "Enregistrement..." : "Saving..."}</>
+            ) : tc.saveChanges}
           </button>
         </div>
       </div>
 
       {/* Change password — only for credentials users */}
       {user?.provider === "credentials" && (
-        <div className={`rounded-2xl shadow-md p-6 ${isDark ? "bg-gray-900" : "bg-white"}`}>
-          <h3 className={`text-lg font-bold mb-4 ${isDark ? "text-white" : "text-gray-900"}`}>{language === "fr" ? "Changer le mot de passe" : "Change Password"}</h3>
+        <div className={`rounded-2xl p-5 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
+          <h3 className={`text-base font-bold mb-4 ${isDark ? "text-white" : "text-gray-900"}`}>
+            {language === "fr" ? "Changer le mot de passe" : "Change Password"}
+          </h3>
           <div className="space-y-4">
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{language === "fr" ? "Mot de passe actuel" : "Current Password"}</label>
-              <input
-                type="password"
-                value={pwForm.current}
-                onChange={(e) => setPwForm((p) => ({ ...p, current: e.target.value }))}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "border-gray-300"}`}
-                placeholder={language === "fr" ? "Mot de passe actuel" : "Current password"}
-              />
-            </div>
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{language === "fr" ? "Nouveau mot de passe" : "New Password"}</label>
-              <input
-                type="password"
-                value={pwForm.next}
-                onChange={(e) => setPwForm((p) => ({ ...p, next: e.target.value }))}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "border-gray-300"}`}
-                placeholder={language === "fr" ? "Nouveau mot de passe" : "New password"}
-              />
-            </div>
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{language === "fr" ? "Confirmer le mot de passe" : "Confirm New Password"}</label>
-              <input
-                type="password"
-                value={pwForm.confirm}
-                onChange={(e) => setPwForm((p) => ({ ...p, confirm: e.target.value }))}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "border-gray-300"}`}
-                placeholder={language === "fr" ? "Confirmer" : "Confirm password"}
-              />
-            </div>
+            {[
+              { key: "current", label: language === "fr" ? "Mot de passe actuel" : "Current Password", show: showCurrent, toggle: () => setShowCurrent(p => !p) },
+              { key: "next",    label: language === "fr" ? "Nouveau mot de passe" : "New Password",     show: showNext,    toggle: () => setShowNext(p => !p) },
+              { key: "confirm", label: language === "fr" ? "Confirmer" : "Confirm New Password",        show: showConfirm, toggle: () => setShowConfirm(p => !p) },
+            ].map(({ key, label, show, toggle }) => (
+              <div key={key}>
+                <label className={`block text-sm font-medium mb-1.5 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{label}</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type={show ? "text" : "password"}
+                    value={pwForm[key as keyof typeof pwForm]}
+                    onChange={(e) => setPwForm((p) => ({ ...p, [key]: e.target.value }))}
+                    className={`w-full pl-10 pr-10 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${
+                      isDark ? "bg-gray-800 border-gray-700 text-white placeholder-gray-500" : "border-gray-200 focus:border-primary"
+                    }`}
+                    placeholder="••••••••"
+                  />
+                  <button type="button" onClick={toggle} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+            ))}
+
             {pwMsg && (
-              <p className={`text-sm font-medium ${pwMsg.type === "success" ? "text-green-600" : "text-red-600"}`}>{pwMsg.text}</p>
+              <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium ${
+                pwMsg.type === "success"
+                  ? "bg-green-50 text-green-700 border border-green-200"
+                  : "bg-red-50 text-red-700 border border-red-200"
+              }`}>
+                {pwMsg.type === "success" ? "✓" : "✕"} {pwMsg.text}
+              </div>
             )}
+
             <button
               onClick={handleChangePassword}
               disabled={pwSaving}
-              className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-medium disabled:opacity-60"
+              className="w-full py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 active:scale-[0.98] transition-all font-semibold disabled:opacity-60 flex items-center justify-center gap-2"
             >
-              {pwSaving ? "..." : (language === "fr" ? "Mettre à jour le mot de passe" : "Update Password")}
+              {pwSaving ? (
+                <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> {language === "fr" ? "Mise à jour..." : "Updating..."}</>
+              ) : (language === "fr" ? "Mettre à jour le mot de passe" : "Update Password")}
             </button>
           </div>
         </div>
@@ -935,37 +997,37 @@ export default function OwnerDashboard() {
   };
 
   return (
-    <div className={`min-h-screen ${isDark ? "bg-gray-950" : "bg-gray-50"}`}>
+    <div className={`h-screen overflow-hidden flex flex-col ${isDark ? "bg-gray-950" : "bg-gray-50"}`}>
       {/* Header */}
-      <div className={`sticky top-0 z-50 shadow-sm border-b ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
-        <div className="max-w-[1500px] mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-16">
-            <h1 className={`text-2xl font-bold ${isDark ? "text-primary-light" : "text-primary"}`}>{tc.dashboard}</h1>
-            <div className="flex items-center gap-3">
+      <div className={`sticky top-0 z-50 shadow-sm border-b flex-shrink-0 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
+        <div className="max-w-[1500px] mx-auto px-3 sm:px-6">
+          <div className="flex items-center justify-between h-14 sm:h-16">
+            <h1 className={`text-base sm:text-xl font-bold truncate ${isDark ? "text-primary-light" : "text-primary"}`}>{tc.dashboard}</h1>
+            <div className="flex items-center gap-2">
               <button
                 onClick={toggleTheme}
-                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${isDark ? "bg-gray-800 text-yellow-400 hover:bg-gray-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
-                title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-colors ${isDark ? "bg-gray-800 text-yellow-400 hover:bg-gray-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
               >
                 {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
               <Link
                 href="/"
-                className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg transition-colors font-medium text-sm"
+                className="flex items-center gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg transition-colors font-medium text-xs sm:text-sm"
               >
-                <Home className="w-4 h-4" />
-                <span>{language === "fr" ? "Accueil" : "Back to Home"}</span>
+                <Home className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">{language === "fr" ? "Accueil" : "Back to Home"}</span>
+                <span className="sm:hidden">{language === "fr" ? "Accueil" : "Home"}</span>
               </Link>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
-          {/* Sidebar */}
-          <div className="lg:w-72 flex-shrink-0">
-            <div className={`p-4 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto flex flex-col border-r ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-md"}`}>
-              <nav className="space-y-2">
+      <div className="flex flex-1 overflow-hidden">
+          {/* Desktop Sidebar */}
+          <div className="hidden lg:block w-64 xl:w-72 flex-shrink-0">
+            <div className={`p-4 h-full overflow-y-auto flex flex-col border-r ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+              <nav className="space-y-1">
                 <button
                   onClick={() => setActiveTab("listings")}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
@@ -973,7 +1035,7 @@ export default function OwnerDashboard() {
                   }`}
                 >
                   <Home className="w-5 h-5" />
-                  <span className="font-medium">{tc.myListings}</span>
+                  <span className="font-medium text-sm">{tc.myListings}</span>
                 </button>
                 <button
                   onClick={() => {
@@ -988,8 +1050,8 @@ export default function OwnerDashboard() {
                     activeTab === "requests" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
-                  <Calendar className="w-5 h-5" />
-                  <span className="font-medium">{tc.bookingRequests}</span>
+                  <Calendar className="w-5 h-5 flex-shrink-0" />
+                  <span className="font-medium text-sm">{tc.bookingRequests}</span>
                   {contactRequests.filter((r: any) => !seenInquiryIds.has(r._id)).length > 0 && (
                     <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                       {contactRequests.filter((r: any) => !seenInquiryIds.has(r._id)).length}
@@ -1002,8 +1064,8 @@ export default function OwnerDashboard() {
                     activeTab === "messages" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
-                  <MessageSquare className="w-5 h-5" />
-                  <span className="font-medium">{tc.messages}</span>
+                  <MessageSquare className="w-5 h-5 flex-shrink-0" />
+                  <span className="font-medium text-sm">{tc.messages}</span>
                   {Object.values(conversations).filter(c => c.unread).length > 0 && (
                     <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                       {Object.values(conversations).filter(c => c.unread).length}
@@ -1072,50 +1134,50 @@ export default function OwnerDashboard() {
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0">
+          <div className="flex-1 min-w-0 overflow-y-auto pb-16 lg:pb-0">
+            <div className="p-3 sm:p-5 lg:p-8">
             {/* My Listings */}
             {activeTab === "listings" && (
               <div className="space-y-6">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
-                  <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{tc.myListings}</h2>
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
+                <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
+                  <h2 className={`text-lg sm:text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{tc.myListings}</h2>
+                  <div className="flex items-center gap-2">
                     {/* View Toggle */}
-                    <div className={`flex items-center gap-1 rounded-lg p-1 w-fit ${isDark ? "bg-gray-800" : "bg-gray-100"}`}>
+                    <div className={`flex items-center gap-1 rounded-lg p-1 ${isDark ? "bg-gray-800" : "bg-gray-100"}`}>
                       <button
                         onClick={() => setViewMode("grid")}
-                        className={`p-2 rounded-md transition-colors ${
+                        className={`p-1.5 sm:p-2 rounded-md transition-colors ${
                           viewMode === "grid" ? isDark ? "bg-gray-700 text-primary shadow-sm" : "bg-white text-primary shadow-sm" : isDark ? "text-gray-400 hover:text-gray-200" : "text-gray-600 hover:text-gray-900"
                         }`}
-                        title="Grid View"
                       >
-                        <Grid3x3 className="w-5 h-5" />
+                        <Grid3x3 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => setViewMode("list")}
-                        className={`p-2 rounded-md transition-colors ${
+                        className={`p-1.5 sm:p-2 rounded-md transition-colors ${
                           viewMode === "list" ? isDark ? "bg-gray-700 text-primary shadow-sm" : "bg-white text-primary shadow-sm" : isDark ? "text-gray-400 hover:text-gray-200" : "text-gray-600 hover:text-gray-900"
                         }`}
-                        title="List View"
                       >
-                        <List className="w-5 h-5" />
+                        <List className="w-4 h-4" />
                       </button>
                     </div>
                     <Link
                       href="/post-property"
-                      className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-xs sm:text-sm font-medium"
                     >
-                      <Plus className="w-5 h-5" />
-                      {tc.addNewListing}
+                      <Plus className="w-4 h-4" />
+                      <span className="hidden sm:inline">{tc.addNewListing}</span>
+                      <span className="sm:hidden">{language === "fr" ? "Ajouter" : "Add"}</span>
                     </Link>
                   </div>
                 </div>
 
                 {listingsLoading ? (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                     {Array.from({ length: 3 }).map((_, i) => (
                       <div key={i} className={`rounded-2xl overflow-hidden animate-pulse ${isDark ? "bg-gray-800" : "bg-white shadow-md"}`}>
-                        <div className={`h-48 ${isDark ? "bg-gray-700" : "bg-gray-200"}`} />
-                        <div className="p-6 space-y-3">
+                        <div className={`h-40 ${isDark ? "bg-gray-700" : "bg-gray-200"}`} />
+                        <div className="p-4 space-y-3">
                           <div className={`h-4 rounded w-3/4 ${isDark ? "bg-gray-700" : "bg-gray-200"}`} />
                           <div className={`h-3 rounded w-1/2 ${isDark ? "bg-gray-700" : "bg-gray-200"}`} />
                           <div className={`h-5 rounded w-1/3 ${isDark ? "bg-gray-700" : "bg-gray-200"}`} />
@@ -2257,10 +2319,10 @@ export default function OwnerDashboard() {
                     <>
                     {/* Grid View */}
                     {viewMode === "grid" && (
-                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                         {myListings.map((listing) => (
                           <div key={listing._id} className={`rounded-2xl overflow-hidden hover:shadow-lg transition-shadow ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white shadow-md"}`}>
-                            <div className="relative h-48">
+                            <div className="relative h-40 sm:h-48">
                               <Image
                                 src={listing.images?.[0] || "/owner.png"}
                                 alt={listing.title}
@@ -2739,13 +2801,71 @@ export default function OwnerDashboard() {
               <ProfileSection user={user} tc={tc} language={language} isDark={isDark} />
             )}
           </div>
+          </div>
+      </div>
+
+      {/* Mobile Bottom Tab Bar */}
+      <div className={`lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <div className="flex items-stretch h-16">
+          {[
+            { key: "listings",  icon: Home,         label: language === "fr" ? "Annonces" : "Listings" },
+            { key: "requests",  icon: Calendar,     label: language === "fr" ? "Demandes" : "Inquiries",
+              badge: contactRequests.filter((r: any) => !seenInquiryIds.has(r._id)).length },
+            { key: "messages",  icon: MessageSquare,label: language === "fr" ? "Messages" : "Messages",
+              badge: Object.values(conversations).filter(c => c.unread).length },
+            { key: "profile",   icon: User,         label: language === "fr" ? "Profil" : "Profile" },
+          ].map(({ key, icon: Icon, label, badge }) => (
+            <button
+              key={key}
+              onClick={() => {
+                setActiveTab(key);
+                if (key === "requests") {
+                  setSeenInquiryIds(prev => {
+                    const updated = new Set(prev);
+                    contactRequests.forEach((r: any) => updated.add(r._id));
+                    return updated;
+                  });
+                }
+              }}
+              className={`flex-1 flex flex-col items-center justify-center gap-1 relative transition-all duration-200 ${
+                activeTab === key
+                  ? "text-primary"
+                  : isDark ? "text-gray-500 hover:text-gray-300" : "text-gray-400 hover:text-gray-600"
+              }`}
+            >
+              {activeTab === key && (
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 bg-primary rounded-full" />
+              )}
+              {activeTab === key && (
+                <span className={`absolute inset-x-1 inset-y-1 rounded-xl ${isDark ? "bg-primary/10" : "bg-primary/8"}`} />
+              )}
+              <div className="relative z-10">
+                <Icon className="w-5 h-5" />
+                {badge ? (
+                  <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5">
+                    {(badge as number) > 9 ? '9+' : badge}
+                  </span>
+                ) : null}
+              </div>
+              <span className={`text-[9px] font-semibold z-10 ${activeTab === key ? "opacity-100" : "opacity-60"}`}>{label}</span>
+            </button>
+          ))}
+          <button
+            onClick={() => logout()}
+            className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${isDark ? "text-red-400 hover:text-red-300" : "text-red-400 hover:text-red-600"}`}
+          >
+            <LogOut className="w-5 h-5" />
+            <span className="text-[9px] font-semibold opacity-60">{language === "fr" ? "Sortir" : "Logout"}</span>
+          </button>
+        </div>
       </div>
 
       {/* Chat Modal */}
       {chatRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
           <div className="absolute inset-0 bg-black/50" onClick={closeChat} />
-          <div className={`relative rounded-2xl shadow-2xl w-full max-w-lg flex flex-col ${isDark ? "bg-gray-900" : "bg-white"}`} style={{ height: '80vh', maxHeight: '600px' }}>
+          <div className={`relative rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg flex flex-col ${isDark ? "bg-gray-900" : "bg-white"}`} style={{ height: '92vh', maxHeight: '600px' }}>
             {/* Header */}
             <div className={`flex items-center gap-3 p-4 border-b flex-shrink-0 ${isDark ? "border-gray-800" : "border-gray-200"}`}>
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
