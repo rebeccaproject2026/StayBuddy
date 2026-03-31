@@ -122,7 +122,7 @@ export default function PropertyCard({
         className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer"
       >
         {/* Image Carousel */}
-        <div className="relative h-64 bg-gray-200 overflow-hidden">
+        <div className="relative h-44 sm:h-52 md:h-56 bg-gray-200 overflow-hidden">
           <AnimatePresence initial={false} custom={direction}>
             <motion.div
               key={currentImageIndex}
@@ -152,15 +152,15 @@ export default function PropertyCard({
             <>
               <button
                 onClick={prevImage}
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 hover:bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 shadow-md"
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-8 sm:h-8 bg-white/90 hover:bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 sm:opacity-0 touch:opacity-100 transition-opacity duration-300 z-10 shadow-md"
               >
-                <ChevronLeft className="w-5 h-5 text-gray-800" />
+                <ChevronLeft className="w-4 h-4 text-gray-800" />
               </button>
               <button
                 onClick={nextImage}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 hover:bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 shadow-md"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-8 sm:h-8 bg-white/90 hover:bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 sm:opacity-0 touch:opacity-100 transition-opacity duration-300 z-10 shadow-md"
               >
-                <ChevronRight className="w-5 h-5 text-gray-800" />
+                <ChevronRight className="w-4 h-4 text-gray-800" />
               </button>
             </>
           )}
@@ -228,34 +228,31 @@ export default function PropertyCard({
         </div>
 
         {/* Content */}
-        <div className="p-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-1">
+        <div className="p-3 sm:p-4">
+          <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 mb-1 line-clamp-1">
             {type === "Tenant" && societyName ? societyName : title}
           </h3>
-          <p className="text-sm text-gray-600 mb-2 line-clamp-1">
+          <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-1">
             {[areaName, location, state].filter(Boolean).join(", ")}
           </p>
 
-          <div className="flex flex-row-reverse items-end justify-between">
-            {/* Rating Section — always shown */}
-            <div className="flex items-center gap-1.5">
+          <div className="flex items-center justify-between mt-1">
+            <p className="text-base sm:text-lg font-bold text-primary">
+              {currencySymbol} {price.toLocaleString()}
+              <span className="text-xs sm:text-sm font-normal text-gray-500"> / {monthText}</span>
+            </p>
+            {/* Rating */}
+            <div className="flex items-center gap-1">
               <svg
-                className={`w-4 h-4 ${rating ? "fill-yellow-400 text-yellow-400" : "fill-gray-300 text-gray-300"}`}
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
+                className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${rating ? "fill-yellow-400 text-yellow-400" : "fill-gray-300 text-gray-300"}`}
+                xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
               </svg>
-              <span className={`text-sm font-semibold ${rating ? "text-gray-700" : "text-gray-400"}`}>
+              <span className={`text-xs sm:text-sm font-semibold ${rating ? "text-gray-700" : "text-gray-400"}`}>
                 {rating ? rating.toFixed(1) : "0.0"}
               </span>
-              <span className="text-xs text-gray-500">({reviewsCount ?? 0})</span>
-            </div>
-
-            <div className="flex items-center justify-between mt-auto">
-              <p className="text-xl font-bold text-primary">
-                {currencySymbol} {price.toLocaleString()} <span className="text-sm font-normal text-gray-600">/ {monthText}</span>
-              </p>
+              <span className="text-xs text-gray-400 hidden sm:inline">({reviewsCount ?? 0})</span>
             </div>
           </div>
         </div>

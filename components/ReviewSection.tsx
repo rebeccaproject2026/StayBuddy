@@ -158,16 +158,16 @@ export default function ReviewSection({ propertyId, language = "en", country = "
 
       {/* Stats */}
       {total > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 sm:gap-6 mb-8">
           {/* Average score */}
-          <div className="md:col-span-4 flex flex-col items-center justify-center p-6 bg-gray-50 rounded-xl border border-gray-100">
+          <div className="sm:col-span-4 flex flex-col items-center justify-center p-5 sm:p-6 bg-gray-50 rounded-xl border border-gray-100">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{tr.overallRating}</p>
             <p className="text-5xl font-extrabold text-gray-900 mb-2">{average.toFixed(1)}</p>
             {renderStars(Math.round(average), "w-5 h-5")}
             <p className="text-sm text-gray-500 mt-2">{tr.basedOn} {total} {tr.reviewsWord}</p>
           </div>
           {/* Distribution */}
-          <div className="md:col-span-8 flex flex-col justify-center gap-3">
+          <div className="sm:col-span-8 flex flex-col justify-center gap-2.5 sm:gap-3">
             {distribution.map(({ star, pct }) => (
               <div key={star} className="flex items-center gap-3 text-sm">
                 <span className="w-10 shrink-0 text-gray-600 font-medium flex items-center gap-1">

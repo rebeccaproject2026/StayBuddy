@@ -3,67 +3,54 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "@/components/LocalizedLink";
 import { motion, AnimatePresence } from "framer-motion";
-import { Globe, LogOut, Settings, LayoutDashboard, ChevronDown } from "lucide-react";
+import { Globe, LogOut, Settings, LayoutDashboard, ChevronDown, Menu, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 
-const navItemVariants = {
-  hidden: { opacity: 0, y: -12 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.08 + 0.3, duration: 0.4, ease: "easeOut" },
-  }),
-};
-
 const dropdownVariants = {
   hidden: { opacity: 0, y: -8, scale: 0.97 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.2, ease: "easeOut" },
-  },
-  exit: {
-    opacity: 0,
-    y: -8,
-    scale: 0.97,
-    transition: { duration: 0.15, ease: "easeIn" },
-  },
+  visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.2, ease: "easeOut" } },
+  exit: { opacity: 0, y: -8, scale: 0.97, transition: { duration: 0.15, ease: "easeIn" } },
 };
 
 const dropdownItemVariants = {
   hidden: { opacity: 0, x: -8 },
   visible: (i: number) => ({
-    opacity: 1,
-    x: 0,
+    opacity: 1, x: 0,
     transition: { delay: i * 0.05, duration: 0.2, ease: "easeOut" },
   }),
+};
+
+const mobileMenuVariants = {
+  hidden: { opacity: 0, height: 0 },
+  visible: { opacity: 1, height: "auto", transition: { duration: 0.3, ease: "easeOut" } },
+  exit: { opacity: 0, height: 0, transition: { duration: 0.2, ease: "easeIn" } },
 };
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [notifCount, setNotifCount] = useState(0);
   const [mounted, setMounted] = useState(false);
+
   const { language, setLanguage, t } = useLanguage();
   const { user, isAuthenticated, logout, isLoading } = useAuth();
   const params = useParams();
   const urlCountry = params?.country as string;
 
-  // A user is only "active" on the country site they registered for
   const isCountryMatch = !user || !urlCountry || user.country === urlCountry;
   const effectivelyAuthenticated = isAuthenticated && isCountryMatch;
-
-  useEffect(() => { setMounted(true); }, []);
 
   const langMenuRef = useRef<HTMLDivElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const langMenuButtonRef = useRef<HTMLButtonElement>(null);
   const profileMenuButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -71,15 +58,21 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Poll notification count for landlords and renters every 30s
+  // Close mobile menu on resize to desktop
   useEffect(() => {
-    if (!isAuthenticated || !user || !isCountryMatch || (user.role !== 'landlord' && user.role !== 'renter')) {
+    const handleResize = () => { if (window.innerWidth >= 768) setIsMobileMenuOpen(false); };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user || !isCountryMatch || (user.role !== "landlord" && user.role !== "renter")) {
       setNotifCount(0);
       return;
     }
     const fetchCount = () => {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('staybuddy_token') : null;
-      fetch('/api/notifications/count', {
+      const token = typeof window !== "undefined" ? localStorage.getItem("staybuddy_token") : null;
+      fetch("/api/notifications/count", {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
         .then(r => r.json())
@@ -89,26 +82,16 @@ export default function Navbar() {
     fetchCount();
     const interval = setInterval(fetchCount, 30000);
     return () => clearInterval(interval);
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, isCountryMatch]);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        isLangMenuOpen &&
-        langMenuRef.current &&
-        !langMenuRef.current.contains(event.target as Node) &&
-        langMenuButtonRef.current &&
-        !langMenuButtonRef.current.contains(event.target as Node)
-      ) {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (isLangMenuOpen && langMenuRef.current && !langMenuRef.current.contains(e.target as Node) &&
+          langMenuButtonRef.current && !langMenuButtonRef.current.contains(e.target as Node)) {
         setIsLangMenuOpen(false);
       }
-      if (
-        isProfileMenuOpen &&
-        profileMenuRef.current &&
-        !profileMenuRef.current.contains(event.target as Node) &&
-        profileMenuButtonRef.current &&
-        !profileMenuButtonRef.current.contains(event.target as Node)
-      ) {
+      if (isProfileMenuOpen && profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node) &&
+          profileMenuButtonRef.current && !profileMenuButtonRef.current.contains(e.target as Node)) {
         setIsProfileMenuOpen(false);
       }
     };
@@ -124,11 +107,13 @@ export default function Navbar() {
   const handleLanguageChange = (lang: "en" | "fr") => {
     setLanguage(lang);
     setIsLangMenuOpen(false);
+    setIsMobileMenuOpen(false);
   };
 
   const handleLogout = () => {
     logout();
     setIsProfileMenuOpen(false);
+    setIsMobileMenuOpen(false);
   };
 
   const getDashboardLink = () => {
@@ -151,106 +136,93 @@ export default function Navbar() {
     }
   };
 
-  const ProfileAvatar = () => {
+  const ProfileAvatar = ({ size = 8 }: { size?: number }) => {
+    const cls = `w-${size} h-${size} rounded-full`;
     if (user?.profileImage) {
-      return (
-        <img
-          src={user.profileImage}
-          alt={user.fullName}
-          className="w-8 h-8 rounded-full object-cover"
-        />
-      );
+      return <img src={user.profileImage} alt={user.fullName} className={`${cls} object-cover`} />;
     }
     return (
-      <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-semibold">
+      <div className={`${cls} bg-primary text-white flex items-center justify-center text-sm font-semibold`}>
         {user?.fullName?.charAt(0).toUpperCase() || "U"}
       </div>
     );
   };
 
+  const roleLabel = user?.role === "renter" ? "Renter"
+    : user?.role === "landlord" ? "Landlord"
+    : user?.role === "admin" ? "Admin"
+    : user?.role || "User";
+
+  const dashboardLabel = user?.role === "admin" ? "Admin Dashboard"
+    : user?.role === "landlord" ? "Owner Dashboard"
+    : "Tenant Dashboard";
 
   return (
     <motion.nav
       initial={false}
       animate={{
         backgroundColor: isScrolled ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,1)",
-        boxShadow: isScrolled
-          ? "0 4px 24px rgba(0,0,0,0.08)"
-          : "0 0px 0px rgba(0,0,0,0)",
+        boxShadow: isScrolled ? "0 4px 24px rgba(0,0,0,0.08)" : "0 0px 0px rgba(0,0,0,0)",
         backdropFilter: isScrolled ? "blur(12px)" : "blur(0px)",
       }}
       transition={{ duration: 0.35, ease: "easeInOut" }}
-      className="fixed top-0 left-0 right-0 z-50 px-4"
+      className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6"
     >
-      <div className="max-w-7xl mx-auto relative">
-        <div className="flex items-center justify-between h-20">
+      <div className="max-w-7xl mx-auto">
+        {/* Backdrop to close menus on mobile */}
+        {(isMobileMenuOpen || isLangMenuOpen) && (
+          <div
+            className="fixed inset-0 z-[-1] md:hidden"
+            onClick={() => { setIsMobileMenuOpen(false); setIsLangMenuOpen(false); }}
+          />
+        )}
+        {/* Main bar */}
+        <div className="flex items-center justify-between h-16 sm:h-20">
+
           {/* Logo */}
           <motion.div
             initial={{ x: -40, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
+            className="flex-shrink-0"
           >
-            <Link href="/" className="flex items-center group">
-              <motion.span
-                whileHover={{ scale: 1.04 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              >
-                <Image
-                  src="/logo.png"
-                  alt="StayBuddy Logo"
-                  width={200}
-                  height={200}
-                  className="mr-2"
-                />
-              </motion.span>
+            <Link href="/" className="flex items-center">
+              <motion.div whileHover={{ scale: 1.04 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
+                <Image src="/logo.png" alt="StayBuddy Logo" width={140} height={140} className="w-32 sm:w-36 md:w-44 h-auto" />
+              </motion.div>
             </Link>
           </motion.div>
 
-          {/* Right side */}
-          <div className="hidden md:flex items-center space-x-4">
-            {/* List Property */}
+          {/* Desktop right side */}
+          <div className="hidden md:flex items-center gap-2">
+
+            {/* List Property — landlord only */}
             {effectivelyAuthenticated && user?.role === "landlord" && (
-              <motion.div
-                custom={0}
-                variants={navItemVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                <Link href="/post-property">
-                  <motion.button
-                    whileHover={{ scale: 1.05, y: -1 }}
-                    whileTap={{ scale: 0.96 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                    className="px-5 py-2.5 bg-accent text-white rounded-xl font-semibold hover:bg-accent-hover transition-colors duration-300 shadow-md hover:shadow-lg"
-                  >
-                    {t("nav.listProperty")}
-                  </motion.button>
-                </Link>
-              </motion.div>
+              <Link href="/post-property">
+                <motion.button
+                  whileHover={{ scale: 1.05, y: -1 }}
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                  className="px-4 py-2 bg-accent text-white rounded-xl font-semibold text-sm hover:bg-accent-hover transition-colors duration-300 shadow-md hover:shadow-lg"
+                >
+                  {t("nav.listProperty")}
+                </motion.button>
+              </Link>
             )}
 
-            {/* Language Selector */}
-            <motion.div
-              custom={1}
-              variants={navItemVariants}
-              initial="hidden"
-              animate="visible"
-              className="relative"
-            >
+            {/* Language selector */}
+            <div className="relative">
               <motion.button
                 ref={langMenuButtonRef}
                 onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-primary transition-colors duration-300 rounded-lg hover:bg-primary-light"
+                className="flex items-center gap-1.5 px-3 py-2 text-gray-700 hover:text-primary rounded-lg hover:bg-primary-light transition-colors duration-200"
               >
-                <Globe className="w-5 h-5" />
-                <span className="font-medium">{language.toUpperCase()}</span>
-                <motion.span
-                  animate={{ rotate: isLangMenuOpen ? 180 : 0 }}
-                  transition={{ duration: 0.25 }}
-                >
-                  <ChevronDown className="w-4 h-4" />
+                <Globe className="w-4 h-4" />
+                <span className="font-medium text-sm">{language.toUpperCase()}</span>
+                <motion.span animate={{ rotate: isLangMenuOpen ? 180 : 0 }} transition={{ duration: 0.25 }}>
+                  <ChevronDown className="w-3.5 h-3.5" />
                 </motion.span>
               </motion.button>
 
@@ -259,49 +231,36 @@ export default function Navbar() {
                   <motion.div
                     ref={langMenuRef}
                     variants={dropdownVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50"
+                    initial="hidden" animate="visible" exit="exit"
+                    className="absolute top-full right-0 mt-2 w-44 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50"
                   >
                     {languages.map((lang, i) => (
                       <motion.button
                         key={lang.code}
                         custom={i}
                         variants={dropdownItemVariants}
-                        initial="hidden"
-                        animate="visible"
+                        initial="hidden" animate="visible"
                         onClick={() => handleLanguageChange(lang.code as "en" | "fr")}
-                        whileHover={{ x: 4, backgroundColor: "var(--color-primary-light, #f0f7ff)" }}
-                        className={`w-full flex items-center space-x-3 px-4 py-3 text-left transition-colors duration-200 ${
-                          language === lang.code
-                            ? "bg-primary-light text-primary"
-                            : "text-gray-700"
-                        }`}
+                        whileHover={{ x: 4 }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors duration-200 ${language === lang.code ? "bg-primary-light text-primary" : "text-gray-700 hover:bg-gray-50"}`}
                       >
-                        <span className="text-2xl">{lang.flag}</span>
-                        <span className="font-medium">{lang.label}</span>
+                        <span className="text-xl">{lang.flag}</span>
+                        <span className="font-medium text-sm">{lang.label}</span>
                       </motion.button>
                     ))}
                   </motion.div>
                 )}
               </AnimatePresence>
-            </motion.div>
+            </div>
 
-            {/* Auth Section */}
+            {/* Auth */}
             {!mounted ? (
-              /* Static placeholder — identical on server and client, prevents hydration mismatch */
-              <div className="flex items-center space-x-3">
-                <div className="w-16 h-9 rounded-lg bg-gray-100" />
-                <div className="w-20 h-9 rounded-lg bg-gray-100" />
+              <div className="flex items-center gap-2">
+                <div className="w-14 h-8 rounded-lg bg-gray-100 animate-pulse" />
+                <div className="w-18 h-8 rounded-lg bg-gray-100 animate-pulse" />
               </div>
             ) : (!isLoading || !user) && (
-              <motion.div
-                custom={2}
-                variants={navItemVariants}
-                initial="hidden"
-                animate="visible"
-              >
+              <>
                 {effectivelyAuthenticated && user ? (
                   <div className="relative">
                     <motion.button
@@ -309,32 +268,26 @@ export default function Navbar() {
                       onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.97 }}
-                      className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-primary transition-colors duration-300 rounded-lg hover:bg-primary-light"
+                      className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-primary rounded-lg hover:bg-primary-light transition-colors duration-200"
                     >
-                      {/* Avatar with notification badge */}
                       <div className="relative">
                         <ProfileAvatar />
                         <AnimatePresence>
-                          {notifCount > 0 && (user.role === 'landlord' || user.role === 'renter') && (
+                          {notifCount > 0 && (
                             <motion.span
-                              key="avatar-badge"
-                              initial={{ scale: 0, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              exit={{ scale: 0, opacity: 0 }}
+                              key="badge"
+                              initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
                               transition={{ type: "spring", stiffness: 500, damping: 25 }}
-                              className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none"
+                              className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-0.5 bg-red-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center leading-none"
                             >
-                              {notifCount > 99 ? '99+' : notifCount}
+                              {notifCount > 99 ? "99+" : notifCount}
                             </motion.span>
                           )}
                         </AnimatePresence>
                       </div>
-                      <span className="font-medium">{user.fullName.split(" ")[0]}</span>
-                      <motion.span
-                        animate={{ rotate: isProfileMenuOpen ? 180 : 0 }}
-                        transition={{ duration: 0.25 }}
-                      >
-                        <ChevronDown className="w-4 h-4" />
+                      <span className="font-medium text-sm hidden lg:block">{user.fullName.split(" ")[0]}</span>
+                      <motion.span animate={{ rotate: isProfileMenuOpen ? 180 : 0 }} transition={{ duration: 0.25 }}>
+                        <ChevronDown className="w-3.5 h-3.5" />
                       </motion.span>
                     </motion.button>
 
@@ -343,110 +296,52 @@ export default function Navbar() {
                         <motion.div
                           ref={profileMenuRef}
                           variants={dropdownVariants}
-                          initial="hidden"
-                          animate="visible"
-                          exit="exit"
-                          className="absolute top-full right-0 mt-2 w-72 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50"
+                          initial="hidden" animate="visible" exit="exit"
+                          className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50"
                         >
-                          {/* User Info */}
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.1 }}
-                            className="px-4 py-3 border-b border-gray-100"
-                          >
-                            <div className="flex items-center space-x-3">
+                          <div className="px-4 py-3 border-b border-gray-100">
+                            <div className="flex items-center gap-3">
                               <ProfileAvatar />
-                              <div>
-                                <p className="font-semibold text-gray-900">{user.fullName}</p>
-                                <p className="text-sm text-gray-500">{user.email}</p>
-                                <p className="text-xs text-primary capitalize">
-                                  {user.role === "renter"
-                                    ? "Renter"
-                                    : user.role === "landlord"
-                                    ? "Landlord"
-                                    : user.role === "admin"
-                                    ? "Admin"
-                                    : user.role || "User"}
-                                </p>
+                              <div className="min-w-0">
+                                <p className="font-semibold text-gray-900 text-sm truncate">{user.fullName}</p>
+                                <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                                <p className="text-xs text-primary capitalize">{roleLabel}</p>
                               </div>
                             </div>
-                          </motion.div>
-
-                          {/* Menu Items */}
-                          <div className="py-2">
+                          </div>
+                          <div className="py-1">
                             {[
-                              {
-                                href: getDashboardLink(),
-                                icon: <LayoutDashboard className="w-5 h-5" />,
-                                label:
-                                  user.role === "admin"
-                                    ? "Admin Dashboard"
-                                    : user.role === "landlord"
-                                    ? "Owner Dashboard"
-                                    : "Tenant Dashboard",
-                                badge: (user.role === 'landlord' || user.role === 'renter') && notifCount > 0 ? notifCount : 0,
-                                className:
-                                  "text-gray-700 hover:bg-primary-light hover:text-primary",
-                              },
-                              {
-                                href: getProfileLink(),
-                                icon: <Settings className="w-5 h-5" />,
-                                label: "Profile Settings",
-                                badge: 0,
-                                className:
-                                  "text-gray-700 hover:bg-primary-light hover:text-primary",
-                              },
+                              { href: getDashboardLink(), icon: <LayoutDashboard className="w-4 h-4" />, label: dashboardLabel, badge: notifCount },
+                              { href: getProfileLink(), icon: <Settings className="w-4 h-4" />, label: "Profile Settings", badge: 0 },
                             ].map((item, i) => (
-                              <motion.div
-                                key={item.href}
-                                custom={i}
-                                variants={dropdownItemVariants}
-                                initial="hidden"
-                                animate="visible"
-                              >
+                              <motion.div key={item.href} custom={i} variants={dropdownItemVariants} initial="hidden" animate="visible">
                                 <Link href={item.href}>
                                   <motion.button
                                     onClick={() => setIsProfileMenuOpen(false)}
-                                    whileHover={{ x: 4 }}
+                                    whileHover={{ x: 3 }}
                                     transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                                    className={`w-full flex items-center space-x-3 px-4 py-3 transition-all duration-200 ${item.className}`}
+                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-primary-light hover:text-primary transition-colors duration-200"
                                   >
                                     {item.icon}
-                                    <span className="font-medium flex-1 text-left">{item.label}</span>
-                                    <AnimatePresence>
-                                      {item.badge > 0 && (
-                                        <motion.span
-                                          key="dropdown-badge"
-                                          initial={{ scale: 0, opacity: 0 }}
-                                          animate={{ scale: 1, opacity: 1 }}
-                                          exit={{ scale: 0, opacity: 0 }}
-                                          transition={{ type: "spring", stiffness: 500, damping: 25 }}
-                                          className="min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
-                                        >
-                                          {item.badge > 99 ? '99+' : item.badge}
-                                        </motion.span>
-                                      )}
-                                    </AnimatePresence>
+                                    <span className="font-medium text-sm flex-1 text-left">{item.label}</span>
+                                    {item.badge > 0 && (
+                                      <span className="min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                                        {item.badge > 99 ? "99+" : item.badge}
+                                      </span>
+                                    )}
                                   </motion.button>
                                 </Link>
                               </motion.div>
                             ))}
-
-                            <motion.div
-                              custom={2}
-                              variants={dropdownItemVariants}
-                              initial="hidden"
-                              animate="visible"
-                            >
+                            <motion.div custom={2} variants={dropdownItemVariants} initial="hidden" animate="visible">
                               <motion.button
                                 onClick={handleLogout}
-                                whileHover={{ x: 4 }}
+                                whileHover={{ x: 3 }}
                                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                                className="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-all duration-200"
+                                className="w-full flex items-center gap-3 px-4 py-2.5 text-red-600 hover:bg-red-50 transition-colors duration-200"
                               >
-                                <LogOut className="w-5 h-5" />
-                                <span className="font-medium">Logout</span>
+                                <LogOut className="w-4 h-4" />
+                                <span className="font-medium text-sm">Logout</span>
                               </motion.button>
                             </motion.div>
                           </div>
@@ -455,33 +350,190 @@ export default function Navbar() {
                     </AnimatePresence>
                   </div>
                 ) : (
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center gap-2">
                     <Link href="/login">
                       <motion.button
-                        whileHover={{ scale: 1.05, y: -1 }}
-                        whileTap={{ scale: 0.96 }}
+                        whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}
                         transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                        className="px-4 py-2 text-gray-700 hover:text-primary transition-colors duration-300 rounded-lg hover:bg-primary-light font-medium"
+                        className="px-3 py-2 text-gray-700 hover:text-primary rounded-lg hover:bg-primary-light font-medium text-sm transition-colors duration-200"
                       >
                         {t("nav.login")}
                       </motion.button>
                     </Link>
                     <Link href="/signup">
                       <motion.button
-                        whileHover={{ scale: 1.05, y: -1 }}
-                        whileTap={{ scale: 0.96 }}
+                        whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}
                         transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors duration-300 font-medium shadow-md hover:shadow-lg"
+                        className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium text-sm shadow-md hover:shadow-lg transition-colors duration-200"
                       >
                         {t("nav.signup")}
                       </motion.button>
                     </Link>
                   </div>
                 )}
-              </motion.div>
+              </>
             )}
           </div>
+
+          {/* Mobile right — lang + hamburger */}
+          <div className="flex md:hidden items-center gap-2">
+            {/* Mobile lang toggle (icon only) */}
+            <button
+              onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
+              className="p-2 text-gray-600 hover:text-primary rounded-lg hover:bg-primary-light transition-colors"
+              aria-label="Language"
+            >
+              <Globe className="w-5 h-5" />
+            </button>
+
+            {/* Notification badge on mobile for authenticated users */}
+            {mounted && effectivelyAuthenticated && user && notifCount > 0 && (
+              <Link href={getDashboardLink()}>
+                <div className="relative p-2">
+                  <div className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-xs font-semibold">
+                    {user.fullName?.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="absolute top-1 right-1 min-w-[14px] h-[14px] px-0.5 bg-red-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center leading-none">
+                    {notifCount > 9 ? "9+" : notifCount}
+                  </span>
+                </div>
+              </Link>
+            )}
+
+            {/* Hamburger */}
+            <motion.button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              whileTap={{ scale: 0.92 }}
+              className="p-2 text-gray-700 hover:text-primary rounded-lg hover:bg-primary-light transition-colors"
+              aria-label="Menu"
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                {isMobileMenuOpen ? (
+                  <motion.span key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}>
+                    <X className="w-6 h-6" />
+                  </motion.span>
+                ) : (
+                  <motion.span key="open" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.15 }}>
+                    <Menu className="w-6 h-6" />
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
+          </div>
         </div>
+
+        {/* Mobile menu drawer */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              variants={mobileMenuVariants}
+              initial="hidden" animate="visible" exit="exit"
+              className="md:hidden overflow-hidden border-t border-gray-100 bg-white shadow-lg"
+            >
+              <div className="py-3 space-y-1">
+
+                {/* Auth section */}
+                {!mounted ? null : effectivelyAuthenticated && user ? (
+                  <div className="px-3 space-y-1">
+                    {/* User info */}
+                    <div className="flex items-center gap-3 px-3 py-3 bg-gray-50 rounded-xl">
+                      <div className="relative flex-shrink-0">
+                        <ProfileAvatar size={10} />
+                        {notifCount > 0 && (
+                          <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                            {notifCount > 9 ? "9+" : notifCount}
+                          </span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-gray-900 text-sm truncate">{user.fullName}</p>
+                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                        <p className="text-xs text-primary">{roleLabel}</p>
+                      </div>
+                    </div>
+
+                    {/* List property */}
+                    {user.role === "landlord" && (
+                      <Link href="/post-property" onClick={() => setIsMobileMenuOpen(false)}>
+                        <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-accent text-white font-semibold text-sm mt-1">
+                          {t("nav.listProperty")}
+                        </div>
+                      </Link>
+                    )}
+
+                    {/* Dashboard */}
+                    <Link href={getDashboardLink()} onClick={() => setIsMobileMenuOpen(false)}>
+                      <div className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-700 hover:bg-primary-light hover:text-primary transition-colors">
+                        <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
+                        <span className="font-medium text-sm flex-1">{dashboardLabel}</span>
+                        {notifCount > 0 && (
+                          <span className="min-w-[20px] h-5 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                            {notifCount > 99 ? "99+" : notifCount}
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+
+                    {/* Profile */}
+                    <Link href={getProfileLink()} onClick={() => setIsMobileMenuOpen(false)}>
+                      <div className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-700 hover:bg-primary-light hover:text-primary transition-colors">
+                        <Settings className="w-5 h-5 flex-shrink-0" />
+                        <span className="font-medium text-sm">Profile Settings</span>
+                      </div>
+                    </Link>
+
+                    {/* Logout */}
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <LogOut className="w-5 h-5 flex-shrink-0" />
+                      <span className="font-medium text-sm">Logout</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2 px-3 pt-1 pb-2">
+                    <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                      <div className="w-full text-center px-4 py-3 rounded-xl border-2 border-primary text-primary font-semibold text-sm hover:bg-primary-light transition-colors">
+                        {t("nav.login")}
+                      </div>
+                    </Link>
+                    <Link href="/signup" onClick={() => setIsMobileMenuOpen(false)}>
+                      <div className="w-full text-center px-4 py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary-dark transition-colors shadow-md">
+                        {t("nav.signup")}
+                      </div>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Mobile language dropdown (separate from drawer) */}
+        <AnimatePresence>
+          {isLangMenuOpen && (
+            <motion.div
+              variants={dropdownVariants}
+              initial="hidden" animate="visible" exit="exit"
+              className="md:hidden absolute right-4 sm:right-6 top-[60px] sm:top-[76px] w-44 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-[60]"
+            >
+              {languages.map((lang, i) => (
+                <motion.button
+                  key={lang.code}
+                  custom={i}
+                  variants={dropdownItemVariants}
+                  initial="hidden" animate="visible"
+                  onClick={() => handleLanguageChange(lang.code as "en" | "fr")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${language === lang.code ? "bg-primary-light text-primary" : "text-gray-700 hover:bg-gray-50"}`}
+                >
+                  <span className="text-xl">{lang.flag}</span>
+                  <span className="font-medium text-sm">{lang.label}</span>
+                </motion.button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.nav>
   );

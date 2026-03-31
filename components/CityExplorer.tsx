@@ -152,7 +152,7 @@ export default function CityExplorer() {
 
 
   return (
-    <div className="w-full bg-white py-8 px-4">
+    <div className="w-full bg-white py-8 px-4 overflow-hidden">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div

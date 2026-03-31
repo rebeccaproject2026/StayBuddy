@@ -47,11 +47,10 @@ export default function PropertyListings() {
     const fetchProperties = async () => {
       setLoading(true);
       try {
-        const params = new URLSearchParams({ country, limit: "8" });
-        if (activeTab === "pg") params.set("type", "PG");
-        if (activeTab === "tenant") params.set("type", "Tenant");
-
-        const res = await fetch(`/api/properties?${params}`);
+        const p = new URLSearchParams({ country, limit: "8" });
+        if (activeTab === "pg") p.set("type", "PG");
+        if (activeTab === "tenant") p.set("type", "Tenant");
+        const res = await fetch(`/api/properties?${p}`);
         const data = await res.json();
         if (data.success) setProperties(data.properties);
       } catch (err) {
@@ -60,30 +59,20 @@ export default function PropertyListings() {
         setLoading(false);
       }
     };
-
     fetchProperties();
   }, [country, activeTab]);
 
-  // Fetch user's favorites when authenticated
   useEffect(() => {
-    if (!isAuthenticated || !token) {
-      setFavoriteIds(new Set());
-      return;
-    }
-    const fetchFavorites = async () => {
-      try {
-        const res = await fetch('/api/auth/favorites', {
-          headers: token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {},
-        });
-        const data = await res.json();
-        if (data.success) {
+    if (!isAuthenticated || !token) { setFavoriteIds(new Set()); return; }
+    fetch('/api/auth/favorites', {
+      headers: token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success)
           setFavoriteIds(new Set(data.favorites.map((f: any) => f._id?.toString() ?? f.toString())));
-        }
-      } catch {
-        // silently fail
-      }
-    };
-    fetchFavorites();
+      })
+      .catch(() => {});
   }, [isAuthenticated, token]);
 
   const handleToggleFavorite = async (propertyId: string, newState: boolean) => {
@@ -92,38 +81,21 @@ export default function PropertyListings() {
       router.push(`/${country}/login`);
       throw new Error("unauthenticated");
     }
-    if (user?.role === 'landlord') {
-      toast.error("Landlords cannot save favorites");
-      throw new Error("not-allowed");
-    }
+    if (user?.role === 'landlord') { toast.error("Landlords cannot save favorites"); throw new Error("not-allowed"); }
     const res = await fetch('/api/auth/favorites', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {}),
-      },
+      headers: { 'Content-Type': 'application/json', ...(token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {}) },
       body: JSON.stringify({ propertyId }),
     });
     const data = await res.json();
     if (data.success) {
       setFavoriteIds(new Set(data.favoriteIds));
-      if (data.isFavorite) {
-        toast.success("Added to favorites");
-      } else {
-        toast("Removed from favorites", { icon: "💔" });
-      }
-    } else {
-      throw new Error(data.error);
-    }
+      data.isFavorite ? toast.success("Added to favorites") : toast("Removed from favorites", { icon: "💔" });
+    } else throw new Error(data.error);
   };
 
-  const scroll = (direction: "left" | "right") => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({
-        left: direction === "left" ? -400 : 400,
-        behavior: "smooth",
-      });
-    }
+  const scroll = (dir: "left" | "right") => {
+    scrollContainerRef.current?.scrollBy({ left: dir === "left" ? -320 : 320, behavior: "smooth" });
   };
 
   const tabs = [
@@ -132,118 +104,115 @@ export default function PropertyListings() {
     { id: "tenant" as PropertyType, label: t("filters.tenant").toUpperCase() },
   ];
 
+  const cardProps = (property: Property) => ({
+    id: property._id,
+    title: property.title,
+    societyName: property.societyName,
+    location: property.location,
+    areaName: property.areaName,
+    state: property.state,
+    price: property.price,
+    rooms: property.rooms,
+    area: property.area,
+    images: property.images?.length > 0
+      ? property.images
+      : ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=400"],
+    type: property.propertyType,
+    isNew: property.isNew,
+    verified: property.isVerified,
+    rating: property.averageRating ?? undefined,
+    reviewsCount: property.reviewsCount,
+    isFavorite: favoriteIds.has(property._id),
+    onToggleFavorite: user?.role === 'landlord' ? undefined : handleToggleFavorite,
+  });
+
   return (
     <div className="px-4 sm:px-6">
       <div className="w-full max-w-7xl mx-auto py-8 sm:py-10 md:py-12">
         {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <h2 className="text-2xl esm:text-3xl md:text-3xl font-bold text-gray-900 mb-2">
+        <div className="mb-5 sm:mb-7">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1.5">
             {t("properties.featured")}
           </h2>
-          <p className="text-sm esm:text-base md:text-base text-gray-600">
-            {t("properties.subtitle")}
-          </p>
+          <p className="text-sm sm:text-base text-gray-600">{t("properties.subtitle")}</p>
         </div>
 
-        {/* Tabs + Arrows */}
-        <div className="flex items-center justify-between mb-5 sm:mb-6 gap-3">
-          <div className="flex gap-2 esm:gap-3 overflow-x-auto scrollbar-hide pr-2 -mr-2">
+        {/* Tabs + scroll arrows */}
+        <div className="flex items-center justify-between mb-5 gap-3">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 esm:px-5 md:px-6 py-2 md:py-2.5 rounded-lg font-medium whitespace-nowrap transition-all duration-300 ${
-                  activeTab === tab.id
-                    ? "bg-primary text-white shadow-md"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all duration-200 ${
+                  activeTab === tab.id ? "bg-primary text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
                 {tab.label}
               </button>
             ))}
           </div>
-          <div className="hidden sm:flex gap-2 ml-1 md:ml-4 flex-shrink-0">
-            <button
-              onClick={() => scroll("left")}
-              className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-full border-2 border-gray-300 hover:border-primary hover:bg-primary-light transition-all duration-300"
-            >
-              <ChevronLeft className="w-4 h-4 md:w-5 md:h-5 text-gray-700" />
+          {/* Arrows — only on sm+ */}
+          <div className="hidden sm:flex gap-2 flex-shrink-0">
+            <button onClick={() => scroll("left")} className="w-9 h-9 flex items-center justify-center rounded-full border-2 border-gray-300 hover:border-primary hover:bg-primary-light transition-all">
+              <ChevronLeft className="w-4 h-4 text-gray-700" />
             </button>
-            <button
-              onClick={() => scroll("right")}
-              className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-full border-2 border-gray-300 hover:border-primary hover:bg-primary-light transition-all duration-300"
-            >
-              <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-gray-700" />
+            <button onClick={() => scroll("right")} className="w-9 h-9 flex items-center justify-center rounded-full border-2 border-gray-300 hover:border-primary hover:bg-primary-light transition-all">
+              <ChevronRight className="w-4 h-4 text-gray-700" />
             </button>
           </div>
         </div>
 
-        {/* Cards */}
+        {/* Cards — horizontal scroll on mobile, grid on md+ */}
         {loading ? (
-          <div className="flex gap-4 esm:gap-5 md:gap-6 overflow-hidden">
-            {[...Array(4)].map((_, i) => (
-              <div
-                key={i}
-                className="flex-shrink-0 w-[260px] esm:w-[280px] md:w-[300px] h-[340px] bg-gray-200 rounded-2xl animate-pulse"
-              />
-            ))}
-          </div>
+          <>
+            {/* Mobile skeleton */}
+            <div className="flex md:hidden gap-4 overflow-hidden">
+              {[...Array(2)].map((_, i) => (
+                <div key={i} className="flex-shrink-0 w-[calc(50vw-24px)] min-w-[160px] h-[280px] bg-gray-200 rounded-2xl animate-pulse" />
+              ))}
+            </div>
+            {/* Desktop skeleton */}
+            <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-5">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-[340px] bg-gray-200 rounded-2xl animate-pulse" />
+              ))}
+            </div>
+          </>
         ) : properties.length === 0 ? (
           <div className="text-center py-16 text-gray-500">
             No properties found.{" "}
             {isAuthenticated && user?.role === "landlord" && (
-              <>
-                Be the first to{" "}
-                <Link href="/post-property" className="text-primary font-medium underline">
-                  post one
-                </Link>
-                .
-              </>
+              <Link href="/post-property" className="text-primary font-medium underline">post one</Link>
             )}
           </div>
         ) : (
-          <div
-            ref={scrollContainerRef}
-            className="flex gap-4 esm:gap-5 md:gap-6 overflow-x-auto scrollbar-hide scroll-smooth pb-4"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          >
-            {properties.map((property) => (
-              <div
-                key={property._id}
-                className="flex-shrink-0 w-[260px] esm:w-[280px] md:w-[300px]"
-              >
-                <PropertyCard
-                  id={property._id}
-                  title={property.title}
-                  societyName={property.societyName}
-                  location={property.location}
-                  areaName={property.areaName}
-                  state={property.state}
-                  price={property.price}
-                  rooms={property.rooms}
-                  area={property.area}
-                  images={
-                    property.images?.length > 0
-                      ? property.images
-                      : ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=400"]
-                  }
-                  type={property.propertyType}
-                  isNew={property.isNew}
-                  verified={property.isVerified}
-                  rating={property.averageRating ?? undefined}
-                  reviewsCount={property.reviewsCount}
-                  isFavorite={favoriteIds.has(property._id)}
-                  onToggleFavorite={user?.role === 'landlord' ? undefined : handleToggleFavorite}
-                />
-              </div>
-            ))}
-          </div>
+          <>
+            {/* Mobile: horizontal scroll */}
+            <div
+              ref={scrollContainerRef}
+              className="flex md:hidden gap-3 overflow-x-auto scrollbar-hide scroll-smooth pb-3"
+            >
+              {properties.map((property) => (
+                <div key={property._id} className="flex-shrink-0 w-[72vw] max-w-[280px] min-w-[220px]">
+                  <PropertyCard {...cardProps(property)} />
+                </div>
+              ))}
+            </div>
+
+            {/* Tablet / Desktop: grid */}
+            <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {properties.map((property) => (
+                <PropertyCard key={property._id} {...cardProps(property)} />
+              ))}
+            </div>
+          </>
         )}
 
         {/* View All */}
         <div className="text-center mt-6 sm:mt-8">
           <Link href="/properties">
-            <button className="px-6 esm:px-8 py-2.5 md:py-3 bg-primary text-white rounded-xl font-semibold shadow-lg hover:bg-primary-dark hover:shadow-xl transition-all duration-300">
+            <button className="px-6 sm:px-8 py-2.5 sm:py-3 bg-primary text-white rounded-xl font-semibold shadow-lg hover:bg-primary-dark transition-all duration-300 text-sm sm:text-base">
               {t("properties.viewAll")}
             </button>
           </Link>

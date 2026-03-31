@@ -197,24 +197,24 @@ export default function SignupPage() {
   return (
     <>
       <Toaster />
-      <div 
-        className="min-h-screen flex items-center justify-center px-4 py-12 relative bg-cover bg-center bg-no-repeat"
+      <div
+        className="min-h-screen flex items-center justify-center px-3 sm:px-4 py-8 sm:py-12 relative bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop')` }}
       >
-        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="w-full max-w-3xl relative z-10"
         >
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            <div className="text-center mb-8">
+          <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-7 md:p-8">
+            <div className="text-center mb-5 sm:mb-7">
               <motion.h1
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.4 }}
-                className="text-3xl font-bold text-primary mb-2"
+                className="text-2xl sm:text-3xl font-bold text-primary mb-1.5"
               >
                 {t("signup.title")}
               </motion.h1>
@@ -222,7 +222,7 @@ export default function SignupPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3, duration: 0.4 }}
-                className="text-gray-600"
+                className="text-sm sm:text-base text-gray-600"
               >
                 {t("signup.subtitle")}
               </motion.p>
@@ -232,9 +232,9 @@ export default function SignupPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.4 }}
-              className="mb-6"
+              className="mb-5 sm:mb-6"
             >
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
+              <label className="block text-sm font-semibold text-gray-700 mb-2.5">
                 {t("signup.iAm")}
               </label>
               <div className="grid grid-cols-2 gap-3">
@@ -248,29 +248,21 @@ export default function SignupPage() {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       disabled={isLoading}
-                      className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                      className={`p-3 sm:p-4 rounded-xl border-2 transition-all duration-300 ${
                         selectedRole === role.value
                           ? "border-primary bg-primary-light"
                           : "border-gray-200 hover:border-primary"
                       } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       <Icon
-                        className={`w-6 h-6 mx-auto mb-2 ${
-                          selectedRole === role.value
-                            ? "text-primary"
-                            : "text-gray-400"
+                        className={`w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1.5 ${
+                          selectedRole === role.value ? "text-primary" : "text-gray-400"
                         }`}
                       />
-                      <div
-                        className={`font-semibold text-sm ${
-                          selectedRole === role.value
-                            ? "text-primary"
-                            : "text-gray-700"
-                        }`}
-                      >
+                      <div className={`font-semibold text-xs sm:text-sm ${selectedRole === role.value ? "text-primary" : "text-gray-700"}`}>
                         {role.label}
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">
+                      <div className="text-xs text-gray-500 mt-0.5 hidden sm:block">
                         {role.description}
                       </div>
                     </motion.button>
@@ -279,7 +271,7 @@ export default function SignupPage() {
               </div>
             </motion.div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -294,7 +286,7 @@ export default function SignupPage() {
                     {...register("fullName")}
                     type="text"
                     disabled={isLoading}
-                    className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full pl-10 sm:pl-11 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder={t("placeholder.fullName")}
                   />
                 </div>
@@ -307,7 +299,7 @@ export default function SignupPage() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.6, duration: 0.4 }}
-                className="grid md:grid-cols-2 gap-5"
+                className="grid sm:grid-cols-2 gap-4 sm:gap-5"
               >
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -319,7 +311,7 @@ export default function SignupPage() {
                       {...register("email")}
                       type="email"
                       disabled={isLoading}
-                      className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full pl-10 sm:pl-11 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder={t("placeholder.email")}
                     />
                   </div>
@@ -344,7 +336,7 @@ export default function SignupPage() {
                         const target = e.target as HTMLInputElement;
                         target.value = target.value.replace(/[^0-9+]/g, '');
                       }}
-                      className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full pl-10 sm:pl-11 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder={t("placeholder.phone")}
                     />
                   </div>
@@ -358,7 +350,7 @@ export default function SignupPage() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.7, duration: 0.4 }}
-                className="grid md:grid-cols-2 gap-5"
+                className="grid sm:grid-cols-2 gap-4 sm:gap-5"
               >
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -371,7 +363,7 @@ export default function SignupPage() {
                       type={showPassword ? "text" : "password"}
                       disabled={isLoading}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-11 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full pl-10 sm:pl-11 pr-10 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder={t("placeholder.password")}
                     />
                     <button
@@ -380,7 +372,7 @@ export default function SignupPage() {
                       disabled={isLoading}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
                     >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      {showPassword ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
                     </button>
                   </div>
                   {errors.password && (
@@ -399,7 +391,7 @@ export default function SignupPage() {
                       type={showConfirmPassword ? "text" : "password"}
                       disabled={isLoading}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className={`w-full pl-11 pr-12 py-3 border rounded-xl focus:ring-2 focus:border-transparent transition-all duration-300 outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
+                      className={`w-full pl-10 sm:pl-11 pr-10 py-2.5 sm:py-3 text-sm sm:text-base border rounded-xl focus:ring-2 focus:border-transparent transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
                         passwordsDontMatch
                           ? "border-red-300 focus:ring-red-500"
                           : passwordsMatch
@@ -414,7 +406,7 @@ export default function SignupPage() {
                       disabled={isLoading}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
                     >
-                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
                     </button>
                   </div>
                   {passwordsMatch && (
@@ -439,12 +431,12 @@ export default function SignupPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="bg-gray-50 rounded-xl p-4"
+                  className="bg-gray-50 rounded-xl p-3 sm:p-4"
                 >
-                  <p className="text-sm font-medium text-gray-700 mb-2">
+                  <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     {tc.passwordRequirements}
                   </p>
-                  <ul className="grid md:grid-cols-2 gap-2 text-sm text-gray-600">
+                  <ul className="grid grid-cols-2 gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600">
                     <li className="flex items-center gap-2">
                       <span className={`w-1.5 h-1.5 rounded-full ${password.length >= 8 ? "bg-green-500" : "bg-gray-300"}`}></span>
                       {tc.requirement1}
@@ -475,7 +467,7 @@ export default function SignupPage() {
                   disabled={isLoading}
                   whileHover={!isLoading ? { scale: 1.02 } : {}}
                   whileTap={!isLoading ? { scale: 0.98 } : {}}
-                  className="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow-lg hover:bg-primary-dark hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-2.5 sm:py-3 bg-primary text-white rounded-xl font-semibold shadow-lg hover:bg-primary-dark hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
                   {isLoading ? (
                     <>
@@ -493,9 +485,9 @@ export default function SignupPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.9, duration: 0.4 }}
-              className="mt-6 text-center"
+              className="mt-5 text-center"
             >
-              <p className="text-gray-600">
+              <p className="text-gray-600 text-sm sm:text-base">
                 {t("signup.haveAccount")}{" "}
                 <Link
                   href="/login"

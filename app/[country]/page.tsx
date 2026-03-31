@@ -16,10 +16,10 @@ export default function HomePage() {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       {/* Hero Section with Background Image */}
       <div
-        className="relative min-h-[400px] bg-cover bg-center bg-no-repeat px-4 sm:px-6 md:min-h-[400px] overflow-hidden"
+        className="relative min-h-[420px] sm:min-h-[480px] md:min-h-[500px] bg-cover bg-center bg-no-repeat overflow-hidden"
         style={{
           backgroundImage:
             "url('https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop')",
@@ -47,7 +47,7 @@ export default function HomePage() {
         />
 
         {/* Content */}
-        <div className="relative max-w-7xl mx-auto py-14 esm:py-20 ">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-20 md:py-24 pb-20 sm:pb-24">
           <div className="text-center space-y-4 sm:space-y-6">
             {/* Badge */}
             <motion.div
@@ -60,12 +60,12 @@ export default function HomePage() {
               {t("home.heroBadge")}
             </motion.div>
 
-            {/* Heading — word by word */}
+            {/* Heading */}
             <motion.h1
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.65, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
-              className="text-3xl sm:text-5xl md:text-6xl font-bold text-white drop-shadow-lg"
+              className="text-3xl esm:text-4xl sm:text-5xl md:text-6xl font-bold text-white drop-shadow-lg px-2"
             >
               {t("home.title")}
             </motion.h1>
@@ -75,7 +75,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.42, ease: "easeOut" }}
-              className="text-base sm:text-lg md:text-xl text-white/90 max-w-2xl mx-auto drop-shadow"
+              className="text-sm esm:text-base sm:text-lg md:text-xl text-white/90 max-w-2xl mx-auto drop-shadow px-4"
             >
               {t("home.subtitle")}
             </motion.p>
@@ -85,24 +85,24 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.58, ease: "easeOut" }}
-              className="flex flex-col esm:flex-row gap-3 sm:gap-4 justify-center items-center mt-6 sm:mt-8"
+              className="flex flex-col esm:flex-row gap-3 sm:gap-4 justify-center items-center mt-6 sm:mt-8 px-6 esm:px-0"
             >
-              <Link href="/signup">
+              <Link href="/signup" className="w-full esm:w-auto">
                 <motion.button
                   whileHover={{ scale: 1.06, y: -2, boxShadow: "0 12px 32px rgba(0,0,0,0.25)" }}
                   whileTap={{ scale: 0.96 }}
                   transition={{ type: "spring", stiffness: 380, damping: 20 }}
-                  className="w-full sm:w-auto px-6 sm:px-8 py-2 sm:py-4 bg-accent text-white rounded-xl font-semibold shadow-lg hover:bg-accent-hover transition-colors duration-300"
+                  className="w-full esm:w-auto px-8 py-3 sm:py-4 bg-accent text-white rounded-xl font-semibold shadow-lg hover:bg-accent-hover transition-colors duration-300 text-sm sm:text-base"
                 >
                   {t("home.getStarted")}
                 </motion.button>
               </Link>
-              <Link href="/properties">
+              <Link href="/properties" className="w-full esm:w-auto">
                 <motion.button
                   whileHover={{ scale: 1.06, y: -2, boxShadow: "0 12px 32px rgba(0,0,0,0.2)" }}
                   whileTap={{ scale: 0.96 }}
                   transition={{ type: "spring", stiffness: 380, damping: 20 }}
-                  className="w-full sm:w-auto px-6 sm:px-8 py-2 sm:py-4 bg-white text-primary rounded-xl font-semibold hover:bg-gray-50 shadow-lg transition-colors duration-300"
+                  className="w-full esm:w-auto px-8 py-3 sm:py-4 bg-white text-primary rounded-xl font-semibold hover:bg-gray-50 shadow-lg transition-colors duration-300 text-sm sm:text-base"
                 >
                   {t("home.browseListing")}
                 </motion.button>

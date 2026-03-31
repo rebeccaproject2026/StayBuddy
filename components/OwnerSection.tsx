@@ -36,13 +36,13 @@ export default function OwnerSection() {
           transition={{ duration: 0.6, ease: 'easeOut' }}
           className="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-100"
         >
-          <div className="grid md:grid-cols-[35%_65%] gap-0 items-center p-4 sm:p-5 md:p-4">
+          <div className="grid md:grid-cols-[35%_65%] gap-0 items-center p-3 sm:p-4 md:p-4">
             {/* Image */}
             <motion.div
               initial={{ opacity: 0, x: -40 }}
               animate={isInView ? { opacity: 1, x: 0 } : {}}
               transition={{ duration: 0.7, delay: 0.15, ease: 'easeOut' }}
-              className="relative h-[260px] esm:h-[320px] sm:h-[380px] md:h-[520px]"
+              className="relative h-[220px] esm:h-[280px] sm:h-[340px] md:h-[480px]"
             >
               <Image src="/owner.png" alt="Property Owner" fill className="object-cover rounded-xl" priority />
             </motion.div>
@@ -52,7 +52,7 @@ export default function OwnerSection() {
               initial={{ opacity: 0, x: 40 }}
               animate={isInView ? { opacity: 1, x: 0 } : {}}
               transition={{ duration: 0.7, delay: 0.25, ease: 'easeOut' }}
-              className="p-8 md:p-14 lg:p-16 flex flex-col justify-center"
+              className="p-4 esm:p-6 sm:p-8 md:p-10 lg:p-14 flex flex-col justify-center"
             >
               <h2 className="text-2xl esm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 esm:mb-5 md:mb-6 leading-tight">
                 {t.title}

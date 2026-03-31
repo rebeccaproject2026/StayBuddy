@@ -198,7 +198,7 @@ function VerifyOTPContent() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center px-4 py-12 relative bg-cover bg-center bg-no-repeat"
+      className="min-h-screen flex items-center justify-center px-3 sm:px-4 py-8 sm:py-12 relative bg-cover bg-center bg-no-repeat"
       style={{
         backgroundImage: `url('https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop')`,
       }}
@@ -211,7 +211,7 @@ function VerifyOTPContent() {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="w-full max-w-md relative z-10"
       >
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-7 md:p-8">
           {/* Icon */}
           <motion.div
             initial={{ scale: 0 }}
@@ -248,7 +248,7 @@ function VerifyOTPContent() {
             <label className="block text-sm font-medium text-gray-700 text-center mb-4">
               {t.enterCode}
             </label>
-            <div className="flex justify-center gap-3" onPaste={handlePaste}>
+            <div className="flex justify-center gap-2 sm:gap-3" onPaste={handlePaste}>
               {otp.map((digit, index) => (
                 <input
                   key={index}
@@ -260,11 +260,8 @@ function VerifyOTPContent() {
                   onChange={(e) => handleChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   disabled={isVerifying}
-                  className={`w-12 h-14 text-center text-xl font-bold border-2 rounded-xl outline-none transition-all duration-200 disabled:opacity-50
-                    ${digit
-                      ? "border-primary bg-primary/5 text-primary"
-                      : "border-gray-300 text-gray-900"
-                    }
+                  className={`w-10 h-12 sm:w-12 sm:h-14 text-center text-lg sm:text-xl font-bold border-2 rounded-xl outline-none transition-all duration-200 disabled:opacity-50
+                    ${digit ? "border-primary bg-primary/5 text-primary" : "border-gray-300 text-gray-900"}
                     focus:border-primary focus:ring-2 focus:ring-primary/20`}
                 />
               ))}

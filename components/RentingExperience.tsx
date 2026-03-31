@@ -102,7 +102,7 @@ const RentingExperience = () => {
         </motion.div>
 
         {/* Two Column Layout */}
-        <div className="grid lg:grid-cols-2 gap-8 esm:gap-10 md:gap-12">
+        <div className="grid md:grid-cols-2 gap-6 sm:gap-8 md:gap-10">
           {/* Left Column */}
           <motion.div
             custom={0}

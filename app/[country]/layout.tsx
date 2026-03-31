@@ -25,10 +25,10 @@ export default function RootLayout({
         <title>StayBuddy - Find Your Perfect Stay</title>
         <meta name="description" content="Premium rental marketplace for PG and tenant listings" />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.className} overflow-x-hidden`}>
         <Providers>
           {!isDashboard && <Navbar />}
-          <main className={!isDashboard ? "pt-20" : ""}>{children}</main>
+          <main className={!isDashboard ? "pt-16 sm:pt-20" : ""}>{children}</main>
           {!isDashboard && <Footer />}
           <Toaster position="top-center" />
         </Providers>
