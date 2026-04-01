@@ -126,6 +126,11 @@ export default function AdminDashboard() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
+  // Reject confirmation modal
+  const [rejectModal, setRejectModal] = useState<{ id: string; title: string; ownerEmail?: string; ownerName?: string } | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectSubmitting, setRejectSubmitting] = useState(false);
+
   // Pagination
   const PAGE_SIZE = 10;
   const USER_PAGE_SIZE = 12;
@@ -415,6 +420,26 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteRejectedRequest = async (propertyId: string) => {
+    const token = localStorage.getItem("staybuddy_token");
+    if (!token) return;
+    setDeletingId(propertyId);
+    try {
+      const res = await fetch(`/api/admin/properties/${propertyId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setRequests(prev => prev.filter(r => r._id !== propertyId));
+        if (viewingRequest?._id === propertyId) setViewingRequest(null);
+      }
+    } catch (err) {
+      console.error("Delete rejected request failed:", err);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const handlePropertyAction = async (propertyId: string, action: 'approve' | 'reject' | 'verify') => {
     const token = localStorage.getItem("staybuddy_token");
     if (!token) return;
@@ -445,6 +470,31 @@ export default function AdminDashboard() {
       console.error("Action failed:", err);
     } finally {
       setActioningId(null);
+    }
+  };
+
+  const handleRejectSubmit = async () => {
+    if (!rejectModal || !rejectReason.trim()) return;
+    const token = localStorage.getItem("staybuddy_token");
+    if (!token) return;
+    setRejectSubmitting(true);
+    try {
+      const res = await fetch(`/api/admin/properties/${rejectModal.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action: "reject", reason: rejectReason.trim() }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRequests(prev => prev.map(p => p._id === rejectModal.id ? { ...p, approvalStatus: 'rejected' } : p));
+        if (viewingRequest?._id === rejectModal.id) setViewingRequest(prev => prev ? { ...prev, approvalStatus: 'rejected' } : null);
+        setRejectModal(null);
+        setRejectReason("");
+      }
+    } catch (err) {
+      console.error("Reject failed:", err);
+    } finally {
+      setRejectSubmitting(false);
     }
   };
 
@@ -1473,7 +1523,11 @@ export default function AdminDashboard() {
                                           <button onClick={() => handlePropertyAction(req._id, "approve")} disabled={isActioning} className="flex items-center gap-1 px-2 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-[10px] font-medium disabled:opacity-60">
                                             {isActioning ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3 h-3" />} OK
                                           </button>
-                                          <button onClick={() => handlePropertyAction(req._id, "reject")} disabled={isActioning} className={`flex items-center gap-1 px-2 py-1 border rounded-lg transition-colors text-[10px] font-medium disabled:opacity-60 ${isDark ? "border-red-500/50 text-red-400 hover:bg-red-500/10" : "border-red-300 text-red-500 hover:bg-red-50"}`}>
+                                          <button onClick={() => {
+                                            const owner = typeof req.createdBy === "object" ? req.createdBy as PropertyOwner : null;
+                                            setRejectModal({ id: req._id, title: req.title, ownerEmail: owner?.email, ownerName: owner?.fullName });
+                                            setRejectReason("");
+                                          }} disabled={isActioning} className={`flex items-center gap-1 px-2 py-1 border rounded-lg transition-colors text-[10px] font-medium disabled:opacity-60 ${isDark ? "border-red-500/50 text-red-400 hover:bg-red-500/10" : "border-red-300 text-red-500 hover:bg-red-50"}`}>
                                             <XCircle className="w-3 h-3" /> No
                                           </button>
                                         </>)}
@@ -1486,6 +1540,15 @@ export default function AdminDashboard() {
                                           <span className="flex items-center gap-1 px-2 py-1 bg-emerald-600/20 text-emerald-400 rounded-lg text-[10px] font-medium">
                                             <ShieldCheck className="w-3 h-3" /> ✓
                                           </span>
+                                        )}
+                                        {req.approvalStatus === "rejected" && (
+                                          <button
+                                            onClick={() => handleDeleteRejectedRequest(req._id)}
+                                            disabled={deletingId === req._id}
+                                            className="flex items-center gap-1 px-2 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-[10px] font-medium disabled:opacity-60"
+                                          >
+                                            {deletingId === req._id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />} Delete
+                                          </button>
                                         )}
                                       </div>
                                     </td>
@@ -1532,7 +1595,11 @@ export default function AdminDashboard() {
                                   <button onClick={() => handlePropertyAction(req._id, "approve")} disabled={isActioning} className="flex items-center gap-1.5 px-3 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors text-xs font-semibold disabled:opacity-60">
                                     {isActioning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />} Approve
                                   </button>
-                                  <button onClick={() => handlePropertyAction(req._id, "reject")} disabled={isActioning} className={`flex items-center gap-1.5 px-3 py-2 border rounded-xl transition-colors text-xs font-semibold disabled:opacity-60 ${isDark ? "border-red-500/50 text-red-400 hover:bg-red-500/10" : "border-red-300 text-red-500 hover:bg-red-50"}`}>
+                                  <button onClick={() => {
+                                    const owner = typeof req.createdBy === "object" ? req.createdBy as PropertyOwner : null;
+                                    setRejectModal({ id: req._id, title: req.title, ownerEmail: owner?.email, ownerName: owner?.fullName });
+                                    setRejectReason("");
+                                  }} disabled={isActioning} className={`flex items-center gap-1.5 px-3 py-2 border rounded-xl transition-colors text-xs font-semibold disabled:opacity-60 ${isDark ? "border-red-500/50 text-red-400 hover:bg-red-500/10" : "border-red-300 text-red-500 hover:bg-red-50"}`}>
                                     <XCircle className="w-3.5 h-3.5" /> Reject
                                   </button>
                                 </>)}
@@ -1545,6 +1612,15 @@ export default function AdminDashboard() {
                                   <span className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600/20 text-emerald-400 rounded-xl text-xs font-semibold">
                                     <ShieldCheck className="w-3.5 h-3.5" /> Verified
                                   </span>
+                                )}
+                                {req.approvalStatus === "rejected" && (
+                                  <button
+                                    onClick={() => handleDeleteRejectedRequest(req._id)}
+                                    disabled={deletingId === req._id}
+                                    className="flex items-center gap-1.5 px-3 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors text-xs font-semibold disabled:opacity-60"
+                                  >
+                                    {deletingId === req._id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />} Delete
+                                  </button>
                                 )}
                               </div>
                             </div>
@@ -2105,6 +2181,70 @@ export default function AdminDashboard() {
       </div>
       </div>
 
+      {/* Reject Property Modal */}
+      {rejectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => !rejectSubmitting && setRejectModal(null)}>
+          <div className={`w-full max-w-md rounded-2xl shadow-2xl border overflow-hidden ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`} onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className={`flex items-center justify-between px-6 py-5 border-b ${isDark ? "border-gray-800" : "border-gray-100"}`}>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-red-500/15 flex items-center justify-center">
+                  <XCircle className="w-5 h-5 text-red-500" />
+                </div>
+                <div>
+                  <h3 className={`font-bold text-base ${isDark ? "text-white" : "text-gray-900"}`}>Reject Property</h3>
+                  <p className={`text-xs mt-0.5 truncate max-w-[220px] ${isDark ? "text-gray-400" : "text-gray-500"}`}>{rejectModal.title}</p>
+                </div>
+              </div>
+              <button onClick={() => !rejectSubmitting && setRejectModal(null)} className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isDark ? "hover:bg-gray-700 text-gray-400" : "hover:bg-gray-100 text-gray-500"}`}>
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-5 space-y-4">
+              <div className={`flex items-start gap-3 p-3 rounded-xl ${isDark ? "bg-red-500/10 border border-red-500/20" : "bg-red-50 border border-red-200"}`}>
+                <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                <p className={`text-xs leading-relaxed ${isDark ? "text-red-300" : "text-red-700"}`}>
+                  This will reject the listing and notify <strong>{rejectModal.ownerName || rejectModal.ownerEmail || 'the owner'}</strong> by email with your reason.
+                </p>
+              </div>
+              <div>
+                <label className={`block text-sm font-semibold mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                  Reason for rejection <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={rejectReason}
+                  onChange={e => setRejectReason(e.target.value)}
+                  placeholder="e.g. Incomplete information, duplicate listing, inappropriate content..."
+                  rows={4}
+                  className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-400 resize-none ${isDark ? "bg-gray-800 border-gray-700 text-white placeholder-gray-500" : "border-gray-200 placeholder-gray-400"}`}
+                />
+                <p className={`text-xs mt-1 ${isDark ? "text-gray-500" : "text-gray-400"}`}>{rejectReason.length}/500</p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className={`flex gap-3 px-6 py-4 border-t ${isDark ? "border-gray-800" : "border-gray-100"}`}>
+              <button
+                onClick={() => !rejectSubmitting && setRejectModal(null)}
+                disabled={rejectSubmitting}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-gray-300 hover:bg-gray-700" : "text-gray-600 hover:bg-gray-100"}`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRejectSubmit}
+                disabled={!rejectReason.trim() || rejectSubmitting}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-all active:scale-95"
+              >
+                {rejectSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Rejecting...</> : <><XCircle className="w-4 h-4" /> Reject & Notify</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Block User Modal */}
       {blockModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => !blockSubmitting && setBlockModal(null)}>
@@ -2422,7 +2562,11 @@ export default function AdminDashboard() {
                         {isActioning ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />} Approve
                       </button>
                       <button
-                        onClick={() => handlePropertyAction(req._id, "reject")}
+                        onClick={() => {
+                          const owner = typeof req.createdBy === "object" ? req.createdBy as PropertyOwner : null;
+                          setRejectModal({ id: req._id, title: req.title, ownerEmail: owner?.email, ownerName: owner?.fullName });
+                          setRejectReason("");
+                        }}
                         disabled={isActioning}
                         className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors text-sm font-semibold disabled:opacity-60"
                       >

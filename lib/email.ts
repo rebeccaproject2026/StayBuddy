@@ -516,3 +516,40 @@ export async function sendVacancyAlert(property: {
     );
   }
 }
+
+export async function sendPropertyRejectedEmail(
+  ownerEmail: string,
+  ownerName: string,
+  propertyTitle: string,
+  reason: string
+) {
+  await transporter.sendMail({
+    from: `"StayBuddy" <${process.env.SMTP_USER}>`,
+    to: ownerEmail,
+    subject: `Your property "${propertyTitle}" was not approved`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px; background: #f9fafb; border-radius: 12px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h1 style="color: #4f46e5; font-size: 28px; margin: 0;">StayBuddy</h1>
+        </div>
+        <div style="background: white; border-radius: 12px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          <h2 style="color: #111827; font-size: 20px; margin-top: 0;">Hi ${ownerName},</h2>
+          <p style="color: #6b7280; line-height: 1.6;">
+            Thank you for submitting your property <strong style="color: #111827;">${propertyTitle}</strong> to StayBuddy.
+            After review, our team was unable to approve this listing at this time.
+          </p>
+          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 20px; margin: 24px 0;">
+            <h3 style="color: #991b1b; font-size: 14px; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 0.05em;">Reason</h3>
+            <p style="color: #7f1d1d; font-size: 15px; margin: 0; line-height: 1.6;">${reason}</p>
+          </div>
+          <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
+            You're welcome to address the issue and resubmit your listing. If you have questions, please reply to this email.
+          </p>
+        </div>
+        <p style="color: #9ca3af; font-size: 12px; text-align: center; margin-top: 16px;">
+          © StayBuddy — You're receiving this because you submitted a property listing.
+        </p>
+      </div>
+    `,
+  });
+}

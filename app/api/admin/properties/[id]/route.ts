@@ -4,7 +4,7 @@ import Property from '@/models/Property';
 import '@/models/User'; // ensure User model is registered for populate
 import { authenticateUser } from '@/lib/auth-middleware';
 import mongoose from 'mongoose';
-import { sendPropertyApprovedEmail, sendPropertyVerifiedEmail, sendNewPropertyEmail } from '@/lib/email';
+import { sendPropertyApprovedEmail, sendPropertyVerifiedEmail, sendNewPropertyEmail, sendPropertyRejectedEmail } from '@/lib/email';
 
 // PATCH /api/admin/properties/[id]
 // body: { action: 'approve' | 'reject' | 'verify' }
@@ -30,7 +30,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid property ID' }, { status: 400 });
     }
 
-    const { action } = await req.json();
+    const { action, reason } = await req.json();
     if (!['approve', 'reject', 'verify'].includes(action)) {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
@@ -69,6 +69,10 @@ export async function PATCH(
           country: (property as any).country,
         }).catch(err => console.error('[email] Subscriber new-property notification failed:', err));
       }
+      if (action === 'reject' && reason) {
+        sendPropertyRejectedEmail(owner.email, owner.fullName || 'Owner', (property as any).title, reason)
+          .catch(err => console.error('[email] Rejected notification failed:', err));
+      }
       if (action === 'verify') {
         sendPropertyVerifiedEmail(owner.email, owner.fullName || 'Owner', (property as any).title, propertyUrl)
           .catch(err => console.error('[email] Verified notification failed:', err));
@@ -78,6 +82,46 @@ export async function PATCH(
     return NextResponse.json({ success: true, property });
   } catch (error) {
     console.error('[PATCH /api/admin/properties/[id]]', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+// DELETE /api/admin/properties/[id] — only rejected properties
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await connectDB();
+
+    let authUser;
+    try {
+      authUser = await authenticateUser(req);
+    } catch {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (authUser.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+      return NextResponse.json({ error: 'Invalid property ID' }, { status: 400 });
+    }
+
+    const property = await Property.findById(params.id).lean();
+    if (!property) {
+      return NextResponse.json({ error: 'Property not found' }, { status: 404 });
+    }
+
+    if ((property as any).approvalStatus !== 'rejected') {
+      return NextResponse.json({ error: 'Only rejected properties can be deleted' }, { status: 400 });
+    }
+
+    await Property.findByIdAndDelete(params.id);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('[DELETE /api/admin/properties/[id]]', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
