@@ -230,13 +230,35 @@ export default function AdminDashboard() {
     fetchProperties();
     fetchRequests();
 
-    // Poll for new property requests every 30 seconds
-    const interval = setInterval(() => {
-      fetchRequests();
-    }, 30000);
+    // Connect to SSE — refresh requests only when a new property is posted
+    const token = localStorage.getItem("staybuddy_token");
+    if (!token) return;
 
-    return () => clearInterval(interval);
-  }, [isAuthenticated, user, fetchProperties, fetchRequests]);
+    const es = new EventSource(`/api/admin/property-events?token=${encodeURIComponent(token)}`);
+
+    es.onmessage = (e) => {
+      try {
+        const payload = JSON.parse(e.data);
+        if (payload.type === "new_property") {
+          fetchRequests();
+        } else if (payload.type === "new_lead") {
+          // fetchLeads is declared later — call it via a small inline fetch
+          const t = localStorage.getItem("staybuddy_token");
+          if (!t) return;
+          fetch(`/api/admin/leads?country=${currentCountry}`, { headers: { Authorization: `Bearer ${t}` } })
+            .then(r => r.json())
+            .then(d => { if (d.success) setLeads(d.leads); })
+            .catch(() => {});
+        }
+      } catch {}
+    };
+
+    es.onerror = () => {
+      // SSE will auto-reconnect; nothing to do
+    };
+
+    return () => es.close();
+  }, [isAuthenticated, user, fetchProperties, fetchRequests, currentCountry]);
 
   const fetchUsers = useCallback(async () => {
     const token = localStorage.getItem("staybuddy_token");

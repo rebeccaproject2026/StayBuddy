@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Lead from '@/models/Lead';
 import { authenticateUser } from '@/lib/auth-middleware';
+import { notifyNewLead } from '@/app/api/admin/property-events/route';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,6 +42,7 @@ export async function POST(req: NextRequest) {
       { $set: { name, pgName, messageSentAt: new Date() }, $setOnInsert: { status: 'contacted' } },
       { upsert: true, new: true }
     );
+    notifyNewLead();
     return NextResponse.json({ success: true, lead });
   } catch (err) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

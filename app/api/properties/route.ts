@@ -6,6 +6,7 @@ import cloudinary from '@/lib/cloudinary';
 import { authenticateUser } from '@/lib/auth-middleware';
 import { propertySchema } from '@/lib/validation';
 import { sendPropertyRequestEmail, sendNewPropertyEmail } from '@/lib/email';
+import { notifyNewProperty } from '@/app/api/admin/property-events/route';
 
 // Increase body size limit for image uploads
 export const config = {
@@ -175,6 +176,9 @@ export async function POST(req: NextRequest) {
     });
 
     console.log('[POST /api/properties] Saved nearbyPlaces:', JSON.stringify((property as any).nearbyPlaces));
+
+    // Notify connected admin dashboards via SSE (fire-and-forget)
+    notifyNewProperty();
 
     // Send notification email to admin (fire-and-forget — don't block the response)
     const User = (await import('@/models/User')).default;
