@@ -233,10 +233,23 @@ export async function GET(req: NextRequest) {
     const page       = Math.max(1, parseInt(searchParams.get('page') ?? '1'));
     const limit      = Math.min(50, parseInt(searchParams.get('limit') ?? '12'));
 
+    const pgFor = searchParams.get('pgFor'); // Male | Female | Both
+
     const filter: Record<string, any> = {};
     if (country)  filter.country      = country;
     if (type)     filter.propertyType = type;
     if (category) filter.category     = category;
+    if (pgFor) {
+      filter.$and = filter.$and || [];
+      filter.$and.push({
+        $or: [
+          { pgFor: { $regex: new RegExp(pgFor, 'i') } },
+          { preferredGender: { $regex: new RegExp(pgFor, 'i') } },
+          { pgFor: { $regex: /both/i } },
+          { preferredGender: { $regex: /both/i } },
+        ],
+      });
+    }
     if (minPrice || maxPrice) {
       filter.price = {};
       if (minPrice) filter.price.$gte = Number(minPrice);

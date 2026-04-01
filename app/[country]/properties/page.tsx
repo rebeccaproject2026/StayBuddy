@@ -108,6 +108,7 @@ function PropertiesPageContent() {
         qs.set("limit", String(itemsPerPage));
         if (resolvedTab === "pg") qs.set("type", "PG");
         if (resolvedTab === "tenant") qs.set("type", "Tenant");
+        if (pgForParam) qs.set("pgFor", pgForParam);
         if (resolvedMin > 0) qs.set("minPrice", String(resolvedMin));
         if (resolvedMax < 200000) qs.set("maxPrice", String(resolvedMax));
         const res = await fetch(`/api/properties?${qs.toString()}`);

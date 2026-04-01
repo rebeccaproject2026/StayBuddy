@@ -161,8 +161,8 @@ export default function Footer() {
             </h4>
             <motion.ul key={`discover-${language}`} className="space-y-2" variants={staggerList} initial="initial" whileInView="whileInView" viewport={{ once: true, margin: "-60px" }}>
               {[
-                { href: "/properties?tab=pg&pgFor=Girls", label: t.discover.links[0] },
-                { href: "/properties?tab=pg&pgFor=Boys", label: t.discover.links[1] },
+                { href: "/properties?tab=pg&pgFor=Female", label: t.discover.links[0] },
+                { href: "/properties?tab=pg&pgFor=Male", label: t.discover.links[1] },
                 { href: "/properties?tab=pg&tenant=Students", label: t.discover.links[2] },
                 { href: "/properties?tab=tenant", label: t.discover.links[3] },
                 { href: "/properties?tab=tenant", label: t.discover.links[4] },

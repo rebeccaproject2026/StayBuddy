@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Heart, ShieldCheck } from "lucide-react";
+import { ChevronLeft, ChevronRight, Heart, ShieldCheck, ShieldOff } from "lucide-react";
 import Image from "next/image";
 import Link from "@/components/LocalizedLink";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -177,6 +177,12 @@ export default function PropertyCard({
               <span className="px-3 py-1 bg-green-600 text-white text-xs font-semibold rounded-full flex items-center gap-1">
                 <ShieldCheck className="w-3 h-3" />
                 Verified
+              </span>
+            )}
+            {!verified && (
+              <span className="px-2.5 py-1 bg-gray-500/80 text-white text-xs font-semibold rounded-full flex items-center gap-1">
+                <ShieldOff className="w-3 h-3" />
+                Not Verified
               </span>
             )}
             {badge && (
