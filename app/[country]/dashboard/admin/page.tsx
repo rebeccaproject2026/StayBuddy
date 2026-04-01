@@ -616,46 +616,45 @@ export default function AdminDashboard() {
 
   return (
     <>
-    <div className={`min-h-screen relative ${isDark ? "bg-gray-950" : "bg-gray-50"}`}>
+    <div className={`h-screen overflow-hidden flex flex-col relative ${isDark ? "bg-gray-950" : "bg-gray-50"}`}>
       {/* Grid background — only in dark mode */}
       {isDark && (
         <div className="fixed inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px] pointer-events-none" />
       )}
       {/* Header */}
-      <div className={`sticky top-0 z-50 shadow-lg border-b ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
-        <div className="max-w-[1500px] mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <h1 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{tc.dashboard}</h1>
-              <div className={`px-3 py-1.5 rounded-lg border text-sm font-semibold ${isDark ? "bg-gray-800 border-gray-700 text-gray-200" : "bg-gray-100 border-gray-300 text-gray-700"}`}>
+      <div className={`flex-shrink-0 sticky top-0 z-50 shadow-lg border-b ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
+        <div className="max-w-[1500px] mx-auto px-3 sm:px-6">
+          <div className="flex items-center justify-between h-14 sm:h-16">
+            <div className="flex items-center gap-2">
+              <h1 className={`text-base sm:text-xl font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{tc.dashboard}</h1>
+              <div className={`hidden sm:block px-2.5 py-1 rounded-lg border text-xs font-semibold ${isDark ? "bg-gray-800 border-gray-700 text-gray-200" : "bg-gray-100 border-gray-300 text-gray-700"}`}>
                 {currentCountry === "in" ? "🇮🇳 India" : currentCountry === "fr" ? "🇫🇷 France" : currentCountry.toUpperCase()}
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              {/* Theme toggle */}
+            <div className="flex items-center gap-2">
               <button
                 onClick={toggleTheme}
-                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${isDark ? "bg-gray-800 text-yellow-400 hover:bg-gray-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
-                title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-colors ${isDark ? "bg-gray-800 text-yellow-400 hover:bg-gray-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
               >
                 {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
               <Link
                 href="/"
-                className="flex items-center gap-2 px-4 py-2 bg-primary/20 text-primary hover:bg-primary hover:text-white rounded-lg transition-colors font-medium text-sm"
+                className="flex items-center gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 bg-primary/20 text-primary hover:bg-primary hover:text-white rounded-lg transition-colors font-medium text-xs sm:text-sm"
               >
-                <Home className="w-4 h-4" />
-                <span>{language === "fr" ? "Accueil" : "Back to Home"}</span>
+                <Home className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">{language === "fr" ? "Accueil" : "Back to Home"}</span>
+                <span className="sm:hidden">{language === "fr" ? "Accueil" : "Home"}</span>
               </Link>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="relative flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
-        {/* Sidebar */}
-        <div className="lg:w-72 flex-shrink-0">
-          <div className={`p-4 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto flex flex-col border-r ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
+      <div className="relative flex flex-1 overflow-hidden">
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block w-64 xl:w-72 flex-shrink-0">
+          <div className={`p-4 h-full overflow-y-auto flex flex-col border-r ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
             <nav className="space-y-1">
               <button
                 onClick={() => setActiveTab("analytics")}
@@ -772,7 +771,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0">
+        <div className="flex-1 overflow-y-auto pb-16 lg:pb-0 min-w-0 p-3 sm:p-5 lg:p-8">
             {/* Stats Cards */}
             {activeTab === "analytics" && (
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
@@ -1341,24 +1340,23 @@ export default function AdminDashboard() {
                 {/* Header */}
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Property Requests</h2>
-                    <p className={`text-sm mt-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Review and approve new property listing submissions</p>
+                    <h2 className={`text-lg sm:text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Property Requests</h2>
+                    <p className={`text-xs sm:text-sm mt-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Review and approve new property listing submissions</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={fetchRequests}
                       disabled={requestsLoading}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm transition-colors disabled:opacity-50 ${isDark ? "border-gray-700 text-gray-300 hover:bg-gray-700" : "border-gray-300 text-gray-600 hover:bg-gray-100"}`}
-                      title="Refresh"
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs sm:text-sm transition-colors disabled:opacity-50 ${isDark ? "border-gray-700 text-gray-300 hover:bg-gray-700" : "border-gray-300 text-gray-600 hover:bg-gray-100"}`}
                     >
                       <Loader2 className={`w-3.5 h-3.5 ${requestsLoading ? "animate-spin" : ""}`} />
-                      Refresh
+                      <span className="hidden sm:inline">Refresh</span>
                     </button>
-                    <Filter className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
+                    <Filter className={`w-4 h-4 flex-shrink-0 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
                     <select
                       value={requestFilter}
                       onChange={e => setRequestFilter(e.target.value)}
-                      className={`px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-gray-200" : "bg-white border-gray-300 text-gray-700"}`}
+                      className={`px-2.5 py-1.5 rounded-lg border text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-gray-200" : "bg-white border-gray-300 text-gray-700"}`}
                     >
                       <option value="all">All</option>
                       <option value="pending">Pending</option>
@@ -1369,167 +1367,172 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Summary cards */}
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   {[
                     { label: "Pending", count: requests.filter(r => r.approvalStatus === "pending").length, icon: Clock, color: "text-yellow-400", bg: isDark ? "bg-yellow-500/10 border-yellow-500/20" : "bg-yellow-50 border-yellow-200" },
                     { label: "Approved", count: requests.filter(r => r.approvalStatus === "approved").length, icon: CheckCheck, color: "text-green-400", bg: isDark ? "bg-green-500/10 border-green-500/20" : "bg-green-50 border-green-200" },
                     { label: "Rejected", count: requests.filter(r => r.approvalStatus === "rejected").length, icon: XOctagon, color: "text-red-400", bg: isDark ? "bg-red-500/10 border-red-500/20" : "bg-red-50 border-red-200" },
                   ].map(({ label, count, icon: Icon, color, bg }) => (
-                    <div key={label} className={`rounded-xl p-4 border flex items-center gap-3 ${bg}`}>
-                      <Icon className={`w-5 h-5 flex-shrink-0 ${color}`} />
+                    <div key={label} className={`rounded-xl p-3 sm:p-4 border flex items-center gap-2 sm:gap-3 ${bg}`}>
+                      <Icon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${color}`} />
                       <div>
-                        <p className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{count}</p>
-                        <p className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>{label}</p>
+                        <p className={`text-lg sm:text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{count}</p>
+                        <p className={`text-[10px] sm:text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>{label}</p>
                       </div>
                     </div>
                   ))}
                 </div>
 
                 {requestsLoading ? (
-                  <div className="flex items-center justify-center py-20">
+                  <div className="flex items-center justify-center py-16">
                     <Loader2 className={`w-8 h-8 animate-spin ${isDark ? "text-gray-400" : "text-gray-500"}`} />
                   </div>
                 ) : (() => {
                   const filtered = requests.filter(r => requestFilter === "all" || r.approvalStatus === requestFilter);
                   return filtered.length > 0 ? (
-                    <div className={`rounded-2xl border overflow-hidden ${isDark ? "border-gray-800" : "border-gray-200"}`}>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className={`border-b ${isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
-                              <th className={`px-4 py-3 text-left font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>#</th>
-                              <th className={`px-4 py-3 text-left font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Property</th>
-                              <th className={`px-4 py-3 text-left font-semibold hidden md:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Owner</th>
-                              <th className={`px-4 py-3 text-left font-semibold hidden sm:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Location</th>
-                              <th className={`px-4 py-3 text-left font-semibold hidden lg:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Docs</th>
-                              <th className={`px-4 py-3 text-right font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Price</th>
-                              <th className={`px-4 py-3 text-left font-semibold hidden sm:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Submitted</th>
-                              <th className={`px-4 py-3 text-center font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Status</th>
-                              <th className={`px-4 py-3 text-center font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody className={`divide-y ${isDark ? "divide-gray-800" : "divide-gray-100"}`}>
-                            {filtered.map((req, idx) => {
-                              const owner = typeof req.createdBy === "object" ? req.createdBy as PropertyOwner : null;
-                              const img = req.images?.[0] || "/owner.png";
-                              const hasDocs = (req.verificationImages?.length ?? 0) > 0;
-                              const isActioning = actioningId === req._id;
-                              const statusStyle =
-                                req.approvalStatus === "pending"
-                                  ? isDark ? "bg-yellow-500/20 text-yellow-400" : "bg-yellow-100 text-yellow-700"
-                                  : req.approvalStatus === "approved"
-                                  ? isDark ? "bg-green-500/20 text-green-400" : "bg-green-100 text-green-700"
-                                  : isDark ? "bg-red-500/20 text-red-400" : "bg-red-100 text-red-700";
-                              return (
-                                <tr key={req._id} className={`transition-colors ${isDark ? "bg-gray-900 hover:bg-gray-800" : "bg-white hover:bg-gray-50"}`}>
-                                  <td className={`px-4 py-3 text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>{idx + 1}</td>
-
-                                  {/* Property */}
-                                  <td className="px-4 py-3">
-                                    <div className="flex items-center gap-3 min-w-0">
-                                      <div className="relative w-10 h-10 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200">
-                                        <Image src={img} alt={req.title} fill className="object-cover" />
+                    <>
+                      {/* Desktop table */}
+                      <div className={`hidden sm:block rounded-2xl border overflow-hidden ${isDark ? "border-gray-800" : "border-gray-200"}`}>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm min-w-[640px]">
+                            <thead>
+                              <tr className={`border-b ${isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
+                                <th className={`px-3 py-3 text-left font-semibold text-xs ${isDark ? "text-gray-300" : "text-gray-700"}`}>#</th>
+                                <th className={`px-3 py-3 text-left font-semibold text-xs ${isDark ? "text-gray-300" : "text-gray-700"}`}>Property</th>
+                                <th className={`px-3 py-3 text-left font-semibold text-xs hidden md:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Owner</th>
+                                <th className={`px-3 py-3 text-left font-semibold text-xs ${isDark ? "text-gray-300" : "text-gray-700"}`}>Location</th>
+                                <th className={`px-3 py-3 text-right font-semibold text-xs ${isDark ? "text-gray-300" : "text-gray-700"}`}>Price</th>
+                                <th className={`px-3 py-3 text-center font-semibold text-xs ${isDark ? "text-gray-300" : "text-gray-700"}`}>Status</th>
+                                <th className={`px-3 py-3 text-center font-semibold text-xs ${isDark ? "text-gray-300" : "text-gray-700"}`}>Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody className={`divide-y ${isDark ? "divide-gray-800" : "divide-gray-100"}`}>
+                              {filtered.map((req, idx) => {
+                                const owner = typeof req.createdBy === "object" ? req.createdBy as PropertyOwner : null;
+                                const img = req.images?.[0] || "/owner.png";
+                                const isActioning = actioningId === req._id;
+                                const statusStyle = req.approvalStatus === "pending" ? isDark ? "bg-yellow-500/20 text-yellow-400" : "bg-yellow-100 text-yellow-700" : req.approvalStatus === "approved" ? isDark ? "bg-green-500/20 text-green-400" : "bg-green-100 text-green-700" : isDark ? "bg-red-500/20 text-red-400" : "bg-red-100 text-red-700";
+                                return (
+                                  <tr key={req._id} className={`transition-colors ${isDark ? "bg-gray-900 hover:bg-gray-800" : "bg-white hover:bg-gray-50"}`}>
+                                    <td className={`px-3 py-3 text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>{idx + 1}</td>
+                                    <td className="px-3 py-3">
+                                      <div className="flex items-center gap-2.5 min-w-0">
+                                        <div className="relative w-9 h-9 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200">
+                                          <Image src={img} alt={req.title} fill className="object-cover" />
+                                        </div>
+                                        <div className="min-w-0">
+                                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold text-white ${req.propertyType === "PG" ? "bg-blue-600" : "bg-green-600"}`}>{req.propertyType}</span>
+                                          <p className={`font-semibold text-xs truncate max-w-[120px] mt-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>{req.title}</p>
+                                        </div>
                                       </div>
-                                      <div className="min-w-0">
-                                        <span className={`px-1.5 py-0.5 rounded text-xs font-semibold text-white ${req.propertyType === "PG" ? "bg-blue-600" : "bg-green-600"}`}>{req.propertyType}</span>
-                                        <p className={`font-semibold text-xs truncate max-w-[140px] mt-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>{req.title}</p>
+                                    </td>
+                                    <td className={`px-3 py-3 hidden md:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                                      <p className="text-xs font-medium truncate max-w-[100px]">{owner?.fullName || "—"}</p>
+                                      <p className={`text-[10px] truncate max-w-[100px] ${isDark ? "text-gray-500" : "text-gray-400"}`}>{owner?.email}</p>
+                                    </td>
+                                    <td className={`px-3 py-3 text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                                      <div className="flex items-center gap-1">
+                                        <MapPin className="w-3 h-3 flex-shrink-0" />
+                                        <span className="truncate max-w-[100px]">{[req.areaName, req.location].filter(Boolean).join(", ")}</span>
                                       </div>
-                                    </div>
-                                  </td>
-
-                                  {/* Owner */}
-                                  <td className={`px-4 py-3 hidden md:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-                                    <p className="text-xs font-medium">{owner?.fullName || "—"}</p>
-                                    <p className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>{owner?.email}</p>
-                                  </td>
-
-                                  {/* Location */}
-                                  <td className={`px-4 py-3 hidden sm:table-cell text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}>
-                                    <div className="flex items-center gap-1">
-                                      <MapPin className="w-3 h-3 flex-shrink-0" />
-                                      <span className="truncate max-w-[120px]">{[req.areaName, req.location].filter(Boolean).join(", ")}</span>
-                                    </div>
-                                  </td>
-
-                                  {/* Docs */}
-                                  <td className="px-4 py-3 hidden lg:table-cell text-center">
-                                    {hasDocs ? (
-                                      <span className="flex items-center gap-1 text-xs text-green-500 font-medium">
-                                        <ShieldCheck className="w-3.5 h-3.5" /> {req.verificationImages!.length} doc{req.verificationImages!.length > 1 ? "s" : ""}
-                                      </span>
-                                    ) : (
-                                      <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>None</span>
-                                    )}
-                                  </td>
-
-                                  {/* Price */}
-                                  <td className="px-4 py-3 text-right">
-                                    <span className="font-bold text-primary text-sm">{currencySymbol}{req.price.toLocaleString()}</span>
-                                  </td>
-
-                                  {/* Submitted */}
-                                  <td className={`px-4 py-3 hidden sm:table-cell text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                                    {new Date(req.createdAt).toLocaleDateString()}
-                                  </td>
-
-                                  {/* Status */}
-                                  <td className="px-4 py-3 text-center">
-                                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${statusStyle}`}>{req.approvalStatus}</span>
-                                  </td>
-
-                                  {/* Actions */}
-                                  <td className="px-4 py-3">
-                                    <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                                      <button
-                                        onClick={() => setViewingRequest(req)}
-                                        className="flex items-center gap-1 px-2.5 py-1.5 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-colors text-xs font-medium"
-                                      >
-                                        <Eye className="w-3.5 h-3.5" /> View
-                                      </button>
-                                      {req.approvalStatus === "pending" && (
-                                        <>
-                                          <button
-                                            onClick={() => handlePropertyAction(req._id, "approve")}
-                                            disabled={isActioning}
-                                            className="flex items-center gap-1 px-2.5 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs font-medium disabled:opacity-60"
-                                          >
-                                            {isActioning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />} Approve
-                                          </button>
-                                          <button
-                                            onClick={() => handlePropertyAction(req._id, "reject")}
-                                            disabled={isActioning}
-                                            className={`flex items-center gap-1 px-2.5 py-1.5 border rounded-lg transition-colors text-xs font-medium disabled:opacity-60 ${isDark ? "border-red-500/50 text-red-400 hover:bg-red-500/10" : "border-red-300 text-red-500 hover:bg-red-50"}`}
-                                          >
-                                            <XCircle className="w-3.5 h-3.5" /> Reject
-                                          </button>
-                                        </>
-                                      )}
-                                      {req.approvalStatus === "approved" && !req.isVerified && (
-                                        <button
-                                          onClick={() => handlePropertyAction(req._id, "verify")}
-                                          disabled={isActioning}
-                                          className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-xs font-medium disabled:opacity-60"
-                                        >
-                                          {isActioning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />} Verify
+                                    </td>
+                                    <td className="px-3 py-3 text-right">
+                                      <span className="font-bold text-primary text-xs">{currencySymbol}{req.price.toLocaleString()}</span>
+                                    </td>
+                                    <td className="px-3 py-3 text-center">
+                                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize ${statusStyle}`}>{req.approvalStatus}</span>
+                                    </td>
+                                    <td className="px-3 py-3">
+                                      <div className="flex items-center justify-center gap-1 flex-wrap">
+                                        <button onClick={() => setViewingRequest(req)} className="flex items-center gap-1 px-2 py-1 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-colors text-[10px] font-medium">
+                                          <Eye className="w-3 h-3" /> View
                                         </button>
-                                      )}
-                                      {req.approvalStatus === "approved" && req.isVerified && (
-                                        <span className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600/20 text-emerald-400 rounded-lg text-xs font-medium">
-                                          <ShieldCheck className="w-3.5 h-3.5" /> Verified
-                                        </span>
-                                      )}
-                                    </div>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
+                                        {req.approvalStatus === "pending" && (<>
+                                          <button onClick={() => handlePropertyAction(req._id, "approve")} disabled={isActioning} className="flex items-center gap-1 px-2 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-[10px] font-medium disabled:opacity-60">
+                                            {isActioning ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3 h-3" />} OK
+                                          </button>
+                                          <button onClick={() => handlePropertyAction(req._id, "reject")} disabled={isActioning} className={`flex items-center gap-1 px-2 py-1 border rounded-lg transition-colors text-[10px] font-medium disabled:opacity-60 ${isDark ? "border-red-500/50 text-red-400 hover:bg-red-500/10" : "border-red-300 text-red-500 hover:bg-red-50"}`}>
+                                            <XCircle className="w-3 h-3" /> No
+                                          </button>
+                                        </>)}
+                                        {req.approvalStatus === "approved" && !req.isVerified && (
+                                          <button onClick={() => handlePropertyAction(req._id, "verify")} disabled={isActioning} className="flex items-center gap-1 px-2 py-1 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-[10px] font-medium disabled:opacity-60">
+                                            {isActioning ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldCheck className="w-3 h-3" />} Verify
+                                          </button>
+                                        )}
+                                        {req.approvalStatus === "approved" && req.isVerified && (
+                                          <span className="flex items-center gap-1 px-2 py-1 bg-emerald-600/20 text-emerald-400 rounded-lg text-[10px] font-medium">
+                                            <ShieldCheck className="w-3 h-3" /> ✓
+                                          </span>
+                                        )}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
-                    </div>
+
+                      {/* Mobile cards */}
+                      <div className="sm:hidden space-y-3">
+                        {filtered.map((req) => {
+                          const owner = typeof req.createdBy === "object" ? req.createdBy as PropertyOwner : null;
+                          const img = req.images?.[0] || "/owner.png";
+                          const isActioning = actioningId === req._id;
+                          const statusStyle = req.approvalStatus === "pending" ? isDark ? "bg-yellow-500/20 text-yellow-400" : "bg-yellow-100 text-yellow-700" : req.approvalStatus === "approved" ? isDark ? "bg-green-500/20 text-green-400" : "bg-green-100 text-green-700" : isDark ? "bg-red-500/20 text-red-400" : "bg-red-100 text-red-700";
+                          return (
+                            <div key={req._id} className={`rounded-2xl border p-4 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                              <div className="flex items-start gap-3 mb-3">
+                                <div className="relative w-14 h-14 flex-shrink-0 rounded-xl overflow-hidden bg-gray-200">
+                                  <Image src={img} alt={req.title} fill className="object-cover" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold text-white ${req.propertyType === "PG" ? "bg-blue-600" : "bg-green-600"}`}>{req.propertyType}</span>
+                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize ${statusStyle}`}>{req.approvalStatus}</span>
+                                  </div>
+                                  <p className={`font-semibold text-sm truncate ${isDark ? "text-white" : "text-gray-900"}`}>{req.title}</p>
+                                  <p className="font-bold text-primary text-sm">{currencySymbol}{req.price.toLocaleString()}</p>
+                                </div>
+                              </div>
+                              <div className={`space-y-1.5 mb-3 text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                                {owner && <div className="flex items-center gap-1.5"><Phone className="w-3 h-3 flex-shrink-0" /><span className="truncate">{owner.fullName}</span></div>}
+                                <div className="flex items-center gap-1.5"><MapPin className="w-3 h-3 flex-shrink-0" /><span className="truncate">{[req.areaName, req.location].filter(Boolean).join(", ")}</span></div>
+                                <div className="flex items-center gap-1.5"><Calendar className="w-3 h-3 flex-shrink-0" /><span>{new Date(req.createdAt).toLocaleDateString()}</span></div>
+                              </div>
+                              <div className="flex gap-2 flex-wrap">
+                                <button onClick={() => setViewingRequest(req)} className="flex items-center gap-1.5 px-3 py-2 border border-primary text-primary rounded-xl hover:bg-primary hover:text-white transition-colors text-xs font-semibold">
+                                  <Eye className="w-3.5 h-3.5" /> View
+                                </button>
+                                {req.approvalStatus === "pending" && (<>
+                                  <button onClick={() => handlePropertyAction(req._id, "approve")} disabled={isActioning} className="flex items-center gap-1.5 px-3 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors text-xs font-semibold disabled:opacity-60">
+                                    {isActioning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />} Approve
+                                  </button>
+                                  <button onClick={() => handlePropertyAction(req._id, "reject")} disabled={isActioning} className={`flex items-center gap-1.5 px-3 py-2 border rounded-xl transition-colors text-xs font-semibold disabled:opacity-60 ${isDark ? "border-red-500/50 text-red-400 hover:bg-red-500/10" : "border-red-300 text-red-500 hover:bg-red-50"}`}>
+                                    <XCircle className="w-3.5 h-3.5" /> Reject
+                                  </button>
+                                </>)}
+                                {req.approvalStatus === "approved" && !req.isVerified && (
+                                  <button onClick={() => handlePropertyAction(req._id, "verify")} disabled={isActioning} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors text-xs font-semibold disabled:opacity-60">
+                                    {isActioning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />} Verify
+                                  </button>
+                                )}
+                                {req.approvalStatus === "approved" && req.isVerified && (
+                                  <span className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600/20 text-emerald-400 rounded-xl text-xs font-semibold">
+                                    <ShieldCheck className="w-3.5 h-3.5" /> Verified
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
                   ) : (
-                    <div className={`rounded-2xl p-12 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
-                      <ClipboardList className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
+                    <div className={`rounded-2xl p-10 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                      <ClipboardList className={`w-12 h-12 mx-auto mb-3 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
                       <p className={`font-semibold mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>No property requests</p>
                       <p className={`text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>New submissions will appear here for review</p>
                     </div>
@@ -1671,22 +1674,7 @@ export default function AdminDashboard() {
                     </ResponsiveContainer>
                   </div>
 
-                  {/* Bar chart — monthly breakdown */}
-                  <div className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
-                    <h3 className={`text-base font-semibold mb-5 ${isDark ? "text-white" : "text-gray-900"}`}>Monthly Breakdown</h3>
-                    <ResponsiveContainer width="100%" height={240}>
-                      <BarChart data={monthlyData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }} barCategoryGap="30%">
-                        <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-                        <XAxis dataKey="month" tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
-                        <YAxis tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                        <Tooltip content={<CustomTooltip />} cursor={{ fill: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)" }} />
-                        <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />
-                        <Bar dataKey="Properties" fill="#6366f1" radius={[6, 6, 0, 0]} />
-                        <Bar dataKey="Users" fill="#3b82f6" radius={[6, 6, 0, 0]} />
-                        <Bar dataKey="Reports" fill="#ef4444" radius={[6, 6, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+                 
 
                   {/* Pie charts row */}
                   <div className="grid md:grid-cols-2 gap-6">
@@ -1801,47 +1789,45 @@ export default function AdminDashboard() {
               );
 
               return (
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   {/* Hero header */}
-                  <div className={`relative overflow-hidden rounded-2xl p-6 border ${isDark ? "bg-gradient-to-br from-green-950/60 via-gray-900 to-gray-900 border-green-800/30" : "bg-gradient-to-br from-green-50 via-white to-white border-green-200"}`}>
-                    <div className="absolute top-0 right-0 w-48 h-48 opacity-5 pointer-events-none">
+                  <div className={`relative overflow-hidden rounded-2xl p-4 sm:p-6 border ${isDark ? "bg-gradient-to-br from-green-950/60 via-gray-900 to-gray-900 border-green-800/30" : "bg-gradient-to-br from-green-50 via-white to-white border-green-200"}`}>
+                    <div className="absolute top-0 right-0 w-32 sm:w-48 h-32 sm:h-48 opacity-5 pointer-events-none">
                       <div className="w-full h-full text-green-500 scale-150 translate-x-8 -translate-y-8">{WA_ICON}</div>
                     </div>
-                    <div className="relative flex items-start justify-between gap-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/30 flex-shrink-0">
-                          <div className="w-6 h-6 text-white">{WA_ICON}</div>
+                    <div className="relative flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/30 flex-shrink-0">
+                          <div className="w-5 h-5 sm:w-6 sm:h-6 text-white">{WA_ICON}</div>
                         </div>
                         <div>
-                          <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>WhatsApp Outreach</h2>
-                          <p className={`text-sm mt-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Send targeted messages to PG owners · leads auto-saved</p>
+                          <h2 className={`text-lg sm:text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>WhatsApp Outreach</h2>
+                          <p className={`text-xs sm:text-sm mt-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Send targeted messages · leads auto-saved</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <div className={`text-center px-4 py-2 rounded-xl border ${isDark ? "bg-gray-800/80 border-gray-700" : "bg-white border-gray-200 shadow-sm"}`}>
-                          <p className="text-lg font-bold text-green-500">{leads.length}</p>
-                          <p className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>Total Leads</p>
-                        </div>
-                        <div className={`text-center px-4 py-2 rounded-xl border ${isDark ? "bg-gray-800/80 border-gray-700" : "bg-white border-gray-200 shadow-sm"}`}>
-                          <p className="text-lg font-bold text-blue-400">{leads.filter((l: any) => l.status === "interested").length}</p>
-                          <p className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>Interested</p>
-                        </div>
-                        <div className={`text-center px-4 py-2 rounded-xl border ${isDark ? "bg-gray-800/80 border-gray-700" : "bg-white border-gray-200 shadow-sm"}`}>
-                          <p className="text-lg font-bold text-purple-400">{leads.filter((l: any) => l.status === "listed").length}</p>
-                          <p className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>Listed</p>
-                        </div>
+                      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                        {[
+                          { value: leads.length, label: "Leads", color: "text-green-500" },
+                          { value: leads.filter((l: any) => l.status === "interested").length, label: "Interested", color: "text-blue-400" },
+                          { value: leads.filter((l: any) => l.status === "listed").length, label: "Listed", color: "text-purple-400" },
+                        ].map(({ value, label, color }) => (
+                          <div key={label} className={`text-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border ${isDark ? "bg-gray-800/80 border-gray-700" : "bg-white border-gray-200 shadow-sm"}`}>
+                            <p className={`text-base sm:text-lg font-bold ${color}`}>{value}</p>
+                            <p className={`text-[10px] sm:text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>{label}</p>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
 
                   {/* Sub-tabs */}
-                  <div className={`flex gap-1 p-1 rounded-xl w-fit ${isDark ? "bg-gray-800/80" : "bg-gray-100"}`}>
+                  <div className={`flex gap-1 p-1 rounded-xl w-full sm:w-fit ${isDark ? "bg-gray-800/80" : "bg-gray-100"}`}>
                     {([
                       { key: "compose", label: "✉ Compose" },
-                      { key: "database", label: `📋 Lead Database (${leads.length})` },
+                      { key: "database", label: `📋 Leads (${leads.length})` },
                     ] as const).map(({ key, label }) => (
                       <button key={key} onClick={() => setLeadsTab(key)}
-                        className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${leadsTab === key
+                        className={`flex-1 sm:flex-none px-4 sm:px-5 py-2 rounded-lg text-sm font-semibold transition-all ${leadsTab === key
                           ? "bg-green-500 text-white shadow-md shadow-green-500/20"
                           : isDark ? "text-gray-400 hover:text-white hover:bg-gray-700" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200"}`}>
                         {label}
@@ -1851,16 +1837,16 @@ export default function AdminDashboard() {
 
                   {leadsTab === "compose" && (<>
                   {/* Two-column layout: message preview + recipients */}
-                  <div className="grid lg:grid-cols-5 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6">
                     {/* Message preview — left */}
-                    <div className={`lg:col-span-2 rounded-2xl border p-5 flex flex-col gap-3 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                    <div className={`lg:col-span-2 rounded-2xl border p-4 sm:p-5 flex flex-col gap-3 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                         <p className={`text-xs font-semibold uppercase tracking-widest ${isDark ? "text-gray-400" : "text-gray-500"}`}>Message Template</p>
                       </div>
                       {/* WhatsApp bubble */}
                       <div className="relative">
-                        <div className={`rounded-2xl rounded-tl-sm p-4 text-sm leading-relaxed whitespace-pre-line ${isDark ? "bg-green-900/40 text-green-200 border border-green-800/40" : "bg-green-100 text-green-900 border border-green-200"}`}>
+                        <div className={`rounded-2xl rounded-tl-sm p-3 sm:p-4 text-xs sm:text-sm leading-relaxed whitespace-pre-line ${isDark ? "bg-green-900/40 text-green-200 border border-green-800/40" : "bg-green-100 text-green-900 border border-green-200"}`}>
                           {WA_MESSAGE}
                         </div>
                         <div className={`absolute -top-1 -left-1 w-3 h-3 ${isDark ? "text-green-900/40" : "text-green-100"}`}>
@@ -1874,13 +1860,13 @@ export default function AdminDashboard() {
 
                     {/* Recipients — right */}
                     <div className={`lg:col-span-3 rounded-2xl border overflow-hidden ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
-                      <div className={`px-5 py-4 border-b flex items-center justify-between ${isDark ? "border-gray-800" : "border-gray-100"}`}>
+                      <div className={`px-4 sm:px-5 py-3 sm:py-4 border-b flex items-center justify-between ${isDark ? "border-gray-800" : "border-gray-100"}`}>
                         <div className="flex items-center gap-2">
                           <p className={`font-semibold text-sm ${isDark ? "text-white" : "text-gray-900"}`}>Recipients</p>
                           <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${isDark ? "bg-green-500/20 text-green-400" : "bg-green-100 text-green-700"}`}>{waEntries.length}</span>
                         </div>
                         <button onClick={addRow} className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 active:scale-95 text-white text-xs font-bold rounded-lg transition-all shadow-sm shadow-green-500/30">
-                          <span className="text-sm leading-none">+</span> Add Number
+                          <span className="text-sm leading-none">+</span> Add
                         </button>
                       </div>
 
@@ -1889,22 +1875,22 @@ export default function AdminDashboard() {
                           const isValid = entry.phone.replace(/\D/g, "").length >= 10;
                           const sent = waSent.has(entry.id);
                           return (
-                            <div key={entry.id} className={`p-4 transition-all duration-300 ${sent ? isDark ? "bg-green-500/5 border-l-2 border-green-500" : "bg-green-50 border-l-2 border-green-400" : ""}`}>
+                            <div key={entry.id} className={`p-3 sm:p-4 transition-all duration-300 ${sent ? isDark ? "bg-green-500/5 border-l-2 border-green-500" : "bg-green-50 border-l-2 border-green-400" : ""}`}>
                               {/* Row header */}
-                              <div className="flex items-center gap-2 mb-3">
-                                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${sent ? "bg-green-500 text-white scale-110" : isDark ? "bg-gray-700 text-gray-400" : "bg-gray-100 text-gray-500"}`}>
+                              <div className="flex items-center gap-2 mb-2.5">
+                                <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${sent ? "bg-green-500 text-white scale-110" : isDark ? "bg-gray-700 text-gray-400" : "bg-gray-100 text-gray-500"}`}>
                                   {sent ? "✓" : idx + 1}
                                 </div>
                                 {sent ? (
-                                  <span className="flex items-center gap-1.5 text-xs text-green-500 font-semibold">
-                                    <CheckCircle className="w-3.5 h-3.5" /> Saved to leads · Opened in WhatsApp
+                                  <span className="flex items-center gap-1 text-xs text-green-500 font-semibold">
+                                    <CheckCircle className="w-3 h-3" /> Saved · Opened in WhatsApp
                                   </span>
                                 ) : (
                                   <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>Fill details and send</span>
                                 )}
                                 {waEntries.length > 1 && (
                                   <button onClick={() => removeRow(entry.id)} className={`ml-auto w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isDark ? "text-gray-600 hover:bg-red-500/20 hover:text-red-400" : "text-gray-300 hover:bg-red-50 hover:text-red-500"}`}>
-                                    <X className="w-3.5 h-3.5" />
+                                    <X className="w-3 h-3" />
                                   </button>
                                 )}
                               </div>
@@ -1931,7 +1917,7 @@ export default function AdminDashboard() {
                               </div>
 
                               {/* Send button */}
-                              <div className="mt-3">
+                              <div className="mt-2.5">
                                 <a
                                   href={isValid ? buildLink(entry.phone, entry.name, entry.pgName) : undefined}
                                   target="_blank" rel="noopener noreferrer"
@@ -1955,7 +1941,7 @@ export default function AdminDashboard() {
 
                       {/* Progress footer */}
                       {waEntries.length > 1 && (
-                        <div className={`px-5 py-3 border-t flex items-center gap-3 ${isDark ? "border-gray-800 bg-gray-800/40" : "border-gray-100 bg-gray-50"}`}>
+                        <div className={`px-4 sm:px-5 py-3 border-t flex items-center gap-3 ${isDark ? "border-gray-800 bg-gray-800/40" : "border-gray-100 bg-gray-50"}`}>
                           <span className={`text-xs font-semibold ${isDark ? "text-gray-400" : "text-gray-500"}`}>{waSent.size}/{waEntries.length} sent</span>
                           <div className={`flex-1 h-2 rounded-full overflow-hidden ${isDark ? "bg-gray-700" : "bg-gray-200"}`}>
                             <div className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all duration-700"
@@ -1970,8 +1956,8 @@ export default function AdminDashboard() {
 
                   {leadsTab === "database" && (
                     <div className={`rounded-2xl border overflow-hidden ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
-                      <div className={`px-5 py-4 border-b flex items-center justify-between ${isDark ? "border-gray-800" : "border-gray-100"}`}>
-                        <div className="flex items-center gap-3">
+                      <div className={`px-4 sm:px-5 py-3 sm:py-4 border-b flex items-center justify-between gap-3 ${isDark ? "border-gray-800" : "border-gray-100"}`}>
+                        <div className="flex items-center gap-2 flex-wrap">
                           <p className={`font-bold text-sm ${isDark ? "text-white" : "text-gray-900"}`}>Lead Database</p>
                           <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${isDark ? "bg-green-500/20 text-green-400" : "bg-green-100 text-green-700"}`}>{leads.length} total</span>
                           {leads.filter((l: any) => l.status === "interested").length > 0 && (
@@ -1980,7 +1966,7 @@ export default function AdminDashboard() {
                             </span>
                           )}
                         </div>
-                        <button onClick={fetchLeads} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all active:scale-95 ${isDark ? "border-gray-700 text-gray-300 hover:bg-gray-700" : "border-gray-300 text-gray-600 hover:bg-gray-100"}`}>
+                        <button onClick={fetchLeads} className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all active:scale-95 ${isDark ? "border-gray-700 text-gray-300 hover:bg-gray-700" : "border-gray-300 text-gray-600 hover:bg-gray-100"}`}>
                           <Loader2 className={`w-3.5 h-3.5 ${leadsLoading ? "animate-spin" : ""}`} /> Refresh
                         </button>
                       </div>
@@ -2004,44 +1990,44 @@ export default function AdminDashboard() {
                         </div>
                       ) : (
                         <div className="overflow-x-auto">
-                          <table className="w-full text-sm">
+                          <table className="w-full text-sm min-w-[520px]">
                             <thead>
                               <tr className={`border-b ${isDark ? "bg-gray-800/60 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
-                                {["#", "Phone", "Name", "PG Name", "Status", "Contacted", ""].map(h => (
-                                  <th key={h} className={`px-4 py-3 text-left text-xs font-bold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h}</th>
+                                {["#", "Phone", "Name", "PG Name", "Status", "Date", ""].map(h => (
+                                  <th key={h} className={`px-3 sm:px-4 py-3 text-left text-xs font-bold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h}</th>
                                 ))}
                               </tr>
                             </thead>
                             <tbody className={`divide-y ${isDark ? "divide-gray-800/60" : "divide-gray-100"}`}>
                               {leads.map((lead: any, idx: number) => (
                                 <tr key={lead._id} className={`group transition-colors ${isDark ? "hover:bg-gray-800/50" : "hover:bg-gray-50"}`}>
-                                  <td className={`px-4 py-3.5 text-xs font-medium ${isDark ? "text-gray-600" : "text-gray-400"}`}>{idx + 1}</td>
-                                  <td className="px-4 py-3.5">
+                                  <td className={`px-3 sm:px-4 py-3 text-xs font-medium ${isDark ? "text-gray-600" : "text-gray-400"}`}>{idx + 1}</td>
+                                  <td className="px-3 sm:px-4 py-3">
                                     <a href={`https://wa.me/91${lead.phone}`} target="_blank" rel="noopener noreferrer"
-                                      className="flex items-center gap-2 text-green-500 hover:text-green-400 font-semibold text-sm transition-colors">
-                                      <span className="w-4 h-4 flex-shrink-0">{WA_ICON}</span>
-                                      +91 {lead.phone}
+                                      className="flex items-center gap-1.5 text-green-500 hover:text-green-400 font-semibold text-xs sm:text-sm transition-colors">
+                                      <span className="w-3.5 h-3.5 flex-shrink-0">{WA_ICON}</span>
+                                      {lead.phone}
                                     </a>
                                   </td>
-                                  <td className={`px-4 py-3.5 text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                                  <td className={`px-3 sm:px-4 py-3 text-xs sm:text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                                     {lead.name || <span className={`${isDark ? "text-gray-600" : "text-gray-300"}`}>—</span>}
                                   </td>
-                                  <td className={`px-4 py-3.5 text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                                  <td className={`px-3 sm:px-4 py-3 text-xs sm:text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                                     {lead.pgName || <span className={`${isDark ? "text-gray-600" : "text-gray-300"}`}>—</span>}
                                   </td>
-                                  <td className="px-4 py-3.5">
+                                  <td className="px-3 sm:px-4 py-3">
                                     <select value={lead.status} onChange={e => updateLeadStatus(lead._id, e.target.value)}
-                                      className={`px-2.5 py-1 rounded-lg text-xs font-bold border-0 focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer transition-all ${statusColors[lead.status]}`}>
+                                      className={`px-2 py-1 rounded-lg text-xs font-bold border-0 focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer transition-all ${statusColors[lead.status]}`}>
                                       <option value="contacted">Contacted</option>
                                       <option value="interested">Interested</option>
                                       <option value="not_interested">Not Interested</option>
                                       <option value="listed">Listed</option>
                                     </select>
                                   </td>
-                                  <td className={`px-4 py-3.5 text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>
-                                    {new Date(lead.messageSentAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                                  <td className={`px-3 sm:px-4 py-3 text-xs whitespace-nowrap ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                                    {new Date(lead.messageSentAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
                                   </td>
-                                  <td className="px-4 py-3.5">
+                                  <td className="px-3 sm:px-4 py-3">
                                     <button onClick={() => deleteLead(lead._id)}
                                       className={`w-7 h-7 rounded-lg flex items-center justify-center mx-auto opacity-0 group-hover:opacity-100 transition-all ${isDark ? "text-gray-500 hover:bg-red-500/20 hover:text-red-400" : "text-gray-400 hover:bg-red-50 hover:text-red-500"}`}>
                                       <Trash2 className="w-3.5 h-3.5" />
@@ -2060,7 +2046,42 @@ export default function AdminDashboard() {
             })()}
           </div>
         </div>
-    </div>
+
+      {/* Mobile Bottom Tab Bar */}
+      <div className={`lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <div className="flex items-stretch h-16">
+          {[
+            { key: "analytics",  icon: BarChart3,     label: "Analytics" },
+            { key: "listings",   icon: Home,          label: "Listings" },
+            { key: "users",      icon: Users,         label: "Users" },
+            { key: "reports",    icon: Flag,          label: "Reports",  badge: stats.pendingReports },
+            { key: "requests",   icon: ClipboardList, label: "Requests", badge: stats.pendingRequests },
+            { key: "outreach",   icon: MessageSquare, label: "Outreach" },
+          ].map(({ key, icon: Icon, label, badge }) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={`flex-1 flex flex-col items-center justify-center gap-0.5 relative transition-all duration-200 ${
+                activeTab === key ? "text-primary" : isDark ? "text-gray-500" : "text-gray-400"
+              }`}
+            >
+              {activeTab === key && <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />}
+              {activeTab === key && <span className={`absolute inset-x-0.5 inset-y-0.5 rounded-xl ${isDark ? "bg-primary/10" : "bg-primary/8"}`} />}
+              <div className="relative z-10">
+                <Icon className="w-4 h-4" />
+                {badge ? (
+                  <span className="absolute -top-1.5 -right-2 min-w-[14px] h-3.5 bg-red-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center px-0.5">
+                    {(badge as number) > 9 ? '9+' : badge}
+                  </span>
+                ) : null}
+              </div>
+              <span className={`text-[8px] font-semibold z-10 ${activeTab === key ? "opacity-100" : "opacity-50"}`}>{label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      </div>
 
       {/* Block User Modal */}
       {blockModal && (
