@@ -740,7 +740,30 @@ export default function PostPropertyPage() {
     ));
   };
 
+  const MAX_IMG_SIZE = 2 * 1024 * 1024; // 2MB
+
+  const filterValidFiles = (files: FileList | File[]): File[] => {
+    const arr = Array.from(files);
+    const valid: File[] = [];
+    const rejected: string[] = [];
+    arr.forEach(f => {
+      if (f.size > MAX_IMG_SIZE) {
+        rejected.push(f.name);
+      } else {
+        valid.push(f);
+      }
+    });
+    if (rejected.length > 0) {
+      toast.error(`${rejected.length} image(s) exceed 2MB and were skipped:\n${rejected.join(', ')}`, { duration: 5000 });
+    }
+    return valid;
+  };
+
   const handleRoomImageUpload = (id: string, file: File | null) => {
+    if (file && file.size > MAX_IMG_SIZE) {
+      toast.error(`"${file.name}" exceeds 2MB. Please choose a smaller image.`, { duration: 4000 });
+      return;
+    }
     setRoomImages(prev => prev.map(room => 
       room.id === id ? { ...room, file } : room
     ));
@@ -748,21 +771,15 @@ export default function PostPropertyPage() {
   };
 
   const handleKitchenImageUpload = (files: FileList | null) => {
-    if (files) {
-      setKitchenImages(prev => [...prev, ...Array.from(files)]);
-    }
+    if (files) setKitchenImages(prev => [...prev, ...filterValidFiles(files)]);
   };
 
   const handleWashroomImageUpload = (files: FileList | null) => {
-    if (files) {
-      setWashroomImages(prev => [...prev, ...Array.from(files)]);
-    }
+    if (files) setWashroomImages(prev => [...prev, ...filterValidFiles(files)]);
   };
 
   const handleCommonAreaImageUpload = (files: FileList | null) => {
-    if (files) {
-      setCommonAreaImages(prev => [...prev, ...Array.from(files)]);
-    }
+    if (files) setCommonAreaImages(prev => [...prev, ...filterValidFiles(files)]);
   };
   
   // Tenant Room Image Handlers
@@ -786,6 +803,10 @@ export default function PostPropertyPage() {
   };
 
   const handleTenantRoomImageUpload = (id: string, file: File | null) => {
+    if (file && file.size > MAX_IMG_SIZE) {
+      toast.error(`"${file.name}" exceeds 2MB. Please choose a smaller image.`, { duration: 4000 });
+      return;
+    }
     setTenantRoomImages(prev => prev.map(room => 
       room.id === id ? { ...room, file } : room
     ));
@@ -793,21 +814,15 @@ export default function PostPropertyPage() {
   };
 
   const handleTenantKitchenImageUpload = (files: FileList | null) => {
-    if (files) {
-      setTenantKitchenImages(prev => [...prev, ...Array.from(files)]);
-    }
+    if (files) setTenantKitchenImages(prev => [...prev, ...filterValidFiles(files)]);
   };
 
   const handleTenantWashroomImageUpload = (files: FileList | null) => {
-    if (files) {
-      setTenantWashroomImages(prev => [...prev, ...Array.from(files)]);
-    }
+    if (files) setTenantWashroomImages(prev => [...prev, ...filterValidFiles(files)]);
   };
 
   const handleTenantCommonAreaImageUpload = (files: FileList | null) => {
-    if (files) {
-      setTenantCommonAreaImages(prev => [...prev, ...Array.from(files)]);
-    }
+    if (files) setTenantCommonAreaImages(prev => [...prev, ...filterValidFiles(files)]);
   };
 
   // Auto redirect after success

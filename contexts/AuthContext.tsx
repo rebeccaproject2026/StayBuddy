@@ -90,6 +90,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(nextAuthUser);
           setToken('nextauth');
           setIsLoading(false);
+
+          // Fetch full profile to check if phone number is missing
+          try {
+            const res = await fetch('/api/auth/me', { credentials: 'include' });
+            if (res.ok) {
+              const data = await res.json();
+              const hasPhone = !!data.user?.phoneNumber;
+              const toastKey = `phone_toast_${session.user.id}`;
+              if (!hasPhone && !sessionStorage.getItem(toastKey)) {
+                sessionStorage.setItem(toastKey, '1');
+                setTimeout(() => {
+                  toast('📱 Add your mobile number in Profile for better contact.', {
+                    duration: 6000,
+                    position: 'top-center',
+                    style: { background: '#1d4ed8', color: 'white', fontWeight: '500', maxWidth: '380px' },
+                    icon: '👤',
+                  });
+                }, 1500);
+              }
+            }
+          } catch { /* silent */ }
+
           return;
         }
 

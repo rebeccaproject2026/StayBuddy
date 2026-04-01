@@ -4,7 +4,7 @@ import Property from '@/models/Property';
 import '@/models/User'; // ensure User model is registered for populate
 import { authenticateUser } from '@/lib/auth-middleware';
 import mongoose from 'mongoose';
-import { sendPropertyApprovedEmail, sendPropertyVerifiedEmail } from '@/lib/email';
+import { sendPropertyApprovedEmail, sendPropertyVerifiedEmail, sendNewPropertyEmail } from '@/lib/email';
 
 // PATCH /api/admin/properties/[id]
 // body: { action: 'approve' | 'reject' | 'verify' }
@@ -58,6 +58,16 @@ export async function PATCH(
       if (action === 'approve') {
         sendPropertyApprovedEmail(owner.email, owner.fullName || 'Owner', (property as any).title, propertyUrl)
           .catch(err => console.error('[email] Approved notification failed:', err));
+
+        // Notify subscribers — only now that the property is live
+        sendNewPropertyEmail({
+          _id: params.id,
+          title: (property as any).title,
+          location: (property as any).location,
+          price: (property as any).price,
+          propertyType: (property as any).propertyType,
+          country: (property as any).country,
+        }).catch(err => console.error('[email] Subscriber new-property notification failed:', err));
       }
       if (action === 'verify') {
         sendPropertyVerifiedEmail(owner.email, owner.fullName || 'Owner', (property as any).title, propertyUrl)

@@ -95,7 +95,10 @@ export default function PropertyListings() {
   };
 
   const scroll = (dir: "left" | "right") => {
-    scrollContainerRef.current?.scrollBy({ left: dir === "left" ? -320 : 320, behavior: "smooth" });
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const cardWidth = container.firstElementChild?.clientWidth ?? 300;
+    container.scrollBy({ left: dir === "left" ? -(cardWidth + 16) : (cardWidth + 16), behavior: "smooth" });
   };
 
   const tabs = [
@@ -152,33 +155,24 @@ export default function PropertyListings() {
               </button>
             ))}
           </div>
-          {/* Arrows — only on sm+ */}
-          <div className="hidden sm:flex gap-2 flex-shrink-0">
-            <button onClick={() => scroll("left")} className="w-9 h-9 flex items-center justify-center rounded-full border-2 border-gray-300 hover:border-primary hover:bg-primary-light transition-all">
+          {/* Arrows */}
+          <div className="flex gap-2 flex-shrink-0">
+            <button onClick={() => scroll("left")} className="w-9 h-9 flex items-center justify-center rounded-full border-2 border-gray-300 hover:border-primary hover:bg-primary/10 transition-all">
               <ChevronLeft className="w-4 h-4 text-gray-700" />
             </button>
-            <button onClick={() => scroll("right")} className="w-9 h-9 flex items-center justify-center rounded-full border-2 border-gray-300 hover:border-primary hover:bg-primary-light transition-all">
+            <button onClick={() => scroll("right")} className="w-9 h-9 flex items-center justify-center rounded-full border-2 border-gray-300 hover:border-primary hover:bg-primary/10 transition-all">
               <ChevronRight className="w-4 h-4 text-gray-700" />
             </button>
           </div>
         </div>
 
-        {/* Cards — horizontal scroll on mobile, grid on md+ */}
+        {/* Cards — always horizontal scroll, controlled by chevrons */}
         {loading ? (
-          <>
-            {/* Mobile skeleton */}
-            <div className="flex md:hidden gap-4 overflow-hidden">
-              {[...Array(2)].map((_, i) => (
-                <div key={i} className="flex-shrink-0 w-[calc(50vw-24px)] min-w-[160px] h-[280px] bg-gray-200 rounded-2xl animate-pulse" />
-              ))}
-            </div>
-            {/* Desktop skeleton */}
-            <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-5">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-[340px] bg-gray-200 rounded-2xl animate-pulse" />
-              ))}
-            </div>
-          </>
+          <div className="flex gap-4 overflow-hidden">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="flex-shrink-0 w-[72vw] sm:w-[calc(50%-10px)] lg:w-[calc(25%-15px)] h-[300px] bg-gray-200 rounded-2xl animate-pulse" />
+            ))}
+          </div>
         ) : properties.length === 0 ? (
           <div className="text-center py-16 text-gray-500">
             No properties found.{" "}
@@ -187,26 +181,16 @@ export default function PropertyListings() {
             )}
           </div>
         ) : (
-          <>
-            {/* Mobile: horizontal scroll */}
-            <div
-              ref={scrollContainerRef}
-              className="flex md:hidden gap-3 overflow-x-auto scrollbar-hide scroll-smooth pb-3"
-            >
-              {properties.map((property) => (
-                <div key={property._id} className="flex-shrink-0 w-[72vw] max-w-[280px] min-w-[220px]">
-                  <PropertyCard {...cardProps(property)} />
-                </div>
-              ))}
-            </div>
-
-            {/* Tablet / Desktop: grid */}
-            <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {properties.map((property) => (
-                <PropertyCard key={property._id} {...cardProps(property)} />
-              ))}
-            </div>
-          </>
+          <div
+            ref={scrollContainerRef}
+            className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth pb-3"
+          >
+            {properties.map((property) => (
+              <div key={property._id} className="flex-shrink-0 w-[72vw] sm:w-[calc(50%-8px)] lg:w-[calc(25%-12px)] min-w-[220px] max-w-[320px]">
+                <PropertyCard {...cardProps(property)} />
+              </div>
+            ))}
+          </div>
         )}
 
         {/* View All */}

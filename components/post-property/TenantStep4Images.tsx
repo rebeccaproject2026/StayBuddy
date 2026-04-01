@@ -46,6 +46,7 @@ function UploadZone({ id, label, count, uploadLabel, onChange }: {
             </svg>
           </div>
           <span className="text-sm font-medium text-gray-700">{uploadLabel}</span>
+          <span className="text-xs text-gray-400 mt-0.5">Max 2MB per image</span>
           {count > 0 && <span className="text-xs text-green-600 mt-1">{count} images uploaded</span>}
         </label>
       </div>
@@ -93,7 +94,7 @@ export default function TenantStep4Images({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">{t.uploadRoomImage}</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">{t.uploadRoomImage} <span className="text-gray-400 font-normal">(max 2MB)</span></label>
                   <div className="flex gap-2">
                     <input
                       type="file"
