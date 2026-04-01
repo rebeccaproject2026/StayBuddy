@@ -121,9 +121,11 @@ function ProfileSection({ user, tc, language, isDark = false }: { user: any; tc:
     setSaving(true);
     setSaveMsg(null);
     try {
-      const authToken = token && token !== 'nextauth' ? token : localStorage.getItem("staybuddy_token");
+      const isNextAuth = token === 'nextauth';
+      const authToken = isNextAuth ? null : (token || localStorage.getItem("staybuddy_token"));
       const res = await fetch("/api/auth/me", {
         method: "PATCH",
+        credentials: "include", // send session cookie for NextAuth users
         headers: {
           "Content-Type": "application/json",
           ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
@@ -163,9 +165,11 @@ function ProfileSection({ user, tc, language, isDark = false }: { user: any; tc:
     setPwSaving(true);
     setPwMsg(null);
     try {
-      const authToken = token && token !== 'nextauth' ? token : localStorage.getItem("staybuddy_token");
+      const isNextAuth = token === 'nextauth';
+      const authToken = isNextAuth ? null : (token || localStorage.getItem("staybuddy_token"));
       const res = await fetch("/api/auth/me", {
         method: "PATCH",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
           ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),

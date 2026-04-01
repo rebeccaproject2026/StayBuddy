@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import { verifyToken, extractTokenFromHeader } from '@/lib/jwt';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth-options';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,20 +68,47 @@ export async function PATCH(request: NextRequest) {
   try {
     await connectDB();
 
+    let userId: string | null = null;
+    let isGoogleUser = false;
+
+    // Try custom JWT first
     const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
-    const decoded = verifyToken(token);
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = extractTokenFromHeader(authHeader);
+        const decoded = verifyToken(token);
+        userId = decoded.userId;
+      } catch {
+        // fall through to NextAuth
+      }
+    }
+
+    // Fall back to NextAuth session (Google OAuth users)
+    if (!userId) {
+      const session = await getServerSession(authOptions);
+      if (session?.user?.id) {
+        userId = session.user.id;
+        isGoogleUser = true;
+      }
+    }
+
+    if (!userId) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
 
     const body = await request.json();
     const { fullName, phoneNumber, currentPassword, newPassword } = body;
 
-    const user = await User.findById(decoded.userId).select('+password');
+    const user = await User.findById(userId).select('+password');
     if (!user) {
       return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
     }
 
-    // Password change flow
+    // Password change — not available for Google users
     if (newPassword) {
+      if (isGoogleUser) {
+        return NextResponse.json({ success: false, message: 'Password change is not available for Google accounts.' }, { status: 400 });
+      }
       if (!currentPassword) {
         return NextResponse.json({ success: false, message: 'Current password is required' }, { status: 400 });
       }
