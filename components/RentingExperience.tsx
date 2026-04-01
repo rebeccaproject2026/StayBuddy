@@ -1,134 +1,246 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { CheckCircle, FileText, Clock, Shield, CreditCard, Users, MessageSquare, ThumbsUp, Home, Calendar, FileSignature, Package, Headphones } from 'lucide-react';
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, AnimatePresence } from 'framer-motion';
+import {
+  Zap, Clock, Smile, Shield, CreditCard, MessageSquare,
+  Search, CalendarCheck, FileSignature, KeyRound, HeadphonesIcon, ArrowRight,
+} from 'lucide-react';
 
 const RentingExperience = () => {
   const { language } = useLanguage();
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-80px' });
+  const isInView = useInView(ref, { once: true, margin: '-60px' });
+  const [activeStep, setActiveStep] = useState<number | null>(null);
+  const isFr = language === 'fr';
 
-  const content = {
-    en: {
-      mainTitle: 'Take pleasure in a refreshed renting experience.',
-      mainDescription: 'Experience the joy of renting reimagined. Immerse yourself in a renewed sense of comfort and convenience with our refreshed rental offerings. Enjoy modern amenities, stylish interiors, and exceptional service that make every moment in your new home a pleasure. Welcome to a better way to rent.',
-      leftTitle: 'Our Renting Procedure Has Been Made Easier',
-      leftDescription: "Renting a new place has never been this simple! We've simplified the entire process to save you time and hassle",
-      rightTitle: 'Every stage of your rental experience is guided by us',
-      rightDescription: 'From finding your ideal property to signing the lease, we ensure a seamless process. Our dedicated team is here to support you with expert advice and personalized service every step of the way, making your rental journey stress-free and enjoyable.',
-      leftSteps: ['Simplified Application Process', 'Faster Approvals', 'User Friendly Platform', 'Enhanced Customer Support', 'Flexible Payment Options', 'Personalized Services', 'Transparent Communication', 'Feedback And Improvements'],
-      rightSteps: ['Pre-Rental Preparation', 'Booking Stage', 'Renewal Or Moving Out', 'Lease Signing', 'Post-Rental Stage', 'Ongoing Support'],
+  const leftSteps = [
+    {
+      icon: Zap,
+      title: isFr ? 'Candidature simplifiée' : 'Simple Application',
+      desc: isFr ? 'Postulez en quelques minutes, sans paperasse.' : 'Apply in minutes, no paperwork hassle.',
+      color: 'from-blue-500 to-blue-600',
     },
-    fr: {
-      mainTitle: "Profitez d'une expérience de location rafraîchie.",
-      mainDescription: "Découvrez la joie de la location réinventée. Plongez dans un sentiment renouvelé de confort et de commodité avec nos offres de location rafraîchies. Profitez d'équipements modernes, d'intérieurs élégants et d'un service exceptionnel qui rendent chaque moment dans votre nouvelle maison un plaisir. Bienvenue dans une meilleure façon de louer.",
-      leftTitle: 'Notre procédure de location a été simplifiée',
-      leftDescription: "Louer un nouveau logement n'a jamais été aussi simple! Nous avons simplifié l'ensemble du processus pour vous faire gagner du temps et des tracas",
-      rightTitle: 'Chaque étape de votre expérience de location est guidée par nous',
-      rightDescription: "De la recherche de votre propriété idéale à la signature du bail, nous assurons un processus fluide. Notre équipe dévouée est là pour vous soutenir avec des conseils d'experts et un service personnalisé à chaque étape, rendant votre parcours de location sans stress et agréable.",
-      leftSteps: ['Processus de candidature simplifié', 'Approbations plus rapides', 'Plateforme conviviale', 'Support client amélioré', 'Options de paiement flexibles', 'Services personnalisés', 'Communication transparente', 'Commentaires et améliorations'],
-      rightSteps: ['Préparation pré-location', 'Étape de réservation', 'Renouvellement ou déménagement', 'Signature du bail', 'Étape post-location', 'Support continu'],
+    {
+      icon: Clock,
+      title: isFr ? 'Approbations rapides' : 'Fast Approvals',
+      desc: isFr ? 'Obtenez une réponse en moins de 24 heures.' : 'Get a response within 24 hours.',
+      color: 'from-violet-500 to-violet-600',
     },
-  };
+    {
+      icon: Shield,
+      title: isFr ? 'Annonces vérifiées' : 'Verified Listings',
+      desc: isFr ? 'Chaque propriété est contrôlée par notre équipe.' : 'Every property is checked by our team.',
+      color: 'from-emerald-500 to-emerald-600',
+    },
+    {
+      icon: CreditCard,
+      title: isFr ? 'Paiements flexibles' : 'Flexible Payments',
+      desc: isFr ? 'Plusieurs options de paiement sécurisées.' : 'Multiple secure payment options available.',
+      color: 'from-pink-500 to-pink-600',
+    },
+    {
+      icon: MessageSquare,
+      title: isFr ? 'Support dédié' : 'Dedicated Support',
+      desc: isFr ? 'Notre équipe est disponible à chaque étape.' : 'Our team is available at every step.',
+      color: 'from-orange-500 to-orange-600',
+    },
+    {
+      icon: Smile,
+      title: isFr ? 'Expérience sans stress' : 'Stress-Free Experience',
+      desc: isFr ? 'Nous gérons les détails pour vous.' : 'We handle the details so you don\'t have to.',
+      color: 'from-teal-500 to-teal-600',
+    },
+  ];
 
-  const leftIcons = [FileText, Clock, Users, Shield, CreditCard, Home, MessageSquare, ThumbsUp];
-  const rightIcons = [Package, Calendar, Home, FileSignature, CheckCircle, Headphones];
-  const currentContent = content[language as keyof typeof content] || content.en;
-
-  const cardVariants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: (i: number) => ({ opacity: 1, y: 0, transition: { duration: 0.6, delay: i * 0.15, ease: 'easeOut' } }),
-  };
-
-  const stepVariants = {
-    hidden: { opacity: 0, x: -20 },
-    visible: (i: number) => ({ opacity: 1, x: 0, transition: { duration: 0.4, delay: 0.3 + i * 0.07, ease: 'easeOut' } }),
-  };
-
-  const StepList = ({ steps, icons, color }: { steps: string[]; icons: any[]; color: string }) => (
-    <div className="space-y-3 esm:space-y-4">
-      {steps.map((step, index) => {
-        const Icon = icons[index];
-        return (
-          <motion.div
-            key={index}
-            custom={index}
-            initial="hidden"
-            animate={isInView ? 'visible' : 'hidden'}
-            variants={stepVariants}
-            whileHover={{ x: 6 }}
-            transition={{ type: 'spring', stiffness: 300 }}
-            className="flex items-center gap-3 esm:gap-4 group cursor-default"
-          >
-            <div className="relative flex-shrink-0">
-              <motion.div
-                whileHover={{ scale: 1.15 }}
-                transition={{ type: 'spring', stiffness: 400 }}
-                className={`w-10 h-10 esm:w-11 esm:h-11 md:w-12 md:h-12 ${color} rounded-full flex items-center justify-center shadow-md`}
-              >
-                <Icon className="w-5 h-5 md:w-6 md:h-6 text-white" />
-              </motion.div>
-              {index < steps.length - 1 && (
-                <div className="absolute left-1/2 top-10 esm:top-11 md:top-12 w-0.5 h-4 bg-gradient-to-b from-primary/40 to-transparent -translate-x-1/2" />
-              )}
-            </div>
-            <p className="text-gray-700 text-sm esm:text-base font-medium group-hover:text-primary transition-colors duration-200">
-              {step}
-            </p>
-          </motion.div>
-        );
-      })}
-    </div>
-  );
+  const rightSteps = [
+    {
+      num: '01',
+      icon: Search,
+      title: isFr ? 'Recherche & Découverte' : 'Search & Discover',
+      desc: isFr ? 'Parcourez des milliers de propriétés vérifiées avec des filtres intelligents.' : 'Browse thousands of verified properties with smart filters.',
+    },
+    {
+      num: '02',
+      icon: CalendarCheck,
+      title: isFr ? 'Réservation' : 'Book a Visit',
+      desc: isFr ? 'Planifiez une visite et contactez directement le propriétaire.' : 'Schedule a visit and connect directly with the owner.',
+    },
+    {
+      num: '03',
+      icon: FileSignature,
+      title: isFr ? 'Signature du bail' : 'Sign the Lease',
+      desc: isFr ? 'Finalisez les termes et signez votre contrat en toute sécurité.' : 'Finalize terms and sign your agreement securely.',
+    },
+    {
+      num: '04',
+      icon: KeyRound,
+      title: isFr ? 'Emménagement' : 'Move In',
+      desc: isFr ? 'Récupérez vos clés et installez-vous dans votre nouveau chez-vous.' : 'Collect your keys and settle into your new home.',
+    },
+    {
+      num: '05',
+      icon: HeadphonesIcon,
+      title: isFr ? 'Support continu' : 'Ongoing Support',
+      desc: isFr ? 'Nous restons disponibles tout au long de votre séjour.' : 'We stay available throughout your entire stay.',
+    },
+  ];
 
   return (
-    <section className="py-10 md:py-8 px-4 sm:px-6 bg-gradient-to-b from-gray-50 to-white" ref={ref}>
+    <section ref={ref} className="py-14 sm:py-20 px-4 sm:px-6 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
       <div className="max-w-7xl mx-auto">
-        {/* Main Header */}
+
+        {/* Header */}
         <motion.div
-          className="text-center mb-10 esm:mb-12 md:mb-16"
-          initial={{ opacity: 0, y: 30 }}
+          className="text-center mb-12 sm:mb-16"
+          initial={{ opacity: 0, y: 24 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
-          <h2 className="text-2xl esm:text-3xl md:text-4xl font-bold text-gray-800 mb-3 md:mb-4">
-            {currentContent.mainTitle}
+          <motion.span
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={isInView ? { opacity: 1, scale: 1 } : {}}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-4"
+          >
+            <Zap className="w-3.5 h-3.5" />
+            {isFr ? 'Expérience de location' : 'Renting Experience'}
+          </motion.span>
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 max-w-2xl mx-auto leading-tight">
+            {isFr ? 'Une location simple, rapide et sans stress.' : 'Simple, fast, and stress-free renting.'}
           </h2>
-          <p className="text-gray-600 text-sm esm:text-base md:text-lg max-w-5xl mx-auto leading-relaxed">
-            {currentContent.mainDescription}
+          <p className="text-gray-500 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
+            {isFr
+              ? 'StayBuddy simplifie chaque étape — de la recherche à l\'emménagement.'
+              : 'StayBuddy simplifies every step — from searching to moving in.'}
           </p>
         </motion.div>
 
-        {/* Two Column Layout */}
-        <div className="grid md:grid-cols-2 gap-6 sm:gap-8 md:gap-10">
-          {/* Left Column */}
+        <div className="grid lg:grid-cols-2 gap-6 sm:gap-8">
+
+          {/* Left — Feature cards */}
           <motion.div
-            custom={0}
-            initial="hidden"
-            animate={isInView ? 'visible' : 'hidden'}
-            variants={cardVariants}
-            whileHover={{ boxShadow: '0 20px 40px rgba(0,0,0,0.10)' }}
-            className="bg-white rounded-2xl p-5 esm:p-6 md:p-8 shadow-lg border border-gray-100"
+            initial={{ opacity: 0, x: -24 }}
+            animate={isInView ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+            className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 sm:p-8"
           >
-            <h3 className="text-xl esm:text-2xl font-bold text-gray-800 mb-2 md:mb-3">{currentContent.leftTitle}</h3>
-            <p className="text-gray-600 text-sm esm:text-base mb-6 esm:mb-7 md:mb-8 leading-relaxed">{currentContent.leftDescription}</p>
-            <StepList steps={currentContent.leftSteps} icons={leftIcons} color="bg-gradient-to-br from-primary to-primary-dark" />
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
+              {isFr ? 'Pourquoi choisir StayBuddy' : 'Why Choose StayBuddy'}
+            </h3>
+            <p className="text-gray-500 text-sm sm:text-base mb-6">
+              {isFr ? 'Tout ce dont vous avez besoin, en un seul endroit.' : 'Everything you need, all in one place.'}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {leftSteps.map((step, i) => {
+                const Icon = step.icon;
+                const isActive = activeStep === i;
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={isInView ? { opacity: 1, y: 0 } : {}}
+                    transition={{ duration: 0.4, delay: 0.2 + i * 0.07 }}
+                    onMouseEnter={() => setActiveStep(i)}
+                    onMouseLeave={() => setActiveStep(null)}
+                    className={`relative rounded-xl p-4 cursor-default transition-all duration-300 border ${
+                      isActive
+                        ? 'border-primary/30 bg-primary/5 shadow-md'
+                        : 'border-gray-100 bg-gray-50 hover:border-gray-200'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${step.color} flex items-center justify-center mb-3 shadow-sm transition-transform duration-300 ${isActive ? 'scale-110' : ''}`}>
+                      <Icon className="w-4 h-4 text-white" />
+                    </div>
+                    <p className="font-semibold text-gray-900 text-sm sm:text-base mb-0.5">{step.title}</p>
+                    <AnimatePresence>
+                      {isActive && (
+                        <motion.p
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="text-gray-500 text-xs sm:text-sm leading-relaxed overflow-hidden"
+                        >
+                          {step.desc}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                    {!isActive && <p className="text-gray-400 text-xs sm:text-sm">{step.desc}</p>}
+                  </motion.div>
+                );
+              })}
+            </div>
           </motion.div>
 
-          {/* Right Column */}
+          {/* Right — Journey steps */}
           <motion.div
-            custom={1}
-            initial="hidden"
-            animate={isInView ? 'visible' : 'hidden'}
-            variants={cardVariants}
-            whileHover={{ boxShadow: '0 20px 40px rgba(0,0,0,0.10)' }}
-            className="bg-white rounded-2xl p-5 esm:p-6 md:p-8 shadow-lg border border-gray-100"
+            initial={{ opacity: 0, x: 24 }}
+            animate={isInView ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 sm:p-8"
           >
-            <h3 className="text-xl esm:text-2xl font-bold text-gray-800 mb-2 md:mb-3">{currentContent.rightTitle}</h3>
-            <p className="text-gray-600 text-sm esm:text-base mb-6 esm:mb-7 md:mb-8 leading-relaxed">{currentContent.rightDescription}</p>
-            <StepList steps={currentContent.rightSteps} icons={rightIcons} color="bg-gradient-to-br from-accent to-accent-hover" />
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
+              {isFr ? 'Votre parcours de location' : 'Your Rental Journey'}
+            </h3>
+            <p className="text-gray-500 text-sm sm:text-base mb-6">
+              {isFr ? 'Cinq étapes simples vers votre nouveau chez-vous.' : 'Five simple steps to your new home.'}
+            </p>
+            <div className="space-y-2">
+              {rightSteps.map((step, i) => {
+                const Icon = step.icon;
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: 16 }}
+                    animate={isInView ? { opacity: 1, x: 0 } : {}}
+                    transition={{ duration: 0.4, delay: 0.3 + i * 0.09 }}
+                    whileHover={{ x: 4 }}
+                    className="flex items-start gap-4 p-3.5 rounded-xl hover:bg-gray-50 transition-all duration-200 group cursor-default"
+                  >
+                    {/* Step number + line */}
+                    <div className="flex flex-col items-center flex-shrink-0">
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-accent-hover flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300">
+                        <Icon className="w-4 h-4 text-white" />
+                      </div>
+                      {i < rightSteps.length - 1 && (
+                        <div className="w-0.5 h-5 bg-gradient-to-b from-accent/40 to-transparent mt-1" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0 pt-1">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-xs font-bold text-accent/60">{step.num}</span>
+                        <p className="font-semibold text-gray-900 text-sm sm:text-base group-hover:text-primary transition-colors">{step.title}</p>
+                      </div>
+                      <p className="text-gray-500 text-xs sm:text-sm leading-relaxed">{step.desc}</p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-primary group-hover:translate-x-1 transition-all duration-200 flex-shrink-0 mt-2" />
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {/* CTA */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={isInView ? { opacity: 1 } : {}}
+              transition={{ duration: 0.5, delay: 0.8 }}
+              className="mt-6 pt-5 border-t border-gray-100 flex items-center justify-between"
+            >
+              <p className="text-sm text-gray-400">
+                {isFr ? 'Prêt à commencer?' : 'Ready to get started?'}
+              </p>
+              <motion.a
+                href="/properties"
+                whileHover={{ scale: 1.04, x: 2 }}
+                whileTap={{ scale: 0.97 }}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent text-white rounded-xl text-sm font-semibold shadow-md hover:bg-accent-hover transition-colors"
+              >
+                {isFr ? 'Explorer' : 'Explore Now'}
+                <ArrowRight className="w-3.5 h-3.5" />
+              </motion.a>
+            </motion.div>
           </motion.div>
         </div>
       </div>

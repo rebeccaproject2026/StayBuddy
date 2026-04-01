@@ -25,6 +25,7 @@ export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [focused, setFocused] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [submitCount, setSubmitCount] = useState(0);
 
   const isFr = language === "fr";
 
@@ -49,6 +50,9 @@ export default function ContactPage() {
     successTitle: isFr ? "Message envoyé!" : "Message Sent!",
     successMsg: isFr ? "Merci de nous avoir contactés. Nous vous répondrons bientôt." : "Thank you for reaching out. We'll get back to you within 24 hours.",
     successBtn: isFr ? "Envoyer un autre message" : "Send Another Message",
+    limitMsg: isFr
+      ? "Vous avez déjà envoyé 2 messages depuis cet email. Contactez-nous directement à staybuddy2026@gmail.com"
+      : "You've already sent 2 messages from this email. Contact us directly at staybuddy2026@gmail.com",
     infoTitle: isFr ? "Informations de contact" : "Contact Information",
     infoSub: isFr ? "Contactez-nous via l'un de ces canaux" : "Reach us through any of these channels",
     emailTitle: isFr ? "Envoyez-nous un email" : "Email Us",
@@ -74,6 +78,7 @@ export default function ContactPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to send");
       setIsSubmitted(true);
+      setSubmitCount(c => c + 1);
     } catch (err: any) {
       setError(err.message || "Something went wrong. Please try again.");
     } finally {
@@ -98,9 +103,9 @@ export default function ContactPage() {
     {
       icon: Mail,
       title: labels.emailTitle,
-      value: "support@staybuddy.com",
+      value: "staybuddy2026@gmail.com",
       desc: labels.emailDesc,
-      href: "mailto:support@staybuddy.com",
+      href: "mailto:staybuddy2026@gmail.com",
       color: "from-blue-500 to-blue-600",
       bg: "bg-blue-50",
       iconColor: "text-blue-500",
@@ -169,7 +174,7 @@ export default function ContactPage() {
 
       {/* ── Contact Cards ── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 -mt-10 sm:-mt-14 relative z-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
           {contactCards.map((card, i) => {
             const Icon = card.icon;
             const inner = (
@@ -178,7 +183,7 @@ export default function ContactPage() {
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-                className="bg-white rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-gray-200 group cursor-pointer"
+                className="bg-white rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-gray-200 group cursor-pointer h-full flex flex-col"
               >
                 <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${card.color} flex items-center justify-center mb-3 shadow-md group-hover:scale-110 transition-transform duration-300`}>
                   <Icon className="w-5 h-5 text-white" />
@@ -384,14 +389,20 @@ export default function ContactPage() {
                       </motion.div>
                       <h3 className="text-2xl font-bold text-gray-900 mb-2">{labels.successTitle}</h3>
                       <p className="text-gray-500 mb-8 max-w-sm mx-auto text-sm leading-relaxed">{labels.successMsg}</p>
-                      <motion.button
-                        onClick={handleReset}
-                        whileHover={{ scale: 1.04 }}
-                        whileTap={{ scale: 0.97 }}
-                        className="px-8 py-3 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition-colors shadow-md"
-                      >
-                        {labels.successBtn}
-                      </motion.button>
+                      {submitCount < 2 ? (
+                        <motion.button
+                          onClick={handleReset}
+                          whileHover={{ scale: 1.04 }}
+                          whileTap={{ scale: 0.97 }}
+                          className="px-8 py-3 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition-colors shadow-md"
+                        >
+                          {labels.successBtn}
+                        </motion.button>
+                      ) : (
+                        <div className="px-5 py-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-sm max-w-sm mx-auto">
+                          {labels.limitMsg}
+                        </div>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>

@@ -134,10 +134,10 @@ export default function PropertyListings() {
       <div className="w-full max-w-7xl mx-auto py-8 sm:py-10 md:py-12">
         {/* Header */}
         <div className="mb-5 sm:mb-7">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1.5">
+          <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-1.5">
             {t("properties.featured")}
           </h2>
-          <p className="text-sm sm:text-base text-gray-600">{t("properties.subtitle")}</p>
+          <p className="text-base sm:text-base text-gray-600">{t("properties.subtitle")}</p>
         </div>
 
         {/* Tabs + scroll arrows */}
@@ -147,7 +147,7 @@ export default function PropertyListings() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all duration-200 ${
+                className={`px-4 py-2 rounded-lg font-medium text-base whitespace-nowrap transition-all duration-200 ${
                   activeTab === tab.id ? "bg-primary text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
@@ -158,10 +158,10 @@ export default function PropertyListings() {
           {/* Arrows */}
           <div className="flex gap-2 flex-shrink-0">
             <button onClick={() => scroll("left")} className="w-9 h-9 flex items-center justify-center rounded-full border-2 border-gray-300 hover:border-primary hover:bg-primary/10 transition-all">
-              <ChevronLeft className="w-4 h-4 text-gray-700" />
+              <ChevronLeft className="w-5 h-5 text-gray-700" />
             </button>
             <button onClick={() => scroll("right")} className="w-9 h-9 flex items-center justify-center rounded-full border-2 border-gray-300 hover:border-primary hover:bg-primary/10 transition-all">
-              <ChevronRight className="w-4 h-4 text-gray-700" />
+              <ChevronRight className="w-5 h-5 text-gray-700" />
             </button>
           </div>
         </div>

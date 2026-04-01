@@ -235,7 +235,7 @@ export default function PropertyCard({
 
         {/* Content */}
         <div className="p-3 sm:p-4">
-          <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 mb-1 line-clamp-1">
+          <h3 className="text-sm sm:text-base md:text-xl font-semibold text-gray-900 mb-1 line-clamp-1">
             {type === "Tenant" && societyName ? societyName : title}
           </h3>
           <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-1">
@@ -258,7 +258,7 @@ export default function PropertyCard({
               <span className={`text-xs sm:text-sm font-semibold ${rating ? "text-gray-700" : "text-gray-400"}`}>
                 {rating ? rating.toFixed(1) : "0.0"}
               </span>
-              <span className="text-xs text-gray-400 hidden sm:inline">({reviewsCount ?? 0})</span>
+              <span className="text-xs text-gray-400 hidden sm:inline mt-1">({reviewsCount ?? 0})</span>
             </div>
           </div>
         </div>

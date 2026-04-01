@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
+// In-memory store: email -> submission count (resets on server restart)
+const submissionCount = new Map<string, number>();
+const MAX_SUBMISSIONS = 2;
+
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT),
@@ -22,6 +26,17 @@ export async function POST(req: NextRequest) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
     }
+
+    // Rate limit: max 2 submissions per email
+    const key = email.toLowerCase();
+    const count = submissionCount.get(key) ?? 0;
+    if (count >= MAX_SUBMISSIONS) {
+      return NextResponse.json(
+        { error: 'You have already submitted 2 inquiries from this email. Please contact us directly at staybuddy2026@gmail.com' },
+        { status: 429 }
+      );
+    }
+    submissionCount.set(key, count + 1);
 
     await transporter.sendMail({
       from: `"StayBuddy Contact" <${process.env.SMTP_USER}>`,
