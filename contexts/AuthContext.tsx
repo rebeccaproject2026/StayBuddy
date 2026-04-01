@@ -65,10 +65,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         localStorage.removeItem('staybuddy_token');
         localStorage.removeItem('staybuddy_user');
       }
-    } else {
-      // No stored credentials — not loading anymore
-      if (status !== 'loading') setIsLoading(false);
     }
+    // Always resolve loading immediately from localStorage — don't wait for NextAuth
+    setIsLoading(false);
   }, []);
 
   // Load user data from localStorage and NextAuth session

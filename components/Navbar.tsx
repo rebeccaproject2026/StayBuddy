@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Globe, LogOut, Settings, LayoutDashboard, ChevronDown, Menu, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useParams } from "next/navigation";
+import { useParams, useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 
 const dropdownVariants = {
@@ -36,11 +36,26 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [notifCount, setNotifCount] = useState(0);
   const [mounted, setMounted] = useState(false);
+  const [listingLoading, setListingLoading] = useState(false);
 
   const { language, setLanguage, t } = useLanguage();
   const { user, isAuthenticated, logout, isLoading } = useAuth();
   const params = useParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const urlCountry = params?.country as string;
+
+  const handleListProperty = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsMobileMenuOpen(false);
+    // Already on post-property page — do nothing
+    if (pathname?.includes("/post-property")) return;
+    setListingLoading(true);
+    setTimeout(() => {
+      setListingLoading(false);
+      router.push(`/${urlCountry || 'in'}/post-property`);
+    }, 2000);
+  };
 
   const isCountryMatch = !user || !urlCountry || user.country === urlCountry;
   const effectivelyAuthenticated = isAuthenticated && isCountryMatch;
@@ -158,6 +173,52 @@ export default function Navbar() {
     : "Tenant Dashboard";
 
   return (
+    <>
+      {/* Full-screen loading overlay for List Property */}
+      <AnimatePresence>
+        {listingLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center gap-5"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              className="flex flex-col items-center gap-4"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-accent flex items-center justify-center shadow-xl">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                  <polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <div className="text-center">
+                <p className="text-xl font-bold text-gray-900">
+                  {language === "fr" ? "Préparation du formulaire..." : "Preparing your form..."}
+                </p>
+                <p className="text-gray-500 text-sm mt-1">
+                  {language === "fr" ? "Veuillez patienter un instant" : "Just a moment"}
+                </p>
+              </div>
+              <div className="flex gap-1.5 mt-2">
+                {[0, 1, 2].map(i => (
+                  <motion.div
+                    key={i}
+                    className="w-2 h-2 rounded-full bg-accent"
+                    animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 0.8, repeat: Infinity }}
+                  />
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     <motion.nav
       initial={false}
       animate={{
@@ -198,16 +259,15 @@ export default function Navbar() {
 
             {/* List Property — landlord only */}
             {effectivelyAuthenticated && user?.role === "landlord" && (
-              <Link href="/post-property">
-                <motion.button
-                  whileHover={{ scale: 1.05, y: -1 }}
-                  whileTap={{ scale: 0.96 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                  className="px-4 py-2 bg-accent text-white rounded-xl font-semibold text-sm hover:bg-accent-hover transition-colors duration-300 shadow-md hover:shadow-lg"
-                >
-                  {t("nav.listProperty")}
-                </motion.button>
-              </Link>
+              <motion.button
+                onClick={handleListProperty}
+                whileHover={{ scale: 1.05, y: -1 }}
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                className="px-4 py-2 bg-accent text-white rounded-xl font-semibold text-sm sm:text-base hover:bg-accent-hover transition-colors duration-300 shadow-md hover:shadow-lg"
+              >
+                {t("nav.listProperty")}
+              </motion.button>
             )}
 
             {/* Language selector */}
@@ -259,7 +319,7 @@ export default function Navbar() {
                 <div className="w-14 h-8 rounded-lg bg-gray-100 animate-pulse" />
                 <div className="w-18 h-8 rounded-lg bg-gray-100 animate-pulse" />
               </div>
-            ) : (!isLoading || !user) && (
+            ) : (
               <>
                 {effectivelyAuthenticated && user ? (
                   <div className="relative">
@@ -454,11 +514,11 @@ export default function Navbar() {
 
                     {/* List property */}
                     {user.role === "landlord" && (
-                      <Link href="/post-property" onClick={() => setIsMobileMenuOpen(false)}>
+                      <button onClick={handleListProperty} className="w-full text-left">
                         <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-accent text-white font-semibold text-sm mt-1">
                           {t("nav.listProperty")}
                         </div>
-                      </Link>
+                      </button>
                     )}
 
                     {/* Dashboard */}
@@ -536,5 +596,6 @@ export default function Navbar() {
         </AnimatePresence>
       </div>
     </motion.nav>
+    </>
   );
 }
