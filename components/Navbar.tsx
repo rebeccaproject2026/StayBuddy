@@ -143,7 +143,7 @@ export default function Navbar() {
   const ProfileAvatar = ({ size = 8 }: { size?: number }) => {
     const cls = `w-${size} h-${size} rounded-full`;
     if (user?.profileImage) {
-      return <img src={user.profileImage} alt={user.fullName} className={`${cls} object-cover`} />;
+      return <img src={user.profileImage} alt={user.fullName} referrerPolicy="no-referrer" className={`${cls} object-cover`} />;
     }
     return (
       <div className={`${cls} bg-primary text-white flex items-center justify-center text-sm font-semibold`}>

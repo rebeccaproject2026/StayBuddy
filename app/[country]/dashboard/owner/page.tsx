@@ -204,8 +204,15 @@ function ProfileSection({ user, tc, language, isDark = false }: { user: any; tc:
 
       {/* Avatar + summary card */}
       <div className={`rounded-2xl p-5 flex items-center gap-4 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
-        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center flex-shrink-0 shadow-md">
-          <span className="text-white font-bold text-xl">{initials}</span>
+        <div className="w-14 h-14 rounded-full flex-shrink-0 shadow-md overflow-hidden">
+          {user?.profileImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={user.profileImage} alt={savedName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+              <span className="text-white font-bold text-xl">{initials}</span>
+            </div>
+          )}
         </div>
         <div className="min-w-0">
           <p className={`text-base font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{savedName || "—"}</p>
@@ -1097,7 +1104,8 @@ export default function OwnerDashboard() {
                 >
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm">
                     {user?.profileImage ? (
-                      <Image src={user.profileImage} alt={user.fullName} width={40} height={40} className="object-cover w-full h-full" />
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={user.profileImage} alt={user.fullName} referrerPolicy="no-referrer" className="object-cover w-full h-full" />
                     ) : (
                       <span className="text-white font-bold text-sm">
                         {user?.fullName?.charAt(0)?.toUpperCase() || "U"}
