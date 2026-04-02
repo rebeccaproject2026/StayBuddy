@@ -150,6 +150,11 @@ export default function AdminDashboard() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
+  // Delete confirmation modal (with reason)
+  const [deleteModal, setDeleteModal] = useState<{ id: string; title: string; ownerEmail?: string; ownerName?: string } | null>(null);
+  const [deleteReason, setDeleteReason] = useState("");
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+
   // Reject confirmation modal
   const [rejectModal, setRejectModal] = useState<{ id: string; title: string; ownerEmail?: string; ownerName?: string } | null>(null);
   const [rejectReason, setRejectReason] = useState("");
@@ -376,6 +381,24 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteReport = async (reportId: string) => {
+    const token = localStorage.getItem("staybuddy_token");
+    if (!token) return;
+    try {
+      const res = await fetch("/api/admin/reports", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ reportId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAllReports(prev => prev.filter(r => r._id !== reportId));
+      }
+    } catch (err) {
+      console.error("Failed to delete report:", err);
+    }
+  };
+
   const handleToggleBlock = async (userId: string, block: boolean, userName: string, email: string) => {
     if (block) {
       // Open modal to collect reason
@@ -423,24 +446,29 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleDeleteProperty = async (propertyId: string) => {
+  const handleDeleteProperty = async (propertyId: string, reason: string) => {
     const token = localStorage.getItem("staybuddy_token");
     if (!token) return;
+    setDeleteSubmitting(true);
     setDeletingId(propertyId);
     try {
       const res = await fetch(`/api/properties/${propertyId}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ reason }),
       });
       if (res.ok) {
         setProperties(prev => prev.filter(p => p._id !== propertyId));
         if (selectedProperty?._id === propertyId) setSelectedProperty(null);
+        setDeleteModal(null);
+        setDeleteReason("");
       }
     } catch (err) {
       console.error("Delete failed:", err);
     } finally {
       setDeletingId(null);
       setDeleteConfirmId(null);
+      setDeleteSubmitting(false);
     }
   };
 
@@ -1028,31 +1056,16 @@ export default function AdminDashboard() {
                                       >
                                         <Eye className="w-3.5 h-3.5" /> View
                                       </button>
-                                      {deleteConfirmId === property._id ? (
-                                        <div className="flex items-center gap-1">
-                                          <button
-                                            onClick={() => handleDeleteProperty(property._id)}
-                                            disabled={deletingId === property._id}
-                                            className="flex items-center gap-1 px-2.5 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs font-medium disabled:opacity-60"
-                                          >
-                                            {deletingId === property._id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                                            Yes
-                                          </button>
-                                          <button
-                                            onClick={() => setDeleteConfirmId(null)}
-                                            className={`px-2.5 py-1.5 rounded-lg text-xs border transition-colors ${isDark ? "border-gray-600 text-gray-300 hover:bg-gray-700" : "border-gray-300 text-gray-600 hover:bg-gray-100"}`}
-                                          >
-                                            No
-                                          </button>
-                                        </div>
-                                      ) : (
-                                        <button
-                                          onClick={() => setDeleteConfirmId(property._id)}
-                                          className={`flex items-center gap-1 px-2.5 py-1.5 border rounded-lg transition-colors text-xs font-medium ${isDark ? "border-red-500/50 text-red-400 hover:bg-red-500/10" : "border-red-300 text-red-500 hover:bg-red-50"}`}
-                                        >
-                                          <Trash2 className="w-3.5 h-3.5" /> Delete
-                                        </button>
-                                      )}
+                                      <button
+                                        onClick={() => {
+                                          const owner = typeof property.createdBy === 'object' ? property.createdBy as PropertyOwner : null;
+                                          setDeleteModal({ id: property._id, title: property.title, ownerEmail: owner?.email, ownerName: owner?.fullName });
+                                          setDeleteReason("");
+                                        }}
+                                        className={`flex items-center gap-1 px-2.5 py-1.5 border rounded-lg transition-colors text-xs font-medium ${isDark ? "border-red-500/50 text-red-400 hover:bg-red-500/10" : "border-red-300 text-red-500 hover:bg-red-50"}`}
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                                      </button>
                                     </div>
                                   </td>
                                 </tr>
@@ -1412,6 +1425,13 @@ export default function AdminDashboard() {
                                         <Eye className="w-3.5 h-3.5" />
                                       </Link>
                                     )}
+                                    <button
+                                      onClick={() => handleDeleteReport(report._id)}
+                                      className={`flex items-center gap-1 px-2.5 py-1.5 border rounded-lg transition-colors text-xs font-medium ${isDark ? "border-red-500/50 text-red-400 hover:bg-red-500/10" : "border-red-300 text-red-500 hover:bg-red-50"}`}
+                                      title="Delete report"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
                                   </div>
                                 </td>
                               </tr>
@@ -2790,6 +2810,80 @@ export default function AdminDashboard() {
           >
             <Eye className="w-4 h-4" /> Open original
           </a>
+        </div>
+      )}
+
+      {/* ── Delete Listing Modal ─────────────────────────────────────────── */}
+      {deleteModal && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className={`w-full max-w-md rounded-2xl shadow-2xl border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}>
+            {/* Header */}
+            <div className={`flex items-center justify-between px-6 py-4 border-b ${isDark ? "border-gray-700" : "border-gray-100"}`}>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-red-500/10 flex items-center justify-center">
+                  <Trash2 className="w-5 h-5 text-red-500" />
+                </div>
+                <div>
+                  <h3 className={`font-bold text-base ${isDark ? "text-white" : "text-gray-900"}`}>Delete Listing</h3>
+                  <p className={`text-xs mt-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>This action cannot be undone</p>
+                </div>
+              </div>
+              <button
+                onClick={() => { setDeleteModal(null); setDeleteReason(""); }}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isDark ? "hover:bg-gray-800 text-gray-400" : "hover:bg-gray-100 text-gray-500"}`}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-5 space-y-4">
+              <div className={`rounded-xl p-3 border ${isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
+                <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{deleteModal.title}</p>
+                {deleteModal.ownerEmail && (
+                  <p className={`text-xs mt-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Owner: {deleteModal.ownerName || deleteModal.ownerEmail}</p>
+                )}
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-1.5 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                  Reason for deletion <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={deleteReason}
+                  onChange={e => setDeleteReason(e.target.value)}
+                  rows={3}
+                  placeholder="e.g. Duplicate listing, policy violation, inaccurate information..."
+                  className={`w-full px-3 py-2.5 rounded-xl border text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors ${
+                    isDark ? "bg-gray-800 border-gray-700 text-white placeholder-gray-500" : "border-gray-200 placeholder-gray-400"
+                  }`}
+                />
+                {deleteModal.ownerEmail && (
+                  <p className={`text-xs mt-1.5 ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                    An email with this reason will be sent to the owner at <span className="font-medium">{deleteModal.ownerEmail}</span>.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className={`flex items-center justify-end gap-2 px-6 py-4 border-t ${isDark ? "border-gray-700" : "border-gray-100"}`}>
+              <button
+                onClick={() => { setDeleteModal(null); setDeleteReason(""); }}
+                className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${isDark ? "border-gray-600 text-gray-300 hover:bg-gray-800" : "border-gray-300 text-gray-600 hover:bg-gray-50"}`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteProperty(deleteModal.id, deleteReason.trim())}
+                disabled={!deleteReason.trim() || deleteSubmitting}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
+              >
+                {deleteSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                Delete Listing
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </>

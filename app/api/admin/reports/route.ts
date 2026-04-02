@@ -74,3 +74,31 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    await connectDB();
+
+    let authUser;
+    try {
+      authUser = await authenticateUser(req);
+    } catch {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (authUser.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const { reportId } = await req.json();
+    if (!reportId) return NextResponse.json({ error: 'reportId required' }, { status: 400 });
+
+    const report = await Report.findByIdAndDelete(reportId);
+    if (!report) return NextResponse.json({ error: 'Report not found' }, { status: 404 });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('[DELETE /api/admin/reports]', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

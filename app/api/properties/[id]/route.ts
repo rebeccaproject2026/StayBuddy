@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Property from '@/models/Property';
+import User from '@/models/User';
 import cloudinary from '@/lib/cloudinary';
 import { authenticateUser } from '@/lib/auth-middleware';
+import { sendPropertyDeletedEmail } from '@/lib/email';
 import mongoose from 'mongoose';
 
 // ─── GET /api/properties/[id] ────────────────────────────────────────────────
@@ -174,7 +176,32 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    // Parse optional reason (admin-only deletion notification)
+    let reason = '';
+    try {
+      const body = await req.json();
+      reason = body?.reason?.trim() || '';
+    } catch { /* no body is fine */ }
+
     await Property.findByIdAndDelete(params.id);
+
+    // If deleted by admin with a reason, email the property owner (fire-and-forget)
+    if (authUser.role === 'admin' && reason) {
+      try {
+        const owner = await User.findById(property.createdBy).select('email fullName').lean() as any;
+        if (owner?.email) {
+          await sendPropertyDeletedEmail(
+            owner.email,
+            owner.fullName || 'there',
+            property.title,
+            reason
+          );
+        }
+      } catch (mailErr) {
+        console.error('[DELETE property] email failed:', mailErr);
+      }
+    }
+
     return NextResponse.json({ success: true, message: 'Property deleted' });
   } catch (error) {
     console.error('[DELETE /api/properties/[id]]', error);

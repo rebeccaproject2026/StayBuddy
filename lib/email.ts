@@ -315,6 +315,43 @@ export async function sendAccountBlockedEmail(
 
 // ─── Subscriber Emails ────────────────────────────────────────────────────────
 
+export async function sendPropertyDeletedEmail(
+  ownerEmail: string,
+  ownerName: string,
+  propertyTitle: string,
+  reason: string
+) {
+  await transporter.sendMail({
+    from: `"StayBuddy" <${process.env.SMTP_USER}>`,
+    to: ownerEmail,
+    subject: `Your listing "${propertyTitle}" has been removed`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px; background: #f9fafb; border-radius: 12px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h1 style="color: #4f46e5; font-size: 28px; margin: 0;">StayBuddy</h1>
+        </div>
+        <div style="background: white; border-radius: 12px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          <h2 style="color: #111827; font-size: 20px; margin-top: 0;">Hi ${ownerName},</h2>
+          <p style="color: #6b7280; line-height: 1.6;">
+            Your property listing <strong style="color: #111827;">${propertyTitle}</strong> has been
+            <strong style="color: #dc2626;">removed</strong> from StayBuddy by our admin team.
+          </p>
+          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 20px; margin: 24px 0;">
+            <h3 style="color: #991b1b; font-size: 14px; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 0.05em;">Reason for Removal</h3>
+            <p style="color: #7f1d1d; font-size: 15px; margin: 0; line-height: 1.6;">${reason}</p>
+          </div>
+          <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
+            If you believe this was done in error, please contact our support team by replying to this email.
+          </p>
+        </div>
+        <p style="color: #9ca3af; font-size: 12px; text-align: center; margin-top: 16px;">
+          © StayBuddy — Listing notification
+        </p>
+      </div>
+    `,
+  });
+}
+
 export async function sendSubscribeConfirmationEmail(
   email: string,
   city?: string,
