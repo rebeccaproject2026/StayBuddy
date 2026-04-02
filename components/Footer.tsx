@@ -141,7 +141,7 @@ export default function Footer() {
                     transition={{ duration: 0.35, delay: 0.15 + i * 0.08, ease: "easeOut" }}
                   >
                     <motion.div whileHover={{ y: -3, scale: 1.15 }} transition={{ type: "spring", stiffness: 400, damping: 18 }}>
-                      <Link href={s.href} className={`flex items-center justify-center text-gray-600 ${s.hover} transition-colors duration-200`}>
+                      <Link href={s.href} aria-label={s.label} className={`flex items-center justify-center text-gray-600 ${s.hover} transition-colors duration-200`}>
                         {s.icon}
                       </Link>
                     </motion.div>

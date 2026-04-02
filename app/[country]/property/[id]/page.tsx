@@ -443,10 +443,10 @@ export default function PropertyDetailsPage() {
         )}
 
         {/* Navigation */}
-        <button onClick={prevImage} className="absolute left-2 sm:left-3 md:left-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-white/90 hover:bg-white rounded-full flex items-center justify-center z-10 shadow-lg transition-all">
+        <button onClick={prevImage} aria-label="Previous image" className="absolute left-2 sm:left-3 md:left-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-white/90 hover:bg-white rounded-full flex items-center justify-center z-10 shadow-lg transition-all">
           <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-800" />
         </button>
-        <button onClick={nextImage} className="absolute right-2 sm:right-3 md:right-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-white/90 hover:bg-white rounded-full flex items-center justify-center z-10 shadow-lg transition-all">
+        <button onClick={nextImage} aria-label="Next image" className="absolute right-2 sm:right-3 md:right-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-white/90 hover:bg-white rounded-full flex items-center justify-center z-10 shadow-lg transition-all">
           <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-800" />
         </button>
 
@@ -454,6 +454,7 @@ export default function PropertyDetailsPage() {
         <div className="absolute bottom-2 sm:bottom-3 md:bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 sm:gap-2 z-10">
           {currentImages.map((_: any, index: number) => (
             <button key={index} onClick={() => { setDirection(index > currentImageIndex ? 1 : -1); setCurrentImageIndex(index); }}
+              aria-label={`Go to image ${index + 1}`}
               className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 ${index === currentImageIndex ? "w-6 sm:w-8 bg-white" : "w-1.5 sm:w-2 bg-white/60 hover:bg-white/80"}`}
             />
           ))}
@@ -556,6 +557,50 @@ export default function PropertyDetailsPage() {
                 <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
                   <h3 className="text-xs sm:text-sm font-semibold text-gray-500 mb-3 sm:mb-4">{t.description}</h3>
                   <p className="text-sm sm:text-base text-gray-700 leading-relaxed">{description}</p>
+                </div>
+              )}
+
+              {/* PG Room Details — shown right below description */}
+              {property.propertyType === "PG" && property.roomDetails && Object.keys(property.roomDetails).length > 0 && (
+                <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
+                  <h3 className="text-xs sm:text-sm font-semibold text-gray-500 mb-3 sm:mb-4 uppercase tracking-wide">
+                    {language === "fr" ? "Détails des chambres" : "Room Details"}
+                  </h3>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {Object.entries(property.roomDetails as Record<string, any>).map(([category, detail]) => (
+                      <div key={category} className="border border-gray-200 rounded-xl p-4 hover:border-primary/40 transition-colors">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-bold text-gray-900 text-base">{category} Bed</h4>
+                          <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-semibold rounded-full">
+                            {detail.availableBeds ?? detail.availableRooms ?? "—"} {language === "fr" ? "dispo" : "available"}
+                          </span>
+                        </div>
+                        <div className="space-y-2 mb-3">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-500">{language === "fr" ? "Total lits" : "Total Beds"}</span>
+                            <span className="font-semibold text-gray-900">{detail.totalBeds ?? detail.totalRooms ?? "—"}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-500">{t.monthlyRent}</span>
+                            <span className="font-bold text-primary">{currencySymbol} {Number(detail.monthlyRent).toLocaleString()}</span>
+                          </div>
+                          {detail.securityDeposit && Number(detail.securityDeposit) > 0 && (
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-500">{t.deposit}</span>
+                              <span className="font-semibold text-gray-900">{currencySymbol} {Number(detail.securityDeposit).toLocaleString()}</span>
+                            </div>
+                          )}
+                        </div>
+                        {detail.facilities && detail.facilities.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 pt-2 border-t border-gray-100">
+                            {detail.facilities.map((f: string, i: number) => (
+                              <span key={i} className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full capitalize">{f}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -747,50 +792,6 @@ export default function PropertyDetailsPage() {
                 </div>
               )}
 
-              {/* PG Room Details */}
-              {property.propertyType === "PG" && property.roomDetails && Object.keys(property.roomDetails).length > 0 && (
-                <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
-                  <h3 className="text-xs sm:text-sm font-semibold text-gray-500 mb-3 sm:mb-4 uppercase tracking-wide">
-                    {language === "fr" ? "Détails des chambres" : "Room Details"}
-                  </h3>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    {Object.entries(property.roomDetails as Record<string, any>).map(([category, detail]) => (
-                      <div key={category} className="border border-gray-200 rounded-xl p-4 hover:border-primary/40 transition-colors">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-bold text-gray-900 text-base">{category} Bed</h4>
-                          <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-semibold rounded-full">
-                            {detail.availableBeds ?? detail.availableRooms ?? "—"} {language === "fr" ? "dispo" : "available"}
-                          </span>
-                        </div>
-                        <div className="space-y-2 mb-3">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">{language === "fr" ? "Total lits" : "Total Beds"}</span>
-                            <span className="font-semibold text-gray-900">{detail.totalBeds ?? detail.totalRooms ?? "—"}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">{t.monthlyRent}</span>
-                            <span className="font-bold text-primary">{currencySymbol} {Number(detail.monthlyRent).toLocaleString()}</span>
-                          </div>
-                          {detail.securityDeposit && Number(detail.securityDeposit) > 0 && (
-                            <div className="flex justify-between text-sm">
-                              <span className="text-gray-500">{t.deposit}</span>
-                              <span className="font-semibold text-gray-900">{currencySymbol} {Number(detail.securityDeposit).toLocaleString()}</span>
-                            </div>
-                          )}
-                        </div>
-                        {detail.facilities && detail.facilities.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 pt-2 border-t border-gray-100">
-                            {detail.facilities.map((f: string, i: number) => (
-                              <span key={i} className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full capitalize">{f}</span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* PG Rules */}
               {property.propertyType === "PG" && property.pgRules && property.pgRules.length > 0 && (
                 <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
@@ -945,7 +946,7 @@ export default function PropertyDetailsPage() {
                       <Link key={rel._id} href={`/property/${rel._id}`} className="group">
                         <div className="relative h-48 rounded-lg overflow-hidden mb-3">
                           <Image src={rel.images?.[0] || ""} alt={rel.title} fill className="object-cover group-hover:scale-110 transition-transform duration-300" />
-                          <button className="absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors">
+                          <button aria-label="Save to favorites" className="absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors">
                             <Heart className="w-4 h-4 text-gray-700" />
                           </button>
                           {rel.propertyType && (
@@ -1096,7 +1097,8 @@ export default function PropertyDetailsPage() {
         </div>
       </div>
 
-      {/* WhatsApp floating button */}
+      {/* WhatsApp floating button — only for tenants/guests, not for the owner */}
+      {!isOwner && (<>
       <style>{`
         @keyframes wa-bounce {
           0%, 100% { transform: translateY(0); }
@@ -1126,6 +1128,7 @@ export default function PropertyDetailsPage() {
           </svg>
         </button>
       </div>
+      </>)}
 
       <ContactOwnerForm isOpen={showContactForm} onClose={() => setShowContactForm(false)} property={property} language={language} token={token} />
 
@@ -1138,7 +1141,7 @@ export default function PropertyDetailsPage() {
               <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                 <Share2 className="w-6 h-6 text-primary" />{t.shareProperty}
               </h2>
-              <button onClick={() => setShowShareModal(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
+              <button onClick={() => setShowShareModal(false)} aria-label="Close share modal" className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
                 <X className="w-5 h-5 text-gray-600" />
               </button>
             </div>
@@ -1166,7 +1169,7 @@ export default function PropertyDetailsPage() {
           <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-5 border-b border-gray-200">
               <h2 className="text-lg font-bold text-gray-900">Report this property</h2>
-              <button onClick={() => setShowReportModal(false)} className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center">
+              <button onClick={() => setShowReportModal(false)} aria-label="Close report modal" className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center">
                 <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
@@ -1219,8 +1222,8 @@ export default function PropertyDetailsPage() {
         </div>
       )}
 
-      {/* WhatsApp sticky button */}
-      {property.landlord?.phone && (
+      {/* WhatsApp sticky button — only for tenants/guests */}
+      {!isOwner && property.landlord?.phone && (
         <button
           onClick={() => {
             if (!isAuthenticated) {

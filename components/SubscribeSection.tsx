@@ -27,6 +27,9 @@ export default function SubscribeSection() {
       title: "Never Miss a Vacant Room",
       subtitle: "Get instant email alerts when new rooms matching your preferences become available",
       emailPlaceholder: "Enter your email address",
+      emailLabel: "Email address",
+      cityLabel: "Preferred city",
+      typeLabel: "Property type",
       cityPlaceholder: "Any city",
       subscribeButton: "Subscribe Now",
       subscribing: "Subscribing...",
@@ -45,6 +48,9 @@ export default function SubscribeSection() {
       title: "Ne manquez jamais une chambre vacante",
       subtitle: "Recevez des alertes par e-mail instantanées lorsque de nouvelles chambres correspondant à vos préférences deviennent disponibles",
       emailPlaceholder: "Entrez votre adresse e-mail",
+      emailLabel: "Adresse e-mail",
+      cityLabel: "Ville préférée",
+      typeLabel: "Type de bien",
       cityPlaceholder: "Toute ville",
       subscribeButton: "S'abonner maintenant",
       subscribing: "Abonnement en cours...",
@@ -167,45 +173,57 @@ export default function SubscribeSection() {
 
               <form onSubmit={handleSubmit} className="space-y-3">
                 {/* Email */}
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder={t.emailPlaceholder}
-                    disabled={isSubmitting || submitStatus === "success"}
-                    className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
-                    required
-                  />
+                <div>
+                  <label htmlFor="sub-email" className="block text-sm font-semibold text-gray-600 mb-1.5">{t.emailLabel}</label>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      id="sub-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder={t.emailPlaceholder}
+                      disabled={isSubmitting || submitStatus === "success"}
+                      className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+                      required
+                    />
+                  </div>
                 </div>
 
                 {/* Preferences row */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <select
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      disabled={isSubmitting || submitStatus === "success"}
-                      className="w-full pl-9 pr-3 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors disabled:bg-gray-100 text-sm appearance-none bg-white"
-                    >
-                      <option value="">{t.cityPlaceholder}</option>
-                      {(CITIES[language] ?? CITIES.en).map((c) => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                  <div>
+                    <label htmlFor="sub-city" className="block text-sm font-semibold text-gray-600 mb-1.5">{t.cityLabel}</label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <select
+                        id="sub-city"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        disabled={isSubmitting || submitStatus === "success"}
+                        className="w-full pl-9 pr-3 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors disabled:bg-gray-100 text-sm appearance-none bg-white"
+                      >
+                        <option value="">{t.cityPlaceholder}</option>
+                        {(CITIES[language] ?? CITIES.en).map((c) => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
                   </div>
-                  <div className="relative">
-                    <Home className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <select
-                      value={propertyType}
-                      onChange={(e) => setPropertyType(e.target.value as "" | "PG" | "Tenant")}
-                      disabled={isSubmitting || submitStatus === "success"}
-                      className="w-full pl-9 pr-3 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors disabled:bg-gray-100 text-sm appearance-none bg-white"
-                    >
-                      <option value="">{t.anyType}</option>
-                      <option value="PG">PG</option>
-                      <option value="Tenant">Flat / Tenant</option>
-                    </select>
+                  <div>
+                    <label htmlFor="sub-type" className="block text-sm font-semibold text-gray-600 mb-1.5">{t.typeLabel}</label>
+                    <div className="relative">
+                      <Home className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <select
+                        id="sub-type"
+                        value={propertyType}
+                        onChange={(e) => setPropertyType(e.target.value as "" | "PG" | "Tenant")}
+                        disabled={isSubmitting || submitStatus === "success"}
+                        className="w-full pl-9 pr-3 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors disabled:bg-gray-100 text-sm appearance-none bg-white"
+                      >
+                        <option value="">{t.anyType}</option>
+                        <option value="PG">PG</option>
+                        <option value="Tenant">Flat / Tenant</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
 
@@ -214,7 +232,7 @@ export default function SubscribeSection() {
                   disabled={isSubmitting || submitStatus === "success"}
                   whileHover={!isSubmitting && submitStatus !== "success" ? { scale: 1.02 } : {}}
                   whileTap={!isSubmitting && submitStatus !== "success" ? { scale: 0.97 } : {}}
-                  className="w-full py-3 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+                  className="w-full py-3 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-base"
                 >
                   {isSubmitting ? (
                     <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />{t.subscribing}</>

@@ -208,15 +208,12 @@ export default function Navbar() {
         )}
       </AnimatePresence>
 
-    <motion.nav
-      initial={false}
-      animate={{
-        backgroundColor: isScrolled ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,1)",
-        boxShadow: isScrolled ? "0 4px 24px rgba(0,0,0,0.08)" : "0 0px 0px rgba(0,0,0,0)",
-        backdropFilter: isScrolled ? "blur(12px)" : "blur(0px)",
-      }}
-      transition={{ duration: 0.35, ease: "easeInOut" }}
-      className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6"
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 transition-all duration-300 ${
+        isScrolled
+          ? "bg-white/95 shadow-[0_4px_24px_rgba(0,0,0,0.08)] backdrop-blur-md"
+          : "bg-white"
+      }`}
     >
       <div className="max-w-7xl mx-auto">
         {/* Backdrop to close menus on mobile */}
@@ -230,18 +227,11 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16 sm:h-20">
 
           {/* Logo */}
-          <motion.div
-            initial={{ x: -40, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="flex-shrink-0"
-          >
+          <div className="flex-shrink-0">
             <Link href="/" className="flex items-center">
-              <motion.div whileHover={{ scale: 1.04 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
-                <Image src="/logo.png" alt="StayBuddy Logo" width={140} height={140} className="w-32 sm:w-36 md:w-44 h-auto" />
-              </motion.div>
+              <Image src="/logo.png" alt="StayBuddy Logo" width={140} height={140} priority className="w-32 sm:w-36 md:w-44 h-auto" />
             </Link>
-          </motion.div>
+          </div>
 
           {/* Desktop right side */}
           <div className="hidden md:flex items-center gap-2">
@@ -584,7 +574,7 @@ export default function Navbar() {
           )}
         </AnimatePresence>
       </div>
-    </motion.nav>
+    </nav>
     </>
   );
 }

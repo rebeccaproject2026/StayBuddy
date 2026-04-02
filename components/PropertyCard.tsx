@@ -152,12 +152,14 @@ export default function PropertyCard({
             <>
               <button
                 onClick={prevImage}
+                aria-label="Previous image"
                 className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-8 sm:h-8 bg-white/90 hover:bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 sm:opacity-0 touch:opacity-100 transition-opacity duration-300 z-10 shadow-md"
               >
                 <ChevronLeft className="w-4 h-4 text-gray-800" />
               </button>
               <button
                 onClick={nextImage}
+                aria-label="Next image"
                 className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-8 sm:h-8 bg-white/90 hover:bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 sm:opacity-0 touch:opacity-100 transition-opacity duration-300 z-10 shadow-md"
               >
                 <ChevronRight className="w-4 h-4 text-gray-800" />
@@ -223,6 +225,7 @@ export default function PropertyCard({
                     setDirection(index > currentImageIndex ? 1 : -1);
                     setCurrentImageIndex(index);
                   }}
+                  aria-label={`Go to image ${index + 1}`}
                   className={`h-1.5 rounded-full transition-all duration-300 ${index === currentImageIndex
                     ? "w-6 bg-white"
                     : "w-1.5 bg-white/60 hover:bg-white/80"
@@ -255,10 +258,10 @@ export default function PropertyCard({
               >
                 <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
               </svg>
-              <span className={`text-xs sm:text-sm font-semibold ${rating ? "text-gray-700" : "text-gray-400"}`}>
+              <span className={`text-xs sm:text-sm font-semibold ${rating ? "text-gray-700" : "text-gray-500"}`}>
                 {rating ? rating.toFixed(1) : "0.0"}
               </span>
-              <span className="text-xs text-gray-400 hidden sm:inline mt-1">({reviewsCount ?? 0})</span>
+              <span className="text-xs text-gray-500 hidden sm:inline mt-1">({reviewsCount ?? 0})</span>
             </div>
           </div>
         </div>

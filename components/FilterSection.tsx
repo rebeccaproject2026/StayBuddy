@@ -174,8 +174,10 @@ export default function FilterSection() {
           {/* Search Input */}
           <div className="col-span-1 sm:col-span-2 lg:col-span-7">
             <div className="relative">
+              <label htmlFor="filter-search" className="sr-only">Search by property name or city</label>
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
               <input
+                id="filter-search"
                 type="text"
                 value={filters.search}
                 onChange={(e) => setFilters({ ...filters, search: e.target.value })}
@@ -209,33 +211,31 @@ export default function FilterSection() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:items-center gap-3 sm:gap-4">
             {/* Min Price */}
             <div className="flex-1">
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
+              <label htmlFor="filter-min-price" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                 {t("filters.min")}
               </label>
               <input
+                id="filter-min-price"
                 type="number"
                 value={filters.minPrice}
-                onChange={(e) =>
-                  handlePriceChange("min", Number(e.target.value))
-                }
+                onChange={(e) => handlePriceChange("min", Number(e.target.value))}
                 className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
               />
             </div>
 
             {/* Price Range Slider */}
             <div className="flex-1 col-span-1 sm:col-span-2 lg:col-span-1">
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
+              <label htmlFor="filter-price-range" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                 {t("filters.range")}
               </label>
               <div className="relative pt-1 sm:pt-2">
                 <input
+                  id="filter-price-range"
                   type="range"
                   min="0"
                   max="100000"
                   value={filters.minPrice}
-                  onChange={(e) =>
-                    handlePriceChange("min", Number(e.target.value))
-                  }
+                  onChange={(e) => handlePriceChange("min", Number(e.target.value))}
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
                 />
               </div>
@@ -243,15 +243,14 @@ export default function FilterSection() {
 
             {/* Max Price */}
             <div className="flex-1">
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
+              <label htmlFor="filter-max-price" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                 {t("filters.max")}
               </label>
               <input
+                id="filter-max-price"
                 type="number"
                 value={filters.maxPrice}
-                onChange={(e) =>
-                  handlePriceChange("max", Number(e.target.value))
-                }
+                onChange={(e) => handlePriceChange("max", Number(e.target.value))}
                 className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
               />
             </div>

@@ -3,14 +3,17 @@
 import Link from "@/components/LocalizedLink";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
+import dynamic from "next/dynamic";
 import FilterSection from "@/components/FilterSection";
-import PropertyListings from "@/components/PropertyListings";
-import CityExplorer from "@/components/CityExplorer";
-import WhyChooseUs from "@/components/WhyChooseUs";
-import RentingExperience from "@/components/RentingExperience";
-import OwnerSection from "@/components/OwnerSection";
-import CallToActionCards from "@/components/CallToActionCards";
-import SubscribeSection from "@/components/SubscribeSection";
+
+// Lazy-load below-the-fold sections — keeps main-thread parse cost off the critical path
+const PropertyListings = dynamic(() => import("@/components/PropertyListings"), { ssr: false });
+const CityExplorer     = dynamic(() => import("@/components/CityExplorer"),     { ssr: false });
+const WhyChooseUs      = dynamic(() => import("@/components/WhyChooseUs"),      { ssr: false });
+const RentingExperience= dynamic(() => import("@/components/RentingExperience"),{ ssr: false });
+const OwnerSection     = dynamic(() => import("@/components/OwnerSection"),     { ssr: false });
+const CallToActionCards= dynamic(() => import("@/components/CallToActionCards"),{ ssr: false });
+const SubscribeSection = dynamic(() => import("@/components/SubscribeSection"), { ssr: false });
 
 export default function HomePage() {
   const { t } = useLanguage();
@@ -26,67 +29,29 @@ export default function HomePage() {
         }}
       >
         {/* Animated Overlay */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/50 to-black/60"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1 }}
-        />
-
-        {/* Subtle background zoom */}
-        <motion.div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage:
-              "url('/homebg.png')",
-            zIndex: -1,
-          }}
-          initial={{ scale: 1.08 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 1.8, ease: "easeOut" }}
-        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/50 to-black/60" />
 
         {/* Content */}
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-20 md:py-24 pb-20 sm:pb-24">
           <div className="text-center space-y-4 sm:space-y-6">
             {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: -16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 text-white/90 text-sm font-medium"
-            >
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 text-white/90 text-sm font-medium animate-fade-in">
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
               {t("home.heroBadge")}
-            </motion.div>
+            </div>
 
             {/* Heading */}
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.65, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
-              className="text-3xl esm:text-4xl sm:text-5xl md:text-6xl font-bold text-white drop-shadow-lg px-2"
-            >
+            <h1 className="text-3xl esm:text-4xl sm:text-5xl md:text-6xl font-bold text-white drop-shadow-lg px-2 animate-fade-in-up">
               {t("home.title")}
-            </motion.h1>
+            </h1>
 
             {/* Subtitle */}
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.42, ease: "easeOut" }}
-              className="text-sm esm:text-base sm:text-lg md:text-xl text-white/90 max-w-2xl mx-auto drop-shadow px-4"
-            >
+            <p className="text-sm esm:text-base sm:text-lg md:text-xl text-white/90 max-w-2xl mx-auto drop-shadow px-4 animate-fade-in-up [animation-delay:150ms]">
               {t("home.subtitle")}
-            </motion.p>
+            </p>
 
             {/* Buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.58, ease: "easeOut" }}
-              className="flex flex-col esm:flex-row gap-3 sm:gap-4 justify-center items-center mt-6 sm:mt-8 px-6 esm:px-0"
-            >
+            <div className="flex flex-col esm:flex-row gap-3 sm:gap-4 justify-center items-center mt-6 sm:mt-8 px-6 esm:px-0 animate-fade-in-up [animation-delay:280ms]">
               <Link href="/signup" className="w-full esm:w-auto">
                 <motion.button
                   whileHover={{ scale: 1.06, y: -2, boxShadow: "0 12px 32px rgba(0,0,0,0.25)" }}
@@ -107,7 +72,7 @@ export default function HomePage() {
                   {t("home.browseListing")}
                 </motion.button>
               </Link>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>

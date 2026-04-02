@@ -22,6 +22,8 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="icon" href="/favicon.png" type="image/png" className="bg-white!" />
+        <link rel="preconnect" href="https://res.cloudinary.com" />
+        <link rel="dns-prefetch" href="https://res.cloudinary.com" />
         <title>StayBuddy - Find Your Perfect Stay</title>
         <meta name="description" content="Premium rental marketplace for PG and tenant listings" />
       </head>

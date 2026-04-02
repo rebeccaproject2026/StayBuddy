@@ -157,10 +157,10 @@ export default function PropertyListings() {
           </div>
           {/* Arrows */}
           <div className="flex gap-2 flex-shrink-0">
-            <button onClick={() => scroll("left")} className="w-9 h-9 flex items-center justify-center rounded-full border-2 border-gray-300 hover:border-primary hover:bg-primary/10 transition-all">
+            <button onClick={() => scroll("left")} aria-label="Scroll left" className="w-9 h-9 flex items-center justify-center rounded-full border-2 border-gray-300 hover:border-primary hover:bg-primary/10 transition-all">
               <ChevronLeft className="w-5 h-5 text-gray-700" />
             </button>
-            <button onClick={() => scroll("right")} className="w-9 h-9 flex items-center justify-center rounded-full border-2 border-gray-300 hover:border-primary hover:bg-primary/10 transition-all">
+            <button onClick={() => scroll("right")} aria-label="Scroll right" className="w-9 h-9 flex items-center justify-center rounded-full border-2 border-gray-300 hover:border-primary hover:bg-primary/10 transition-all">
               <ChevronRight className="w-5 h-5 text-gray-700" />
             </button>
           </div>
