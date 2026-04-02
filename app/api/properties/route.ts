@@ -6,16 +6,10 @@ import cloudinary from '@/lib/cloudinary';
 import { authenticateUser } from '@/lib/auth-middleware';
 import { propertySchema } from '@/lib/validation';
 import { sendPropertyRequestEmail } from '@/lib/email';
-import { notifyNewProperty } from '@/app/api/admin/property-events/route';
+import { notifyNewProperty } from '@/lib/sse-events';
 
 // Increase body size limit for image uploads
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '50mb',
-    },
-  },
-};
+export const maxDuration = 60;
 
 // ─── Cloudinary helpers ──────────────────────────────────────────────────────
 

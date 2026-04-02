@@ -2,24 +2,9 @@ import { NextRequest } from 'next/server';
 import { verifyToken } from '@/lib/jwt';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
+import { addSseClient, removeSseClient } from '@/lib/sse-events';
 
 export const dynamic = 'force-dynamic';
-
-const clients = new Set<ReadableStreamDefaultController>();
-
-export function notifyNewProperty() {
-  const data = `data: ${JSON.stringify({ type: 'new_property', ts: Date.now() })}\n\n`;
-  clients.forEach(ctrl => {
-    try { ctrl.enqueue(new TextEncoder().encode(data)); } catch { /* disconnected */ }
-  });
-}
-
-export function notifyNewLead() {
-  const data = `data: ${JSON.stringify({ type: 'new_lead', ts: Date.now() })}\n\n`;
-  clients.forEach(ctrl => {
-    try { ctrl.enqueue(new TextEncoder().encode(data)); } catch { /* disconnected */ }
-  });
-}
 
 export async function GET(req: NextRequest) {
   // Auth via query param (EventSource can't set headers)
@@ -42,11 +27,11 @@ export async function GET(req: NextRequest) {
   const stream = new ReadableStream({
     start(ctrl) {
       controller = ctrl;
-      clients.add(ctrl);
+      addSseClient(ctrl);
       ctrl.enqueue(new TextEncoder().encode(': connected\n\n'));
     },
     cancel() {
-      clients.delete(controller);
+      removeSseClient(controller);
     },
   });
 
@@ -60,7 +45,7 @@ export async function GET(req: NextRequest) {
 
   req.signal.addEventListener('abort', () => {
     clearInterval(ping);
-    clients.delete(controller);
+    removeSseClient(controller);
   });
 
   return new Response(stream, {

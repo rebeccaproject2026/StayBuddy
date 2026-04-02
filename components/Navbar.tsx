@@ -8,6 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useParams, useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const dropdownVariants = {
   hidden: { opacity: 0, y: -8, scale: 0.97 },
@@ -34,12 +35,11 @@ export default function Navbar() {
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [notifCount, setNotifCount] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [listingLoading, setListingLoading] = useState(false);
 
   const { language, setLanguage, t } = useLanguage();
-  const { user, isAuthenticated, logout, isLoading } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const params = useParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -60,6 +60,14 @@ export default function Navbar() {
   const isCountryMatch = !user || !urlCountry || user.country === urlCountry;
   const effectivelyAuthenticated = isAuthenticated && isCountryMatch;
 
+  // Live notification count via WebSocket (falls back to 30s polling)
+  const notifToken = mounted ? (localStorage.getItem("staybuddy_token") ?? null) : null;
+  const { count: notifCount } = useNotifications({
+    userId: effectivelyAuthenticated && (user?.role === "landlord" || user?.role === "renter") ? (user as any)?._id ?? null : null,
+    token: notifToken,
+    enabled: mounted && effectivelyAuthenticated && (user?.role === "landlord" || user?.role === "renter"),
+  });
+
   const langMenuRef = useRef<HTMLDivElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const langMenuButtonRef = useRef<HTMLButtonElement>(null);
@@ -79,25 +87,6 @@ export default function Navbar() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  useEffect(() => {
-    if (!isAuthenticated || !user || !isCountryMatch || (user.role !== "landlord" && user.role !== "renter")) {
-      setNotifCount(0);
-      return;
-    }
-    const fetchCount = () => {
-      const token = typeof window !== "undefined" ? localStorage.getItem("staybuddy_token") : null;
-      fetch("/api/notifications/count", {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      })
-        .then(r => r.json())
-        .then(data => { if (data.success) setNotifCount(data.total ?? 0); })
-        .catch(() => {});
-    };
-    fetchCount();
-    const interval = setInterval(fetchCount, 30000);
-    return () => clearInterval(interval);
-  }, [isAuthenticated, user, isCountryMatch]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {

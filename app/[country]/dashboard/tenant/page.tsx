@@ -8,6 +8,9 @@ import { useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
 import Image from "next/image";
 import toast from "react-hot-toast";
+import { AnimatePresence } from "framer-motion";
+import ChatPanel from "@/components/ChatPanel";
+import { useNotifications } from "@/hooks/useNotifications";
 import {
   Heart,
   MessageSquare,
@@ -264,50 +267,43 @@ export default function TenantDashboard() {
     }
   }, [seenCounts]);
 
-  // Poll all requests for new messages (every 15s)
-  useEffect(() => {
-    if (!isAuthenticated || !token || user?.role !== 'renter') return;
-    if (myRequests.length === 0) return;
-
-    const poll = async () => {
+  // Live notifications via WebSocket — update unread counts when a new message arrives
+  useNotifications({
+    userId: isAuthenticated && user?.role === 'renter' ? (user as any)?._id ?? null : null,
+    token: token !== 'nextauth' ? token : null,
+    enabled: isAuthenticated && user?.role === 'renter',
+    onNotification: ({ requestId: reqId }) => {
       const seen: Record<string, number> = JSON.parse(localStorage.getItem('staybuddy_seen') || '{}');
-      for (const req of myRequests) {
-        try {
-          const res = await fetch(`/api/messages/${req._id}`, {
-            headers: token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {},
-          });
-          const data = await res.json();
-          if (data.success && data.messages?.length > 0) {
-            const msgs: any[] = data.messages;
-            const last = msgs[msgs.length - 1];
-            const ownerMsgCount = msgs.filter((m: any) => m.senderRole === 'landlord').length;
-            const isConversationOpen = chatRequest?._id === req._id;
-
-            setConversations(prev => ({
+      const authToken = token !== 'nextauth' ? token : null;
+      fetch(`/api/messages/${reqId}`, {
+        headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (!data.success || !data.messages?.length) return;
+          const msgs: any[] = data.messages;
+          const last = msgs[msgs.length - 1];
+          const ownerMsgCount = msgs.filter((m: any) => m.senderRole === 'landlord').length;
+          const isConversationOpen = chatRequest?._id === reqId;
+          setConversations(prev => ({
+            ...prev,
+            [reqId]: {
+              lastMsg: last.text,
+              time: last.createdAt,
+              senderName: last.senderName,
+              unread: !isConversationOpen && ownerMsgCount > (seen[reqId] ?? 0),
+            },
+          }));
+          if (!isConversationOpen) {
+            setUnreadCounts(prev => ({
               ...prev,
-              [req._id]: {
-                lastMsg: last.text,
-                time: last.createdAt,
-                senderName: last.senderName,
-                unread: !isConversationOpen && ownerMsgCount > (seen[req._id] ?? 0),
-              },
+              [reqId]: Math.max(0, ownerMsgCount - (seen[reqId] ?? 0)),
             }));
-
-            if (!isConversationOpen) {
-              setUnreadCounts(prev => ({
-                ...prev,
-                [req._id]: Math.max(0, ownerMsgCount - (seen[req._id] ?? 0)),
-              }));
-            }
           }
-        } catch {}
-      }
-    };
-
-    poll();
-    const interval = setInterval(poll, 15000);
-    return () => clearInterval(interval);
-  }, [isAuthenticated, token, user?.role, myRequests, chatRequest]);
+        })
+        .catch(() => {});
+    },
+  });
 
   const openChat = async (req: any) => {
     setChatRequest(req);
@@ -1084,85 +1080,28 @@ export default function TenantDashboard() {
         </div>
       </div>
 
-      {/* Chat Modal */}
-      {chatRequest && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-          <div className="absolute inset-0 bg-black/50" onClick={closeChat} />
-          <div className={`relative rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg flex flex-col ${isDark ? "bg-gray-900" : "bg-white"}`} style={{ height: '92vh', maxHeight: '600px' }}>
-            {/* Header */}
-            <div className={`flex items-center gap-3 p-4 border-b flex-shrink-0 ${isDark ? "border-gray-800" : "border-gray-200"}`}>
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className={`font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{chatRequest.propertyTitle}</p>
-                <p className="text-xs text-gray-500 truncate">{(chatRequest.owner as any)?.fullName || (language === 'fr' ? 'Propriétaire' : 'Owner')}</p>
-              </div>
-              <button onClick={deleteChat} className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-red-500/10" : "hover:bg-red-50"}`} title={language === 'fr' ? 'Supprimer la conversation' : 'Delete conversation'}>
-                <Trash2 className="w-4 h-4 text-red-400" />
-              </button>
-              <button onClick={closeChat} className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"}`}>
-                <X className={`w-5 h-5 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
-              </button>
-            </div>
-
-            {/* TTL notice */}
-            <div className={`px-4 py-2 border-b flex-shrink-0 ${isDark ? "bg-amber-500/10 border-amber-500/20" : "bg-amber-50 border-amber-100"}`}>
-              <p className={`text-xs text-center ${isDark ? "text-amber-400" : "text-amber-700"}`}>
-                {language === 'fr' ? '⏳ Les messages sont automatiquement supprimés après 7 jours.' : '⏳ Messages are automatically cleared after 7 days.'}
-              </p>
-            </div>
-
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {chatLoading ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                </div>
-              ) : chatMessages.length === 0 ? (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-400 text-sm">{language === 'fr' ? 'Aucun message. Commencez la conversation.' : 'No messages yet. Start the conversation.'}</p>
-                </div>
-              ) : (
-                chatMessages.map((msg: any) => {
-                  const isMe = msg.senderRole === 'renter';
-                  return (
-                    <div key={msg._id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${isMe ? 'bg-primary text-white rounded-br-sm' : isDark ? 'bg-gray-800 text-gray-100 rounded-bl-sm' : 'bg-gray-100 text-gray-900 rounded-bl-sm'}`}>
-                        <p>{msg.text}</p>
-                        <p className={`text-xs mt-1 ${isMe ? 'text-white/70' : 'text-gray-400'}`}>
-                          {new Date(msg.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            {/* Input */}
-            <div className={`p-4 border-t flex-shrink-0 ${isDark ? "border-gray-800" : "border-gray-200"}`}>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={chatInput}
-                  onChange={e => setChatInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); } }}
-                  placeholder={language === 'fr' ? 'Écrire un message...' : 'Type a message...'}
-                  className={`flex-1 px-4 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm ${isDark ? "bg-gray-800 border-gray-700 text-white placeholder-gray-500" : "bg-white border-gray-300 text-gray-900"}`}
-                />
-                <button
-                  onClick={sendChatMessage}
-                  disabled={chatSending || !chatInput.trim()}
-                  className="px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors disabled:opacity-50 flex items-center gap-1.5"
-                >
-                  <Send className="w-4 h-4" />
-                </button>
-              </div>
+      {/* Chat Modal — WebSocket powered */}
+      <AnimatePresence>
+        {chatRequest && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
+            <div className="absolute inset-0 bg-black/50" onClick={closeChat} />
+            <div className="relative w-full sm:max-w-lg">
+              <ChatPanel
+                requestId={chatRequest._id}
+                propertyTitle={chatRequest.propertyTitle}
+                otherPartyName={(chatRequest.owner as any)?.fullName || (language === 'fr' ? 'Propriétaire' : 'Owner')}
+                userId={user?.id || ''}
+                token={token}
+                userRole="renter"
+                isDark={isDark}
+                language={language}
+                onClose={closeChat}
+                onDelete={deleteChat}
+              />
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 }

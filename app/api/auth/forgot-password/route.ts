@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     // Generate reset token
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenExpiry = Date.now() + 3600000; // 1 hour
+    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
 
     // Store reset token in user document (in production, use Redis or similar)
     user.resetPasswordToken = resetToken;
