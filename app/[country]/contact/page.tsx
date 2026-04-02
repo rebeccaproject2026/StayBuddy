@@ -148,12 +148,12 @@ export default function ContactPage() {
       {/* ── Hero ── */}
       <div
         className="relative min-h-[420px] sm:min-h-[480px] bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=2073&auto=format&fit=crop')" }}
+        style={{ backgroundImage: "url('/contactb.png')" }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-black/75 via-black/60 to-primary/40" />
         <motion.div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=2073&auto=format&fit=crop')", zIndex: -1 }}
+          style={{ backgroundImage: "url('/contactb.png')", zIndex: -1 }}
           initial={{ scale: 1.07 }}
           animate={{ scale: 1 }}
           transition={{ duration: 2, ease: "easeOut" }}

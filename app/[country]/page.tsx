@@ -22,7 +22,7 @@ export default function HomePage() {
         className="relative min-h-[420px] sm:min-h-[450px] bg-cover bg-center bg-no-repeat overflow-hidden"
         style={{
           backgroundImage:
-            "url('https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop')",
+            "url('/homebg.png')",
         }}
       >
         {/* Animated Overlay */}
@@ -38,7 +38,7 @@ export default function HomePage() {
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage:
-              "url('https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop')",
+              "url('/homebg.png')",
             zIndex: -1,
           }}
           initial={{ scale: 1.08 }}
@@ -114,8 +114,6 @@ export default function HomePage() {
 
       {/* Filter Section */}
       <FilterSection />
-
-      
 
       {/* Property Listings */}
       <PropertyListings />

@@ -70,12 +70,12 @@ export default function AboutPage() {
       {/* ── Hero ── */}
       <div
         className="relative min-h-[520px] sm:min-h-[580px] bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1582407947304-fd86f028f716?q=80&w=2096&auto=format&fit=crop')" }}
+        style={{ backgroundImage: "url('/aboutbg.png')" }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-black/75 via-black/60 to-primary/40" />
         <motion.div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1582407947304-fd86f028f716?q=80&w=2096&auto=format&fit=crop')", zIndex: -1 }}
+          style={{ backgroundImage: "url('/aboutbg.png')", zIndex: -1 }}
           initial={{ scale: 1.08 }}
           animate={{ scale: 1 }}
           transition={{ duration: 2, ease: "easeOut" }}
@@ -196,7 +196,7 @@ export default function AboutPage() {
             <motion.div {...fadeUp(0.15)} className="relative">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/3]">
                 <img
-                  src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=1200&auto=format&fit=crop"
+                  src="/homebg.png"
                   alt="Mission"
                   className="w-full h-full object-cover"
                 />
@@ -386,7 +386,7 @@ export default function AboutPage() {
             <motion.div {...fadeUp(0.1)} className="order-2 lg:order-1 relative">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/3]">
                 <img
-                  src="https://images.unsplash.com/photo-1486325212027-8081e485255e?q=80&w=1200&auto=format&fit=crop"
+                  src="/about2.png"
                   alt="Vision"
                   className="w-full h-full object-cover"
                 />

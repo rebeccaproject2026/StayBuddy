@@ -113,19 +113,19 @@ export default function CityExplorer() {
   const country = params?.country as string;
 
   const indianCities = [
-    { name: "Ahmedabad", image: "https://images.unsplash.com/photo-1580655653885-65763b2597d0", size: "large" as const, trending: true },
-    { name: "Surat", image: "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?q=80&w=2070&auto=format&fit=crop", size: "medium" as const },
-    { name: "Vadodara", image: "https://images.unsplash.com/photo-1587474260584-136574528ed5?q=80&w=2070&auto=format&fit=crop", size: "medium" as const, trending: true },
-    { name: "Gandhinagar", image: "https://images.unsplash.com/photo-1596176530529-78163a4f7af2?q=80&w=2070&auto=format&fit=crop", size: "small" as const },
-    { name: "Rajkot", image: "https://images.unsplash.com/photo-1595658658481-d53d3f999875?q=80&w=2070&auto=format&fit=crop", size: "small" as const },
+    { name: "Ahmedabad", image: "/ahmedabad.png", size: "large" as const, trending: true },
+    { name: "Gandhinagar", image: "/gandhinagar.png", size: "small" as const },
+    { name: "Surat", image: "/surat.png", size: "medium" as const },
+    { name: "Vadodara", image: "/vadodara.png", size: "medium" as const, trending: true },
+    { name: "Rajkot", image: "/rajkot.png", size: "small" as const },
   ];
 
   const frenchCities = [
-    { name: "Paris", image: "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=2020&auto=format&fit=crop", size: "large" as const, trending: true },
-    { name: "Lyon", image: "https://images.unsplash.com/photo-1524484485831-a92ffc0de03f?q=80&w=2069&auto=format&fit=crop", size: "medium" as const },
-    { name: "Marseille", image: "https://images.unsplash.com/photo-1516912481808-3406841bd33c?q=80&w=2044&auto=format&fit=crop", size: "medium" as const, trending: true },
-    { name: "Toulouse", image: "https://images.unsplash.com/photo-1562979314-bee7453e911c?q=80&w=2070&auto=format&fit=crop", size: "small" as const },
-    { name: "Nice", image: "https://images.unsplash.com/photo-1533929736458-ca588d08c8be?q=80&w=2070&auto=format&fit=crop", size: "small" as const },
+    { name: "Paris", image: "/paris.png", size: "large" as const, trending: true },
+    { name: "Lyon", image: "/lyon.png", size: "medium" as const },
+    { name: "Marseille", image: "/Marseille.png", size: "medium" as const, trending: true },
+    { name: "Toulouse", image: "/Toulouse.png", size: "small" as const },
+    { name: "Nice", image: "/Nice.png", size: "small" as const },
   ];
 
   const baseCities = country === "fr" ? frenchCities : indianCities;
