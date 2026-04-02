@@ -94,7 +94,7 @@ export async function PUT(
     }
 
     // Upload simple string image arrays
-    const simpleArrayFields = ['kitchenImages', 'washroomImages', 'commonAreaImages', 'tenantKitchenImages', 'tenantWashroomImages', 'tenantCommonAreaImages'];
+    const simpleArrayFields = ['kitchenImages', 'washroomImages', 'commonAreaImages', 'tenantKitchenImages', 'tenantWashroomImages', 'tenantCommonAreaImages', 'verificationImages'];
     for (const field of simpleArrayFields) {
       if (Array.isArray(body[field])) {
         body[field] = await Promise.all(

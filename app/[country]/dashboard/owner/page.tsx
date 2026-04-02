@@ -405,6 +405,9 @@ export default function OwnerDashboard() {
   // Room images (PG: {id,name,status,image} / Tenant: {id,name,image})
   const [editRoomImages, setEditRoomImages] = useState<any[]>([]);
   const [editRoomNewFiles, setEditRoomNewFiles] = useState<File[]>([]);
+  // Verification document images
+  const [editVerifImages, setEditVerifImages] = useState<string[]>([]);
+  const [editVerifNewFiles, setEditVerifNewFiles] = useState<File[]>([]);
 
   // Chat state
   const [chatRequest, setChatRequest] = useState<any | null>(null); // inquiry being chatted
@@ -839,6 +842,8 @@ export default function OwnerDashboard() {
     setEditCatNewFiles({ kitchen: [], washroom: [], commonArea: [] });
     setEditRoomImages(listing.propertyType === 'PG' ? (listing.roomImages || []) : (listing.tenantRoomImages || []));
     setEditRoomNewFiles([]);
+    setEditVerifImages(listing.verificationImages || []);
+    setEditVerifNewFiles([]);
     setEditingListing(listing);
   };
 
@@ -851,6 +856,8 @@ export default function OwnerDashboard() {
     setEditCatNewFiles({ kitchen: [], washroom: [], commonArea: [] });
     setEditRoomImages([]);
     setEditRoomNewFiles([]);
+    setEditVerifImages([]);
+    setEditVerifNewFiles([]);
   };
 
   const saveEdit = async () => {
@@ -883,6 +890,10 @@ export default function OwnerDashboard() {
       ...roomNewBase64.map((img, i) => ({ id: `new-${Date.now()}-${i}`, name: `Room ${editRoomImages.length + i + 1}`, image: img })),
     ];
 
+    // Verification images
+    const verifNewBase64 = await Promise.all(editVerifNewFiles.map(toBase64));
+    const mergedVerifImages = [...editVerifImages, ...verifNewBase64];
+
     const isPG = editForm.propertyType === 'PG';
 
     const updates: Record<string, any> = {
@@ -901,6 +912,7 @@ export default function OwnerDashboard() {
       availableFrom: editForm.availableFrom.trim(),
       pgDescription: editForm.pgDescription.trim(),
       images: mergedImages,
+      ...(mergedVerifImages.length > 0 ? { verificationImages: mergedVerifImages } : {}),
       ...(isPG ? {
         kitchenImages: [...editCatImages.kitchen, ...kitchenNew],
         washroomImages: [...editCatImages.washroom, ...washroomNew],
@@ -1142,6 +1154,41 @@ export default function OwnerDashboard() {
             {/* My Listings */}
             {activeTab === "listings" && (
               <div className="space-y-6">
+
+                {/* ── Verification document nudge ── */}
+                {!listingsLoading && myListings.some(l => !l.verificationImages?.length) && (() => {
+                  const missing = myListings.filter(l => !l.verificationImages?.length);
+                  return (
+                    <div className={`px-4 py-3.5 rounded-2xl border space-y-2.5 ${isDark ? "bg-amber-500/10 border-amber-500/30" : "bg-amber-50 border-amber-200"}`}>
+                      <div className="flex items-center gap-2">
+                        <span className="text-amber-500 text-base leading-none">⚠</span>
+                        <p className={`text-sm font-semibold ${isDark ? "text-amber-400" : "text-amber-700"}`}>
+                          {language === "fr" ? "Documents de vérification manquants" : "Verification documents missing"}
+                        </p>
+                      </div>
+                      <p className={`text-xs ${isDark ? "text-amber-500/80" : "text-amber-600"}`}>
+                        {language === "fr"
+                          ? "Les annonces suivantes n'ont pas de documents de vérification :"
+                          : "The following listings are missing verification documents. Click a listing to upload:"}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {missing.map((l: any) => (
+                          <button
+                            key={l._id}
+                            onClick={() => openEdit(l)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${isDark ? "bg-amber-500/20 border-amber-500/30 text-amber-300 hover:bg-amber-500/30" : "bg-white border-amber-300 text-amber-700 hover:bg-amber-100"}`}
+                          >
+                            <span className="truncate max-w-[160px]">{l.propertyType === "PG" ? (l.pgName || l.title) : (l.societyName || l.title)}</span>
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isDark ? "bg-amber-500/30 text-amber-400" : "bg-amber-100 text-amber-600"}`}>
+                              {language === "fr" ? "Modifier" : "Upload"}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
                   <h2 className={`text-lg sm:text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{tc.myListings}</h2>
                   <div className="flex items-center gap-2">
@@ -1207,7 +1254,7 @@ export default function OwnerDashboard() {
                               {editingListing.propertyType}
                             </span>
                             <span className={`text-base font-bold truncate max-w-xs ${isDark ? "text-white" : "text-gray-900"}`}>
-                              {editingListing.title}
+                              {editingListing.propertyType === "PG" ? (editingListing.pgName || editingListing.title) : (editingListing.societyName || editingListing.title)}
                             </span>
                           </div>
                           <span className="ml-auto text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full">
@@ -2029,6 +2076,58 @@ export default function OwnerDashboard() {
 
                             </div>
                           </div>
+
+                          {/* ── Section: Verification Documents ── */}
+                          {editVerifImages.length === 0 ? (
+                            <div className={`rounded-2xl p-4 sm:p-5 space-y-4 border-2 border-dashed ${isDark ? "bg-gray-800 border-amber-500/30" : "bg-amber-50 border-amber-300"}`}>
+                              <h3 className="text-sm font-bold text-amber-600 uppercase tracking-wide flex items-center gap-2">
+                                <span className="w-1 h-4 bg-amber-500 rounded-full inline-block" />
+                                Verification Documents
+                                <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full ${isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-100 text-amber-700"}`}>
+                                  Not uploaded
+                                </span>
+                              </h3>
+                              <p className={`text-xs leading-relaxed ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                                Upload ownership proof, rent agreement, or any document that verifies this property. This helps get your listing verified faster.
+                              </p>
+
+                              {editVerifNewFiles.length > 0 && (
+                                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                  {editVerifNewFiles.map((file, i) => (
+                                    <div key={i} className="relative aspect-square rounded-xl overflow-hidden border-2 border-amber-300 group">
+                                      <Image src={URL.createObjectURL(file)} alt={`doc ${i + 1}`} fill className="object-cover" />
+                                      <button
+                                        type="button"
+                                        onClick={() => setEditVerifNewFiles(p => p.filter((_, idx) => idx !== i))}
+                                        className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                      >×</button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              <label className={`flex items-center gap-2 px-4 py-3 border-2 border-dashed rounded-xl cursor-pointer hover:border-amber-400 transition-colors text-sm ${isDark ? "border-amber-500/30 text-amber-400 bg-gray-900" : "border-amber-300 text-amber-600 bg-white"}`}>
+                                <Plus className="w-4 h-4" />
+                                {editVerifNewFiles.length > 0 ? `${editVerifNewFiles.length} file(s) selected — add more` : "Upload verification documents"}
+                                <input
+                                  type="file"
+                                  accept="image/*,.pdf"
+                                  multiple
+                                  className="hidden"
+                                  onChange={e => {
+                                    setEditVerifNewFiles(p => [...p, ...Array.from(e.target.files || [])]);
+                                    e.target.value = "";
+                                  }}
+                                />
+                              </label>
+                            </div>
+                          ) : (
+                            <div className={`rounded-2xl p-4 sm:p-5 flex items-center gap-3 border ${isDark ? "bg-gray-800 border-gray-700" : "bg-green-50 border-green-200"}`}>
+                              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${isDark ? "bg-green-500/20 text-green-400" : "bg-green-100 text-green-700"}`}>
+                                ✓ Verification documents already uploaded
+                              </span>
+                            </div>
+                          )}
 
                           {editError && (
                             <div className={`flex items-center gap-2 px-4 py-3 border rounded-xl text-sm text-red-600 ${isDark ? "bg-red-900/20 border-red-800/30" : "bg-red-50 border-red-200"}`}>

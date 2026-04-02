@@ -66,8 +66,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         localStorage.removeItem('staybuddy_user');
       }
     }
-    // Always resolve loading immediately from localStorage — don't wait for NextAuth
-    setIsLoading(false);
+    // Only resolve loading immediately for credentials users (localStorage token found).
+    // For Google/NextAuth users there is no localStorage token — keep isLoading=true
+    // until the NextAuth session status resolves (handled in the second useEffect).
+    if (storedToken) {
+      setIsLoading(false);
+    }
   }, []);
 
   // Load user data from localStorage and NextAuth session
@@ -147,6 +151,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     if (status !== 'loading') {
       loadUserData();
+    } else {
+      // NextAuth is still resolving — keep isLoading true (already set)
     }
   }, [session, status]);
 
