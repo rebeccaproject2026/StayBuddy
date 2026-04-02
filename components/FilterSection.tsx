@@ -70,8 +70,11 @@ export default function FilterSection() {
   const cityOptions = country === 'in' || country === 'india' ? indiaCities : franceCities;
 
   const getTranslatedOption = (option: string): string => {
-    const key = option.toLowerCase();
-    return t(`filters.${key}`) || option;
+    // Normalize key: lowercase, strip spaces/hyphens for lookup
+    const key = option.toLowerCase().replace(/\s+/g, "").replace(/-/g, "");
+    const translated = t(`filters.${key}`);
+    // t() returns the key itself if not found, so check against the dotted key
+    return translated !== `filters.${key}` ? translated : option;
   };
 
   const handleSearch = () => {
@@ -182,7 +185,7 @@ export default function FilterSection() {
                 value={filters.search}
                 onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                placeholder="Search by property name or city..."
+                placeholder={t("filters.searchPlaceholder")}
                 className="w-full pl-9 sm:pl-11 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 outline-none"
               />
             </div>
@@ -307,7 +310,7 @@ export default function FilterSection() {
                               : "bg-white text-gray-700 border-gray-200 hover:bg-primary-light"
                           }`}
                         >
-                          {option}
+                          {getTranslatedOption(option)}
                         </motion.button>
                       ))}
                     </div>
@@ -337,7 +340,7 @@ export default function FilterSection() {
                             : "bg-white text-gray-700 border-gray-200 hover:bg-primary-light"
                         }`}
                       >
-                        {option}
+                        {getTranslatedOption(option)}
                       </motion.button>
                     ))}
                   </div>
@@ -400,7 +403,7 @@ export default function FilterSection() {
                               : "bg-white text-gray-700 border-gray-200 hover:bg-primary-light"
                           }`}
                         >
-                          {option}
+                          {getTranslatedOption(option)}
                         </motion.button>
                       ))}
                     </div>
@@ -410,7 +413,7 @@ export default function FilterSection() {
                 {/* City Filter */}
                 <div>
                   <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">
-                    {"City"}
+                    {t("filters.city")}
                   </h3>
                   <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {cityOptions.map((option) => (

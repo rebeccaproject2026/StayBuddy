@@ -1219,14 +1219,14 @@ export default function OwnerDashboard() {
                         <List className="w-4 h-4" />
                       </button>
                     </div>
-                    <Link
-                      href="/post-property"
+                    <button
+                      onClick={() => router.push(`/${user?.country || 'in'}/post-property`)}
                       className="flex items-center gap-1.5 px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-xs sm:text-sm font-medium"
                     >
                       <Plus className="w-4 h-4" />
                       <span className="hidden sm:inline">{tc.addNewListing}</span>
                       <span className="sm:hidden">{language === "fr" ? "Ajouter" : "Add"}</span>
-                    </Link>
+                    </button>
                   </div>
                 </div>
 

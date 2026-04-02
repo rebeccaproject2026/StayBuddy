@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Property from '@/models/Property';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/properties/city-stats?country=in&cities=Ahmedabad,Surat,Vadodara
 export async function GET(req: NextRequest) {
   try {

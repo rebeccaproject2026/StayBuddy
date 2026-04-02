@@ -76,7 +76,7 @@ export default function LoginPage() {
         const redirect = searchParams.get('redirect');
         setTimeout(() => {
           router.push(redirect || `/${country}`);
-        }, 1500);
+        }, 100);
       }
     } catch (error) {
       console.error('Login error:', error);

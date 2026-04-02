@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useParams } from "next/navigation";
 import { Mail, CheckCircle, AlertCircle, Bell, Sparkles, MapPin, Home } from "lucide-react";
 import { motion, useInView } from "framer-motion";
 
@@ -11,7 +12,10 @@ const CITIES: Record<string, string[]> = {
 };
 
 export default function SubscribeSection() {
-  const { language } = useLanguage();
+  const { language: ctxLanguage } = useLanguage();
+  const params = useParams();
+  // Derive language from URL country param — reliable even in lazy-loaded components
+  const language = (params?.country as string) === 'fr' ? 'fr' : ctxLanguage;
   const [email, setEmail] = useState("");
   const [city, setCity] = useState("");
   const [propertyType, setPropertyType] = useState<"" | "PG" | "Tenant">("");

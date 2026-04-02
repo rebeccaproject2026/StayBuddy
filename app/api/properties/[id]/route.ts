@@ -4,7 +4,7 @@ import Property from '@/models/Property';
 import User from '@/models/User';
 import cloudinary from '@/lib/cloudinary';
 import { authenticateUser } from '@/lib/auth-middleware';
-import { sendPropertyDeletedEmail } from '@/lib/email';
+import { sendPropertyDeletedEmail, sendVacancyAlert } from '@/lib/email';
 import mongoose from 'mongoose';
 
 // ─── GET /api/properties/[id] ────────────────────────────────────────────────
@@ -130,6 +130,49 @@ export async function PUT(
       { $set: body },
       { new: true, runValidators: true }
     ).lean();
+
+    // Fire vacancy alert if availability increased
+    // Check 1: top-level rooms count increased
+    const roomsIncreased =
+      typeof body.rooms === 'number' &&
+      typeof (property as any).rooms === 'number' &&
+      body.rooms > (property as any).rooms;
+
+    // Check 2: total availableBeds across roomDetails increased (PG bed availability)
+    let bedsIncreased = false;
+    if (body.roomDetails && (property as any).roomDetails) {
+      const sumBeds = (rd: Record<string, any>) =>
+        Object.values(rd).reduce((acc: number, cat: any) => {
+          const v = Number(cat?.availableBeds ?? cat?.availableRooms ?? 0);
+          return acc + (isNaN(v) ? 0 : v);
+        }, 0);
+      const oldTotal = sumBeds((property as any).roomDetails);
+      const newTotal = sumBeds(body.roomDetails);
+      bedsIncreased = newTotal > oldTotal;
+    } else if (body.roomDetails && !(property as any).roomDetails) {
+      // roomDetails didn't exist before — any beds are new availability
+      const sumBeds = (rd: Record<string, any>) =>
+        Object.values(rd).reduce((acc: number, cat: any) => {
+          const v = Number(cat?.availableBeds ?? cat?.availableRooms ?? 0);
+          return acc + (isNaN(v) ? 0 : v);
+        }, 0);
+      bedsIncreased = sumBeds(body.roomDetails) > 0;
+    }
+
+    if (
+      updated &&
+      (roomsIncreased || bedsIncreased) &&
+      (updated as any).approvalStatus === 'approved'
+    ) {
+      sendVacancyAlert({
+        _id: params.id,
+        title: (updated as any).title,
+        location: (updated as any).location,
+        price: (updated as any).price,
+        propertyType: (updated as any).propertyType,
+        country: (updated as any).country,
+      }).catch(err => console.error('[email] Vacancy alert failed:', err));
+    }
 
     return NextResponse.json({ success: true, property: updated });
   } catch (error: any) {

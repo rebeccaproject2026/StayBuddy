@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 interface Review {
   _id: string;
@@ -146,7 +147,11 @@ export default function ReviewSection({ propertyId, language = "en", country = "
             if (isAuthenticated) {
               setShowModal(true);
             } else {
-              router.push(`/${country}/login`);
+              toast.error(isFr ? "Connexion requise pour laisser un avis" : "Login required to write a review on this property", {
+                duration: 4000,
+                position: "top-center",
+              });
+              router.push(`/${country}/login?redirect=${encodeURIComponent(typeof window !== 'undefined' ? window.location.pathname : '')}`);
             }
           }}
           className="px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white font-semibold rounded-lg transition-colors text-sm border border-primary/20 hover:border-transparent whitespace-nowrap"

@@ -37,6 +37,8 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [listingLoading, setListingLoading] = useState(false);
+  const [navLoading, setNavLoading] = useState(false);
+  const [navDest, setNavDest] = useState("");
 
   const { language, setLanguage, t } = useLanguage();
   const { user, isAuthenticated, logout } = useAuth();
@@ -55,6 +57,21 @@ export default function Navbar() {
       setListingLoading(false);
       router.push(`/${urlCountry || 'in'}/post-property`);
     }, 2000);
+  };
+
+  const handleNavClick = (e: React.MouseEvent, path: string) => {
+    e.preventDefault();
+    setIsMobileMenuOpen(false);
+    // If path already includes country prefix, use as-is; otherwise prepend country
+    const dest = path.startsWith(`/${urlCountry || 'in'}/`) || path === `/${urlCountry || 'in'}`
+      ? path
+      : `/${urlCountry || 'in'}${path}`;
+    setNavDest(dest);
+    setNavLoading(true);
+    setTimeout(() => {
+      setNavLoading(false);
+      router.push(dest);
+    }, 1000);
   };
 
   const isCountryMatch = !user || !urlCountry || user.country === urlCountry;
@@ -200,6 +217,43 @@ export default function Navbar() {
                     className="w-2 h-2 rounded-full bg-accent"
                     animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
                     transition={{ duration: 0.8, repeat: Infinity }}
+                  />
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+        {navLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center gap-5"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="flex flex-col items-center gap-4"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center shadow-xl">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div className="text-center">
+                <p className="text-xl font-bold text-gray-900">
+                  {language === "fr" ? "Chargement..." : "Loading..."}
+                </p>
+              </div>
+              <div className="flex gap-1.5 mt-1">
+                {[0, 1, 2].map(i => (
+                  <motion.div
+                    key={i}
+                    className="w-2 h-2 rounded-full bg-primary"
+                    animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.15 }}
                   />
                 ))}
               </div>
@@ -354,22 +408,20 @@ export default function Navbar() {
                               { href: getProfileLink(), icon: <Settings className="w-4 h-4" />, label: "Profile Settings", badge: 0 },
                             ].map((item, i) => (
                               <motion.div key={item.href} custom={i} variants={dropdownItemVariants} initial="hidden" animate="visible">
-                                <Link href={item.href}>
-                                  <motion.button
-                                    onClick={() => setIsProfileMenuOpen(false)}
-                                    whileHover={{ x: 3 }}
-                                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-primary-light hover:text-primary transition-colors duration-200"
-                                  >
-                                    {item.icon}
-                                    <span className="font-medium text-sm flex-1 text-left">{item.label}</span>
-                                    {item.badge > 0 && (
-                                      <span className="min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
-                                        {item.badge > 99 ? "99+" : item.badge}
-                                      </span>
-                                    )}
-                                  </motion.button>
-                                </Link>
+                                <motion.button
+                                  onClick={(e) => { setIsProfileMenuOpen(false); handleNavClick(e, item.href); }}
+                                  whileHover={{ x: 3 }}
+                                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-primary-light hover:text-primary transition-colors duration-200"
+                                >
+                                  {item.icon}
+                                  <span className="font-medium text-sm flex-1 text-left">{item.label}</span>
+                                  {item.badge > 0 && (
+                                    <span className="min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                                      {item.badge > 99 ? "99+" : item.badge}
+                                    </span>
+                                  )}
+                                </motion.button>
                               </motion.div>
                             ))}
                             <motion.div custom={2} variants={dropdownItemVariants} initial="hidden" animate="visible">
@@ -390,24 +442,22 @@ export default function Navbar() {
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <Link href="/login">
-                      <motion.button
-                        whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                        className="px-3 py-2 text-gray-700 hover:text-primary rounded-lg hover:bg-primary-light font-semibold text-base transition-colors duration-200"
-                      >
-                        {t("nav.login")}
-                      </motion.button>
-                    </Link>
-                    <Link href="/signup">
-                      <motion.button
-                        whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                        className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium text-base shadow-md hover:shadow-lg transition-colors duration-200"
-                      >
-                        {t("nav.signup")}
-                      </motion.button>
-                    </Link>
+                    <motion.button
+                      onClick={() => router.push(`/${urlCountry || 'in'}/login`)}
+                      whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                      className="px-3 py-2 text-gray-700 hover:text-primary rounded-lg hover:bg-primary-light font-semibold text-base transition-colors duration-200"
+                    >
+                      {t("nav.login")}
+                    </motion.button>
+                    <motion.button
+                      onClick={() => router.push(`/${urlCountry || 'in'}/signup`)}
+                      whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                      className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium text-base shadow-md hover:shadow-lg transition-colors duration-200"
+                    >
+                      {t("nav.signup")}
+                    </motion.button>
                   </div>
                 )}
               </>
@@ -501,7 +551,7 @@ export default function Navbar() {
                     )}
 
                     {/* Dashboard */}
-                    <Link href={getDashboardLink()} onClick={() => setIsMobileMenuOpen(false)}>
+                    <button onClick={(e) => { setIsMobileMenuOpen(false); handleNavClick(e, getDashboardLink()); }} className="w-full text-left">
                       <div className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-700 hover:bg-primary-light hover:text-primary transition-colors">
                         <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
                         <span className="font-medium text-sm flex-1">{dashboardLabel}</span>
@@ -511,15 +561,15 @@ export default function Navbar() {
                           </span>
                         )}
                       </div>
-                    </Link>
+                    </button>
 
                     {/* Profile */}
-                    <Link href={getProfileLink()} onClick={() => setIsMobileMenuOpen(false)}>
+                    <button onClick={(e) => { setIsMobileMenuOpen(false); handleNavClick(e, getProfileLink()); }} className="w-full text-left">
                       <div className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-700 hover:bg-primary-light hover:text-primary transition-colors">
                         <Settings className="w-5 h-5 flex-shrink-0" />
                         <span className="font-medium text-sm">Profile Settings</span>
                       </div>
-                    </Link>
+                    </button>
 
                     {/* Logout */}
                     <button
@@ -532,16 +582,16 @@ export default function Navbar() {
                   </div>
                 ) : (
                   <div className="flex flex-col gap-2 px-3 pt-1 pb-2">
-                    <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                    <button onClick={() => { setIsMobileMenuOpen(false); router.push(`/${urlCountry || 'in'}/login`); }} className="w-full">
                       <div className="w-full text-center px-4 py-3 rounded-xl border-2 border-primary text-primary font-semibold text-sm hover:bg-primary-light transition-colors">
                         {t("nav.login")}
                       </div>
-                    </Link>
-                    <Link href="/signup" onClick={() => setIsMobileMenuOpen(false)}>
+                    </button>
+                    <button onClick={() => { setIsMobileMenuOpen(false); router.push(`/${urlCountry || 'in'}/signup`); }} className="w-full">
                       <div className="w-full text-center px-4 py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary-dark transition-colors shadow-md">
                         {t("nav.signup")}
                       </div>
-                    </Link>
+                    </button>
                   </div>
                 )}
               </div>
