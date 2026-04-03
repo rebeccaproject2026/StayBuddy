@@ -73,6 +73,7 @@ export default function PostPropertyPage() {
   
   // Step 2: Property Details (Tenant)
   const [flatsInProject, setFlatsInProject] = useState("");
+  const [bhk, setBhk] = useState("");
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
   const [balcony, setBalcony] = useState("");
@@ -185,6 +186,7 @@ export default function PostPropertyPage() {
     latitude: yup.string().trim().optional(),
     longitude: yup.string().trim().optional(),
     flatsInProject: yup.string().required("Please select number of flats in project"),
+    bhk: yup.string().required("Please select BHK type"),
     bedrooms: yup.string().required("Please select number of bedrooms"),
     bathrooms: yup.string().required("Please select number of bathrooms"),
     totalFloors: yup.string().required("Please select total floors"),
@@ -365,6 +367,7 @@ export default function PostPropertyPage() {
         latitude,
         longitude,
         flatsInProject,
+        bhk,
         bedrooms,
         bathrooms,
         totalFloors,
@@ -552,6 +555,7 @@ export default function PostPropertyPage() {
       if (propertyType === 'Tenant') {
         Object.assign(payload, {
           flatsInProject,
+          bhk,
           bedrooms,
           balcony,
           totalFloors,
@@ -1250,6 +1254,8 @@ export default function PostPropertyPage() {
                     FieldError={FieldError}
                     flatsInProject={flatsInProject}
                     setFlatsInProject={setFlatsInProject}
+                    bhk={bhk}
+                    setBhk={setBhk}
                     bedrooms={bedrooms}
                     setBedrooms={setBedrooms}
                     bathrooms={bathrooms}

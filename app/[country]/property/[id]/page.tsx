@@ -668,6 +668,12 @@ export default function PropertyDetailsPage() {
                     <span className="text-sm sm:text-base font-semibold text-green-600">{property.availableFrom}</span>
                   </div>
                   {/* Tenant-specific detail rows */}
+                  {property.propertyType === "Tenant" && property.bhk && (
+                    <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
+                      <span className="text-sm sm:text-base text-gray-600">BHK</span>
+                      <span className="text-sm sm:text-base font-semibold text-gray-900">{property.bhk}</span>
+                    </div>
+                  )}
                   {property.propertyType === "Tenant" && property.balcony && (
                     <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
                       <span className="text-sm sm:text-base text-gray-600">{t.balcony}</span>

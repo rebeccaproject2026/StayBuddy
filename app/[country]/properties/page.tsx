@@ -22,6 +22,8 @@ function mapProperty(p: any) {
     price: p.price as number,
     rooms: p.rooms as number,
     area: p.area as number,
+    bhk: p.bhk as string | undefined,
+    roomDetails: p.roomDetails as Record<string, { monthlyRent: string }> | undefined,
     images: (p.images || []) as string[],
     type: p.propertyType as "PG" | "Tenant",
     isNew: false,

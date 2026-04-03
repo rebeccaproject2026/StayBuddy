@@ -6,6 +6,8 @@ interface Props {
   FieldError: ({ name }: { name: string }) => JSX.Element | null;
   flatsInProject: string;
   setFlatsInProject: (v: string) => void;
+  bhk: string;
+  setBhk: (v: string) => void;
   bedrooms: string;
   setBedrooms: (v: string) => void;
   bathrooms: string;
@@ -28,10 +30,12 @@ interface Props {
 
 const countOptions = ["All", "1+", "2+", "3+", "4+"];
 const floorOptions = ["G", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "10+"];
+const bhkOptions = ["1 BHK", "2 BHK", "3 BHK", "4 BHK", "4+ BHK"];
 
 export default function TenantStep2Details({
   t, fieldErrors, FieldError,
   flatsInProject, setFlatsInProject,
+  bhk, setBhk,
   bedrooms, setBedrooms,
   bathrooms, setBathrooms,
   balcony, setBalcony,
@@ -63,6 +67,27 @@ export default function TenantStep2Details({
           ))}
         </div>
         <FieldError name="flatsInProject" />
+      </div>
+
+      {/* BHK */}
+      <div data-field="bhk">
+        <label className="block text-sm sm:text-base text-gray-700 font-medium mb-3">{t.bhk}<span className="text-red-500">*</span></label>
+        <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-5 gap-2">
+          {bhkOptions.map((option) => (
+            <button
+              key={option}
+              onClick={() => setBhk(option)}
+              className={`py-2 px-3 border-2 rounded-xl transition-all text-sm ${
+                bhk === option
+                  ? "border-primary bg-primary/10 text-primary font-medium"
+                  : "border-gray-200 text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+        <FieldError name="bhk" />
       </div>
 
       {/* Bedrooms */}

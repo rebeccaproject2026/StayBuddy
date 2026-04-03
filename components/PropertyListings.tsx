@@ -21,6 +21,7 @@ interface Property {
   price: number;
   rooms: number;
   area: number;
+  bhk?: string;
   images: string[];
   propertyType: "PG" | "Tenant";
   isNew?: boolean;
@@ -28,6 +29,7 @@ interface Property {
   averageRating?: number | null;
   reviewsCount?: number;
   isVerified?: boolean;
+  roomDetails?: Record<string, { monthlyRent: string; securityDeposit?: string; totalBeds?: string; availableBeds?: string }>;
 }
 
 export default function PropertyListings() {
@@ -117,6 +119,8 @@ export default function PropertyListings() {
     price: property.price,
     rooms: property.rooms,
     area: property.area,
+    bhk: property.bhk,
+    roomDetails: property.roomDetails,
     images: property.images?.length > 0
       ? property.images
       : ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=400"],
