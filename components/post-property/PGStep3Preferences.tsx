@@ -82,7 +82,7 @@ export default function PGStep3Preferences({
     <>
       {/* Preferred Gender */}
       <div data-field="preferredGender" className="space-y-4 pb-4 border-b border-gray-200">
-        <h3 className="text-lg font-bold text-gray-800">{t.preferredGenderTitle}</h3>
+        <h3 className="text-base sm:text-lg font-bold text-gray-800">{t.preferredGenderTitle}</h3>
         <div className="grid grid-cols-1 esm:grid-cols-3 gap-3">
           {(["Male", "Female", "Both"] as PreferredGender[]).map((gender) => (
             <button
@@ -103,7 +103,7 @@ export default function PGStep3Preferences({
 
       {/* Tenant Preferences */}
       <div data-field="tenantPreference" className="space-y-4 pb-4 border-b border-gray-200">
-        <h3 className="text-lg font-bold text-gray-800">{t.tenantPreferencesTitle}</h3>
+        <h3 className="text-base sm:text-lg font-bold text-gray-800">{t.tenantPreferencesTitle}</h3>
         <div className="grid grid-cols-1 esm:grid-cols-3 gap-3">
           {(["Professionals", "Students", "Both"] as TenantPreference[]).map((pref) => (
             <button
@@ -124,7 +124,7 @@ export default function PGStep3Preferences({
 
       {/* PG Rules */}
       <div className="space-y-4 pb-4 border-b border-gray-200">
-        <h3 className="text-lg font-bold text-gray-800">{t.pgRulesTitle}</h3>
+        <h3 className="text-base sm:text-lg font-bold text-gray-800">{t.pgRulesTitle}</h3>
         <div className="space-y-2">
           {[
             ...pgRulesOptions,
@@ -135,7 +135,7 @@ export default function PGStep3Preferences({
             <button
               key={rule.id}
               onClick={() => togglePGRule(rule.id)}
-              className={`w-full flex items-center justify-between p-3 border-2 rounded-xl transition-all ${
+              className={`w-full flex items-center justify-between p-2.5 sm:p-3 border-2 rounded-xl transition-all ${
                 pgRules.includes(rule.id) ? "border-primary bg-primary/10" : "border-gray-200 bg-white hover:border-gray-300"
               }`}
             >
@@ -177,11 +177,11 @@ export default function PGStep3Preferences({
 
         <div className="grid grid-cols-1 esm:grid-cols-2 gap-3 mt-4">
           <div>
-            <label className="block text-gray-700 font-medium mb-2">{t.noticePeriodTitle}</label>
+            <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">{t.noticePeriodTitle}</label>
             <select
               value={noticePeriod}
               onChange={(e) => setNoticePeriod(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none bg-white cursor-pointer"
+              className="w-full px-3 py-2.5 sm:px-4 sm:py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none bg-white cursor-pointer"
             >
               <option value="">{t.noticePeriodPlaceholder}</option>
               <option value="1 Week">{t.oneWeek}</option>
@@ -192,12 +192,12 @@ export default function PGStep3Preferences({
             </select>
           </div>
           <div>
-            <label className="block text-gray-700 font-medium mb-2">{t.gateClosingTitle}</label>
+            <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">{t.gateClosingTitle}</label>
             <input
               type="time"
               value={gateClosingTime}
               onChange={(e) => setGateClosingTime(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors"
+              className="w-full px-3 py-2.5 sm:px-4 sm:py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors"
             />
           </div>
         </div>
@@ -205,7 +205,7 @@ export default function PGStep3Preferences({
 
       {/* Services */}
       <div className="space-y-4 pb-4 border-b border-gray-200">
-        <h3 className="text-lg font-bold text-gray-800">{t.servicesTitle}</h3>
+        <h3 className="text-base sm:text-lg font-bold text-gray-800">{t.servicesTitle}</h3>
         <div className="space-y-2">
           {[
             ...servicesOptions,
@@ -216,7 +216,7 @@ export default function PGStep3Preferences({
             <button
               key={service.id}
               onClick={() => toggleService(service.id)}
-              className={`w-full flex items-center justify-between p-3 border-2 rounded-xl transition-all ${
+              className={`w-full flex items-center justify-between p-2.5 sm:p-3 border-2 rounded-xl transition-all ${
                 services.includes(service.id) ? "border-primary bg-primary/10" : "border-gray-200 bg-white hover:border-gray-300"
               }`}
             >
@@ -271,7 +271,7 @@ export default function PGStep3Preferences({
         {foodProvided && (
           <div className="space-y-3 mt-3 pl-8">
             <div>
-              <label className="block text-gray-700 font-medium mb-2">Meals</label>
+              <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">Meals</label>
               <div className="grid grid-cols-1 esm:grid-cols-2 md:grid-cols-3 gap-2">
                 {["Breakfast", "Lunch", "Dinner"].map((meal) => (
                   <button
@@ -289,7 +289,7 @@ export default function PGStep3Preferences({
               </div>
             </div>
             <div>
-              <label className="block text-gray-700 font-medium mb-2">{t.vegNonVegLabel}</label>
+              <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">{t.vegNonVegLabel}</label>
               <div className="grid grid-cols-1 esm:grid-cols-2 gap-2">
                 {["Veg", "Veg & Non Veg"].map((option) => (
                   <button
@@ -307,11 +307,11 @@ export default function PGStep3Preferences({
               </div>
             </div>
             <div>
-              <label className="block text-gray-700 font-medium mb-2">{t.foodChargesLabel}</label>
+              <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">{t.foodChargesLabel}</label>
               <select
                 value={foodCharges}
                 onChange={(e) => setFoodCharges(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none bg-white cursor-pointer"
+                className="w-full px-3 py-2.5 sm:px-4 sm:py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none bg-white cursor-pointer"
               >
                 <option value="">{t.selectCategoryPlaceholder}</option>
                 <option value="Included in rent">{t.includedInRent}</option>
@@ -325,7 +325,7 @@ export default function PGStep3Preferences({
 
       {/* Common Area Amenities */}
       <div className="space-y-4 pb-4 border-b border-gray-200">
-        <h3 className="text-lg font-bold text-gray-800">{t.commonAreaTitle}</h3>
+        <h3 className="text-base sm:text-lg font-bold text-gray-800">{t.commonAreaTitle}</h3>
         <div className="grid grid-cols-1 esm:grid-cols-2 gap-2">
           {[
             ...commonAmenitiesOptions,

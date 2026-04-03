@@ -34,7 +34,7 @@ function UploadZone({ id, label, count, uploadLabel, onChange }: {
 }) {
   return (
     <div className="space-y-3">
-      <h4 className="text-md font-semibold text-gray-800">{label}</h4>
+      <h4 className="text-sm sm:text-base font-semibold text-gray-800">{label}</h4>
       <div className="relative">
         <input type="file" id={id} accept="image/*" multiple onChange={(e) => onChange(e.target.files)} className="hidden" />
         <label
@@ -68,7 +68,7 @@ export default function PGStep4Images({
       <div data-field="roomImages" className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h4 className="text-md font-semibold text-gray-800">{t.roomsImages}</h4>
+            <h4 className="text-sm sm:text-base font-semibold text-gray-800">{t.roomsImages}</h4>
             <p className="text-xs text-gray-500">{t.roomsImagesSubtitle}</p>
           </div>
           <button
@@ -82,8 +82,8 @@ export default function PGStep4Images({
         <FieldError name="roomImages" />
         <div className="space-y-3">
           {roomImages.map((room) => (
-            <div key={room.id} className="bg-gray-50 rounded-xl p-4 space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div key={room.id} className="bg-gray-50 rounded-xl p-3 sm:p-4 space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">{t.roomName}</label>
                   <input

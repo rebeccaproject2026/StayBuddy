@@ -842,35 +842,35 @@ export default function PostPropertyPage() {
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-green-500/5 rounded-full blur-3xl"></div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 md:px-6 py-10 sm:py-12 md:py-12 min-h-screen">
+      <div className="relative max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-10 md:py-12 min-h-screen">
         {/* Progress Indicator */}
-        <div className="mb-8">
-          <div className="flex items-center justify-center gap-2">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center justify-center gap-1 esm:gap-2">
             {[1, 2, 3, 4, 5].map((s) => (
               <div key={s} className="flex items-center">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
+                <div className={`w-8 h-8 esm:w-9 esm:h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm transition-all ${
                   step === s ? 'bg-primary text-white scale-110' : 
                   step > s ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'
                 }`}>
-                  {step > s ? <Check className="w-5 h-5" /> : s}
+                  {step > s ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : s}
                 </div>
-                {s < 5 && <div className={`w-7 esm:w-10 md:w-12 h-1 ${step > s ? 'bg-green-500' : 'bg-gray-200'}`}></div>}
+                {s < 5 && <div className={`w-4 esm:w-6 sm:w-10 md:w-12 h-1 ${step > s ? 'bg-green-500' : 'bg-gray-200'}`}></div>}
               </div>
             ))}
           </div>
-          <div className="text-center mt-4">
-            <p className="text-sm text-gray-600">Step {step} of 5</p>
+          <div className="text-center mt-3">
+            <p className="text-xs sm:text-sm text-gray-600">Step {step} of 5</p>
           </div>
         </div>
 
         <div className="max-w-4xl mx-auto pb-12">
-          <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12">
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl p-4 esm:p-5 sm:p-8 md:p-12">
             {/* STEP 1: Property Type & Basic Info */}
             {step === 1 && (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-primary mb-2">{t.greeting}</h2>
-                  <p className="text-gray-600 text-lg mb-6">{t.step1Title}</p>
+                  <h2 className="text-xl esm:text-2xl md:text-3xl font-bold text-primary mb-2">{t.greeting}</h2>
+                  <p className="text-gray-600 text-base sm:text-lg mb-6">{t.step1Title}</p>
                 </div>
 
                 {/* Property Type */}
@@ -1022,7 +1022,7 @@ export default function PostPropertyPage() {
                   <ArrowLeft className="w-5 h-5" />{t.back}
                 </button>
                 <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-primary mb-2">{t.step2Title}</h2>
+                  <h2 className="text-xl esm:text-2xl md:text-3xl font-bold text-primary mb-2">{t.step2Title}</h2>
                   <p className="text-gray-600 mb-4">{t.addressSubtitle}</p>
                   {selectedCity && (
                     <div className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-lg w-fit mb-4">
@@ -1290,7 +1290,7 @@ export default function PostPropertyPage() {
                   <ArrowLeft className="w-5 h-5" />{t.back}
                 </button>
                 <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-primary mb-6">{t.step3Title}</h2>
+                  <h2 className="text-xl esm:text-2xl md:text-3xl font-bold text-primary mb-6">{t.step3Title}</h2>
                 </div>
 
 
@@ -1380,7 +1380,7 @@ export default function PostPropertyPage() {
                   <ArrowLeft className="w-5 h-5" />{t.back}
                 </button>
                 <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-primary mb-6">{t.step4Title}</h2>
+                  <h2 className="text-xl esm:text-2xl md:text-3xl font-bold text-primary mb-6">{t.step4Title}</h2>
                 </div>
 
                 {/* USP Section */}
@@ -1427,16 +1427,16 @@ export default function PostPropertyPage() {
                     />
                     <FieldError name="pgDescription" />
                   </div>
-                  <div className="flex gap-3">
+                  <div className="flex flex-col esm:flex-row gap-2">
                     <button
                       onClick={() => useSampleDescription(t.sampleText)}
-                      className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm"
+                      className="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-xs sm:text-sm text-center"
                     >
                       {t.sample1} - {t.editAndUse}
                     </button>
                     <button
                       onClick={() => useSampleDescription(t.sampleText)}
-                      className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm"
+                      className="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-xs sm:text-sm text-center"
                     >
                       {t.sample2} - {t.editAndUse}
                     </button>
@@ -1523,7 +1523,7 @@ export default function PostPropertyPage() {
                   <ArrowLeft className="w-5 h-5" />{t.back}
                 </button>
                 <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-primary mb-2">Verify Your Property</h2>
+                  <h2 className="text-xl esm:text-2xl md:text-3xl font-bold text-primary mb-2">Verify Your Property</h2>
                   <p className="text-gray-600 mb-2">Upload documents to get a verified badge on your listing. This builds trust with potential tenants.</p>
                   <p className="text-sm text-gray-500">Accepted: electricity bill, property tax receipt, ownership deed, or any government-issued property ID proof.</p>
                 </div>
@@ -1540,7 +1540,7 @@ export default function PostPropertyPage() {
                 <div className="space-y-4">
                   <label className="block text-gray-700 font-semibold">Verification Documents <span className="text-gray-400 font-normal text-sm">(optional — skip to post without verification)</span></label>
                   <div
-                    className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-primary transition-colors cursor-pointer"
+                    className="border-2 border-dashed border-gray-300 rounded-xl p-5 sm:p-8 text-center hover:border-primary transition-colors cursor-pointer"
                     onClick={() => document.getElementById('verification-upload')?.click()}
                   >
                     <ShieldCheck className="w-10 h-10 text-gray-400 mx-auto mb-3" />
@@ -1599,12 +1599,12 @@ export default function PostPropertyPage() {
 
             {/* STEP 6: Success */}
             {step === 6 && (
-              <div className="flex flex-col items-center justify-center space-y-8 py-12">
-                <div className="w-32 h-32 rounded-full bg-primary/20 flex items-center justify-center animate-bounce">
-                  <Check className="w-16 h-16 text-primary" />
+              <div className="flex flex-col items-center justify-center space-y-6 sm:space-y-8 py-8 sm:py-12">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-primary/20 flex items-center justify-center animate-bounce">
+                  <Check className="w-12 h-12 sm:w-16 sm:h-16 text-primary" />
                 </div>
                 <div className="text-center space-y-3 max-w-md">
-                  <h2 className="text-3xl md:text-4xl font-bold text-primary">
+                  <h2 className="text-2xl esm:text-3xl md:text-4xl font-bold text-primary">
                     {language === 'fr' ? 'Soumis avec succès !' : 'Submitted Successfully!'}
                   </h2>
                   <p className="text-lg text-gray-700 font-medium">

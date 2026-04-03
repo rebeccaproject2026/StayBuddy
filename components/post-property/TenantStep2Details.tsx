@@ -46,7 +46,7 @@ export default function TenantStep2Details({
     <div className="space-y-4 pb-4 border-b border-gray-200">
       {/* Flats in project */}
       <div data-field="flatsInProject">
-        <label className="block text-gray-700 font-medium mb-3">{t.flatsInProject}</label>
+        <label className="block text-sm sm:text-base text-gray-700 font-medium mb-3">{t.flatsInProject}</label>
         <div className="grid grid-cols-1 esm:grid-cols-2 md:grid-cols-3 gap-3">
           {["<50", "50-100", ">100"].map((option) => (
             <button
@@ -67,7 +67,7 @@ export default function TenantStep2Details({
 
       {/* Bedrooms */}
       <div data-field="bedrooms">
-        <label className="block text-gray-700 font-medium mb-3">{t.bedroom}</label>
+        <label className="block text-sm sm:text-base text-gray-700 font-medium mb-3">{t.bedroom}</label>
         <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-5 gap-2">
           {countOptions.map((option) => (
             <button
@@ -88,7 +88,7 @@ export default function TenantStep2Details({
 
       {/* Bathrooms */}
       <div data-field="bathrooms">
-        <label className="block text-gray-700 font-medium mb-3">{t.bathroom}</label>
+        <label className="block text-sm sm:text-base text-gray-700 font-medium mb-3">{t.bathroom}</label>
         <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-5 gap-2">
           {countOptions.map((option) => (
             <button
@@ -109,7 +109,7 @@ export default function TenantStep2Details({
 
       {/* Balcony (optional) */}
       <div>
-        <label className="block text-gray-700 font-medium mb-3">{t.balconyOptional}</label>
+        <label className="block text-sm sm:text-base text-gray-700 font-medium mb-3">{t.balconyOptional}</label>
         <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-5 gap-2">
           {countOptions.map((option) => (
             <button
@@ -129,7 +129,7 @@ export default function TenantStep2Details({
 
       {/* Total Floors */}
       <div data-field="totalFloors">
-        <label className="block text-gray-700 font-medium mb-3">{t.totalFloorsInBuilding}</label>
+        <label className="block text-sm sm:text-base text-gray-700 font-medium mb-3">{t.totalFloorsInBuilding}</label>
         <div className="grid grid-cols-3 esm:grid-cols-4 md:grid-cols-6 gap-2">
           {floorOptions.map((option) => (
             <button
@@ -150,7 +150,7 @@ export default function TenantStep2Details({
 
       {/* Floor Number */}
       <div data-field="floorNumber">
-        <label className="block text-gray-700 font-medium mb-3">{t.floorNoOfProperty}</label>
+        <label className="block text-sm sm:text-base text-gray-700 font-medium mb-3">{t.floorNoOfProperty}</label>
         <div className="grid grid-cols-3 esm:grid-cols-4 md:grid-cols-6 gap-2">
           {floorOptions.map((option) => (
             <button
@@ -171,7 +171,7 @@ export default function TenantStep2Details({
 
       {/* Furnishing */}
       <div>
-        <label className="block text-gray-700 font-medium mb-3">{t.furnishingLabel}</label>
+        <label className="block text-sm sm:text-base text-gray-700 font-medium mb-3">{t.furnishingLabel}</label>
         <div className="grid grid-cols-1 esm:grid-cols-3 gap-3">
           {["Unfurnished", "Semi-Furnished", "Fully-Furnished"].map((option) => (
             <button
@@ -191,7 +191,7 @@ export default function TenantStep2Details({
 
       {/* Area */}
       <div>
-        <label className="block text-gray-700 font-medium mb-3">{t.areaLabel}</label>
+        <label className="block text-sm sm:text-base text-gray-700 font-medium mb-3">{t.areaLabel}</label>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs text-gray-500 mb-1">{t.min}</label>
@@ -201,7 +201,7 @@ export default function TenantStep2Details({
               value={areaMin}
               onChange={(e) => setAreaMin(e.target.value.replace(/\D/g, ""))}
               placeholder={t.enterMinArea}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors"
+              className="w-full px-3 py-2.5 sm:px-4 sm:py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors"
             />
           </div>
           <div>
@@ -212,7 +212,7 @@ export default function TenantStep2Details({
               value={areaMax}
               onChange={(e) => setAreaMax(e.target.value.replace(/\D/g, ""))}
               placeholder={t.enterMaxArea}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors"
+              className="w-full px-3 py-2.5 sm:px-4 sm:py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors"
             />
           </div>
         </div>
@@ -220,13 +220,13 @@ export default function TenantStep2Details({
 
       {/* Society Name */}
       <div data-field="societyName">
-        <label className="block text-gray-700 font-medium mb-2">{t.societyName}</label>
+        <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">{t.societyName}</label>
         <input
           type="text"
           value={societyName}
           onChange={(e) => setSocietyName(e.target.value)}
           placeholder={t.enterSocietyName}
-          className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors.societyName ? "border-red-400" : "border-gray-200"}`}
+          className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors.societyName ? "border-red-400" : "border-gray-200"}`}
         />
         <FieldError name="societyName" />
       </div>

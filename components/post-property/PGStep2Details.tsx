@@ -54,7 +54,7 @@ export default function PGStep2Details({
     <>
       <div className="space-y-4 pb-4 border-b border-gray-200">
         <div data-field="operationalSince">
-          <label className="block text-gray-700 font-medium mb-2">
+          <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">
             {t.operationalLabel}<span className="text-red-500">*</span>
           </label>
           <input
@@ -62,13 +62,13 @@ export default function PGStep2Details({
             value={operationalSince}
             onChange={(e) => setOperationalSince(e.target.value)}
             placeholder={t.operationalPlaceholder}
-            className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors.operationalSince ? "border-red-400" : "border-gray-200"}`}
+            className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors.operationalSince ? "border-red-400" : "border-gray-200"}`}
           />
           <FieldError name="operationalSince" />
         </div>
 
         <div data-field="pgPresentIn">
-          <label className="block text-gray-700 font-medium mb-2">
+          <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">
             {t.presentInLabel}<span className="text-red-500">*</span>
           </label>
           <div className="space-y-2">
@@ -79,7 +79,7 @@ export default function PGStep2Details({
             ].map((option) => (
               <label
                 key={option.value}
-                className={`flex items-center gap-4 p-3 border-2 rounded-xl cursor-pointer transition-all hover:border-primary hover:bg-primary/5 ${pgPresentIn === option.value ? "border-primary bg-primary/10" : "border-gray-200"}`}
+                className={`flex items-center gap-4 p-2.5 sm:p-3 border-2 rounded-xl cursor-pointer transition-all hover:border-primary hover:bg-primary/5 ${pgPresentIn === option.value ? "border-primary bg-primary/10" : "border-gray-200"}`}
               >
                 <input
                   type="radio"
@@ -89,7 +89,7 @@ export default function PGStep2Details({
                   onChange={(e) => setPgPresentIn(e.target.value as PGPresentIn)}
                   className="w-5 h-5 text-primary focus:ring-primary"
                 />
-                <span className="text-base font-medium text-gray-700">{option.label}</span>
+                <span className="text-sm sm:text-base font-medium text-gray-700">{option.label}</span>
               </label>
             ))}
           </div>
@@ -97,7 +97,7 @@ export default function PGStep2Details({
         </div>
 
         <div data-field="pgName">
-          <label className="block text-gray-700 font-medium mb-2">
+          <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">
             {t.pgNameLabel}<span className="text-red-500">*</span>
           </label>
           <input
@@ -105,7 +105,7 @@ export default function PGStep2Details({
             value={pgName}
             onChange={(e) => setPgName(e.target.value)}
             placeholder={t.pgNamePlaceholder}
-            className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors.pgName ? "border-red-400" : "border-gray-200"}`}
+            className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors.pgName ? "border-red-400" : "border-gray-200"}`}
           />
           <FieldError name="pgName" />
         </div>
@@ -113,7 +113,7 @@ export default function PGStep2Details({
 
       {/* Room Categories */}
       <div data-field="selectedRoomCategories" className="space-y-4 pb-4 border-b border-gray-200">
-        <h3 className="text-lg font-bold text-gray-800">{t.roomCategoriesTitle}</h3>
+        <h3 className="text-base sm:text-lg font-bold text-gray-800">{t.roomCategoriesTitle}</h3>
         <p className="text-sm text-gray-600">{t.roomCategoriesSubtitle}</p>
         <div className="grid grid-cols-1 esm:grid-cols-2 md:grid-cols-3 gap-3">
           {(["Single", "Double", "Triple", "Four", "Other"] as RoomCategory[]).map((category) => (
@@ -136,62 +136,62 @@ export default function PGStep2Details({
       {/* Room Details per category */}
       {selectedRoomCategories.map((category) => (
         <div key={category} className="space-y-4 pb-4 border-b border-gray-200">
-          <h3 className="text-lg font-bold text-primary">
+          <h3 className="text-base sm:text-lg font-bold text-primary">
             {t.roomDetailsFor} {category} {t.roomCategoriesTitle.split(" ")[0]}
           </h3>
           <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
             <div data-field={`room_${category}_totalBeds`}>
-              <label className="block text-gray-700 font-medium mb-2">Total Beds<span className="text-red-500">*</span></label>
+              <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">Total Beds<span className="text-red-500">*</span></label>
               <input
                 type="text"
                 inputMode="numeric"
                 value={roomDetails[category].totalBeds}
                 onChange={(e) => updateRoomDetail(category, "totalBeds", e.target.value.replace(/\D/g, ""))}
                 placeholder="Enter total beds"
-                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors[`room_${category}_totalBeds`] ? "border-red-400" : "border-gray-200"}`}
+                className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors[`room_${category}_totalBeds`] ? "border-red-400" : "border-gray-200"}`}
               />
               <FieldError name={`room_${category}_totalBeds`} />
             </div>
             <div data-field={`room_${category}_availableBeds`}>
-              <label className="block text-gray-700 font-medium mb-2">Available Beds<span className="text-red-500">*</span></label>
+              <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">Available Beds<span className="text-red-500">*</span></label>
               <input
                 type="text"
                 inputMode="numeric"
                 value={roomDetails[category].availableBeds}
                 onChange={(e) => updateRoomDetail(category, "availableBeds", e.target.value.replace(/\D/g, ""))}
                 placeholder="Enter available beds"
-                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors[`room_${category}_availableBeds`] ? "border-red-400" : "border-gray-200"}`}
+                className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors[`room_${category}_availableBeds`] ? "border-red-400" : "border-gray-200"}`}
               />
               <FieldError name={`room_${category}_availableBeds`} />
             </div>
           </div>
           <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
             <div data-field={`room_${category}_monthlyRent`}>
-              <label className="block text-gray-700 font-medium mb-2">{t.monthlyRent}<span className="text-red-500">*</span></label>
+              <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">{t.monthlyRent}<span className="text-red-500">*</span></label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">{currencySymbol}</span>
+                <span className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">{currencySymbol}</span>
                 <input
                   type="text"
                   inputMode="numeric"
                   value={roomDetails[category].monthlyRent}
                   onChange={(e) => updateRoomDetail(category, "monthlyRent", e.target.value.replace(/\D/g, ""))}
                   placeholder={t.monthlyRentPlaceholder}
-                  className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors[`room_${category}_monthlyRent`] ? "border-red-400" : "border-gray-200"}`}
+                  className={`w-full pl-10 pr-4 py-2.5 sm:py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors[`room_${category}_monthlyRent`] ? "border-red-400" : "border-gray-200"}`}
                 />
               </div>
               <FieldError name={`room_${category}_monthlyRent`} />
             </div>
             <div data-field={`room_${category}_securityDeposit`}>
-              <label className="block text-gray-700 font-medium mb-2">{t.securityDeposit}<span className="text-red-500">*</span></label>
+              <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">{t.securityDeposit}<span className="text-red-500">*</span></label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">{currencySymbol}</span>
+                <span className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">{currencySymbol}</span>
                 <input
                   type="text"
                   inputMode="numeric"
                   value={roomDetails[category].securityDeposit}
                   onChange={(e) => updateRoomDetail(category, "securityDeposit", e.target.value.replace(/\D/g, ""))}
                   placeholder={t.securityDepositPlaceholder}
-                  className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors[`room_${category}_securityDeposit`] ? "border-red-400" : "border-gray-200"}`}
+                  className={`w-full pl-10 pr-4 py-2.5 sm:py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${fieldErrors[`room_${category}_securityDeposit`] ? "border-red-400" : "border-gray-200"}`}
                 />
               </div>
               <FieldError name={`room_${category}_securityDeposit`} />
@@ -200,7 +200,7 @@ export default function PGStep2Details({
 
           {/* Room Facilities */}
           <div>
-            <label className="block text-gray-700 font-medium mb-3">{t.roomFacilities}</label>
+            <label className="block text-sm sm:text-base text-gray-700 font-medium mb-3">{t.roomFacilities}</label>
             <div className="grid grid-cols-1 esm:grid-cols-2 gap-2">
               {[
                 ...roomFacilities,

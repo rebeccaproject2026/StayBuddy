@@ -62,25 +62,25 @@ export default function TenantStep3Pricing({
     <>
       {/* Price */}
       <div className="space-y-4 pb-4 border-b border-gray-200">
-        <h3 className="text-lg font-bold text-gray-800">{t.priceExpectTitle}</h3>
+        <h3 className="text-base sm:text-lg font-bold text-gray-800">{t.priceExpectTitle}</h3>
         <div data-field="monthlyRentAmount">
-          <label className="block text-gray-700 font-medium mb-2">
+          <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">
             {t.monthlyRentLabel}<span className="text-red-500">*</span>
           </label>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-lg">{currencySymbol}</span>
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-base sm:text-lg">{currencySymbol}</span>
             <input
               type="text"
               value={monthlyRentAmount}
               onChange={(e) => setMonthlyRentAmount(e.target.value)}
               placeholder={t.enterMonthlyRent}
-              className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors text-lg ${fieldErrors.monthlyRentAmount ? "border-red-400" : "border-gray-200"}`}
+              className={`w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors text-base sm:text-lg ${fieldErrors.monthlyRentAmount ? "border-red-400" : "border-gray-200"}`}
             />
           </div>
           <FieldError name="monthlyRentAmount" />
         </div>
         <div>
-          <label className="block text-gray-700 font-medium mb-2">{t.securityAmountOptional}</label>
+          <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">{t.securityAmountOptional}</label>
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">{currencySymbol}</span>
             <input
@@ -88,12 +88,12 @@ export default function TenantStep3Pricing({
               value={securityAmount}
               onChange={(e) => setSecurityAmount(e.target.value)}
               placeholder={t.enterSecurityAmount}
-              className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors"
+              className="w-full pl-10 pr-4 py-2.5 sm:py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors"
             />
           </div>
         </div>
         <div>
-          <label className="block text-gray-700 font-medium mb-2">{t.maintenanceChargesOptional}</label>
+          <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">{t.maintenanceChargesOptional}</label>
           <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">{currencySymbol}</span>
@@ -102,13 +102,13 @@ export default function TenantStep3Pricing({
                 value={maintenanceCharges}
                 onChange={(e) => setMaintenanceCharges(e.target.value)}
                 placeholder={t.enterSecurityAmount}
-                className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors"
+                className="w-full pl-10 pr-4 py-2.5 sm:py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors"
               />
             </div>
             <select
               value={maintenanceType}
               onChange={(e) => setMaintenanceType(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none bg-white cursor-pointer"
+              className="w-full px-3 py-2.5 sm:px-4 sm:py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none bg-white cursor-pointer"
             >
               <option value="">{t.selectMaintenanceType}</option>
               <option value="Monthly">Monthly</option>
@@ -120,9 +120,9 @@ export default function TenantStep3Pricing({
 
       {/* Availability */}
       <div className="space-y-4 pb-4 border-b border-gray-200">
-        <h3 className="text-lg font-bold text-gray-800">{t.statusOfProperty}</h3>
+        <h3 className="text-base sm:text-lg font-bold text-gray-800">{t.statusOfProperty}</h3>
         <div>
-          <label className="block text-gray-700 font-medium mb-3">{t.availableFrom}</label>
+          <label className="block text-sm sm:text-base text-gray-700 font-medium mb-3">{t.availableFrom}</label>
           <div className="grid grid-cols-1 esm:grid-cols-2 gap-3">
             {["Selected Date", "Immediately"].map((option) => (
               <button
@@ -141,12 +141,12 @@ export default function TenantStep3Pricing({
         </div>
         {availableFrom === "Selected Date" && (
           <div>
-            <label className="block text-gray-700 font-medium mb-2">{t.availableDate}</label>
+            <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">{t.availableDate}</label>
             <input
               type="date"
               value={availableDate}
               onChange={(e) => setAvailableDate(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors"
+              className="w-full px-3 py-2.5 sm:px-4 sm:py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors"
             />
           </div>
         )}
@@ -154,11 +154,11 @@ export default function TenantStep3Pricing({
 
       {/* Additional Details */}
       <div className="space-y-4 pb-4 border-b border-gray-200">
-        <h3 className="text-lg font-bold text-gray-800">{t.additionalDetailsTitle}</h3>
+        <h3 className="text-base sm:text-lg font-bold text-gray-800">{t.additionalDetailsTitle}</h3>
 
         {/* Additional Rooms */}
         <div>
-          <label className="block text-gray-700 font-medium mb-2">{t.additionalRooms}</label>
+          <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">{t.additionalRooms}</label>
           <div className="space-y-2">
             {[
               { id: "poojaRoom", label: t.poojaRoom },
@@ -184,7 +184,7 @@ export default function TenantStep3Pricing({
 
         {/* Overlooking */}
         <div>
-          <label className="block text-gray-700 font-medium mb-2">{t.overlookingLabel}</label>
+          <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">{t.overlookingLabel}</label>
           <div className="space-y-2">
             {[
               { id: "gardenPark", label: t.gardenPark },
@@ -209,7 +209,7 @@ export default function TenantStep3Pricing({
 
         {/* Facing */}
         <div>
-          <label className="block text-gray-700 font-medium mb-2">{t.facingLabel}</label>
+          <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">{t.facingLabel}</label>
           <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-4 gap-2">
             {["East", "North", "North-East", "North-West", "South", "South-East", "South-West", "West"].map((direction) => (
               <button
@@ -229,7 +229,7 @@ export default function TenantStep3Pricing({
 
         {/* Society Amenities */}
         <div>
-          <label className="block text-gray-700 font-medium mb-2">{t.societyAmenitiesLabel}</label>
+          <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">{t.societyAmenitiesLabel}</label>
           <div className="grid grid-cols-1 esm:grid-cols-2 gap-2">
             {societyAmenitiesList.map((amenity) => (
               <button
@@ -250,7 +250,7 @@ export default function TenantStep3Pricing({
 
         {/* Tenants Prefer */}
         <div>
-          <label className="block text-gray-700 font-medium mb-2">{t.tenantsYouPrefer}</label>
+          <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">{t.tenantsYouPrefer}</label>
           <div className="space-y-2">
             {[
               { id: "coupleFamily", label: t.coupleFamily },
@@ -276,13 +276,13 @@ export default function TenantStep3Pricing({
 
         {/* Locality Description */}
         <div>
-          <label className="block text-gray-700 font-medium mb-2">{t.localityDescriptionLabel}</label>
+          <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">{t.localityDescriptionLabel}</label>
           <textarea
             value={localityDescription}
             onChange={(e) => setLocalityDescription(e.target.value)}
             placeholder={t.localityDescriptionPlaceholder}
             rows={4}
-            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors resize-none"
+            className="w-full px-3 py-2.5 sm:px-4 sm:py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors resize-none"
           />
         </div>
       </div>
