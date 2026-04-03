@@ -68,7 +68,7 @@ export default function Navbar() {
     router.push(dest);
   };
 
-  const isCountryMatch = !user || !urlCountry || user.country === urlCountry;
+  const isCountryMatch = !user || !urlCountry || user.role === 'admin' || user.country === urlCountry;
   const effectivelyAuthenticated = isAuthenticated && isCountryMatch;
 
   // Live notification count via WebSocket (falls back to 30s polling)

@@ -213,15 +213,15 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated) {
-        router.push(`/in/control/login`);
+        router.push(`/${currentCountry}/control/login`);
         return;
       }
       if (user?.role !== 'admin') {
-        router.push(`/`);
+        router.push(`/${currentCountry}`);
         return;
       }
     }
-  }, [user, isLoading, isAuthenticated, router]);
+  }, [user, isLoading, isAuthenticated, router, currentCountry]);
 
   // Fetch approved properties (listings tab)
   const fetchProperties = useCallback(async () => {

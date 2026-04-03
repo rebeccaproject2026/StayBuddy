@@ -839,6 +839,7 @@ export default function OwnerDashboard() {
       uspCategory: listing.uspCategory || "",
       uspText: listing.uspText || "",
       roomDetails: listing.roomDetails ? JSON.parse(JSON.stringify(listing.roomDetails)) : {},
+      tenantRooms: listing.tenantRooms ? JSON.parse(JSON.stringify(listing.tenantRooms)) : [],
     });
     setEditImages(listing.images || []);
     setEditNewFiles([]);
@@ -954,6 +955,7 @@ export default function OwnerDashboard() {
     } else {
       if (editForm.societyName) updates.societyName = editForm.societyName.trim();
       if (editForm.bhk) updates.bhk = editForm.bhk;
+      if (Array.isArray(editForm.tenantRooms) && editForm.tenantRooms.length > 0) updates.tenantRooms = editForm.tenantRooms;
       updates.furnishing = Array.isArray(editForm.furnishing) ? editForm.furnishing : [];
       if (editForm.floorNumber) updates.floorNumber = editForm.floorNumber;
       if (editForm.totalFloors) updates.totalFloors = editForm.totalFloors;
@@ -1715,6 +1717,66 @@ export default function OwnerDashboard() {
                                   {["1 BHK","2 BHK","3 BHK","4 BHK","4+ BHK"].map(o => <option key={o} value={o}>{o}</option>)}
                                 </select>
                               </div>
+
+                              {/* Tenant Room Details editing */}
+                              {user?.country === "fr" && Array.isArray(editForm.tenantRooms) && editForm.tenantRooms.length > 0 && (
+                                <div className="sm:col-span-2 space-y-3">
+                                  <label className={`block text-sm font-bold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Room Details</label>
+                                  {(editForm.tenantRooms as any[]).map((room: any, idx: number) => {
+                                    const max = parseInt(room.maxPersons) || 1;
+                                    const current = parseInt(room.currentPersons) || 0;
+                                    const status = current >= max ? "Occupied" : current > 0 ? "Partial" : "Available";
+                                    const statusCls = status === "Available" ? "text-green-600" : status === "Partial" ? "text-yellow-600" : "text-red-500";
+                                    const updateTenantRoom = (field: string, value: string) => {
+                                      const updated = editForm.tenantRooms.map((r: any, i: number) => {
+                                        if (i !== idx) return r;
+                                        const u = { ...r, [field]: value };
+                                        const m = parseInt(field === "maxPersons" ? value : r.maxPersons) || 1;
+                                        const c = parseInt(field === "currentPersons" ? value : r.currentPersons) || 0;
+                                        u.status = c >= m ? "Occupied" : c > 0 ? "Partial" : "Available";
+                                        return u;
+                                      });
+                                      setEditForm((p: any) => ({ ...p, tenantRooms: updated }));
+                                    };
+                                    return (
+                                      <div key={room.id ?? idx} className={`border-2 rounded-xl p-4 space-y-3 ${isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-white"}`}>
+                                        <div className="flex items-center justify-between">
+                                          <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>{room.name || `Room ${idx + 1}`}</p>
+                                          <span className={`text-xs font-semibold ${statusCls}`}>{status} ({current}/{max})</span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                          <div>
+                                            <label className="block text-xs text-gray-500 mb-1">Room Name</label>
+                                            <input value={room.name || ""} onChange={e => updateTenantRoom("name", e.target.value)}
+                                              className={`w-full px-3 py-2 border-2 rounded-xl text-sm focus:outline-none focus:border-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
+                                          </div>
+                                          <div>
+                                            <label className="block text-xs text-gray-500 mb-1">Monthly Rent ({currencySymbol})</label>
+                                            <input value={room.rent || ""} inputMode="numeric" onChange={e => updateTenantRoom("rent", e.target.value.replace(/\D/g, ""))}
+                                              className={`w-full px-3 py-2 border-2 rounded-xl text-sm focus:outline-none focus:border-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
+                                          </div>
+                                          <div>
+                                            <label className="block text-xs text-gray-500 mb-1">Max Persons</label>
+                                            <input value={room.maxPersons || "1"} inputMode="numeric"
+                                              onChange={e => updateTenantRoom("maxPersons", e.target.value.replace(/\D/g, "") || "1")}
+                                              className={`w-full px-3 py-2 border-2 rounded-xl text-sm focus:outline-none focus:border-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
+                                          </div>
+                                          <div>
+                                            <label className="block text-xs text-gray-500 mb-1">Current Persons</label>
+                                            <input value={room.currentPersons || "0"} inputMode="numeric"
+                                              onChange={e => {
+                                                const val = e.target.value.replace(/\D/g, "");
+                                                const m = parseInt(room.maxPersons) || 1;
+                                                updateTenantRoom("currentPersons", String(Math.min(parseInt(val) || 0, m)));
+                                              }}
+                                              className={`w-full px-3 py-2 border-2 rounded-xl text-sm focus:outline-none focus:border-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
                               <div>
                                 <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Monthly Rent ({currencySymbol})</label>
                                 <input value={editForm.monthlyRentAmount} onChange={e => setEditForm(p => ({ ...p, monthlyRentAmount: e.target.value }))}
@@ -2410,6 +2472,52 @@ export default function OwnerDashboard() {
                                     )}
                                   </div>
                                 ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Tenant Room Details */}
+                          {selectedListing.propertyType === "Tenant" && user?.country === "fr" && selectedListing.tenantRooms?.length > 0 && (
+                            <div>
+                              <p className="text-xs font-semibold text-gray-500 uppercase mb-3">Room Details</p>
+                              <div className="grid sm:grid-cols-2 gap-3">
+                                {(selectedListing.tenantRooms as any[]).map((room: any, i: number) => {
+                                  const max = parseInt(room.maxPersons) || 1;
+                                  const current = parseInt(room.currentPersons) || 0;
+                                  const available = max - current;
+                                  const status = current >= max ? "Occupied" : current > 0 ? "Partial" : "Available";
+                                  const statusCls = status === "Available" ? "bg-green-50 text-green-700 border-green-200" : status === "Partial" ? "bg-yellow-50 text-yellow-700 border-yellow-200" : "bg-red-50 text-red-600 border-red-200";
+                                  const dotCls = status === "Available" ? "bg-green-500" : status === "Partial" ? "bg-yellow-500" : "bg-red-500";
+                                  return (
+                                    <div key={room.id ?? i} className={`border rounded-xl p-4 hover:border-primary/40 transition-colors ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                                      <div className="flex items-center justify-between mb-3">
+                                        <h4 className={`font-bold text-sm ${isDark ? "text-white" : "text-gray-900"}`}>{room.name || `Room ${i + 1}`}</h4>
+                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border ${statusCls}`}>
+                                          <span className={`w-1.5 h-1.5 rounded-full ${dotCls}`} />
+                                          {status}
+                                        </span>
+                                      </div>
+                                      <div className="space-y-1.5">
+                                        {room.rent && Number(room.rent) > 0 && (
+                                          <div className="flex justify-between text-sm">
+                                            <span className="text-gray-500">Monthly Rent</span>
+                                            <span className="font-bold text-primary">{currencySymbol} {Number(room.rent).toLocaleString()}</span>
+                                          </div>
+                                        )}
+                                        <div className="flex justify-between text-sm">
+                                          <span className="text-gray-500">Capacity</span>
+                                          <span className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{current} / {max} persons</span>
+                                        </div>
+                                        {status !== "Occupied" && (
+                                          <div className="flex justify-between text-sm">
+                                            <span className="text-gray-500">Available spots</span>
+                                            <span className="font-semibold text-green-600">{available}</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
                           )}

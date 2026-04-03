@@ -604,6 +604,60 @@ export default function PropertyDetailsPage() {
                 </div>
               )}
 
+              {/* Tenant Room Details */}
+              {property.propertyType === "Tenant" && property.country === "fr" && property.tenantRooms && property.tenantRooms.length > 0 && (
+                <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
+                  <h3 className="text-xs sm:text-sm font-semibold text-gray-500 mb-3 sm:mb-4 uppercase tracking-wide">
+                    {language === "fr" ? "Détails des chambres" : "Room Details"}
+                  </h3>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {(property.tenantRooms as any[]).map((room: any, i: number) => {
+                      const max = parseInt(room.maxPersons) || 1;
+                      const current = parseInt(room.currentPersons) || 0;
+                      const available = max - current;
+                      const status: "Available" | "Partial" | "Occupied" =
+                        current >= max ? "Occupied" : current > 0 ? "Partial" : "Available";
+                      const statusColor =
+                        status === "Available" ? "bg-green-50 text-green-700 border-green-200" :
+                        status === "Partial"   ? "bg-yellow-50 text-yellow-700 border-yellow-200" :
+                                                 "bg-red-50 text-red-600 border-red-200";
+                      const dotColor =
+                        status === "Available" ? "bg-green-500" :
+                        status === "Partial"   ? "bg-yellow-500" : "bg-red-500";
+                      return (
+                        <div key={room.id ?? i} className="border border-gray-200 rounded-xl p-4 hover:border-primary/40 transition-colors">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-bold text-gray-900 text-base">{room.name || `Room ${i + 1}`}</h4>
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${statusColor}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
+                              {status}
+                            </span>
+                          </div>
+                          <div className="space-y-2">
+                            {room.rent && Number(room.rent) > 0 && (
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-500">{t.monthlyRent}</span>
+                                <span className="font-bold text-primary">{currencySymbol} {Number(room.rent).toLocaleString()}</span>
+                              </div>
+                            )}
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-500">{language === "fr" ? "Capacité" : "Capacity"}</span>
+                              <span className="font-semibold text-gray-900">{current} / {max} {language === "fr" ? "personnes" : "persons"}</span>
+                            </div>
+                            {status !== "Occupied" && (
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-500">{language === "fr" ? "Places disponibles" : "Spots available"}</span>
+                                <span className="font-semibold text-green-600">{available}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* USP */}
               {property.uspText && (
                 <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
@@ -643,10 +697,13 @@ export default function PropertyDetailsPage() {
                       <span className="text-sm sm:text-base font-semibold text-gray-900">{property.preferredTenants || property.tenantPreference}</span>
                     </div>
                   )}
-                  <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
-                    <span className="text-sm sm:text-base text-gray-600">{t.rooms}</span>
-                    <span className="text-sm sm:text-base font-semibold text-gray-900">{property.rooms}</span>
-                  </div>
+                  {/* Rooms — PG always, /in tenant only */}
+                  {(property.propertyType === "PG" || property.country !== "fr") && (
+                    <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
+                      <span className="text-sm sm:text-base text-gray-600">{t.rooms}</span>
+                      <span className="text-sm sm:text-base font-semibold text-gray-900">{property.rooms}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
                     <span className="text-sm sm:text-base text-gray-600">{t.bathrooms}</span>
                     <span className="text-sm sm:text-base font-semibold text-gray-900">{property.bathrooms}</span>
@@ -655,10 +712,13 @@ export default function PropertyDetailsPage() {
                     <span className="text-sm sm:text-base text-gray-600">{t.size}</span>
                     <span className="text-sm sm:text-base font-semibold text-gray-900">{property.area} m²</span>
                   </div>
-                  <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
-                    <span className="text-sm sm:text-base text-gray-600">{t.rent}</span>
-                    <span className="text-sm sm:text-base font-semibold text-gray-900">{currencySymbol} {property.price}</span>
-                  </div>
+                  {/* Monthly rent — hidden for /fr tenant (shown per-room in Room Details) */}
+                  {!(property.propertyType === "Tenant" && property.country === "fr") && (
+                    <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
+                      <span className="text-sm sm:text-base text-gray-600">{t.rent}</span>
+                      <span className="text-sm sm:text-base font-semibold text-gray-900">{currencySymbol} {property.price}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
                     <span className="text-sm sm:text-base text-gray-600">{t.deposit}</span>
                     <span className="text-sm sm:text-base font-semibold text-gray-900">{currencySymbol} {property.deposit}</span>
@@ -667,38 +727,39 @@ export default function PropertyDetailsPage() {
                     <span className="text-sm sm:text-base text-gray-600">{t.availableFrom}</span>
                     <span className="text-sm sm:text-base font-semibold text-green-600">{property.availableFrom}</span>
                   </div>
-                  {/* Tenant-specific detail rows */}
+                  {/* BHK — shown for all tenant */}
                   {property.propertyType === "Tenant" && property.bhk && (
                     <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
                       <span className="text-sm sm:text-base text-gray-600">BHK</span>
                       <span className="text-sm sm:text-base font-semibold text-gray-900">{property.bhk}</span>
                     </div>
                   )}
-                  {property.propertyType === "Tenant" && property.balcony && (
+                  {/* India-only tenant fields */}
+                  {property.propertyType === "Tenant" && property.country !== "fr" && property.balcony && (
                     <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
                       <span className="text-sm sm:text-base text-gray-600">{t.balcony}</span>
                       <span className="text-sm sm:text-base font-semibold text-gray-900">{property.balcony}</span>
                     </div>
                   )}
-                  {property.propertyType === "Tenant" && property.totalFloors && (
+                  {property.propertyType === "Tenant" && property.country !== "fr" && property.totalFloors && (
                     <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
                       <span className="text-sm sm:text-base text-gray-600">{t.totalFloors}</span>
                       <span className="text-sm sm:text-base font-semibold text-gray-900">{property.totalFloors}</span>
                     </div>
                   )}
-                  {property.propertyType === "Tenant" && property.floorNumber && (
+                  {property.propertyType === "Tenant" && property.country !== "fr" && property.floorNumber && (
                     <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
                       <span className="text-sm sm:text-base text-gray-600">{t.floorNumber}</span>
                       <span className="text-sm sm:text-base font-semibold text-gray-900">{property.floorNumber}</span>
                     </div>
                   )}
-                  {property.propertyType === "Tenant" && property.furnishing && property.furnishing.length > 0 && (
+                  {property.propertyType === "Tenant" && property.country !== "fr" && property.furnishing && property.furnishing.length > 0 && (
                     <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
                       <span className="text-sm sm:text-base text-gray-600">{t.furnishing}</span>
                       <span className="text-sm sm:text-base font-semibold text-gray-900">{property.furnishing.join(", ")}</span>
                     </div>
                   )}
-                  {property.propertyType === "Tenant" && property.facing && (
+                  {property.propertyType === "Tenant" && property.country !== "fr" && property.facing && (
                     <div className="flex justify-between py-2 sm:py-3 border-b border-gray-200">
                       <span className="text-sm sm:text-base text-gray-600">{t.facing}</span>
                       <span className="text-sm sm:text-base font-semibold text-gray-900">{property.facing}</span>
@@ -999,6 +1060,39 @@ export default function PropertyDetailsPage() {
                             </span>
                           </div>
                         ))}
+                      </div>
+                      <p className="text-xs text-gray-500 mb-3 sm:mb-4">
+                        {t.securityDeposit}: {currencySymbol} {property.deposit}
+                      </p>
+                    </>
+                  ) : property.propertyType === 'Tenant' && property.country === 'fr' && property.tenantRooms?.length > 0 ? (
+                    <>
+                      <p className="text-xs sm:text-sm text-gray-500 font-semibold uppercase tracking-wide mb-3">
+                        {language === 'fr' ? 'Prix par chambre' : 'Price by Room'}
+                      </p>
+                      <div className="space-y-2 mb-4">
+                        {(property.tenantRooms as any[]).map((room: any, i: number) => {
+                          const max = parseInt(room.maxPersons) || 1;
+                          const current = parseInt(room.currentPersons) || 0;
+                          const status = current >= max ? 'Occupied' : current > 0 ? 'Partial' : 'Available';
+                          const statusCls = status === 'Available' ? 'bg-green-100 text-green-700' : status === 'Partial' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-600';
+                          return (
+                            <div key={room.id ?? i} className="flex items-center justify-between p-2.5 bg-gray-50 rounded-xl border border-gray-100">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${status === 'Available' ? 'bg-green-500' : status === 'Partial' ? 'bg-yellow-500' : 'bg-red-500'}`} />
+                                <span className="text-sm font-medium text-gray-700 truncate">{room.name || `Room ${i + 1}`}</span>
+                                <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${statusCls}`}>{status}</span>
+                              </div>
+                              {room.rent && Number(room.rent) > 0 ? (
+                                <span className="text-sm font-bold text-primary ml-2 flex-shrink-0">
+                                  {currencySymbol} {Number(room.rent).toLocaleString()}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-gray-400 ml-2 flex-shrink-0">—</span>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                       <p className="text-xs text-gray-500 mb-3 sm:mb-4">
                         {t.securityDeposit}: {currencySymbol} {property.deposit}

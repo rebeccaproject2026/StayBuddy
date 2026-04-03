@@ -84,6 +84,15 @@ const tenantRoomImageSchema = z.object({
   image: z.string().optional(),
 });
 
+const tenantRoomSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  status: z.enum(['Available', 'Occupied', 'Partial']),
+  rent: z.string(),
+  maxPersons: z.string().optional(),
+  currentPersons: z.string().optional(),
+});
+
 export const propertySchema = z.object({
   // ── Core fields (always required) ──────────────────────────────────────────
   country: z.enum(['fr', 'in'], { message: 'Country must be fr or in' }),
@@ -140,7 +149,8 @@ export const propertySchema = z.object({
 
   // ── Tenant-specific (required when propertyType === 'Tenant') ──────────────
   flatsInProject: z.string().optional(),
-  bedrooms: z.string().optional(),
+  bhk: z.string().optional(),
+  tenantRooms: z.array(tenantRoomSchema).optional(),
   balcony: z.string().optional(),
   totalFloors: z.string().optional(),
   floorNumber: z.string().optional(),
@@ -232,8 +242,8 @@ export const propertySchema = z.object({
     if (!data.flatsInProject) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Number of flats in project is required', path: ['flatsInProject'] });
     }
-    if (!data.bedrooms) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Number of bedrooms is required', path: ['bedrooms'] });
+    if (!data.bhk) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'BHK type is required', path: ['bhk'] });
     }
     if (!data.totalFloors) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Total floors is required', path: ['totalFloors'] });
@@ -244,7 +254,8 @@ export const propertySchema = z.object({
     if (!data.societyName?.trim()) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Society name is required', path: ['societyName'] });
     }
-    if (!data.monthlyRentAmount?.trim()) {
+    // Monthly rent required only for India (France uses per-room rent from tenantRooms)
+    if (data.country !== 'fr' && !data.monthlyRentAmount?.trim()) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Monthly rent amount is required', path: ['monthlyRentAmount'] });
     }
   }

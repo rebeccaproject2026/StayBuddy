@@ -74,6 +74,7 @@ export default function PostPropertyPage() {
   // Step 2: Property Details (Tenant)
   const [flatsInProject, setFlatsInProject] = useState("");
   const [bhk, setBhk] = useState("");
+  const [tenantRooms, setTenantRooms] = useState<Array<{ id: string; name: string; status: "Available" | "Occupied" | "Partial"; rent: string; maxPersons: string; currentPersons: string }>>([]);
   const [bathrooms, setBathrooms] = useState("");
   const [balcony, setBalcony] = useState("");
   const [totalFloors, setTotalFloors] = useState("");
@@ -198,12 +199,14 @@ export default function PostPropertyPage() {
   });
 
   const step3TenantSchema = yup.object({
-    monthlyRentAmount: yup
-      .string()
-      .trim()
-      .required("Monthly rent is required")
-      .matches(/^\d+$/, "Monthly rent must be a valid number")
-      .test("min", "Monthly rent must be greater than 0", (v) => parseInt(v || "0") > 0),
+    monthlyRentAmount: country === "fr"
+      ? yup.string().optional()
+      : yup
+          .string()
+          .trim()
+          .required("Monthly rent is required")
+          .matches(/^\d+$/, "Monthly rent must be a valid number")
+          .test("min", "Monthly rent must be greater than 0", (v) => parseInt(v || "0") > 0),
   });
 
   const step4Schema = yup.object({
@@ -494,7 +497,7 @@ export default function PostPropertyPage() {
         category: propertyCategory || (propertyType === 'PG' ? 'PG' : 'Flat'),
         rentalPeriod: 'Monthly',
         availableFrom: availableFrom === 'Immediately' ? new Date().toISOString().split('T')[0] : availableDate,
-        price: propertyType === 'PG' ? pgPrice : parseFloat(monthlyRentAmount) || 0,
+        price: propertyType === 'PG' ? pgPrice : (country === 'fr' && tenantRooms.length > 0 ? parseFloat(tenantRooms[0].rent) || 0 : parseFloat(monthlyRentAmount) || 0),
         deposit: propertyType === 'PG' ? pgDeposit : parseFloat(securityAmount) || 0,
         rooms: propertyType === 'PG' ? selectedRoomCategories.length : 1,
         bathrooms: parseInt(bathrooms) || 0,
@@ -553,6 +556,7 @@ export default function PostPropertyPage() {
         Object.assign(payload, {
           flatsInProject,
           bhk,
+          tenantRooms,
           balcony,
           totalFloors,
           floorNumber,
@@ -1248,10 +1252,14 @@ export default function PostPropertyPage() {
                     t={t}
                     fieldErrors={fieldErrors}
                     FieldError={FieldError}
+                    propertyCategory={propertyCategory ?? undefined}
+                    country={country}
                     flatsInProject={flatsInProject}
                     setFlatsInProject={setFlatsInProject}
                     bhk={bhk}
                     setBhk={setBhk}
+                    tenantRooms={tenantRooms}
+                    setTenantRooms={setTenantRooms}
                     bathrooms={bathrooms}
                     setBathrooms={setBathrooms}
                     balcony={balcony}
@@ -1268,6 +1276,7 @@ export default function PostPropertyPage() {
                     setAreaMax={setAreaMax}
                     societyName={societyName}
                     setSocietyName={setSocietyName}
+                    currencySymbol={currencySymbol}
                   />
                 )}
 
@@ -1334,6 +1343,7 @@ export default function PostPropertyPage() {
                   <TenantStep3Pricing
                     t={t}
                     currencySymbol={currencySymbol}
+                    country={country}
                     fieldErrors={fieldErrors}
                     FieldError={FieldError}
                     monthlyRentAmount={monthlyRentAmount}

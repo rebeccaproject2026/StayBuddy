@@ -91,6 +91,7 @@ export interface IProperty extends Document {
   tenantKitchenImages?: string[];
   tenantWashroomImages?: string[];
   tenantCommonAreaImages?: string[];
+  tenantRooms?: Array<{ id: string; name: string; status: string; rent: string; maxPersons?: string; currentPersons?: string }>;
   view360Url?: string;
   verificationImages?: string[];
   isVerified?: boolean;
@@ -181,6 +182,7 @@ const PropertySchema: Schema = new Schema<IProperty>({
   tenantKitchenImages: [{ type: String }],
   tenantWashroomImages: [{ type: String }],
   tenantCommonAreaImages: [{ type: String }],
+  tenantRooms: [{ id: String, name: String, status: String, rent: String, maxPersons: String, currentPersons: String }],
   view360Url: { type: String },
   verificationImages: [{ type: String }],
   isVerified: { type: Boolean, default: false },

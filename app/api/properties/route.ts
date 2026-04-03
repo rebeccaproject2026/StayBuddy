@@ -164,8 +164,9 @@ export async function POST(req: NextRequest) {
       roomImages: pgRoomImgs,
       tenantRoomImages: tenantRoomImgs,
       verificationImages: verificationImgs,
-      isVerified: false,           // always false until admin explicitly verifies
-      approvalStatus: 'pending',   // always pending until admin approves
+      tenantRooms: data.tenantRooms ?? [],
+      isVerified: false,
+      approvalStatus: 'pending',
       createdBy: authUser.id,
     });
 

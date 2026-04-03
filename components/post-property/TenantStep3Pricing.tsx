@@ -5,6 +5,7 @@ import { Check } from "lucide-react";
 interface Props {
   t: Record<string, string>;
   currencySymbol: string;
+  country?: string;
   fieldErrors: Record<string, string>;
   FieldError: ({ name }: { name: string }) => JSX.Element | null;
   monthlyRentAmount: string;
@@ -44,7 +45,7 @@ const societyAmenitiesList = [
 ];
 
 export default function TenantStep3Pricing({
-  t, currencySymbol, fieldErrors, FieldError,
+  t, currencySymbol, country, fieldErrors, FieldError,
   monthlyRentAmount, setMonthlyRentAmount,
   securityAmount, setSecurityAmount,
   maintenanceCharges, setMaintenanceCharges,
@@ -63,22 +64,25 @@ export default function TenantStep3Pricing({
       {/* Price */}
       <div className="space-y-4 pb-4 border-b border-gray-200">
         <h3 className="text-base sm:text-lg font-bold text-gray-800">{t.priceExpectTitle}</h3>
-        <div data-field="monthlyRentAmount">
-          <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">
-            {t.monthlyRentLabel}<span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-base sm:text-lg">{currencySymbol}</span>
-            <input
-              type="text"
-              value={monthlyRentAmount}
-              onChange={(e) => setMonthlyRentAmount(e.target.value)}
-              placeholder={t.enterMonthlyRent}
-              className={`w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors text-base sm:text-lg ${fieldErrors.monthlyRentAmount ? "border-red-400" : "border-gray-200"}`}
-            />
+        {/* Monthly rent — hidden for /fr (captured per-room in Step 2) */}
+        {country !== "fr" && (
+          <div data-field="monthlyRentAmount">
+            <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">
+              {t.monthlyRentLabel}<span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-base sm:text-lg">{currencySymbol}</span>
+              <input
+                type="text"
+                value={monthlyRentAmount}
+                onChange={(e) => setMonthlyRentAmount(e.target.value)}
+                placeholder={t.enterMonthlyRent}
+                className={`w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors text-base sm:text-lg ${fieldErrors.monthlyRentAmount ? "border-red-400" : "border-gray-200"}`}
+              />
+            </div>
+            <FieldError name="monthlyRentAmount" />
           </div>
-          <FieldError name="monthlyRentAmount" />
-        </div>
+        )}
         <div>
           <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">{t.securityAmountOptional}</label>
           <div className="relative">
