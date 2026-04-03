@@ -212,9 +212,13 @@ export default function PropertyCard({
           {/* Badges */}
           <div className="absolute top-3 left-3 flex gap-2 z-10">
             {type && (
-              <span className={`px-3 py-1 text-white text-xs font-semibold rounded-full ${type === "PG" ? "bg-blue-600" : "bg-green-600"
-                }`}>
+              <span className={`px-3 py-1 text-white text-xs font-semibold rounded-full ${type === "PG" ? "bg-blue-600" : "bg-green-600"}`}>
                 {type}
+              </span>
+            )}
+            {type === "Tenant" && bhk && (
+              <span className="px-3 py-1 bg-white/90 text-gray-800 text-xs font-semibold rounded-full">
+                {bhk}
               </span>
             )}
             {verified && (
@@ -300,11 +304,6 @@ export default function PropertyCard({
           <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-1">
             {[areaName, location, state].filter(Boolean).join(", ")}
           </p>
-          {type === "Tenant" && bhk && (
-            <span className="inline-block text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full mb-2">
-              {bhk}
-            </span>
-          )}
 
           <div className="flex items-center mt-1">
             <p className="text-base sm:text-lg font-bold text-primary">

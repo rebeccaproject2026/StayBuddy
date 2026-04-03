@@ -74,7 +74,6 @@ export default function PostPropertyPage() {
   // Step 2: Property Details (Tenant)
   const [flatsInProject, setFlatsInProject] = useState("");
   const [bhk, setBhk] = useState("");
-  const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
   const [balcony, setBalcony] = useState("");
   const [totalFloors, setTotalFloors] = useState("");
@@ -187,7 +186,6 @@ export default function PostPropertyPage() {
     longitude: yup.string().trim().optional(),
     flatsInProject: yup.string().required("Please select number of flats in project"),
     bhk: yup.string().required("Please select BHK type"),
-    bedrooms: yup.string().required("Please select number of bedrooms"),
     bathrooms: yup.string().required("Please select number of bathrooms"),
     totalFloors: yup.string().required("Please select total floors"),
     floorNumber: yup.string().required("Please select floor number"),
@@ -368,7 +366,6 @@ export default function PostPropertyPage() {
         longitude,
         flatsInProject,
         bhk,
-        bedrooms,
         bathrooms,
         totalFloors,
         floorNumber,
@@ -499,7 +496,7 @@ export default function PostPropertyPage() {
         availableFrom: availableFrom === 'Immediately' ? new Date().toISOString().split('T')[0] : availableDate,
         price: propertyType === 'PG' ? pgPrice : parseFloat(monthlyRentAmount) || 0,
         deposit: propertyType === 'PG' ? pgDeposit : parseFloat(securityAmount) || 0,
-        rooms: propertyType === 'PG' ? selectedRoomCategories.length : parseInt(bedrooms) || 1,
+        rooms: propertyType === 'PG' ? selectedRoomCategories.length : 1,
         bathrooms: parseInt(bathrooms) || 0,
         area: propertyType === 'PG' ? 0 : (parseFloat(areaMin) || 0),
         pgDescription,
@@ -556,7 +553,6 @@ export default function PostPropertyPage() {
         Object.assign(payload, {
           flatsInProject,
           bhk,
-          bedrooms,
           balcony,
           totalFloors,
           floorNumber,
@@ -1256,8 +1252,6 @@ export default function PostPropertyPage() {
                     setFlatsInProject={setFlatsInProject}
                     bhk={bhk}
                     setBhk={setBhk}
-                    bedrooms={bedrooms}
-                    setBedrooms={setBedrooms}
                     bathrooms={bathrooms}
                     setBathrooms={setBathrooms}
                     balcony={balcony}

@@ -1282,8 +1282,15 @@ export default function OwnerDashboard() {
                             </h3>
                             <div className="grid sm:grid-cols-2 gap-4">
                             <div className="sm:col-span-2">
-                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Property Title</label>
-                              <input value={editForm.title} onChange={e => setEditForm(p => ({ ...p, title: e.target.value }))}
+                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                                {editForm.propertyType === "PG" ? "PG Name" : "Society Name"}
+                              </label>
+                              <input
+                                value={editForm.propertyType === "PG" ? editForm.pgName : editForm.societyName}
+                                onChange={e => setEditForm((p: any) => editForm.propertyType === "PG"
+                                  ? { ...p, pgName: e.target.value }
+                                  : { ...p, societyName: e.target.value }
+                                )}
                                 className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                             </div>
                             <div>
@@ -1374,11 +1381,6 @@ export default function OwnerDashboard() {
 
                             {editForm.propertyType === "PG" && (<>
                               {/* PG Basic */}
-                              <div>
-                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>PG Name</label>
-                                <input value={editForm.pgName} onChange={e => setEditForm(p => ({ ...p, pgName: e.target.value }))}
-                                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
-                              </div>
                               <div>
                                 <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Operational Since</label>
                                 <input value={editForm.operationalSince} onChange={e => setEditForm(p => ({ ...p, operationalSince: e.target.value }))}
@@ -1705,11 +1707,6 @@ export default function OwnerDashboard() {
                             </>)}
 
                             {editForm.propertyType === "Tenant" && (<>
-                              <div className="sm:col-span-2">
-                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Society Name</label>
-                                <input value={editForm.societyName} onChange={e => setEditForm(p => ({ ...p, societyName: e.target.value }))}
-                                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
-                              </div>
                               <div>
                                 <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>BHK</label>
                                 <select value={editForm.bhk || ""} onChange={e => setEditForm((p: any) => ({ ...p, bhk: e.target.value }))}

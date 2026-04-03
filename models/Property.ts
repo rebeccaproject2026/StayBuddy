@@ -52,7 +52,6 @@ export interface IProperty extends Document {
   // Tenant-specific fields
   flatsInProject?: string;
   bhk?: string;
-  bedrooms?: string;
   balcony?: string;
   totalFloors?: string;
   floorNumber?: string;
@@ -152,7 +151,6 @@ const PropertySchema: Schema = new Schema<IProperty>({
   parkingType: { type: String },
   flatsInProject: { type: String },
   bhk: { type: String },
-  bedrooms: { type: String },
   balcony: { type: String },
   totalFloors: { type: String },
   floorNumber: { type: String },

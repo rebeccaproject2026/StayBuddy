@@ -8,8 +8,6 @@ interface Props {
   setFlatsInProject: (v: string) => void;
   bhk: string;
   setBhk: (v: string) => void;
-  bedrooms: string;
-  setBedrooms: (v: string) => void;
   bathrooms: string;
   setBathrooms: (v: string) => void;
   balcony: string;
@@ -36,7 +34,6 @@ export default function TenantStep2Details({
   t, fieldErrors, FieldError,
   flatsInProject, setFlatsInProject,
   bhk, setBhk,
-  bedrooms, setBedrooms,
   bathrooms, setBathrooms,
   balcony, setBalcony,
   totalFloors, setTotalFloors,
@@ -88,27 +85,6 @@ export default function TenantStep2Details({
           ))}
         </div>
         <FieldError name="bhk" />
-      </div>
-
-      {/* Bedrooms */}
-      <div data-field="bedrooms">
-        <label className="block text-sm sm:text-base text-gray-700 font-medium mb-3">{t.bedroom}</label>
-        <div className="grid grid-cols-2 esm:grid-cols-3 md:grid-cols-5 gap-2">
-          {countOptions.map((option) => (
-            <button
-              key={option}
-              onClick={() => setBedrooms(option)}
-              className={`py-2 px-3 border-2 rounded-xl transition-all text-sm ${
-                bedrooms === option
-                  ? "border-primary bg-primary/10 text-primary font-medium"
-                  : "border-gray-200 text-gray-700 hover:border-gray-300"
-              }`}
-            >
-              {option}
-            </button>
-          ))}
-        </div>
-        <FieldError name="bedrooms" />
       </div>
 
       {/* Bathrooms */}
