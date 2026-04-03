@@ -4,7 +4,9 @@ import next from 'next';
 import { WebSocketServer, WebSocket } from 'ws';
 
 const dev = process.env.NODE_ENV !== 'production';
-const app = next({ dev });
+const hostname = 'localhost';
+const PORT = parseInt(process.env.PORT || '3000', 10);
+const app = next({ dev, hostname, port: PORT });
 const handle = app.getRequestHandler();
 
 // Map: roomKey → Set of connected WebSocket clients
@@ -43,15 +45,18 @@ app.prepare().then(() => {
 
   const wss = new WebSocketServer({ noServer: true });
 
-  // Upgrade HTTP → WebSocket only for /ws path
+  // Get Next.js's internal HMR upgrade handler and attach it to our server
+  const nextUpgradeHandler = (app as any).getUpgradeHandler?.();
+  if (nextUpgradeHandler) {
+    server.on('upgrade', nextUpgradeHandler);
+  }
+
   server.on('upgrade', (req, socket, head) => {
     const { pathname } = parse(req.url || '', true);
     if (pathname === '/ws') {
       wss.handleUpgrade(req, socket as any, head, ws => {
         wss.emit('connection', ws, req);
       });
-    } else {
-      socket.destroy();
     }
   });
 
@@ -137,7 +142,6 @@ app.prepare().then(() => {
     });
   });
 
-  const PORT = parseInt(process.env.PORT || '3000', 10);
   server.listen(PORT, () => {
     console.log(`> Ready on http://localhost:${PORT} (WebSocket on ws://localhost:${PORT}/ws)`);
   });
