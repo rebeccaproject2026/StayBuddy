@@ -53,10 +53,7 @@ export default function Navbar() {
     // Already on post-property page — do nothing
     if (pathname?.includes("/post-property")) return;
     setListingLoading(true);
-    setTimeout(() => {
-      setListingLoading(false);
-      router.push(`/${urlCountry || 'in'}/post-property`);
-    }, 2000);
+    router.push(`/${urlCountry || 'in'}/post-property`);
   };
 
   const handleNavClick = (e: React.MouseEvent, path: string) => {
@@ -68,10 +65,7 @@ export default function Navbar() {
       : `/${urlCountry || 'in'}${path}`;
     setNavDest(dest);
     setNavLoading(true);
-    setTimeout(() => {
-      setNavLoading(false);
-      router.push(dest);
-    }, 1000);
+    router.push(dest);
   };
 
   const isCountryMatch = !user || !urlCountry || user.country === urlCountry;
@@ -91,6 +85,12 @@ export default function Navbar() {
   const profileMenuButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => { setMounted(true); }, []);
+
+  // Clear overlays when route changes (page has loaded)
+  useEffect(() => {
+    setListingLoading(false);
+    setNavLoading(false);
+  }, [pathname]);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);

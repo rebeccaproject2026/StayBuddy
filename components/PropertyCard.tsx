@@ -65,7 +65,6 @@ export default function PropertyCard({
   const [isFavorite, setIsFavorite] = useState(isFavoriteProp);
   const [isTogglingFav, setIsTogglingFav] = useState(false);
   const [direction, setDirection] = useState(0);
-  const [cardLoading, setCardLoading] = useState(false);
 
   // Bed type dropdown state
   const bedTypes = type === "PG" && roomDetails ? Object.keys(roomDetails) : [];
@@ -135,10 +134,7 @@ export default function PropertyCard({
   };
 
   const handleCardClick = () => {
-    setCardLoading(true);
-    setTimeout(() => {
-      router.push(`/${country}/property/${id}`);
-    }, 1000);
+    router.push(`/${country}/property/${id}`);
   };
 
   const variants = {
@@ -160,46 +156,6 @@ export default function PropertyCard({
 
   return (
     <>
-      <AnimatePresence>
-        {cardLoading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center gap-5"
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              className="flex flex-col items-center gap-4"
-            >
-              <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center shadow-xl">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                  <polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <div className="text-center">
-                <p className="text-xl font-bold text-gray-900">
-                  {country === 'fr' ? 'Chargement...' : 'Loading property...'}
-                </p>
-              </div>
-              <div className="flex gap-1.5 mt-1">
-                {[0, 1, 2].map(i => (
-                  <motion.div
-                    key={i}
-                    className="w-2 h-2 rounded-full bg-primary"
-                    animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.15 }}
-                  />
-                ))}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
       <motion.div
         onClick={handleCardClick}
         initial={{ opacity: 0, y: 20 }}

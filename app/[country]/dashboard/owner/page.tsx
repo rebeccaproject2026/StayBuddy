@@ -818,6 +818,7 @@ export default function OwnerDashboard() {
       pgName: listing.pgName || "",
       // Tenant-specific
       societyName: listing.societyName || "",
+      bhk: listing.bhk || "",
       furnishing: Array.isArray(listing.furnishing) ? listing.furnishing : [],
       floorNumber: listing.floorNumber || "",
       totalFloors: listing.totalFloors || "",
@@ -952,6 +953,7 @@ export default function OwnerDashboard() {
       if (editForm.pgName) updates.pgName = editForm.pgName;
     } else {
       if (editForm.societyName) updates.societyName = editForm.societyName.trim();
+      if (editForm.bhk) updates.bhk = editForm.bhk;
       updates.furnishing = Array.isArray(editForm.furnishing) ? editForm.furnishing : [];
       if (editForm.floorNumber) updates.floorNumber = editForm.floorNumber;
       if (editForm.totalFloors) updates.totalFloors = editForm.totalFloors;
@@ -1709,6 +1711,14 @@ export default function OwnerDashboard() {
                                   className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                               </div>
                               <div>
+                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>BHK</label>
+                                <select value={editForm.bhk || ""} onChange={e => setEditForm((p: any) => ({ ...p, bhk: e.target.value }))}
+                                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`}>
+                                  <option value="">Select BHK</option>
+                                  {["1 BHK","2 BHK","3 BHK","4 BHK","4+ BHK"].map(o => <option key={o} value={o}>{o}</option>)}
+                                </select>
+                              </div>
+                              <div>
                                 <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Monthly Rent ({currencySymbol})</label>
                                 <input value={editForm.monthlyRentAmount} onChange={e => setEditForm(p => ({ ...p, monthlyRentAmount: e.target.value }))}
                                   inputMode="numeric"
@@ -2218,6 +2228,7 @@ export default function OwnerDashboard() {
                                 { label: "Gate Closing", value: selectedListing.gateClosingTime },
                                 { label: "Notice Period", value: selectedListing.noticePeriod },
                               ] : [
+                                { label: "BHK", value: selectedListing.bhk },
                                 { label: "Society", value: selectedListing.societyName },
                                 { label: "Furnishing", value: Array.isArray(selectedListing.furnishing) ? selectedListing.furnishing.join(", ") : selectedListing.furnishing },
                                 { label: "Floor", value: selectedListing.floorNumber },
