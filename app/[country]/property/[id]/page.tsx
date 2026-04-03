@@ -1214,11 +1214,14 @@ export default function PropertyDetailsPage() {
         <button
           onClick={() => {
             if (!isAuthenticated) {
-              toast.error(language === 'fr' ? 'Veuillez vous connecter pour contacter le propriétaire' : 'Please login to contact the owner');
               router.push(`/${country}/login?redirect=${encodeURIComponent(`/${country}/property/${propertyId}`)}`);
               return;
             }
-            window.open(`https://wa.me/?text=${encodeURIComponent(`Check out this property: ${property?.title} - ${window.location.href}`)}`, '_blank');
+            const phone = property?.ownerPhone || property?.landlord?.phone;
+            const waUrl = phone
+              ? `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi, I'm interested in ${property?.title} at ${property?.location}`)}`
+              : `https://wa.me/?text=${encodeURIComponent(`Check out this property: ${property?.title} - ${window.location.href}`)}`;
+            window.open(waUrl, '_blank');
           }}
           className="wa-float w-14 h-14 bg-[#25D366] rounded-full flex items-center justify-center shadow-lg hover:shadow-xl hover:bg-[#1ebe5d] transition-colors duration-300 cursor-pointer"
           aria-label="Chat on WhatsApp with owner"
@@ -1322,25 +1325,7 @@ export default function PropertyDetailsPage() {
         </div>
       )}
 
-      {/* WhatsApp sticky button — only for tenants/guests */}
-      {!isOwner && property.landlord?.phone && (
-        <button
-          onClick={() => {
-            if (!isAuthenticated) {
-              toast.error(language === 'fr' ? 'Veuillez vous connecter pour contacter le propriétaire' : 'Please login to contact the owner');
-              router.push(`/${country}/login?redirect=${encodeURIComponent(`/${country}/property/${propertyId}`)}`);
-              return;
-            }
-            window.open(`https://wa.me/${property.landlord.phone.replace(/\s/g, '')}?text=${encodeURIComponent(`Hi, I'm interested in ${property.title} at ${property.location}`)}`, '_blank');
-          }}
-          className="fixed bottom-4 right-4 sm:bottom-5 sm:right-5 z-50 w-12 h-12 sm:w-14 sm:h-14 bg-green-700 text-white rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110 group animate-bounce cursor-pointer">
-          <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6" />
-          <span className="absolute right-full mr-2 sm:mr-3 px-3 sm:px-4 py-1 sm:py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 shadow-lg hidden sm:block">
-            Chat on WhatsApp with owner
-            <span className="absolute top-1/2 -right-1 -translate-y-1/2 w-2 h-2 bg-gray-900 transform rotate-45"></span>
-          </span>
-        </button>
-      )}
+      {/* WhatsApp sticky button handled by the floating button above */}
     </div>
   );
 }

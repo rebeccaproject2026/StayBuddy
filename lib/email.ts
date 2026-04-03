@@ -405,7 +405,7 @@ export async function sendNewPropertyEmail(property: {
   const propertyUrl = `${baseUrl}/${country}/property/${property._id}`;
 
   // Build smart filter
-  const filter: Record<string, any> = { isActive: true };
+  const filter: Record<string, any> = { isActive: true, country: country };
   const orConditions: any[] = [
     { 'preferences.city': { $exists: false } },
     { 'preferences.city': '' },
@@ -487,7 +487,7 @@ export async function sendVacancyAlert(property: {
   const country = property.country || 'in';
   const propertyUrl = `${baseUrl}/${country}/property/${property._id}`;
 
-  const filter: Record<string, any> = { isActive: true };
+  const filter: Record<string, any> = { isActive: true, country: country };
   const orConditions: any[] = [
     { 'preferences.city': { $exists: false } },
     { 'preferences.city': '' },

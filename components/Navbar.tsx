@@ -226,38 +226,21 @@ export default function Navbar() {
         {navLoading && (
           <motion.div
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            animate={{ opacity: 0.6 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center gap-5"
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[9999] bg-white/60 backdrop-blur-sm flex items-center justify-center"
           >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              className="flex flex-col items-center gap-4"
-            >
-              <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center shadow-xl">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-              <div className="text-center">
-                <p className="text-xl font-bold text-gray-900">
-                  {language === "fr" ? "Chargement..." : "Loading..."}
-                </p>
-              </div>
-              <div className="flex gap-1.5 mt-1">
-                {[0, 1, 2].map(i => (
-                  <motion.div
-                    key={i}
-                    className="w-2 h-2 rounded-full bg-primary"
-                    animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.15 }}
-                  />
-                ))}
-              </div>
-            </motion.div>
+            <div className="flex gap-1.5">
+              {[0, 1, 2].map(i => (
+                <motion.div
+                  key={i}
+                  className="w-2.5 h-2.5 rounded-full bg-primary"
+                  animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.12 }}
+                />
+              ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

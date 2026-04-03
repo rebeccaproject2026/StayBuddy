@@ -5,14 +5,17 @@ import Subscriber from '@/models/Subscriber';
 export async function POST(req: NextRequest) {
   try {
     await connectDB();
-    const { email } = await req.json();
+    const { email, country } = await req.json();
 
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
+    const filter: Record<string, any> = { email: email.toLowerCase() };
+    if (country) filter.country = country === 'fr' ? 'fr' : 'in';
+
     const result = await Subscriber.findOneAndUpdate(
-      { email: email.toLowerCase() },
+      filter,
       { isActive: false },
       { new: true }
     );
@@ -34,15 +37,16 @@ export async function GET(req: NextRequest) {
   try {
     await connectDB();
     const email = req.nextUrl.searchParams.get('email');
+    const country = req.nextUrl.searchParams.get('country');
 
     if (!email) {
       return new Response('<h2>Missing email parameter.</h2>', { headers: { 'Content-Type': 'text/html' } });
     }
 
-    await Subscriber.findOneAndUpdate(
-      { email: email.toLowerCase() },
-      { isActive: false }
-    );
+    const filter: Record<string, any> = { email: email.toLowerCase() };
+    if (country) filter.country = country === 'fr' ? 'fr' : 'in';
+
+    await Subscriber.findOneAndUpdate(filter, { isActive: false });
 
     return new Response(
       `<html><body style="font-family:sans-serif;text-align:center;padding:60px">

@@ -88,7 +88,7 @@ export default function SubscribeSection() {
       const res = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, city: city || undefined, propertyType: propertyType || undefined }),
+        body: JSON.stringify({ email, city: city || undefined, propertyType: propertyType || undefined, country: (params?.country as string) || 'in' }),
       });
       const data = await res.json();
 

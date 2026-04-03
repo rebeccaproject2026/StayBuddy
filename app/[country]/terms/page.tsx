@@ -2,520 +2,291 @@
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import Link from "@/components/LocalizedLink";
-import { ArrowLeft, FileText, Shield, Users, Home, CreditCard, AlertCircle, Scale, Mail, Phone, MapPin } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+
+const sections = [
+  {
+    id: "introduction",
+    title: "General Terms & Conditions",
+    content: `These General Terms & Conditions ("Terms") constitute a legally binding agreement between you and StayBuddy ("StayBuddy / We / Us / Company") regarding your use of the website and mobile application ("Site") and any services offered or made available by StayBuddy, including delivery of content via the Site or through any mobile or internet-connected device ("Services").
+
+Your use of the Site and Services is governed by the following Terms. By mere use of the Site, you shall be contracting with StayBuddy. These Terms including the policies constitute your binding obligations, and it is imperative that before using the platform you acquaint yourself with their applicability.
+
+StayBuddy reserves the right to amend or modify these Terms without any prior notice. Such modifications shall become effective immediately upon being posted on the Site. Any further access to the Site after such modifications shall constitute your acceptance of the revised Terms.`
+  },
+  {
+    id: "definitions",
+    title: "I. Defined Terms",
+    content: `Unless otherwise specified, the capitalized words shall have the meanings defined below:
+
+"Agreement" refers to the completed application form, its attachments, and these Terms.
+
+"StayBuddy" refers to the company operating the StayBuddy platform, including its website and mobile application.
+
+"Date of Commencement" is the date indicating the acceptance of the application by the User to the Services.
+
+"Date of Termination" is the date of expiry mentioned in the notice or letter of termination and/or the date when the Services are supposed to end.
+
+"Registration Data" is the database of all particulars and information supplied by the User on initial application and subscription, including User name, contact details, mailing address, account details and any other information supplied.
+
+"User / You" includes any Subscriber, Advertiser, Browser, or Visitor — either an individual or a juristic personality — whose details are captured in the application form, and includes their successors and permitted assigns. It also includes any person accessing or using Services for hosting, publishing, listing, transacting, or viewing information, or otherwise participating in any manner.
+
+"Confidential Information" shall mean any and all non-public, proprietary, technical, financial, strategic, commercial, or business-related information, data, documents, trade secrets, know-how, customer lists, pricing strategies, product designs, marketing plans, and any other information disclosed by StayBuddy or its affiliates, in any form or medium, whether marked as confidential or not.`
+  },
+  {
+    id: "services",
+    title: "II. Services",
+    content: `StayBuddy provides various internet-based Services through its platform, including:
+
+• Posting property listings and User profiles for rent or related services.
+• Searching for PG accommodations and rental properties via the Site.
+• Posting online advertisements.
+• Sending promotional messages via email or SMS.
+• Other services as mentioned on the Site or as stated in these Terms.
+
+Services may be purchased through available payment options and are subject to applicable policies, including subscription fees, refunds, and cancellations.`
+  },
+  {
+    id: "eligibility",
+    title: "III. Eligibility",
+    content: `You represent and warrant that you are at least 18 years of age and competent to enter into a valid and binding contract. Minors may use the Service only under the supervision of a parent or legal guardian through the guardian's registered account.
+
+You agree to register before uploading content or accessing Services, and to provide accurate personal details, including name, age, email, address, and contact number.`
+  },
+  {
+    id: "payment",
+    title: "IV. Payment & Refund",
+    content: `For all Services, 50% of the total order value shall be considered as activation/administration charges. The remaining 50% may be refundable on a pro-rata basis upon cancellation, depending on the extent of Services usage. Any applicable refund shall be processed within 4 to 6 weeks from the date of submission of complete and accurate documentation to StayBuddy. All refund claims are subject to the sole discretion of StayBuddy and shall not be construed as a right.
+
+Users are required to pay the applicable fees within the time period specified in the invoice(s) issued by StayBuddy.
+
+Any delay by the User in making payments will attract interest on the outstanding amount from the due date until the date of full payment.`
+  },
+  {
+    id: "security",
+    title: "V. Security",
+    content: `Transactions on the Site are encrypted and secure. Credit/debit card details are handled solely by authorized payment gateways and are not stored by StayBuddy.
+
+Users must safeguard their usernames and passwords, including changing the password periodically and refraining from sharing it with third parties.
+
+Access to Services must be through the credentials of the User. Loss or theft of login credentials must be reported immediately. Users shall remain liable for Services use until such notification is received by StayBuddy.
+
+Use of automated software to extract or download data from the Site is prohibited without prior written consent.`
+  },
+  {
+    id: "obligations",
+    title: "VI. Obligations and Representations of User",
+    content: `• Provide accurate, complete, and correct Registration Data at the time of application for the Services.
+• Acknowledge that all data entered on the Site is subject to verification by StayBuddy.
+• Obtain all necessary licenses, permits, consents, approvals, and intellectual property rights required for using the Services at their own cost.
+• Comply with all instructions or notices issued by StayBuddy for Services usage.
+• Be solely responsible for applicable taxes and related costs incurred in using the Services.
+• Maintain confidentiality of their login credentials and all activities performed under their account.
+• Promptly notify StayBuddy of any unauthorized use or security breach of their account.
+• Confirm they are above 18 years of age and legally competent to contract.
+• Acknowledge that listings may take up to 48 hours to reflect on the Site.
+• Grant StayBuddy a non-exclusive, worldwide, royalty-free, irrevocable, sub-licensable license to use submitted content across media, excluding sensitive financial data.
+• Ensure that all User Data is accurate, complete, and not misleading in any manner.`
+  },
+  {
+    id: "prohibited",
+    title: "VII. Prohibited Actions",
+    content: `Users shall not:
+
+• Permit unauthorized persons to access or use the Services, nor resell, sublicense, assign, or commercially exploit the Services in any unauthorized manner.
+• Post, transmit, or store content that is defamatory, obscene, pornographic, abusive, threatening, harassing, libellous, racially or ethnically objectionable, or otherwise unlawful or harmful.
+• Impersonate any person or entity, misrepresent their affiliation, or disclose confidential or proprietary information without proper authorization.
+• Upload or transmit viruses, malware, or malicious code; attempt unauthorized access to systems, networks, or the Site; or use bots, scrapers, or similar tools without permission.
+• Share false, misleading, or deceptive information, or any content created with malicious intent to harm or misinform others.
+• Send unsolicited messages, engage in spamming activities, or advertise unrelated services to other users.
+
+Violation of these Terms may result in suspension, deactivation, or blacklisting of the User account.`
+  },
+  {
+    id: "ip",
+    title: "VIII. Intellectual Property Rights",
+    content: `All intellectual property rights in the Site, Services, property listings, User data, and all related content remain the sole and exclusive property of StayBuddy. Users shall have no claim or right over such intellectual property.
+
+Any content contributed by a User (text, images, videos, reviews, etc.) shall automatically vest in StayBuddy. Reproduction or reuse of such content elsewhere constitutes infringement, and StayBuddy reserves the right to initiate legal action.
+
+All trademarks, logos, and brand elements displayed on the Site are owned by or licensed to StayBuddy. No right or license is granted to any User. Unauthorized use shall attract strict legal consequences.
+
+Users are granted a limited, non-transferable, non-exclusive, and revocable license to access and use the Services, strictly in accordance with these Terms.`
+  },
+  {
+    id: "confidentiality",
+    title: "IX. Confidentiality",
+    content: `The User acknowledges and agrees that, in the course of using the StayBuddy platform or Services, they may receive or gain access to certain non-public, sensitive, or proprietary information relating to StayBuddy, its affiliates, partners, or other users.
+
+You agree to maintain the confidentiality of all such information and not to disclose, share, publish, or otherwise make such information available to any third party without the prior written consent of StayBuddy, except where disclosure is required under applicable law, regulation, or legal process.
+
+These confidentiality obligations shall survive the termination or expiration of your access to or use of the platform and Services, for any reason whatsoever.`
+  },
+  {
+    id: "thirdparty",
+    title: "X. Third Party Links and Resources",
+    content: `The Site may display or link to content, services, advertisements, or goods provided by third-party websites or platforms. Such third-party content is not under StayBuddy's control, and StayBuddy is not responsible for its availability, accuracy, content, or privacy practices.
+
+Hyperlinks and references to third-party websites are provided solely for User convenience and do not imply endorsement by StayBuddy. Accessing such websites is at the User's own risk.
+
+StayBuddy shall not be liable for any loss, damage, or harm arising from User access to or reliance on third-party websites, content, or services.`
+  },
+  {
+    id: "termination",
+    title: "XI. Termination and Suspension",
+    content: `Users may request suspension of the Services by submitting a written request to StayBuddy. StayBuddy shall have up to 30 days from the date of receiving such request to review and respond.
+
+StayBuddy reserves the right to immediately terminate your access to the Service without prior notice if it has reasonable grounds to believe that you have engaged in any activity amounting to fraud, misrepresentation, cheating, or any act prejudicial to the interests of StayBuddy.
+
+In the event of termination, any fees or amounts paid by you shall be forfeited and shall not be refundable under any circumstances.
+
+Any provisions of the Agreement which by their nature are intended to survive, including but not limited to confidentiality, limitations of liability, and dispute resolution, shall survive termination.`
+  },
+  {
+    id: "disclaimer",
+    title: "XII. Disclaimer",
+    content: `StayBuddy does not warrant, guarantee, or represent that the Services will meet your specific requirements or expectations, be uninterrupted, timely, secure, or error-free.
+
+StayBuddy operates as an intermediary platform. The content on the Site is provided without warranties of any kind; views expressed by Users are their own and are not endorsed by StayBuddy.
+
+StayBuddy does not guarantee any response, satisfactory or otherwise, to listings displayed on the Site. Property descriptions and other content on the Site are for informational purposes only. It is the sole responsibility of buyers/tenants and agents to verify accuracy.
+
+StayBuddy shall not be liable for any disclosure, error, omission, or inaccuracy relating to user information. All data is accepted in good faith.`
+  },
+  {
+    id: "liability",
+    title: "XIII. Limitation of Liability",
+    content: `The User agrees that neither StayBuddy nor its directors, officers, or employees shall be liable for any direct, indirect, incidental, special, consequential, or exemplary damages arising from:
+
+• The use or inability to use the Services.
+• Any goods, data, information, or services obtained, or messages received, or transactions entered into through the Service.
+• Unauthorized access to or alteration of the User's data or transmissions.
+• Any other matter relating to the Services, including loss of profits, use, data, or other intangible losses.
+
+In any event, StayBuddy's total cumulative liability shall not exceed the amount paid by the User to StayBuddy related to the cause of action.`
+  },
+  {
+    id: "indemnity",
+    title: "XIV. Indemnity",
+    content: `Users hereby agree to indemnify, hold harmless, and settle any third-party lawsuit or proceeding brought against StayBuddy or any of its directors, employees, or Key Managerial Personnel in relation to any claim arising from the advertisement, wrongful posting of property, unauthorized posting of property, or the fact that the User Content, Site, and/or User features infringe or tend to infringe any copyright, trade secret, or trademark of such third party.
+
+The User further unconditionally agrees to indemnify, reimburse, and hold harmless StayBuddy, its officers, directors, employees, and agents from and against any claims, actions, demands, liabilities, losses, or damages whatsoever arising from or resulting from their use of StayBuddy, whether directly or indirectly.`
+  },
+  {
+    id: "governing",
+    title: "XV. Governing Law and Jurisdiction",
+    content: `There is no agency, partnership, joint venture, employer-employee, or franchisor-franchisee relationship between StayBuddy and any User of the Services.
+
+The User agrees that, regardless of any statute or law to the contrary, any claim or cause of action arising out of or related to the use of the Services or these Terms must be filed within 30 days after such claim or cause of action arose, or it shall be forever barred.
+
+The Agreement and any dispute or matter arising from incidental use of the Site shall be governed by the applicable laws of the jurisdiction in which the User operates, and the User and Site hereby submit to the exclusive jurisdiction of the competent courts.`
+  },
+  {
+    id: "privacy",
+    title: "XVI. Privacy Policy",
+    content: `The Site respects the privacy of its Users and is committed to protecting it. StayBuddy collects User information through various means. This information is voluntarily provided by Users and includes property details, email addresses, and names. The data collected is stored in the Site database and is intended solely for use by StayBuddy.
+
+The Site engages third-party advertising companies to display ads on various websites in order to reach potential Users, buyers, and sellers. The collected data is used exclusively by the Site and may be shared with its clients for property-related purposes only.
+
+Any unauthorized use or sharing of this information by third parties will result in appropriate legal action by StayBuddy.`
+  },
+  {
+    id: "pg",
+    title: "XVII. PG Listing Terms",
+    content: `StayBuddy is an online platform that facilitates interactions between Users (Tenants) and PG Owners. StayBuddy does not act as an agent for either party and all transactions are on a principal-to-principal basis.
+
+The User is solely responsible for verifying the accuracy, reliability, and authenticity of PG listings, and for conducting their own due diligence including physical inspection and direct communication with the PG Owner.
+
+StayBuddy does not guarantee the quality, condition, ownership, or legal standing of any PG property.
+
+StayBuddy is not a party to the rental agreement or any dispute that may arise between the User and the PG Owner. The User shall indemnify StayBuddy against any claim, cost, or liability arising from such disputes.
+
+StayBuddy reserves the right to modify these Terms at any time without prior notice. Continued use of the platform constitutes acceptance of the revised Terms.`
+  },
+  {
+    id: "acceptance",
+    title: "XVIII. Acknowledgment and Acceptance of Terms",
+    content: `The Terms appearing above constitute the entire agreement between the User and StayBuddy and supersede all previous arrangements and schedules between the parties regarding the subject matter contained herein. By completing the registration process and/or checking the "I have read and accept the Terms" box, the User indicates their acceptance of this agreement and agrees to be bound by all the Terms as stated above.
+
+It is our constant endeavour to make the Site an enjoyable and effective experience for all our Users. If you observe any material or behaviour that may violate these Terms, please write to us. User feedback will go a long way in helping us enhance our Services.`
+  },
+];
 
 export default function TermsAndConditionsPage() {
   const { language } = useLanguage();
-
-  const content = {
-    en: {
-      title: "Terms and Conditions",
-      effectiveDate: "Effective Date: January 1, 2024",
-      lastUpdated: "Last Updated: January 1, 2024",
-      backToHome: "Back to Home",
-      sections: [
-        {
-          id: "introduction",
-          icon: FileText,
-          title: "1. Introduction",
-          content: [
-            "Welcome to StayBuddy. These Terms and Conditions govern your use of our website and services related to PG (Paying Guest) accommodations and tenant rental listings.",
-            "By accessing or using our website, you agree to comply with and be bound by these Terms. If you do not agree with any part of these Terms, please do not use our platform."
-          ]
-        },
-        {
-          id: "definitions",
-          icon: Users,
-          title: "2. Definitions",
-          content: [
-            '"Platform" refers to StayBuddy and all its associated services, websites, and applications.',
-            '"User" refers to any visitor, tenant, landlord, or PG owner using the platform.',
-            '"Tenant" refers to a person seeking or renting a PG or rental property.',
-            '"Owner/Landlord" refers to the person or entity listing PG or rental property on our platform.',
-            '"Services" refers to all features, tools, and functionalities provided by StayBuddy.'
-          ]
-        },
-        {
-          id: "eligibility",
-          icon: Shield,
-          title: "3. Eligibility",
-          content: [
-            "Users must be at least 18 years of age to use our platform.",
-            "Users must provide accurate, current, and complete registration information.",
-            "The platform reserves the right to suspend or terminate accounts that provide false, misleading, or incomplete information.",
-            "Users must have the legal capacity to enter into binding contracts in their jurisdiction."
-          ]
-        },
-        {
-          id: "account",
-          icon: Users,
-          title: "4. Account Registration",
-          content: [
-            "Users are solely responsible for maintaining the confidentiality of their account credentials.",
-            "You are responsible for all activities that occur under your account.",
-            "You must notify us immediately of any unauthorized use of your account or any other breach of security.",
-            "We reserve the right to refuse service, terminate accounts, or remove content at our sole discretion.",
-            "You may not use another user's account without permission."
-          ]
-        },
-        {
-          id: "listings",
-          icon: Home,
-          title: "5. Property Listings",
-          content: [
-            "Property owners are responsible for providing accurate, complete, and up-to-date details including rent, amenities, house rules, and availability.",
-            "All property listings must comply with local laws and regulations.",
-            "The platform does not guarantee the availability, pricing accuracy, condition, or quality of any listed property.",
-            "We reserve the right to remove, modify, or reject any listing that is misleading, inappropriate, illegal, or violates our policies.",
-            "Owners must have the legal right to list and rent the property.",
-            "Photos and descriptions must accurately represent the property."
-          ]
-        },
-        {
-          id: "payments",
-          icon: CreditCard,
-          title: "6. Booking and Payments",
-          content: [
-            "Rent payments and security deposits may be processed through third-party payment gateways.",
-            "The platform is not responsible for payment gateway failures, delays, or technical issues.",
-            "Security deposits, refunds, and cancellations are subject to the individual owner's policy.",
-            "Users must carefully review the cancellation and refund policies before making a booking.",
-            "All payment transactions are subject to applicable taxes and fees.",
-            "StayBuddy may charge service fees for using the platform, which will be clearly disclosed before booking."
-          ]
-        },
-        {
-          id: "responsibilities",
-          icon: AlertCircle,
-          title: "7. User Responsibilities",
-          content: [
-            "Users agree not to post false, misleading, or fraudulent information.",
-            "Users agree not to engage in any fraudulent activities or misuse the platform.",
-            "Users agree not to use the platform for any illegal purposes or activities.",
-            "Users must follow all PG rules, property regulations, and local rental laws.",
-            "Users must respect the rights and property of others.",
-            "Users must not harass, abuse, or harm other users.",
-            "Users must not attempt to circumvent platform fees by conducting transactions outside the platform."
-          ]
-        },
-        {
-          id: "cancellation",
-          icon: FileText,
-          title: "8. Cancellation & Refund Policy",
-          content: [
-            "Cancellation policies may vary by property owner and will be clearly stated in each listing.",
-            "Refunds, if applicable, will be processed within 7-14 business days of cancellation approval.",
-            "Platform service fees may be non-refundable depending on the timing of cancellation.",
-            "Tenants must provide proper notice as per the property's cancellation policy.",
-            "Owners reserve the right to cancel bookings in case of property unavailability or other valid reasons.",
-            "In case of disputes, StayBuddy may mediate but is not obligated to provide refunds."
-          ]
-        },
-        {
-          id: "liability",
-          icon: Shield,
-          title: "9. Limitation of Liability",
-          content: [
-            "StayBuddy acts solely as an intermediary platform connecting tenants and property owners.",
-            "We are not responsible for disputes, disagreements, or conflicts between tenants and owners.",
-            "We are not liable for property damages, theft, personal injury, or any losses incurred during a rental period.",
-            "We do not guarantee the accuracy, reliability, or quality of any listings or user-generated content.",
-            "Users use the platform at their own risk.",
-            "Our total liability shall not exceed the amount of service fees paid by the user in the past 12 months.",
-            "We are not responsible for any indirect, incidental, special, or consequential damages."
-          ]
-        },
-        {
-          id: "termination",
-          icon: AlertCircle,
-          title: "10. Termination",
-          content: [
-            "We reserve the right to suspend or terminate user accounts that violate our policies or Terms.",
-            "We may remove content that breaches these Terms without prior notice.",
-            "Users may terminate their accounts at any time by contacting our support team.",
-            "Upon termination, users lose access to all platform features and services.",
-            "Termination does not affect any outstanding obligations or liabilities."
-          ]
-        },
-        {
-          id: "intellectual",
-          icon: FileText,
-          title: "11. Intellectual Property",
-          content: [
-            "All content, logos, branding, design elements, and software on StayBuddy are the intellectual property of StayBuddy or its licensors.",
-            "Users may not copy, reproduce, distribute, or create derivative works without explicit written permission.",
-            "User-generated content remains the property of the user, but users grant StayBuddy a license to use, display, and distribute such content.",
-            "Any unauthorized use of our intellectual property may result in legal action."
-          ]
-        },
-        {
-          id: "privacy",
-          icon: Shield,
-          title: "12. Privacy and Data Protection",
-          content: [
-            "Your use of the platform is also governed by our Privacy Policy.",
-            "We collect, use, and protect your personal information in accordance with applicable data protection laws.",
-            "Users are responsible for maintaining the confidentiality of their personal information.",
-            "We may share information with third parties as described in our Privacy Policy."
-          ]
-        },
-        {
-          id: "governing",
-          icon: Scale,
-          title: "13. Governing Law and Jurisdiction",
-          content: [
-            "These Terms shall be governed by and construed in accordance with the laws of India.",
-            "Any disputes arising from these Terms or use of the platform shall be subject to the exclusive jurisdiction of the courts in Ahmedabad, Gujarat, India.",
-            "Users agree to submit to the personal jurisdiction of these courts."
-          ]
-        },
-        {
-          id: "changes",
-          icon: FileText,
-          title: "14. Changes to Terms",
-          content: [
-            "We reserve the right to modify, update, or change these Terms at any time.",
-            "Changes will be effective immediately upon posting on the platform.",
-            "Continued use of the platform after changes constitutes acceptance of the updated Terms.",
-            "We encourage users to review these Terms periodically.",
-            "Material changes will be communicated via email or platform notifications."
-          ]
-        },
-        {
-          id: "miscellaneous",
-          icon: FileText,
-          title: "15. Miscellaneous",
-          content: [
-            "If any provision of these Terms is found to be invalid or unenforceable, the remaining provisions shall remain in full force and effect.",
-            "Our failure to enforce any right or provision shall not constitute a waiver of such right or provision.",
-            "These Terms constitute the entire agreement between you and StayBuddy regarding the use of the platform.",
-            "Users may not assign or transfer their rights under these Terms without our written consent."
-          ]
-        }
-      ],
-      contact: {
-        title: "16. Contact Information",
-        subtitle: "For any questions, concerns, or inquiries regarding these Terms and Conditions, please contact us:",
-        email: "Email",
-        emailValue: "support@staybuddy.com",
-        phone: "Phone",
-        phoneValue: "+91 99999 99999",
-        address: "Address",
-        addressValue: "213 Sanidhya Arcade, Vastral, Ahmedabad, Gujarat 382418, India"
-      },
-      acknowledgment: {
-        title: "Acknowledgment",
-        content: "By using StayBuddy, you acknowledge that you have read, understood, and agree to be bound by these Terms and Conditions."
-      }
-    },
-    fr: {
-      title: "Termes et Conditions",
-      effectiveDate: "Date d'entrée en vigueur: 1er janvier 2024",
-      lastUpdated: "Dernière mise à jour: 1er janvier 2024",
-      backToHome: "Retour à l'accueil",
-      sections: [
-        {
-          id: "introduction",
-          icon: FileText,
-          title: "1. Introduction",
-          content: [
-            "Bienvenue sur StayBuddy. Ces Termes et Conditions régissent votre utilisation de notre site Web et de nos services liés aux hébergements PG (Paying Guest) et aux annonces de location pour locataires.",
-            "En accédant ou en utilisant notre site Web, vous acceptez de vous conformer à ces Termes. Si vous n'êtes pas d'accord avec une partie de ces Termes, veuillez ne pas utiliser notre plateforme."
-          ]
-        },
-        {
-          id: "definitions",
-          icon: Users,
-          title: "2. Définitions",
-          content: [
-            '"Plateforme" fait référence à StayBuddy et tous ses services, sites Web et applications associés.',
-            '"Utilisateur" fait référence à tout visiteur, locataire, propriétaire ou propriétaire de PG utilisant la plateforme.',
-            '"Locataire" fait référence à une personne recherchant ou louant un PG ou une propriété locative.',
-            '"Propriétaire/Bailleur" fait référence à la personne ou à l\'entité qui inscrit un PG ou une propriété locative sur notre plateforme.',
-            '"Services" fait référence à toutes les fonctionnalités, outils et fonctionnalités fournis par StayBuddy.'
-          ]
-        },
-        {
-          id: "eligibility",
-          icon: Shield,
-          title: "3. Éligibilité",
-          content: [
-            "Les utilisateurs doivent avoir au moins 18 ans pour utiliser notre plateforme.",
-            "Les utilisateurs doivent fournir des informations d'inscription exactes, actuelles et complètes.",
-            "La plateforme se réserve le droit de suspendre ou de résilier les comptes qui fournissent des informations fausses, trompeuses ou incomplètes.",
-            "Les utilisateurs doivent avoir la capacité juridique de conclure des contrats contraignants dans leur juridiction."
-          ]
-        },
-        {
-          id: "account",
-          icon: Users,
-          title: "4. Inscription au compte",
-          content: [
-            "Les utilisateurs sont seuls responsables du maintien de la confidentialité de leurs identifiants de compte.",
-            "Vous êtes responsable de toutes les activités qui se produisent sous votre compte.",
-            "Vous devez nous informer immédiatement de toute utilisation non autorisée de votre compte ou de toute autre violation de la sécurité.",
-            "Nous nous réservons le droit de refuser le service, de résilier des comptes ou de supprimer du contenu à notre seule discrétion.",
-            "Vous ne pouvez pas utiliser le compte d'un autre utilisateur sans autorisation."
-          ]
-        },
-        {
-          id: "listings",
-          icon: Home,
-          title: "5. Annonces de propriétés",
-          content: [
-            "Les propriétaires sont responsables de fournir des détails précis, complets et à jour, y compris le loyer, les commodités, les règles de la maison et la disponibilité.",
-            "Toutes les annonces de propriétés doivent être conformes aux lois et réglementations locales.",
-            "La plateforme ne garantit pas la disponibilité, l'exactitude des prix, l'état ou la qualité de toute propriété répertoriée.",
-            "Nous nous réservons le droit de supprimer, modifier ou rejeter toute annonce trompeuse, inappropriée, illégale ou violant nos politiques.",
-            "Les propriétaires doivent avoir le droit légal de répertorier et de louer la propriété.",
-            "Les photos et descriptions doivent représenter fidèlement la propriété."
-          ]
-        },
-        {
-          id: "payments",
-          icon: CreditCard,
-          title: "6. Réservation et paiements",
-          content: [
-            "Les paiements de loyer et les dépôts de garantie peuvent être traités via des passerelles de paiement tierces.",
-            "La plateforme n'est pas responsable des défaillances, retards ou problèmes techniques des passerelles de paiement.",
-            "Les dépôts de garantie, les remboursements et les annulations sont soumis à la politique du propriétaire individuel.",
-            "Les utilisateurs doivent examiner attentivement les politiques d'annulation et de remboursement avant de faire une réservation.",
-            "Toutes les transactions de paiement sont soumises aux taxes et frais applicables.",
-            "StayBuddy peut facturer des frais de service pour l'utilisation de la plateforme, qui seront clairement divulgués avant la réservation."
-          ]
-        },
-        {
-          id: "responsibilities",
-          icon: AlertCircle,
-          title: "7. Responsabilités des utilisateurs",
-          content: [
-            "Les utilisateurs acceptent de ne pas publier d'informations fausses, trompeuses ou frauduleuses.",
-            "Les utilisateurs acceptent de ne pas se livrer à des activités frauduleuses ou d'abuser de la plateforme.",
-            "Les utilisateurs acceptent de ne pas utiliser la plateforme à des fins ou activités illégales.",
-            "Les utilisateurs doivent suivre toutes les règles PG, les réglementations de propriété et les lois locales sur la location.",
-            "Les utilisateurs doivent respecter les droits et la propriété des autres.",
-            "Les utilisateurs ne doivent pas harceler, abuser ou nuire à d'autres utilisateurs.",
-            "Les utilisateurs ne doivent pas tenter de contourner les frais de plateforme en effectuant des transactions en dehors de la plateforme."
-          ]
-        },
-        {
-          id: "cancellation",
-          icon: FileText,
-          title: "8. Politique d'annulation et de remboursement",
-          content: [
-            "Les politiques d'annulation peuvent varier selon le propriétaire et seront clairement indiquées dans chaque annonce.",
-            "Les remboursements, le cas échéant, seront traités dans les 7 à 14 jours ouvrables suivant l'approbation de l'annulation.",
-            "Les frais de service de la plateforme peuvent être non remboursables selon le moment de l'annulation.",
-            "Les locataires doivent fournir un préavis approprié conformément à la politique d'annulation de la propriété.",
-            "Les propriétaires se réservent le droit d'annuler les réservations en cas d'indisponibilité de la propriété ou pour d'autres raisons valables.",
-            "En cas de litige, StayBuddy peut servir de médiateur mais n'est pas obligé de fournir des remboursements."
-          ]
-        },
-        {
-          id: "liability",
-          icon: Shield,
-          title: "9. Limitation de responsabilité",
-          content: [
-            "StayBuddy agit uniquement en tant que plateforme intermédiaire reliant les locataires et les propriétaires.",
-            "Nous ne sommes pas responsables des litiges, désaccords ou conflits entre locataires et propriétaires.",
-            "Nous ne sommes pas responsables des dommages matériels, du vol, des blessures corporelles ou de toute perte subie pendant une période de location.",
-            "Nous ne garantissons pas l'exactitude, la fiabilité ou la qualité des annonces ou du contenu généré par les utilisateurs.",
-            "Les utilisateurs utilisent la plateforme à leurs propres risques.",
-            "Notre responsabilité totale ne doit pas dépasser le montant des frais de service payés par l'utilisateur au cours des 12 derniers mois.",
-            "Nous ne sommes pas responsables des dommages indirects, accessoires, spéciaux ou consécutifs."
-          ]
-        },
-        {
-          id: "termination",
-          icon: AlertCircle,
-          title: "10. Résiliation",
-          content: [
-            "Nous nous réservons le droit de suspendre ou de résilier les comptes d'utilisateurs qui violent nos politiques ou Termes.",
-            "Nous pouvons supprimer le contenu qui enfreint ces Termes sans préavis.",
-            "Les utilisateurs peuvent résilier leurs comptes à tout moment en contactant notre équipe d'assistance.",
-            "Lors de la résiliation, les utilisateurs perdent l'accès à toutes les fonctionnalités et services de la plateforme.",
-            "La résiliation n'affecte pas les obligations ou responsabilités en cours."
-          ]
-        },
-        {
-          id: "intellectual",
-          icon: FileText,
-          title: "11. Propriété intellectuelle",
-          content: [
-            "Tout le contenu, les logos, l'image de marque, les éléments de conception et les logiciels sur StayBuddy sont la propriété intellectuelle de StayBuddy ou de ses concédants de licence.",
-            "Les utilisateurs ne peuvent pas copier, reproduire, distribuer ou créer des œuvres dérivées sans autorisation écrite explicite.",
-            "Le contenu généré par les utilisateurs reste la propriété de l'utilisateur, mais les utilisateurs accordent à StayBuddy une licence pour utiliser, afficher et distribuer ce contenu.",
-            "Toute utilisation non autorisée de notre propriété intellectuelle peut entraîner des poursuites judiciaires."
-          ]
-        },
-        {
-          id: "privacy",
-          icon: Shield,
-          title: "12. Confidentialité et protection des données",
-          content: [
-            "Votre utilisation de la plateforme est également régie par notre Politique de confidentialité.",
-            "Nous collectons, utilisons et protégeons vos informations personnelles conformément aux lois applicables sur la protection des données.",
-            "Les utilisateurs sont responsables du maintien de la confidentialité de leurs informations personnelles.",
-            "Nous pouvons partager des informations avec des tiers comme décrit dans notre Politique de confidentialité."
-          ]
-        },
-        {
-          id: "governing",
-          icon: Scale,
-          title: "13. Loi applicable et juridiction",
-          content: [
-            "Ces Termes sont régis et interprétés conformément aux lois de l'Inde.",
-            "Tout litige découlant de ces Termes ou de l'utilisation de la plateforme sera soumis à la juridiction exclusive des tribunaux d'Ahmedabad, Gujarat, Inde.",
-            "Les utilisateurs acceptent de se soumettre à la juridiction personnelle de ces tribunaux."
-          ]
-        },
-        {
-          id: "changes",
-          icon: FileText,
-          title: "14. Modifications des Termes",
-          content: [
-            "Nous nous réservons le droit de modifier, mettre à jour ou modifier ces Termes à tout moment.",
-            "Les modifications prendront effet immédiatement après leur publication sur la plateforme.",
-            "L'utilisation continue de la plateforme après les modifications constitue l'acceptation des Termes mis à jour.",
-            "Nous encourageons les utilisateurs à consulter périodiquement ces Termes.",
-            "Les modifications importantes seront communiquées par e-mail ou notifications de plateforme."
-          ]
-        },
-        {
-          id: "miscellaneous",
-          icon: FileText,
-          title: "15. Divers",
-          content: [
-            "Si une disposition de ces Termes est jugée invalide ou inapplicable, les dispositions restantes resteront pleinement en vigueur.",
-            "Notre incapacité à faire respecter un droit ou une disposition ne constitue pas une renonciation à ce droit ou à cette disposition.",
-            "Ces Termes constituent l'accord complet entre vous et StayBuddy concernant l'utilisation de la plateforme.",
-            "Les utilisateurs ne peuvent pas céder ou transférer leurs droits en vertu de ces Termes sans notre consentement écrit."
-          ]
-        }
-      ],
-      contact: {
-        title: "16. Informations de contact",
-        subtitle: "Pour toute question, préoccupation ou demande concernant ces Termes et Conditions, veuillez nous contacter:",
-        email: "Email",
-        emailValue: "support@staybuddy.com",
-        phone: "Téléphone",
-        phoneValue: "+91 99999 99999",
-        address: "Adresse",
-        addressValue: "213 Sanidhya Arcade, Vastral, Ahmedabad, Gujarat 382418, Inde"
-      },
-      acknowledgment: {
-        title: "Reconnaissance",
-        content: "En utilisant StayBuddy, vous reconnaissez avoir lu, compris et accepté d'être lié par ces Termes et Conditions."
-      }
-    }
-  };
-
-  const t = content[language];
+  const isFr = language === "fr";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-      <div className="max-w-5xl mx-auto px-6 py-12">
-        {/* Header */}
-        <div className="mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 text-primary hover:text-primary-dark transition-colors mb-6">
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">{t.backToHome}</span>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-primary text-white py-12 px-4">
+        <div className="max-w-7xl mx-auto">
+          <Link href="/" className="inline-flex items-center gap-2 text-white/80 hover:text-white text-sm mb-6 transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            {isFr ? "Retour à l'accueil" : "Back to Home"}
           </Link>
-          
-          <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 border-t-4 border-primary">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                <FileText className="w-8 h-8 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold text-gray-900">{t.title}</h1>
-                <p className="text-sm text-gray-600 mt-1">{t.effectiveDate}</p>
-                <p className="text-sm text-gray-600">{t.lastUpdated}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Content Sections */}
-        <div className="space-y-6">
-          {t.sections.map((section) => {
-            const Icon = section.icon;
-            return (
-              <div key={section.id} className="bg-white rounded-xl shadow-md p-6 md:p-8 hover:shadow-lg transition-shadow">
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Icon className="w-6 h-6 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">{section.title}</h2>
-                    <div className="space-y-3">
-                      {section.content.map((paragraph, pIndex) => (
-                        <p key={pIndex} className="text-gray-700 leading-relaxed">
-                          {paragraph}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Contact Section */}
-          <div className="bg-gradient-to-br from-primary/5 to-green-50 rounded-xl shadow-md p-6 md:p-8 border-2 border-primary/20">
-            <div className="flex items-start gap-4 mb-4">
-              <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
-                <Mail className="w-6 h-6 text-white" />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">{t.contact.title}</h2>
-                <p className="text-gray-700 mb-6">{t.contact.subtitle}</p>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Mail className="w-5 h-5 text-primary" />
-                    <div>
-                      <p className="text-sm font-semibold text-gray-700">{t.contact.email}</p>
-                      <a href={`mailto:${t.contact.emailValue}`} className="text-primary hover:text-primary-dark transition-colors">
-                        {t.contact.emailValue}
-                      </a>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <Phone className="w-5 h-5 text-primary" />
-                    <div>
-                      <p className="text-sm font-semibold text-gray-700">{t.contact.phone}</p>
-                      <a href={`tel:${t.contact.phoneValue}`} className="text-primary hover:text-primary-dark transition-colors">
-                        {t.contact.phoneValue}
-                      </a>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <MapPin className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm font-semibold text-gray-700">{t.contact.address}</p>
-                      <p className="text-gray-700">{t.contact.addressValue}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Acknowledgment */}
-          <div className="bg-primary text-white rounded-xl shadow-md p-6 md:p-8">
-            <h2 className="text-2xl font-bold mb-4">{t.acknowledgment.title}</h2>
-            <p className="text-white/90 leading-relaxed">{t.acknowledgment.content}</p>
-          </div>
-        </div>
-
-        {/* Footer Note */}
-        <div className="mt-8 text-center">
-          <p className="text-sm text-gray-600">
-            © 2024 StayBuddy. All rights reserved.
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2">
+            {isFr ? "Conditions Générales d'Utilisation" : "Terms & Conditions"}
+          </h1>
+          <p className="text-white/80 text-sm">
+            {isFr ? "Dernière mise à jour : 1er janvier 2024" : "Last Updated: January 1, 2024"}
           </p>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-10">
+        {/* Table of Contents */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+          <h2 className="text-base font-bold text-gray-800 mb-4">
+            {isFr ? "Table des matières" : "Table of Contents"}
+          </h2>
+          <div className="grid sm:grid-cols-2 gap-1.5">
+            {sections.map((s, i) => (
+              <a
+                key={s.id}
+                href={`#${s.id}`}
+                className="text-sm text-primary hover:underline py-0.5"
+              >
+                {s.title}
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {/* Sections */}
+        <div className="space-y-6">
+          {sections.map((section) => (
+            <div
+              key={section.id}
+              id={section.id}
+              className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 scroll-mt-24"
+            >
+              <h2 className="text-lg font-bold text-primary mb-4 pb-3 border-b border-gray-100">
+                {section.title}
+              </h2>
+              <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                {section.content}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Contact */}
+        <div className="mt-8 bg-primary/5 border border-primary/20 rounded-2xl p-6 text-center">
+          <h3 className="font-bold text-gray-900 mb-2">
+            {isFr ? "Des questions ?" : "Have questions?"}
+          </h3>
+          <p className="text-sm text-gray-600 mb-3">
+            {isFr
+              ? "Contactez notre équipe pour toute question concernant ces conditions."
+              : "Contact our team for any questions regarding these terms."}
+          </p>
+          <Link
+            href="/contact"
+            className="inline-block px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-colors"
+          >
+            {isFr ? "Nous contacter" : "Contact Us"}
+          </Link>
         </div>
       </div>
     </div>

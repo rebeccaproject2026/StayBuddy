@@ -41,7 +41,7 @@ export default function Footer() {
       contact: {
         title: 'Contact Us',
         email: 'staybuddy2026@gmail.com',
-        phone: '+91 99999 99999',
+        phone: '+91 9904725163',
         address: '213 Sanidhya Arcade, Vastral, Ahmedabad, Gujarat 382418'
       },
       social: 'Follow Us',
@@ -62,7 +62,7 @@ export default function Footer() {
       contact: {
         title: 'Contactez-nous',
         email: 'support@staybuddy.com',
-        phone: '+91 99999 99999',
+        phone: '+33 782094294',
         address: '213 Sanidhya Arcade, Vastral, Ahmedabad, Gujarat 382418'
       },
       social: 'Suivez-nous',
