@@ -10,6 +10,7 @@ type Props = {
   propertyTitle: string;
   otherPartyName: string;
   userId: string;
+  recipientId?: string | null;
   token: string | null;
   userRole: 'landlord' | 'renter';
   isDark?: boolean;
@@ -19,8 +20,8 @@ type Props = {
 };
 
 export default function ChatPanel({
-  requestId, propertyTitle, otherPartyName, userId, token,
-  userRole, isDark = false, onClose, onDelete, language = 'en',
+  requestId, propertyTitle, otherPartyName, userId, recipientId,
+  token, userRole, isDark = false, onClose, onDelete, language = 'en',
 }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -29,6 +30,7 @@ export default function ChatPanel({
   const [isTyping, setIsTyping] = useState(false);
   const [typingName, setTypingName] = useState('');
   const [initialCount, setInitialCount] = useState(0);
+  const [initialIds, setInitialIds] = useState<string[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFr = language === 'fr';
@@ -47,8 +49,8 @@ export default function ChatPanel({
         if (d.success) {
           const msgs: ChatMessage[] = d.messages || [];
           setMessages(msgs);
-          // Tell the hook how many messages already exist so polling skips them
           setInitialCount(msgs.length);
+          setInitialIds(msgs.map(m => String(m._id)));
         }
       })
       .catch(() => {})
@@ -62,8 +64,9 @@ export default function ChatPanel({
 
   const handleNewMessage = useCallback((msg: ChatMessage) => {
     setMessages(prev => {
-      // Avoid duplicates
-      if (prev.some(m => m._id === msg._id)) return prev;
+      // Normalize _id to string for reliable dedup
+      const incomingId = String(msg._id);
+      if (prev.some(m => String(m._id) === incomingId)) return prev;
       return [...prev, msg];
     });
   }, []);
@@ -76,8 +79,10 @@ export default function ChatPanel({
   const { connected, usingPolling, sendMessage, sendTyping, sendRead } = useChat({
     requestId,
     userId,
+    recipientId: recipientId ?? null,
     token,
     initialCount,
+    initialIds,
     onMessage: handleNewMessage,
     onTyping: handleTyping,
   });
@@ -109,13 +114,14 @@ export default function ChatPanel({
       });
       const data = await res.json();
       if (data.success) {
-        // Broadcast via WebSocket so other party gets it instantly
-        sendMessage(data.message);
-        // Add to own list
+        // Add to own list immediately (optimistic)
         setMessages(prev => {
-          if (prev.some(m => m._id === data.message._id)) return prev;
+          const incomingId = String(data.message._id);
+          if (prev.some(m => String(m._id) === incomingId)) return prev;
           return [...prev, data.message];
         });
+        // Broadcast via WebSocket so other party gets it instantly
+        sendMessage(data.message);
       }
     } catch { /* ignore */ }
     finally { setSending(false); }

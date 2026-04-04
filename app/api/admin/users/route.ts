@@ -68,7 +68,7 @@ export async function PATCH(req: NextRequest) {
     if (user.role === 'admin') return NextResponse.json({ error: 'Cannot block admin accounts' }, { status: 403 });
 
     user.isBlocked = isBlocked;
-    await user.save();
+    await user.save({ validateModifiedOnly: true });
 
     // Send email notification when blocking
     if (isBlocked && reason && user.email) {

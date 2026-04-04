@@ -63,13 +63,11 @@ export default function Navbar() {
     const dest = path.startsWith(`/${urlCountry || 'in'}/`) || path === `/${urlCountry || 'in'}`
       ? path
       : `/${urlCountry || 'in'}${path}`;
-    // For admin dashboard, use full page navigation to ensure auth re-initializes
-    if (dest.includes('/dashboard/admin')) {
-      window.location.href = dest;
-      return;
+    // Skip loading overlay for dashboard routes — they load instantly
+    if (!dest.includes('/dashboard')) {
+      setNavDest(dest);
+      setNavLoading(true);
     }
-    setNavDest(dest);
-    setNavLoading(true);
     router.push(dest);
   };
 

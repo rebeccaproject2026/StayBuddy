@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       const user = new User({
         fullName: validatedData.fullName,
         email: emailLower,
-        phoneNumber: validatedData.phoneNumber || undefined,
+        phoneNumber: validatedData.phoneNumber,
         password: validatedData.password,
         role: validatedData.role,
         country: validatedData.country,

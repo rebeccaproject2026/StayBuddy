@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       isFavorite = false;
     }
 
-    await user.save();
+    await user.save({ validateModifiedOnly: true });
 
     return NextResponse.json({ success: true, isFavorite, favoriteIds: user.favorites.map((f: mongoose.Types.ObjectId) => f.toString()) });
   } catch {

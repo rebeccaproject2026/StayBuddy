@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     user.password = password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
-    await user.save();
+    await user.save({ validateModifiedOnly: true });
 
     return NextResponse.json(
       { message: 'Password reset successfully' },

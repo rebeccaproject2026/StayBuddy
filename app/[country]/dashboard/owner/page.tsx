@@ -779,7 +779,7 @@ export default function OwnerDashboard() {
 
   // Live notifications via WebSocket — refresh conversations when a new message arrives
   const ownerToken = typeof window !== 'undefined' ? getToken() : null;
-  useNotifications({
+  const { count: notifCount } = useNotifications({
     userId: isAuthenticated && user?.role === 'landlord' ? (user as any)?._id ?? null : null,
     token: ownerToken,
     enabled: isAuthenticated && user?.role === 'landlord',
@@ -1300,7 +1300,14 @@ export default function OwnerDashboard() {
       <div className={`sticky top-0 z-50 shadow-sm border-b flex-shrink-0 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
         <div className="max-w-[1500px] mx-auto px-3 sm:px-6">
           <div className="flex items-center justify-between h-14 sm:h-16">
-            <h1 className={`text-base sm:text-xl font-bold truncate ${isDark ? "text-primary-light" : "text-primary"}`}>{tc.dashboard}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className={`text-base sm:text-xl font-bold truncate ${isDark ? "text-primary-light" : "text-primary"}`}>{tc.dashboard}</h1>
+              {notifCount > 0 && (
+                <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full">
+                  {notifCount > 99 ? "99+" : notifCount}
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={toggleTheme}
@@ -3315,6 +3322,7 @@ export default function OwnerDashboard() {
                 propertyTitle={chatRequest.propertyTitle}
                 otherPartyName={chatRequest.fullName || chatRequest.renter?.fullName || 'Tenant'}
                 userId={user?.id || ''}
+                recipientId={chatRequest.renter?._id || chatRequest.renter || null}
                 token={typeof window !== 'undefined' ? getToken() : null}
                 userRole="landlord"
                 isDark={isDark}

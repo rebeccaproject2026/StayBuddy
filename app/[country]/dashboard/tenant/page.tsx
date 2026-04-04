@@ -269,7 +269,7 @@ export default function TenantDashboard() {
   }, [seenCounts]);
 
   // Live notifications via WebSocket — update unread counts when a new message arrives
-  useNotifications({
+  const { count: notifCount } = useNotifications({
     userId: isAuthenticated && user?.role === 'renter' ? (user as any)?._id ?? null : null,
     token: token !== 'nextauth' ? token : null,
     enabled: isAuthenticated && user?.role === 'renter',
@@ -620,7 +620,14 @@ export default function TenantDashboard() {
       <div className={`sticky top-0 z-50 shadow-sm border-b ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
         <div className="max-w-[1500px] mx-auto px-3 sm:px-6">
           <div className="flex items-center justify-between h-14 sm:h-16">
-            <h1 className={`text-base sm:text-xl font-bold truncate ${isDark ? "text-primary-light" : "text-primary"}`}>{tc.dashboard}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className={`text-base sm:text-xl font-bold truncate ${isDark ? "text-primary-light" : "text-primary"}`}>{tc.dashboard}</h1>
+              {notifCount > 0 && (
+                <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full">
+                  {notifCount > 99 ? "99+" : notifCount}
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={toggleTheme}
@@ -1092,6 +1099,7 @@ export default function TenantDashboard() {
                 propertyTitle={chatRequest.propertyTitle}
                 otherPartyName={(chatRequest.owner as any)?.fullName || (language === 'fr' ? 'Propriétaire' : 'Owner')}
                 userId={user?.id || ''}
+                recipientId={(chatRequest.owner as any)?._id || chatRequest.owner || null}
                 token={token}
                 userRole="renter"
                 isDark={isDark}

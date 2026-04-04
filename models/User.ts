@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 export interface IUser extends Document {
   fullName: string;
   email: string;
-  phoneNumber?: string;
+  phoneNumber: string;
   password?: string;
   role: 'renter' | 'landlord' | 'admin';
   country: 'fr' | 'in';
@@ -49,6 +49,7 @@ const userSchema = new Schema<IUser>(
     },
     phoneNumber: {
       type: String,
+      required: [true, 'Phone number is required'],
       trim: true,
       match: [
         /^[\+]?[1-9][\d]{0,15}$/,

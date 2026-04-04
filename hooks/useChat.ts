@@ -22,6 +22,7 @@ type UseChatOptions = {
   recipientId?: string | null;
   token: string | null;
   initialCount?: number;
+  initialIds?: string[]; // message IDs already loaded — polling skips these
   onMessage?: (msg: ChatMessage) => void;
   onTyping?: (state: TypingState) => void;
   onRead?: (userId: string) => void;
@@ -29,7 +30,7 @@ type UseChatOptions = {
 
 const POLL_INTERVAL = 3000; // 3s fallback polling
 
-export function useChat({ requestId, userId, recipientId, token, initialCount = 0, onMessage, onTyping, onRead }: UseChatOptions) {
+export function useChat({ requestId, userId, recipientId, token, initialCount = 0, initialIds = [], onMessage, onTyping, onRead }: UseChatOptions) {
   const wsRef = useRef<WebSocket | null>(null);
   const [connected, setConnected] = useState(false);
   const [usingPolling, setUsingPolling] = useState(false);
@@ -46,6 +47,13 @@ export function useChat({ requestId, userId, recipientId, token, initialCount = 
   }, [token]);
 
   // ── Polling fallback ──────────────────────────────────────────────────────
+  const seenIdsRef = useRef<Set<string>>(new Set());
+
+  // Seed seenIdsRef from initial messages so polling never re-fires them
+  useEffect(() => {
+    initialIds.forEach(id => seenIdsRef.current.add(id));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const startPolling = useCallback(() => {
     if (!requestId || !mountedRef.current) return;
     setUsingPolling(true);
@@ -60,12 +68,14 @@ export function useChat({ requestId, userId, recipientId, token, initialCount = 
         const data = await res.json();
         if (!data.success || !mountedRef.current) return;
         const msgs: ChatMessage[] = data.messages || [];
-        // Only fire onMessage for genuinely new messages
-        if (msgs.length > lastMsgCountRef.current) {
-          const newMsgs = msgs.slice(lastMsgCountRef.current);
-          newMsgs.forEach(m => onMessage?.(m));
-          lastMsgCountRef.current = msgs.length;
-        }
+        msgs.forEach(m => {
+          const id = String(m._id);
+          if (!seenIdsRef.current.has(id)) {
+            seenIdsRef.current.add(id);
+            onMessage?.(m);
+          }
+        });
+        lastMsgCountRef.current = msgs.length;
       } catch { /* ignore network errors */ }
     };
 
@@ -125,8 +135,12 @@ export function useChat({ requestId, userId, recipientId, token, initialCount = 
       try {
         const data = JSON.parse(event.data);
         if (data.type === 'message' && data.requestId === requestId) {
-          onMessage?.(data.message);
-          lastMsgCountRef.current += 1;
+          const id = String(data.message._id);
+          if (!seenIdsRef.current.has(id)) {
+            seenIdsRef.current.add(id);
+            onMessage?.(data.message);
+            lastMsgCountRef.current += 1;
+          }
         }
         if (data.type === 'typing' && data.requestId === requestId) {
           onTyping?.(data);
@@ -162,7 +176,7 @@ export function useChat({ requestId, userId, recipientId, token, initialCount = 
     };
   }, [requestId, userId, startPolling, onMessage, onTyping, onRead]);
 
-  // Update lastMsgCountRef when initial messages load
+  // Update lastMsgCountRef and seenIdsRef when initial messages load
   useEffect(() => {
     if (initialCount > lastMsgCountRef.current) {
       lastMsgCountRef.current = initialCount;

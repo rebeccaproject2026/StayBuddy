@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     // Store reset token in user document (in production, use Redis or similar)
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpires = resetTokenExpiry;
-    await user.save();
+    await user.save({ validateModifiedOnly: true });
 
     // Create transporter
     const transporter = nodemailer.createTransport({

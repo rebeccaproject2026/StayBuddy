@@ -63,7 +63,7 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     if (isSuccess) {
       const timer = setTimeout(() => {
-        router.push(`/${country}/login`);
+        router.push(`/login`);
       }, 3000); // Redirect after 3 seconds
 
       const countdownTimer = setInterval(() => {
@@ -86,7 +86,7 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     if (isSuccess) {
       const timer = setTimeout(() => {
-        router.push(`/${country}/login`);
+        router.push(`login`);
       }, 3000); // Redirect after 3 seconds
 
       return () => clearTimeout(timer);
@@ -177,7 +177,7 @@ export default function ResetPasswordPage() {
                 Redirecting to login page in {countdown} second{countdown !== 1 ? 's' : ''}...
               </p>
 
-              <Link href={`/${country}/login`}>
+              <Link href={`/login`}>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -226,7 +226,7 @@ export default function ResetPasswordPage() {
               </p>
 
               <div className="space-y-4">
-                <Link href={`/${country}/forgot-password`}>
+                <Link href={`/forgot-password`}>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -236,7 +236,7 @@ export default function ResetPasswordPage() {
                   </motion.button>
                 </Link>
 
-                <Link href={`/${country}/login`}>
+                <Link href={`/login`}>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -269,7 +269,7 @@ export default function ResetPasswordPage() {
         >
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <Link
-              href={`/${country}/login`}
+              href={`/login`}
               className="inline-flex items-center text-indigo-600 hover:text-indigo-700 mb-6 transition-colors duration-300"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -431,7 +431,7 @@ export default function ResetPasswordPage() {
               <p className="text-gray-600">
                 Remember your password?{" "}
                 <Link
-                  href={`/${country}/login`}
+                  href={`/login`}
                   className="text-indigo-600 font-semibold hover:text-indigo-700 transition-colors duration-300"
                 >
                   Sign in

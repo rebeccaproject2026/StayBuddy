@@ -75,7 +75,7 @@ function VerifyOTPContent() {
             style: { background: "#10B981", color: "white", fontWeight: "500" },
           }
         );
-        setTimeout(() => router.push(`/${country}/login`), 2000);
+        setTimeout(() => router.push(`/login`), 2000);
       } else {
         toast.error(data.error || "Verification failed", { position: "top-center" });
         const cleared = ["", "", "", "", "", ""];

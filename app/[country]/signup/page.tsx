@@ -16,9 +16,7 @@ const signupSchema = z.object({
   email: z.string().email("Invalid email address"),
   phoneNumber: z.string()
     .min(10, "Phone number must be at least 10 digits")
-    .regex(/^[\+]?[1-9][\d]{0,15}$/, "Please provide a valid phone number")
-    .optional()
-    .or(z.literal("")),
+    .regex(/^[\+]?[1-9][\d]{0,15}$/, "Please provide a valid phone number"),
   password: z.string()
     .min(8, "Password must be at least 8 characters")
     .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
@@ -66,7 +64,7 @@ export default function SignupPage() {
       const signupData = {
         fullName: data.fullName,
         email: data.email,
-        phoneNumber: data.phoneNumber || undefined,
+        phoneNumber: data.phoneNumber,
         password: data.password,
         confirmPassword: data.confirmPassword,
         role: data.role,
@@ -84,25 +82,10 @@ export default function SignupPage() {
       const result = await response.json();
 
       if (response.ok) {
-        toast.success(
-          language === 'fr' 
-            ? 'OTP envoyé! Vérifiez votre email.' 
-            : 'OTP sent! Check your email.',
-          {
-            duration: 3000,
-            position: 'top-center',
-            style: { background: '#10B981', color: 'white', fontWeight: '500' },
-          }
-        );
-
         reset();
         setPassword("");
         setConfirmPassword("");
-
-        // Redirect to OTP verification page
-        setTimeout(() => {
-          router.push(`/${country}/verify-otp?email=${encodeURIComponent(data.email)}`);
-        }, 1500);
+        router.push(`/${country}/verify-otp?email=${encodeURIComponent(data.email)}`);
 
       } else {
         if (result.details && Array.isArray(result.details)) {
@@ -278,7 +261,7 @@ export default function SignupPage() {
                 transition={{ delay: 0.5, duration: 0.4 }}
               >
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t("signup.fullName")}
+                  {t("signup.fullName")} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -303,7 +286,7 @@ export default function SignupPage() {
               >
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t("signup.email")}
+                    {t("signup.email")} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -322,7 +305,7 @@ export default function SignupPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t("signup.phone")} <span className="text-gray-400 text-xs">(Optional)</span>
+                    {t("signup.phone")} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -354,7 +337,7 @@ export default function SignupPage() {
               >
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t("signup.password")}
+                    {t("signup.password")} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -382,7 +365,7 @@ export default function SignupPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t("signup.confirmPassword")}
+                    {t("signup.confirmPassword")} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />

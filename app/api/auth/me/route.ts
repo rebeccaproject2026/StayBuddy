@@ -123,7 +123,7 @@ export async function PATCH(request: NextRequest) {
     if (fullName !== undefined) user.fullName = fullName.trim();
     if (phoneNumber !== undefined) user.phoneNumber = phoneNumber.trim();
 
-    await user.save();
+    await user.save({ validateModifiedOnly: true });
 
     return NextResponse.json({
       success: true,

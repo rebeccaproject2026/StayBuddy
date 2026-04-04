@@ -89,12 +89,12 @@ app.prepare().then(() => {
         }
 
         if (msg.type === 'message' && currentRoom) {
-          // Broadcast to chat room
+          // Broadcast to chat room — exclude sender to avoid echo
           broadcast(currentRoom, {
             type: 'message',
             requestId: currentRoom,
             message: msg.message,
-          });
+          }, ws);
           // Notify the recipient's notification room
           if (msg.recipientId) {
             broadcast(`notif:${msg.recipientId}`, {
