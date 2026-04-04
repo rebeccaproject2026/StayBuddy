@@ -14,6 +14,15 @@ interface RoomDetail {
   availableBeds?: string;
 }
 
+interface TenantRoom {
+  id: string;
+  name: string;
+  status: string;
+  rent: string;
+  maxPersons?: string;
+  currentPersons?: string;
+}
+
 interface PropertyCardProps {
   id: string;
   title: string;
@@ -35,6 +44,7 @@ interface PropertyCardProps {
   isFavorite?: boolean;
   onToggleFavorite?: (id: string, newState: boolean) => void;
   roomDetails?: Record<string, RoomDetail>;
+  tenantRooms?: TenantRoom[];
 }
 
 export default function PropertyCard({
@@ -56,6 +66,7 @@ export default function PropertyCard({
   isFavorite: isFavoriteProp = false,
   onToggleFavorite,
   roomDetails,
+  tenantRooms,
 }: PropertyCardProps) {
   const { t } = useLanguage();
   const params = useParams();
@@ -72,10 +83,20 @@ export default function PropertyCard({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Derived price based on selected bed type
+  // Tenant room dropdown state (France only)
+  const showTenantRoomDropdown = country === 'fr' && type === "Tenant" && tenantRooms && tenantRooms.length > 0;
+  const [selectedTenantRoom, setSelectedTenantRoom] = useState<TenantRoom | null>(
+    showTenantRoomDropdown ? (tenantRooms![0] ?? null) : null
+  );
+  const [tenantRoomDropdownOpen, setTenantRoomDropdownOpen] = useState(false);
+  const tenantRoomDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Derived price based on selected bed type or tenant room
   const displayPrice =
     type === "PG" && roomDetails && selectedBedType && roomDetails[selectedBedType]
       ? parseFloat(roomDetails[selectedBedType].monthlyRent) || price
+      : showTenantRoomDropdown && selectedTenantRoom
+      ? parseFloat(selectedTenantRoom.rent) || price
       : price;
 
   // Sync when parent updates favorites
@@ -88,6 +109,9 @@ export default function PropertyCard({
     const handler = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setDropdownOpen(false);
+      }
+      if (tenantRoomDropdownRef.current && !tenantRoomDropdownRef.current.contains(e.target as Node)) {
+        setTenantRoomDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -347,6 +371,55 @@ export default function PropertyCard({
                               {currencySymbol}{parseFloat(roomDetails[bt].monthlyRent).toLocaleString()}
                             </span>
                           )}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+
+            {/* Room dropdown — France Tenant only */}
+            {showTenantRoomDropdown && (
+              <div ref={tenantRoomDropdownRef} className="relative ml-auto" onClick={(e) => e.stopPropagation()}>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setTenantRoomDropdownOpen((o) => !o); }}
+                  className="flex items-center gap-1 px-2.5 py-1.5 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:border-primary hover:text-primary transition-colors bg-white"
+                >
+                  <span>{selectedTenantRoom ? selectedTenantRoom.name : "Room"}</span>
+                  <ChevronUp className={`w-3 h-3 transition-transform duration-200 ${tenantRoomDropdownOpen ? "rotate-0" : "rotate-180"}`} />
+                </button>
+
+                <AnimatePresence>
+                  {tenantRoomDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 6, scale: 0.97 }}
+                      transition={{ duration: 0.18, ease: "easeOut" }}
+                      className="absolute bottom-full right-0 mb-1.5 bg-white border border-gray-200 rounded-xl shadow-lg z-20 min-w-[130px] overflow-hidden"
+                    >
+                      {tenantRooms!.map((room) => (
+                        <button
+                          key={room.id}
+                          onClick={(e) => { e.stopPropagation(); setSelectedTenantRoom(room); setTenantRoomDropdownOpen(false); }}
+                          className={`w-full text-left px-3 py-2 text-xs font-medium transition-colors ${
+                            selectedTenantRoom?.id === room.id
+                              ? "bg-primary/10 text-primary"
+                              : "text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          {room.name}
+                          <span className="flex items-center gap-1.5 mt-0.5">
+                            {room.rent && (
+                              <span className="text-gray-400 font-normal">
+                                {currencySymbol}{parseFloat(room.rent).toLocaleString()}
+                              </span>
+                            )}
+                            {room.maxPersons && (
+                              <span className="text-gray-400 font-normal">· {room.currentPersons ?? 0}/{room.maxPersons} cap</span>
+                            )}
+                          </span>
                         </button>
                       ))}
                     </motion.div>

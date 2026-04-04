@@ -7,9 +7,10 @@ import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
 import Image from "next/image";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import ChatPanel from "@/components/ChatPanel";
 import { useNotifications } from "@/hooks/useNotifications";
+import { getToken } from "@/lib/token-storage";
 import {
   Home,
   MessageSquare,
@@ -29,6 +30,7 @@ import {
   Mail,
   X,
   ChevronDown,
+  ChevronUp,
   Sun,
   Moon,
   Lock,
@@ -125,7 +127,7 @@ function ProfileSection({ user, tc, language, isDark = false }: { user: any; tc:
     setSaveMsg(null);
     try {
       const isNextAuth = token === 'nextauth';
-      const authToken = isNextAuth ? null : (token || localStorage.getItem("staybuddy_token"));
+      const authToken = isNextAuth ? null : (token || getToken());
       const res = await fetch("/api/auth/me", {
         method: "PATCH",
         credentials: "include", // send session cookie for NextAuth users
@@ -169,7 +171,7 @@ function ProfileSection({ user, tc, language, isDark = false }: { user: any; tc:
     setPwMsg(null);
     try {
       const isNextAuth = token === 'nextauth';
-      const authToken = isNextAuth ? null : (token || localStorage.getItem("staybuddy_token"));
+      const authToken = isNextAuth ? null : (token || getToken());
       const res = await fetch("/api/auth/me", {
         method: "PATCH",
         credentials: "include",
@@ -366,6 +368,276 @@ function ProfileSection({ user, tc, language, isDark = false }: { user: any; tc:
   );
 }
 
+// Currency helper — based on the listing's country, not the UI language
+function getCurrency(country?: string) {
+  return country === "fr" ? "€" : "₹";
+}
+
+// Per-card component so each card has its own dropdown state
+function OwnerListingCard({
+  listing,
+  isDark,
+  tc,
+  language,
+  onView,
+  onEdit,
+  onDelete,
+}: {
+  listing: any;
+  isDark: boolean;
+  tc: any;
+  language: string;
+  onView: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const isPG = listing.propertyType === "PG";
+  const isFrTenant = listing.country === "fr" && listing.propertyType === "Tenant";
+  const currencySymbol = getCurrency(listing.country);
+
+  // PG bed type dropdown
+  const bedTypes = isPG && listing.roomDetails ? Object.keys(listing.roomDetails) : [];
+  const [selectedBed, setSelectedBed] = useState<string>(bedTypes[0] || "");
+  const [bedOpen, setBedOpen] = useState(false);
+  const bedRef = useRef<HTMLDivElement>(null);
+
+  // France Tenant room dropdown
+  const tenantRooms: any[] = isFrTenant && listing.tenantRooms?.length ? listing.tenantRooms : [];
+  const [selectedRoom, setSelectedRoom] = useState<any>(tenantRooms[0] ?? null);
+  const [roomOpen, setRoomOpen] = useState(false);
+  const roomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (bedRef.current && !bedRef.current.contains(e.target as Node)) setBedOpen(false);
+      if (roomRef.current && !roomRef.current.contains(e.target as Node)) setRoomOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const displayPrice = isPG && listing.roomDetails && selectedBed && listing.roomDetails[selectedBed]
+    ? parseFloat(listing.roomDetails[selectedBed].monthlyRent) || listing.price
+    : isFrTenant && selectedRoom
+    ? parseFloat(selectedRoom.rent) || listing.price
+    : listing.price;
+
+  const totalRooms = isPG && listing.roomDetails
+    ? Object.values(listing.roomDetails as Record<string, any>).reduce((s: number, r: any) => s + (parseInt(r.totalBeds ?? r.totalRooms) || 0), 0)
+    : isFrTenant && tenantRooms.length > 0 ? tenantRooms.length : listing.rooms;
+
+  const availableRooms = isPG && listing.roomDetails
+    ? Object.values(listing.roomDetails as Record<string, any>).reduce((s: number, r: any) => s + (parseInt(r.availableBeds ?? r.availableRooms) || 0), 0)
+    : isFrTenant && tenantRooms.length > 0 ? tenantRooms.filter((r: any) => r.status !== "occupied").length : listing.rooms;
+
+  // For France Tenant: derive per-room capacity stats from selected room
+  const selectedRoomMax = isFrTenant && selectedRoom ? parseInt(selectedRoom.maxPersons) || 0 : 0;
+  const selectedRoomCurrent = isFrTenant && selectedRoom ? parseInt(selectedRoom.currentPersons) || 0 : 0;
+  const selectedRoomAvailable = Math.max(0, selectedRoomMax - selectedRoomCurrent);
+  const selectedRoomStatus = isFrTenant && selectedRoom
+    ? selectedRoom.status === "occupied" || selectedRoomAvailable === 0
+      ? "occupied"
+      : selectedRoomCurrent > 0 ? "partial" : "available"
+    : null;
+
+  return (
+    <div className={`rounded-2xl overflow-hidden flex flex-col hover:shadow-lg transition-shadow h-full ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white shadow-md"}`}>
+      {/* Image */}
+      <div className="relative h-40 sm:h-48 flex-shrink-0">
+        <Image src={listing.images?.[0] || "/owner.png"} alt={listing.title} fill className="object-cover" />
+        <span className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${isPG ? "bg-blue-500 text-white" : "bg-green-500 text-white"}`}>
+          {listing.propertyType}
+        </span>
+        {/* Bottom-left: verified + BHK badges */}
+        <div className="absolute top-4 left-4 flex gap-1.5 flex-wrap">
+          {listing.approvalStatus === "pending" && (
+            <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-500 text-white">
+              {language === "fr" ? "En attente" : "Pending Review"}
+            </span>
+          )}
+          {listing.approvalStatus === "rejected" && (
+            <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500 text-white">
+              {language === "fr" ? "Rejeté" : "Rejected"}
+            </span>
+          )}
+          {listing.isVerified && (
+            <span className="flex items-center gap-1 px-2.5 py-1 bg-green-600 text-white text-xs font-semibold rounded-full">
+              ✓ {language === "fr" ? "Vérifié" : "Verified"}
+            </span>
+          )}
+          {!listing.isVerified && (
+            <span className="px-2.5 py-1 bg-gray-500/80 text-white text-xs font-semibold rounded-full">
+              {language === "fr" ? "Non vérifié" : "Not Verified"}
+            </span>
+          )}
+          {listing.propertyType === "Tenant" && listing.bhk && (
+            <span className="px-2.5 py-1 bg-white/90 text-gray-800 text-xs font-semibold rounded-full">
+              {listing.bhk}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Content — flex-col + flex-1 so all cards stretch equally */}
+      <div className="p-5 flex flex-col flex-1">
+        <h3 className={`text-base font-bold mb-1 line-clamp-1 ${isDark ? "text-white" : "text-gray-900"}`}>
+          {listing.propertyType === "Tenant" && listing.societyName ? listing.societyName : listing.title}
+        </h3>
+        <div className={`flex items-center gap-1.5 mb-3 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+          <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="text-xs line-clamp-1">{[listing.areaName, listing.location, listing.state].filter(Boolean).join(", ")}</span>
+        </div>
+
+        {/* Price + dropdown */}
+        <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-baseline gap-1">
+            <span className="text-xl font-bold text-primary">{currencySymbol} {displayPrice?.toLocaleString()}</span>
+            <span className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>/mo</span>
+          </div>
+
+          {/* PG bed type dropdown */}
+          {isPG && bedTypes.length > 0 && (
+            <div ref={bedRef} className="relative ml-auto" onClick={e => e.stopPropagation()}>
+              <button
+                onClick={() => setBedOpen(o => !o)}
+                className={`flex items-center gap-1 px-2.5 py-1.5 border-2 rounded-lg text-xs font-medium transition-colors ${isDark ? "border-gray-700 text-gray-300 hover:border-primary hover:text-primary bg-gray-800" : "border-gray-200 text-gray-700 hover:border-primary hover:text-primary bg-white"}`}
+              >
+                <span>{selectedBed ? `${selectedBed} Bed` : "Bed"}</span>
+                <ChevronUp className={`w-3 h-3 transition-transform ${bedOpen ? "rotate-0" : "rotate-180"}`} />
+              </button>
+              <AnimatePresence>
+                {bedOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 6, scale: 0.97 }}
+                    transition={{ duration: 0.15 }}
+                    className={`absolute bottom-full right-0 mb-1.5 border rounded-xl shadow-lg z-30 min-w-[140px] overflow-hidden ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
+                  >
+                    {bedTypes.map(bt => (
+                      <button
+                        key={bt}
+                        onClick={() => { setSelectedBed(bt); setBedOpen(false); }}
+                        className={`w-full text-left px-3 py-2 text-xs font-medium transition-colors ${selectedBed === bt ? "bg-primary/10 text-primary" : isDark ? "text-gray-300 hover:bg-gray-700" : "text-gray-700 hover:bg-gray-50"}`}
+                      >
+                        {bt} Bed
+                        {listing.roomDetails?.[bt]?.monthlyRent && (
+                          <span className="block text-gray-400 font-normal">{currencySymbol}{parseFloat(listing.roomDetails[bt].monthlyRent).toLocaleString()}</span>
+                        )}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
+          {/* France Tenant room dropdown */}
+          {isFrTenant && tenantRooms.length > 0 && (
+            <div ref={roomRef} className="relative ml-auto" onClick={e => e.stopPropagation()}>
+              <button
+                onClick={() => setRoomOpen(o => !o)}
+                className={`flex items-center gap-1 px-2.5 py-1.5 border-2 rounded-lg text-xs font-medium transition-colors ${isDark ? "border-gray-700 text-gray-300 hover:border-primary hover:text-primary bg-gray-800" : "border-gray-200 text-gray-700 hover:border-primary hover:text-primary bg-white"}`}
+              >
+                <span>{selectedRoom ? selectedRoom.name : "Room"}</span>
+                <ChevronUp className={`w-3 h-3 transition-transform ${roomOpen ? "rotate-0" : "rotate-180"}`} />
+              </button>
+              <AnimatePresence>
+                {roomOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 6, scale: 0.97 }}
+                    transition={{ duration: 0.15 }}
+                    className={`absolute bottom-full right-0 mb-1.5 border rounded-xl shadow-lg z-30 min-w-[150px] overflow-hidden ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
+                  >
+                    {tenantRooms.map((room: any) => (
+                      <button
+                        key={room.id}
+                        onClick={() => { setSelectedRoom(room); setRoomOpen(false); }}
+                        className={`w-full text-left px-3 py-2 text-xs font-medium transition-colors ${selectedRoom?.id === room.id ? "bg-primary/10 text-primary" : isDark ? "text-gray-300 hover:bg-gray-700" : "text-gray-700 hover:bg-gray-50"}`}
+                      >
+                        {room.name}
+                        <span className="flex items-center gap-1.5 mt-0.5">
+                          {room.rent && <span className="text-gray-400 font-normal">{currencySymbol}{parseFloat(room.rent).toLocaleString()}</span>}
+                          {room.maxPersons && <span className="text-gray-400 font-normal">· {room.currentPersons ?? 0}/{room.maxPersons} cap</span>}
+                        </span>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-2 mb-4 text-xs">
+          <div className={`text-center p-2 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+            <p className={isDark ? "text-gray-400" : "text-gray-500"}>{isPG ? "Beds" : "Rooms"}</p>
+            <p className={`font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+              {totalRooms}
+            </p>
+          </div>
+          <div className={`text-center p-2 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+            <p className={isDark ? "text-gray-400" : "text-gray-500"}>{language === "fr" ? "Dispo" : "Avail."}</p>
+            {isFrTenant && selectedRoom ? (
+              <p className={`font-bold ${selectedRoomStatus === "occupied" ? "text-red-500" : selectedRoomStatus === "partial" ? "text-yellow-500" : "text-green-600"}`}>
+                {selectedRoomAvailable}
+              </p>
+            ) : (
+              <p className="font-bold text-green-600">{availableRooms}</p>
+            )}
+          </div>
+          <div className={`text-center p-2 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+            <p className={isDark ? "text-gray-400" : "text-gray-500"}>
+              {isFrTenant && selectedRoom ? (language === "fr" ? "Statut" : "Status") : "Area"}
+            </p>
+            {isFrTenant && selectedRoom ? (
+              <p className={`font-bold text-xs ${selectedRoomStatus === "occupied" ? "text-red-500" : selectedRoomStatus === "partial" ? "text-yellow-500" : "text-green-600"}`}>
+                {selectedRoomStatus === "occupied"
+                  ? (language === "fr" ? "Occupé" : "Full")
+                  : selectedRoomStatus === "partial"
+                  ? (language === "fr" ? "Partiel" : "Partial")
+                  : (language === "fr" ? "Libre" : "Free")}
+              </p>
+            ) : (
+              <p className={`font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{listing.area}m²</p>
+            )}
+          </div>
+        </div>
+
+        {/* Actions — pushed to bottom */}
+        <div className="flex flex-col gap-2 mt-auto">
+          <button
+            onClick={onView}
+            className="flex items-center justify-center gap-2 px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm"
+          >
+            <Eye className="w-4 h-4" />
+            {tc.viewDetails}
+          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={onEdit}
+              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 border rounded-lg transition-colors text-sm ${isDark ? "border-gray-600 text-gray-300 hover:bg-gray-800" : "border-gray-300 text-gray-700 hover:bg-gray-50"}`}
+            >
+              <Edit className="w-4 h-4" />
+              {tc.edit}
+            </button>
+            <button
+              onClick={onDelete}
+              className="flex items-center justify-center gap-2 px-3 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition-colors text-sm"
+              aria-label={tc.delete}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function OwnerDashboard() {
   const { language, t } = useLanguage();
   const { user, isLoading, isAuthenticated, logout } = useAuth();
@@ -448,7 +720,7 @@ export default function OwnerDashboard() {
   // Fetch this landlord's own properties
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'landlord') return;
-    const token = localStorage.getItem('staybuddy_token');
+    const token = getToken();
     setListingsLoading(true);
     fetch('/api/properties?mine=true&limit=50', {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -464,7 +736,7 @@ export default function OwnerDashboard() {
   // Fetch contact requests for this owner + poll every 30s for new ones
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'landlord') return;
-    const token = localStorage.getItem('staybuddy_token');
+    const token = getToken();
 
     const fetchRequests = () =>
       fetch('/api/contact-requests', {
@@ -506,14 +778,14 @@ export default function OwnerDashboard() {
   }, [ownerSeenCounts]);
 
   // Live notifications via WebSocket — refresh conversations when a new message arrives
-  const ownerToken = typeof window !== 'undefined' ? localStorage.getItem('staybuddy_token') : null;
+  const ownerToken = typeof window !== 'undefined' ? getToken() : null;
   useNotifications({
     userId: isAuthenticated && user?.role === 'landlord' ? (user as any)?._id ?? null : null,
     token: ownerToken,
     enabled: isAuthenticated && user?.role === 'landlord',
     onNotification: ({ requestId: reqId }) => {
       // A new message arrived — refresh conversations for that request
-      const token = localStorage.getItem('staybuddy_token');
+      const token = getToken();
       const seen: Record<string, number> = JSON.parse(localStorage.getItem('staybuddy_owner_seen') || '{}');
       fetch(`/api/messages/${reqId}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -556,7 +828,7 @@ export default function OwnerDashboard() {
   }
 
   const handleRequestAction = async (id: string, status: 'accepted' | 'rejected') => {
-    const token = localStorage.getItem('staybuddy_token');
+    const token = getToken();
     try {
       const res = await fetch(`/api/contact-requests/${id}`, {
         method: 'PATCH',
@@ -576,7 +848,7 @@ export default function OwnerDashboard() {
     setChatLoading(true);
     // clear unread for this conversation
     setConversations(prev => prev[req._id] ? { ...prev, [req._id]: { ...prev[req._id], unread: false } } : prev);
-    const token = localStorage.getItem('staybuddy_token');
+    const token = getToken();
     try {
       const res = await fetch(`/api/messages/${req._id}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -602,7 +874,7 @@ export default function OwnerDashboard() {
 
   const sendChatMessage = async () => {
     if (!chatInput.trim() || !chatRequest || chatSending) return;
-    const token = localStorage.getItem('staybuddy_token');
+    const token = getToken();
     const text = chatInput.trim();
     setChatInput('');
     setChatSending(true);
@@ -632,7 +904,7 @@ export default function OwnerDashboard() {
 
   const deleteChat = async () => {
     if (!chatRequest) return;
-    const token = localStorage.getItem('staybuddy_token');
+    const token = getToken();
     try {
       await fetch(`/api/messages/${chatRequest._id}`, {
         method: 'DELETE',
@@ -763,7 +1035,7 @@ export default function OwnerDashboard() {
   };
 
   const updateInquiryStatus = async (id: string, status: string) => {
-    const token = localStorage.getItem('staybuddy_token');
+    const token = getToken();
     try {
       const res = await fetch(`/api/contact-requests/${id}`, {
         method: 'PATCH',
@@ -873,7 +1145,7 @@ export default function OwnerDashboard() {
     if (!editingListing) return;
     setEditSaving(true);
     setEditError("");
-    const token = localStorage.getItem('staybuddy_token');
+    const token = getToken();
     const id = editingListing._id;
 
     // Convert any new files to base64 and merge with kept existing URLs
@@ -1001,7 +1273,7 @@ export default function OwnerDashboard() {
   };
 
   const deleteListing = async (id: string) => {
-    const token = localStorage.getItem('staybuddy_token');
+    const token = getToken();
     try {
       await fetch(`/api/properties/${id}`, {
         method: 'DELETE',
@@ -1296,13 +1568,13 @@ export default function OwnerDashboard() {
                                 className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                             </div>
                             <div>
-                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Monthly Rent ({currencySymbol})</label>
+                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Monthly Rent ({getCurrency(editingListing?.country)})</label>
                               <input value={editForm.price} onChange={e => setEditForm(p => ({ ...p, price: e.target.value }))}
                                 inputMode="numeric"
                                 className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                             </div>
                             <div>
-                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Security Deposit ({currencySymbol})</label>
+                              <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Security Deposit ({getCurrency(editingListing?.country)})</label>
                               <input value={editForm.deposit} onChange={e => setEditForm(p => ({ ...p, deposit: e.target.value }))}
                                 inputMode="numeric"
                                 className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
@@ -1678,7 +1950,7 @@ export default function OwnerDashboard() {
                                           />
                                         </div>
                                         <div>
-                                          <label className={`block text-xs font-medium mb-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}>Monthly Rent ({currencySymbol})</label>
+                                          <label className={`block text-xs font-medium mb-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}>Monthly Rent ({getCurrency(editingListing?.country)})</label>
                                           <input
                                             type="number" min="0"
                                             value={detail.monthlyRent ?? ""}
@@ -1690,7 +1962,7 @@ export default function OwnerDashboard() {
                                           />
                                         </div>
                                         <div>
-                                          <label className={`block text-xs font-medium mb-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}>Security Deposit ({currencySymbol})</label>
+                                          <label className={`block text-xs font-medium mb-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}>Security Deposit ({getCurrency(editingListing?.country)})</label>
                                           <input
                                             type="number" min="0"
                                             value={detail.securityDeposit ?? ""}
@@ -1751,7 +2023,7 @@ export default function OwnerDashboard() {
                                               className={`w-full px-3 py-2 border-2 rounded-xl text-sm focus:outline-none focus:border-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                                           </div>
                                           <div>
-                                            <label className="block text-xs text-gray-500 mb-1">Monthly Rent ({currencySymbol})</label>
+                                            <label className="block text-xs text-gray-500 mb-1">Monthly Rent ({getCurrency(editingListing?.country)})</label>
                                             <input value={room.rent || ""} inputMode="numeric" onChange={e => updateTenantRoom("rent", e.target.value.replace(/\D/g, ""))}
                                               className={`w-full px-3 py-2 border-2 rounded-xl text-sm focus:outline-none focus:border-primary ${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                                           </div>
@@ -1778,19 +2050,19 @@ export default function OwnerDashboard() {
                                 </div>
                               )}
                               <div>
-                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Monthly Rent ({currencySymbol})</label>
+                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Monthly Rent ({getCurrency(editingListing?.country)})</label>
                                 <input value={editForm.monthlyRentAmount} onChange={e => setEditForm(p => ({ ...p, monthlyRentAmount: e.target.value }))}
                                   inputMode="numeric"
                                   className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                               </div>
                               <div>
-                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Security Amount ({currencySymbol})</label>
+                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Security Amount ({getCurrency(editingListing?.country)})</label>
                                 <input value={editForm.securityAmount} onChange={e => setEditForm(p => ({ ...p, securityAmount: e.target.value }))}
                                   inputMode="numeric"
                                   className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
                               </div>
                               <div>
-                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Maintenance Charges ({currencySymbol})</label>
+                                <label className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Maintenance Charges ({getCurrency(editingListing?.country)})</label>
                                 <input value={editForm.maintenanceCharges} onChange={e => setEditForm(p => ({ ...p, maintenanceCharges: e.target.value }))}
                                   inputMode="numeric"
                                   className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary transition-colors ${isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-200"}`} />
@@ -2265,10 +2537,10 @@ export default function OwnerDashboard() {
 
                           {/* Price */}
                           <div className="flex items-baseline gap-2 flex-wrap">
-                            <span className="text-2xl font-bold text-primary">{currencySymbol} {selectedListing.price?.toLocaleString()}</span>
+                            <span className="text-2xl font-bold text-primary">{getCurrency(selectedListing.country)} {selectedListing.price?.toLocaleString()}</span>
                             <span className="text-gray-500 text-sm">/month</span>
                             {selectedListing.deposit > 0 && (
-                              <span className="text-sm text-gray-500">· Deposit: {currencySymbol} {selectedListing.deposit?.toLocaleString()}</span>
+                              <span className="text-sm text-gray-500">· Deposit: {getCurrency(selectedListing.country)} {selectedListing.deposit?.toLocaleString()}</span>
                             )}
                           </div>
 
@@ -2294,7 +2566,7 @@ export default function OwnerDashboard() {
                                 { label: "Total Floors", value: selectedListing.totalFloors },
                                 { label: "Facing", value: selectedListing.facing },
                                 { label: "Balcony", value: selectedListing.balcony },
-                                { label: "Maintenance", value: selectedListing.maintenanceCharges ? `${currencySymbol} ${selectedListing.maintenanceCharges}` : null },
+                                { label: "Maintenance", value: selectedListing.maintenanceCharges ? `${getCurrency(selectedListing.country)} ${selectedListing.maintenanceCharges}` : null },
                                 { label: "Additional Rooms", value: Array.isArray(selectedListing.additionalRooms) && selectedListing.additionalRooms.length > 0 ? selectedListing.additionalRooms.join(", ") : null },
                                 { label: "Overlooking", value: Array.isArray(selectedListing.overlooking) && selectedListing.overlooking.length > 0 ? selectedListing.overlooking.join(", ") : null },
                               ]),
@@ -2416,7 +2688,7 @@ export default function OwnerDashboard() {
                                   <span className="px-3 py-1 bg-green-50 text-green-700 text-xs rounded-full">{selectedListing.vegNonVeg}</span>
                                 )}
                                 {selectedListing.foodCharges && (
-                                  <span className={`px-3 py-1 text-xs rounded-full ${isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"}`}>Charges: {currencySymbol} {selectedListing.foodCharges}</span>
+                                  <span className={`px-3 py-1 text-xs rounded-full ${isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"}`}>Charges: {getCurrency(selectedListing.country)} {selectedListing.foodCharges}</span>
                                 )}
                               </div>
                             </div>
@@ -2454,12 +2726,12 @@ export default function OwnerDashboard() {
                                       </div>
                                       <div className="flex justify-between text-sm">
                                         <span className="text-gray-500">Monthly Rent</span>
-                                        <span className="font-bold text-primary">{currencySymbol} {Number(detail.monthlyRent).toLocaleString()}</span>
+                                        <span className="font-bold text-primary">{getCurrency(selectedListing.country)} {Number(detail.monthlyRent).toLocaleString()}</span>
                                       </div>
                                       {detail.securityDeposit && Number(detail.securityDeposit) > 0 && (
                                         <div className="flex justify-between text-sm">
                                           <span className="text-gray-500">Deposit</span>
-                                          <span className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{currencySymbol} {Number(detail.securityDeposit).toLocaleString()}</span>
+                                          <span className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{getCurrency(selectedListing.country)} {Number(detail.securityDeposit).toLocaleString()}</span>
                                         </div>
                                       )}
                                     </div>
@@ -2501,7 +2773,7 @@ export default function OwnerDashboard() {
                                         {room.rent && Number(room.rent) > 0 && (
                                           <div className="flex justify-between text-sm">
                                             <span className="text-gray-500">Monthly Rent</span>
-                                            <span className="font-bold text-primary">{currencySymbol} {Number(room.rent).toLocaleString()}</span>
+                                            <span className="font-bold text-primary">{getCurrency(selectedListing.country)} {Number(room.rent).toLocaleString()}</span>
                                           </div>
                                         )}
                                         <div className="flex justify-between text-sm">
@@ -2545,95 +2817,18 @@ export default function OwnerDashboard() {
                     <>
                     {/* Grid View */}
                     {viewMode === "grid" && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 items-stretch">
                         {myListings.map((listing) => (
-                          <div key={listing._id} className={`rounded-2xl overflow-hidden hover:shadow-lg transition-shadow ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white shadow-md"}`}>
-                            <div className="relative h-40 sm:h-48">
-                              <Image
-                                src={listing.images?.[0] || "/owner.png"}
-                                alt={listing.title}
-                                fill
-                                className="object-cover"
-                              />
-                              <span className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${
-                                listing.propertyType === "PG" ? "bg-blue-500 text-white" : "bg-green-500 text-white"
-                              }`}>
-                                {listing.propertyType}
-                              </span>
-                              {listing.approvalStatus === "pending" && (
-                                <span className="absolute top-4 left-4 px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-500 text-white">
-                                  Pending Review
-                                </span>
-                              )}
-                              {listing.approvalStatus === "rejected" && (
-                                <span className="absolute top-4 left-4 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500 text-white">
-                                  Rejected
-                                </span>
-                              )}
-                            </div>
-                            <div className="p-6">
-                              <h3 className={`text-xl font-bold mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>
-                                {listing.propertyType === "Tenant" && listing.societyName ? listing.societyName : listing.title}
-                              </h3>
-                              <div className={`flex items-center gap-2 mb-3 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
-                                <MapPin className="w-4 h-4" />
-                                <span className="text-sm">{listing.areaName}, {listing.location}, {listing.state}</span>
-                              </div>
-                              <div className="flex items-center gap-2 mb-4">
-                                <span className="text-2xl font-bold text-primary">
-                                  {currencySymbol} {listing.price?.toLocaleString()}
-                                </span>
-                                <span className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>/month</span>
-                              </div>
-                              <div className="grid grid-cols-3 gap-2 mb-4 text-sm">
-                                <div className={`text-center p-2 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
-                                  <p className={isDark ? "text-gray-400" : "text-gray-600"}>Total Beds</p>
-                                  <p className={`font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
-                                    {listing.propertyType === "PG" && listing.roomDetails
-                                      ? Object.values(listing.roomDetails as Record<string, any>).reduce((s: number, r: any) => s + (parseInt(r.totalBeds ?? r.totalRooms) || 0), 0)
-                                      : listing.rooms}
-                                  </p>
-                                </div>
-                                <div className={`text-center p-2 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
-                                  <p className={isDark ? "text-gray-400" : "text-gray-600"}>Available</p>
-                                  <p className="font-bold text-green-600">
-                                    {listing.propertyType === "PG" && listing.roomDetails
-                                      ? Object.values(listing.roomDetails as Record<string, any>).reduce((s: number, r: any) => s + (parseInt(r.availableBeds ?? r.availableRooms) || 0), 0)
-                                      : listing.rooms}
-                                  </p>
-                                </div>
-                                <div className={`text-center p-2 rounded-lg ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
-                                  <p className={isDark ? "text-gray-400" : "text-gray-600"}>Area</p>
-                                  <p className={`font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{listing.area} m²</p>
-                                </div>
-                              </div>
-                              <div className="flex flex-col gap-2">
-                                <button
-                                  onClick={() => setSelectedListing(listing)}
-                                  className="flex items-center justify-center gap-2 px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm"
-                                >
-                                  <Eye className="w-4 h-4" />
-                                  {tc.viewDetails}
-                                </button>
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() => openEdit(listing)}
-                                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 border rounded-lg transition-colors text-sm ${isDark ? "border-gray-600 text-gray-300 hover:bg-gray-800" : "border-gray-300 text-gray-700 hover:bg-gray-50"}`}
-                                  >
-                                    <Edit className="w-4 h-4" />
-                                    {tc.edit}
-                                  </button>
-                                  <button
-                                    onClick={() => setDeleteConfirmId(listing._id)}
-                                    className="flex items-center justify-center gap-2 px-3 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition-colors text-sm"
-                                    aria-label={tc.delete}
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                          <OwnerListingCard
+                            key={listing._id}
+                            listing={listing}
+                            isDark={isDark}
+                            tc={tc}
+                            language={language}
+                            onView={() => setSelectedListing(listing)}
+                            onEdit={() => openEdit(listing)}
+                            onDelete={() => setDeleteConfirmId(listing._id)}
+                          />
                         ))}
                       </div>
                     )}
@@ -2696,8 +2891,29 @@ export default function OwnerDashboard() {
                                     </td>
                                     {/* Rent */}
                                     <td className="px-4 py-4">
-                                      <span className="font-bold text-primary">{currencySymbol} {listing.price?.toLocaleString()}</span>
+                                      <span className="font-bold text-primary">{getCurrency(listing.country)} {listing.price?.toLocaleString()}</span>
                                       <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>/mo</span>
+                                      {/* PG bed type prices */}
+                                      {listing.propertyType === "PG" && listing.roomDetails && (
+                                        <div className="flex flex-col gap-0.5 mt-1">
+                                          {Object.entries(listing.roomDetails as Record<string, any>).map(([type, detail]) => (
+                                            <span key={type} className="text-xs text-gray-400">
+                                              {type}: {getCurrency(listing.country)}{parseFloat(detail.monthlyRent || 0).toLocaleString()}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      )}
+                                      {/* France Tenant room prices */}
+                                      {listing.country === "fr" && listing.propertyType === "Tenant" && listing.tenantRooms?.length > 0 && (
+                                        <div className="flex flex-col gap-0.5 mt-1">
+                                          {listing.tenantRooms.map((room: any) => (
+                                            <span key={room.id} className="text-xs text-gray-400">
+                                              {room.name}: {room.rent ? `${getCurrency(listing.country)}${parseFloat(room.rent).toLocaleString()}` : "—"}
+                                              {room.maxPersons ? ` (${room.currentPersons ?? 0}/${room.maxPersons})` : ""}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      )}
                                     </td>
                                     {/* Rooms */}
                                     <td className="px-4 py-4 hidden sm:table-cell">
@@ -3005,7 +3221,7 @@ export default function OwnerDashboard() {
                             <button
                               onClick={async (e) => {
                                 e.stopPropagation();
-                                const token = localStorage.getItem('staybuddy_token');
+                                const token = getToken();
                                 await fetch(`/api/messages/${req._id}`, { method: 'DELETE', headers: token ? { Authorization: `Bearer ${token}` } : {} });
                                 setConversations(prev => { const n = { ...prev }; delete n[req._id]; return n; });
                               }}
@@ -3099,7 +3315,7 @@ export default function OwnerDashboard() {
                 propertyTitle={chatRequest.propertyTitle}
                 otherPartyName={chatRequest.fullName || chatRequest.renter?.fullName || 'Tenant'}
                 userId={user?.id || ''}
-                token={typeof window !== 'undefined' ? localStorage.getItem('staybuddy_token') : null}
+                token={typeof window !== 'undefined' ? getToken() : null}
                 userRole="landlord"
                 isDark={isDark}
                 language={language}

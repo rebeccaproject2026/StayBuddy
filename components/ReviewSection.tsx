@@ -5,6 +5,7 @@ import { Star, MessageSquare, Flag, ThumbsUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
+import { getToken } from "@/lib/token-storage";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
@@ -94,7 +95,7 @@ export default function ReviewSection({ propertyId, language = "en", country = "
 
     setSubmitting(true);
     try {
-      const token = localStorage.getItem("staybuddy_token");
+      const token = getToken();
       const res = await fetch(`/api/properties/${propertyId}/reviews`, {
         method: "POST",
         headers: {

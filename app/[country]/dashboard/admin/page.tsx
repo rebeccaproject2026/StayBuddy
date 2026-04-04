@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { getToken } from "@/lib/token-storage";
 import { useRouter, useParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
 import Image from "next/image";
@@ -223,9 +224,14 @@ export default function AdminDashboard() {
     }
   }, [user, isLoading, isAuthenticated, router, currentCountry]);
 
+  // Block render until auth is confirmed
+  if (isLoading || !isAuthenticated || user?.role !== 'admin') {
+    return null;
+  }
+
   // Fetch approved properties (listings tab)
   const fetchProperties = useCallback(async () => {
-    const token = localStorage.getItem("staybuddy_token");
+    const token = getToken();
     if (!token) return;
     setPropertiesLoading(true);
     try {
@@ -243,7 +249,7 @@ export default function AdminDashboard() {
 
   // Fetch all property requests
   const fetchRequests = useCallback(async () => {
-    const token = localStorage.getItem("staybuddy_token");
+    const token = getToken();
     if (!token) return;
     setRequestsLoading(true);
     try {
@@ -265,7 +271,7 @@ export default function AdminDashboard() {
     fetchRequests();
 
     // Connect to SSE — refresh requests only when a new property is posted
-    const token = localStorage.getItem("staybuddy_token");
+    const token = getToken();
     if (!token) return;
 
     const es = new EventSource(`/api/admin/property-events?token=${encodeURIComponent(token)}`);
@@ -277,7 +283,7 @@ export default function AdminDashboard() {
           fetchRequests();
         } else if (payload.type === "new_lead") {
           // fetchLeads is declared later — call it via a small inline fetch
-          const t = localStorage.getItem("staybuddy_token");
+          const t = getToken();
           if (!t) return;
           fetch(`/api/admin/leads?country=${currentCountry}`, { headers: { Authorization: `Bearer ${t}` } })
             .then(r => r.json())
@@ -295,7 +301,7 @@ export default function AdminDashboard() {
   }, [isAuthenticated, user, fetchProperties, fetchRequests, currentCountry]);
 
   const fetchUsers = useCallback(async () => {
-    const token = localStorage.getItem("staybuddy_token");
+    const token = getToken();
     if (!token) return;
     setUsersLoading(true);
     try {
@@ -318,7 +324,7 @@ export default function AdminDashboard() {
   }, [isAuthenticated, user, fetchUsers]);
 
   const fetchReports = useCallback(async () => {
-    const token = localStorage.getItem("staybuddy_token");
+    const token = getToken();
     if (!token) return;
     setReportsLoading(true);
     try {
@@ -341,7 +347,7 @@ export default function AdminDashboard() {
   }, [isAuthenticated, user, fetchReports]);
 
   const fetchLeads = useCallback(async () => {
-    const token = localStorage.getItem("staybuddy_token");
+    const token = getToken();
     if (!token) return;
     setLeadsLoading(true);
     try {
@@ -364,7 +370,7 @@ export default function AdminDashboard() {
   }, [isAuthenticated, user, fetchLeads]);
 
   const handleUpdateReportStatus = async (reportId: string, status: string) => {
-    const token = localStorage.getItem("staybuddy_token");
+    const token = getToken();
     if (!token) return;
     try {
       const res = await fetch("/api/admin/reports", {
@@ -382,7 +388,7 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteReport = async (reportId: string) => {
-    const token = localStorage.getItem("staybuddy_token");
+    const token = getToken();
     if (!token) return;
     try {
       const res = await fetch("/api/admin/reports", {
@@ -407,7 +413,7 @@ export default function AdminDashboard() {
       return;
     }
     // Unblock directly — no reason needed
-    const token = localStorage.getItem("staybuddy_token");
+    const token = getToken();
     if (!token) return;
     try {
       const res = await fetch("/api/admin/users", {
@@ -424,7 +430,7 @@ export default function AdminDashboard() {
 
   const handleBlockSubmit = async () => {
     if (!blockModal || !blockReason.trim()) return;
-    const token = localStorage.getItem("staybuddy_token");
+    const token = getToken();
     if (!token) return;
     setBlockSubmitting(true);
     try {
@@ -447,7 +453,7 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteProperty = async (propertyId: string, reason: string) => {
-    const token = localStorage.getItem("staybuddy_token");
+    const token = getToken();
     if (!token) return;
     setDeleteSubmitting(true);
     setDeletingId(propertyId);
@@ -473,7 +479,7 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteRejectedRequest = async (propertyId: string) => {
-    const token = localStorage.getItem("staybuddy_token");
+    const token = getToken();
     if (!token) return;
     setDeletingId(propertyId);
     try {
@@ -493,7 +499,7 @@ export default function AdminDashboard() {
   };
 
   const handlePropertyAction = async (propertyId: string, action: 'approve' | 'reject' | 'verify') => {
-    const token = localStorage.getItem("staybuddy_token");
+    const token = getToken();
     if (!token) return;
     setActioningId(propertyId);
     try {
@@ -527,7 +533,7 @@ export default function AdminDashboard() {
 
   const handleRejectSubmit = async () => {
     if (!rejectModal || !rejectReason.trim()) return;
-    const token = localStorage.getItem("staybuddy_token");
+    const token = getToken();
     if (!token) return;
     setRejectSubmitting(true);
     try {
@@ -1875,7 +1881,7 @@ export default function AdminDashboard() {
                 setWaEntries(prev => prev.map(e => e.id === id ? { ...e, [field]: value } : e));
 
               const saveLead = async (entry: { phone: string; name: string; pgName: string }) => {
-                const token = localStorage.getItem("staybuddy_token");
+                const token = getToken();
                 if (!token) return;
                 try {
                   await fetch("/api/admin/leads", {
@@ -1893,7 +1899,7 @@ export default function AdminDashboard() {
               };
 
               const updateLeadStatus = async (leadId: string, status: string) => {
-                const token = localStorage.getItem("staybuddy_token");
+                const token = getToken();
                 if (!token) return;
                 try {
                   await fetch("/api/admin/leads", {
@@ -1906,7 +1912,7 @@ export default function AdminDashboard() {
               };
 
               const deleteLead = async (leadId: string) => {
-                const token = localStorage.getItem("staybuddy_token");
+                const token = getToken();
                 if (!token) return;
                 try {
                   await fetch(`/api/admin/leads?id=${leadId}`, {

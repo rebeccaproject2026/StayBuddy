@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { getToken } from "@/lib/token-storage";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, X, MapPin, Check, ShieldCheck } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
@@ -578,7 +579,7 @@ export default function PostPropertyPage() {
         });
       }
 
-      const token = localStorage.getItem('staybuddy_token');
+      const token = getToken();
 
       // Strip null/undefined values so Zod optional() fields don't receive null
       const cleanPayload = Object.fromEntries(

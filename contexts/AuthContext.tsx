@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useSession, signIn as nextAuthSignIn, signOut as nextAuthSignOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { tokenKey, userKey, countryFromPath, getToken, setToken as storeToken, removeToken } from '@/lib/token-storage';
 
 interface User {
   id: string;
@@ -55,20 +56,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Sync from localStorage immediately after mount (avoids hydration mismatch)
   useEffect(() => {
     setIsMounted(true);
-    const storedToken = localStorage.getItem('staybuddy_token');
-    const storedUser = localStorage.getItem('staybuddy_user');
+    const country = countryFromPath();
+    const storedToken = localStorage.getItem(tokenKey(country));
+    const storedUser = localStorage.getItem(userKey(country));
     if (storedToken && storedUser) {
       try {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
       } catch {
-        localStorage.removeItem('staybuddy_token');
-        localStorage.removeItem('staybuddy_user');
+        localStorage.removeItem(tokenKey(country));
+        localStorage.removeItem(userKey(country));
       }
     }
-    // Only resolve loading immediately for credentials users (localStorage token found).
-    // For Google/NextAuth users there is no localStorage token — keep isLoading=true
-    // until the NextAuth session status resolves (handled in the second useEffect).
     if (storedToken) {
       setIsLoading(false);
     }
@@ -119,7 +118,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
 
         // Fallback to custom auth — state already initialized from localStorage
-        const storedToken = localStorage.getItem('staybuddy_token');
+        const country = countryFromPath();
+        const storedToken = localStorage.getItem(tokenKey(country));
 
         if (storedToken) {
           // Verify token is still valid in the background
@@ -129,14 +129,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             });
 
             if (!response.ok) {
-              localStorage.removeItem('staybuddy_token');
-              localStorage.removeItem('staybuddy_user');
+              localStorage.removeItem(tokenKey(country));
+              localStorage.removeItem(userKey(country));
               setToken(null);
               setUser(null);
             } else {
               const result = await response.json();
               setUser(result.user);
-              localStorage.setItem('staybuddy_user', JSON.stringify(result.user));
+              localStorage.setItem(userKey(country), JSON.stringify(result.user));
             }
           } catch {
             // Network error — keep existing state, don't log out
@@ -188,8 +188,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const { user: userData, token: userToken } = result;
         setUser(userData);
         setToken(userToken);
-        localStorage.setItem('staybuddy_token', userToken);
-        localStorage.setItem('staybuddy_user', JSON.stringify(userData));
+        const c = country || userData.country || 'in';
+        storeToken(c, userToken);
+        localStorage.setItem(userKey(c), JSON.stringify(userData));
 
         toast.success('Login successful!', {
           duration: 3000,
@@ -237,8 +238,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setToken(null);
 
     // Clear localStorage
-    localStorage.removeItem('staybuddy_token');
-    localStorage.removeItem('staybuddy_user');
+    removeToken(userCountry);
 
     toast.success('Logged out successfully', {
       duration: 2000,
@@ -260,12 +260,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const updatedUser = { ...user, ...userData };
       console.log('AuthContext - Updating existing user:', updatedUser);
       setUser(updatedUser);
-      localStorage.setItem('staybuddy_user', JSON.stringify(updatedUser));
+      localStorage.setItem(userKey(updatedUser.country), JSON.stringify(updatedUser));
     } else {
-      // If no user exists, treat this as setting the initial user
       console.log('AuthContext - Setting initial user:', userData);
       setUser(userData as User);
-      localStorage.setItem('staybuddy_user', JSON.stringify(userData));
+      const c = (userData as User).country || countryFromPath();
+      localStorage.setItem(userKey(c), JSON.stringify(userData));
     }
   };
 

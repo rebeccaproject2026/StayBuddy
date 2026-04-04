@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
+import { tokenKey, userKey } from "@/lib/token-storage";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -36,8 +37,8 @@ export default function AdminLoginPage() {
       }
 
       if (data.token) {
-        localStorage.setItem("staybuddy_token", data.token);
-        localStorage.setItem("staybuddy_user", JSON.stringify(data.user));
+        localStorage.setItem(tokenKey(country), data.token);
+        localStorage.setItem(userKey(country), JSON.stringify(data.user));
       }
 
       // Use window.location for a full page reload so AuthContext re-initializes

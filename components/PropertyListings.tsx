@@ -30,6 +30,7 @@ interface Property {
   reviewsCount?: number;
   isVerified?: boolean;
   roomDetails?: Record<string, { monthlyRent: string; securityDeposit?: string; totalBeds?: string; availableBeds?: string }>;
+  tenantRooms?: { id: string; name: string; status: string; rent: string; maxPersons?: string; currentPersons?: string }[];
 }
 
 export default function PropertyListings() {
@@ -121,6 +122,7 @@ export default function PropertyListings() {
     area: property.area,
     bhk: property.bhk,
     roomDetails: property.roomDetails,
+    tenantRooms: property.tenantRooms,
     images: property.images?.length > 0
       ? property.images
       : ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=400"],

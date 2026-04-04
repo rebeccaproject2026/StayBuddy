@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Globe, LogOut, Settings, LayoutDashboard, ChevronDown, Menu, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { getToken } from "@/lib/token-storage";
 import { useParams, useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -72,7 +73,7 @@ export default function Navbar() {
   const effectivelyAuthenticated = isAuthenticated && isCountryMatch;
 
   // Live notification count via WebSocket (falls back to 30s polling)
-  const notifToken = mounted ? (localStorage.getItem("staybuddy_token") ?? null) : null;
+  const notifToken = mounted ? (getToken() ?? null) : null;
   const { count: notifCount } = useNotifications({
     userId: effectivelyAuthenticated && (user?.role === "landlord" || user?.role === "renter") ? (user as any)?._id ?? null : null,
     token: notifToken,
@@ -111,9 +112,13 @@ export default function Navbar() {
           langMenuButtonRef.current && !langMenuButtonRef.current.contains(e.target as Node)) {
         setIsLangMenuOpen(false);
       }
-      if (isProfileMenuOpen && profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node) &&
-          profileMenuButtonRef.current && !profileMenuButtonRef.current.contains(e.target as Node)) {
-        setIsProfileMenuOpen(false);
+      // Close profile menu if click is outside both the button and the dropdown
+      if (isProfileMenuOpen) {
+        const clickedButton = profileMenuButtonRef.current?.contains(e.target as Node);
+        const clickedMenu = profileMenuRef.current?.contains(e.target as Node);
+        if (!clickedButton && !clickedMenu) {
+          setIsProfileMenuOpen(false);
+        }
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -338,7 +343,7 @@ export default function Navbar() {
             ) : (
               <>
                 {effectivelyAuthenticated && user ? (
-                  <div className="relative">
+                  <div className="relative" ref={profileMenuRef}>
                     <motion.button
                       ref={profileMenuButtonRef}
                       onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
@@ -370,7 +375,6 @@ export default function Navbar() {
                     <AnimatePresence>
                       {isProfileMenuOpen && (
                         <motion.div
-                          ref={profileMenuRef}
                           variants={dropdownVariants}
                           initial="hidden" animate="visible" exit="exit"
                           className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50"

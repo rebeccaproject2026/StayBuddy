@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { getToken } from "@/lib/token-storage";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
@@ -420,7 +421,7 @@ export default function TenantDashboard() {
     }
     setProfileSaving(true);
     try {
-      const authToken = token && token !== "nextauth" ? token : localStorage.getItem("staybuddy_token");
+      const authToken = token && token !== "nextauth" ? token : getToken();
       const res = await fetch("/api/auth/me", {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) },
@@ -447,7 +448,7 @@ export default function TenantDashboard() {
     if (pwForm.next !== pwForm.confirm) { toast.error(language === "fr" ? "Les mots de passe ne correspondent pas." : "Passwords do not match."); return; }
     setPwSaving(true);
     try {
-      const authToken = token && token !== "nextauth" ? token : localStorage.getItem("staybuddy_token");
+      const authToken = token && token !== "nextauth" ? token : getToken();
       const res = await fetch("/api/auth/me", {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) },
