@@ -690,6 +690,7 @@ export default function OwnerDashboard() {
 
   // Chat state
   const [chatRequest, setChatRequest] = useState<any | null>(null); // inquiry being chatted
+  const chatRequestRef = useRef<any | null>(null);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
@@ -743,7 +744,45 @@ export default function OwnerDashboard() {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
         .then(r => r.json())
-        .then(data => { if (data.success) setContactRequests(data.requests || []); })
+        .then(data => {
+          if (data.success) {
+            setContactRequests(data.requests || []);
+            // After loading requests, fetch unread message counts to populate sidebar badges
+            fetch('/api/notifications/count', {
+              headers: token ? { Authorization: `Bearer ${token}` } : {},
+            })
+              .then(r => r.json())
+              .then(notifData => {
+                if (!notifData.success || notifData.total === 0) return;
+                // We know there are unread messages — fetch each request's messages to find which ones
+                const seen: Record<string, number> = JSON.parse(localStorage.getItem('staybuddy_owner_seen') || '{}');
+                (data.requests || []).forEach((req: any) => {
+                  fetch(`/api/messages/${req._id}`, {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
+                  })
+                    .then(r => r.json())
+                    .then(msgData => {
+                      if (!msgData.success || !msgData.messages?.length) return;
+                      const msgs: any[] = msgData.messages;
+                      const tenantMsgCount = msgs.filter((m: any) => m.senderRole === 'renter').length;
+                      if (tenantMsgCount > (seen[req._id] ?? 0)) {
+                        const last = msgs[msgs.length - 1];
+                        setConversations(prev => ({
+                          ...prev,
+                          [req._id]: {
+                            lastMsg: last.text,
+                            time: last.createdAt,
+                            unread: true,
+                          },
+                        }));
+                      }
+                    })
+                    .catch(() => {});
+                });
+              })
+              .catch(() => {});
+          }
+        })
         .catch(() => {});
 
     setRequestsLoading(true);
@@ -780,33 +819,45 @@ export default function OwnerDashboard() {
   // Live notifications via WebSocket — refresh conversations when a new message arrives
   const ownerToken = typeof window !== 'undefined' ? getToken() : null;
   const { count: notifCount } = useNotifications({
-    userId: isAuthenticated && user?.role === 'landlord' ? (user as any)?._id ?? null : null,
+    userId: isAuthenticated && user?.role === 'landlord' ? user?.id ?? null : null,
     token: ownerToken,
     enabled: isAuthenticated && user?.role === 'landlord',
-    onNotification: ({ requestId: reqId }) => {
-      // A new message arrived — refresh conversations for that request
-      const token = getToken();
-      const seen: Record<string, number> = JSON.parse(localStorage.getItem('staybuddy_owner_seen') || '{}');
-      fetch(`/api/messages/${reqId}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      })
-        .then(r => r.json())
-        .then(data => {
-          if (!data.success || !data.messages?.length) return;
-          const msgs: any[] = data.messages;
-          const last = msgs[msgs.length - 1];
-          const tenantMsgCount = msgs.filter((m: any) => m.senderRole === 'renter').length;
-          const isOpen = chatRequest?._id === reqId;
-          setConversations(prev => ({
-            ...prev,
-            [reqId]: {
-              lastMsg: last.text,
-              time: last.createdAt,
-              unread: !isOpen && tenantMsgCount > (seen[reqId] ?? 0),
-            },
-          }));
+    onNotification: ({ requestId: reqId, message }) => {
+      const isOpen = chatRequestRef.current?._id === reqId;
+      // Update conversations list with the new message — no extra fetch needed
+      if (message) {
+        setConversations(prev => ({
+          ...prev,
+          [reqId]: {
+            lastMsg: message.text,
+            time: message.createdAt,
+            unread: !isOpen,
+          },
+        }));
+      } else {
+        // Fallback: fetch if message payload not available
+        const token = getToken();
+        const seen: Record<string, number> = JSON.parse(localStorage.getItem('staybuddy_owner_seen') || '{}');
+        fetch(`/api/messages/${reqId}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         })
-        .catch(() => {});
+          .then(r => r.json())
+          .then(data => {
+            if (!data.success || !data.messages?.length) return;
+            const msgs: any[] = data.messages;
+            const last = msgs[msgs.length - 1];
+            const tenantMsgCount = msgs.filter((m: any) => m.senderRole === 'renter').length;
+            setConversations(prev => ({
+              ...prev,
+              [reqId]: {
+                lastMsg: last.text,
+                time: last.createdAt,
+                unread: !isOpen && tenantMsgCount > (seen[reqId] ?? 0),
+              },
+            }));
+          })
+          .catch(() => {});
+      }
     },
   });
 
@@ -844,6 +895,7 @@ export default function OwnerDashboard() {
 
   const openChat = async (req: any) => {
     setChatRequest(req);
+    chatRequestRef.current = req;
     setChatMessages([]);
     setChatLoading(true);
     // clear unread for this conversation
@@ -898,6 +950,7 @@ export default function OwnerDashboard() {
 
   const closeChat = () => {
     setChatRequest(null);
+    chatRequestRef.current = null;
     setChatMessages([]);
     setChatInput('');
   };
@@ -1355,10 +1408,18 @@ export default function OwnerDashboard() {
                     activeTab === "requests" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
-                  <Calendar className="w-5 h-5 flex-shrink-0" />
+                  <div className="relative flex-shrink-0">
+                    <Calendar className="w-5 h-5" />
+                    {contactRequests.filter((r: any) => !seenInquiryIds.has(r._id)).length > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+                      </span>
+                    )}
+                  </div>
                   <span className="font-medium text-sm">{tc.bookingRequests}</span>
                   {contactRequests.filter((r: any) => !seenInquiryIds.has(r._id)).length > 0 && (
-                    <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                    <span className="ml-auto bg-red-500 text-white text-xs font-bold min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center">
                       {contactRequests.filter((r: any) => !seenInquiryIds.has(r._id)).length}
                     </span>
                   )}
@@ -1369,10 +1430,18 @@ export default function OwnerDashboard() {
                     activeTab === "messages" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
-                  <MessageSquare className="w-5 h-5 flex-shrink-0" />
+                  <div className="relative flex-shrink-0">
+                    <MessageSquare className="w-5 h-5" />
+                    {Object.values(conversations).filter(c => c.unread).length > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+                      </span>
+                    )}
+                  </div>
                   <span className="font-medium text-sm">{tc.messages}</span>
                   {Object.values(conversations).filter(c => c.unread).length > 0 && (
-                    <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                    <span className="ml-auto bg-red-500 text-white text-xs font-bold min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center">
                       {Object.values(conversations).filter(c => c.unread).length}
                     </span>
                   )}
@@ -3322,7 +3391,7 @@ export default function OwnerDashboard() {
                 propertyTitle={chatRequest.propertyTitle}
                 otherPartyName={chatRequest.fullName || chatRequest.renter?.fullName || 'Tenant'}
                 userId={user?.id || ''}
-                recipientId={chatRequest.renter?._id || chatRequest.renter || null}
+                recipientId={chatRequest.renter?._id ? String(chatRequest.renter._id) : (chatRequest.renter ? String(chatRequest.renter) : null)}
                 token={typeof window !== 'undefined' ? getToken() : null}
                 userRole="landlord"
                 isDark={isDark}

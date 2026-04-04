@@ -77,7 +77,7 @@ export default function Navbar() {
   // Live notification count via WebSocket (falls back to 30s polling)
   const notifToken = mounted ? (getToken() ?? null) : null;
   const { count: notifCount } = useNotifications({
-    userId: effectivelyAuthenticated && (user?.role === "landlord" || user?.role === "renter") ? (user as any)?._id ?? null : null,
+    userId: effectivelyAuthenticated && (user?.role === "landlord" || user?.role === "renter") ? user?.id ?? null : null,
     token: notifToken,
     enabled: mounted && effectivelyAuthenticated && (user?.role === "landlord" || user?.role === "renter"),
   });

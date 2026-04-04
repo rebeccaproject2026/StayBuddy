@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { getToken } from "@/lib/token-storage";
@@ -183,6 +183,7 @@ export default function TenantDashboard() {
 
   // Chat state
   const [chatRequest, setChatRequest] = useState<any | null>(null);
+  const chatRequestRef = useRef<any | null>(null);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
@@ -245,12 +246,56 @@ export default function TenantDashboard() {
   // Fetch contact requests
   useEffect(() => {
     if (!isAuthenticated || !token || user?.role !== 'renter') return;
+    const authToken = token !== 'nextauth' ? token : null;
     setRequestsLoading(true);
     fetch('/api/contact-requests', {
-      headers: token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {},
+      headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
     })
       .then(r => r.json())
-      .then(data => { if (data.success) setMyRequests(data.requests || []); })
+      .then(data => {
+        if (data.success) {
+          setMyRequests(data.requests || []);
+          // Check for unread messages on load to populate sidebar badges immediately
+          fetch('/api/notifications/count', {
+            headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+          })
+            .then(r => r.json())
+            .then(notifData => {
+              if (!notifData.success || notifData.total === 0) return;
+              const seen: Record<string, number> = JSON.parse(localStorage.getItem('staybuddy_seen') || '{}');
+              (data.requests || []).forEach((req: any) => {
+                fetch(`/api/messages/${req._id}`, {
+                  headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+                })
+                  .then(r => r.json())
+                  .then(msgData => {
+                    if (!msgData.success || !msgData.messages?.length) return;
+                    const msgs: any[] = msgData.messages;
+                    const ownerMsgCount = msgs.filter((m: any) => m.senderRole === 'landlord').length;
+                    const unread = ownerMsgCount > (seen[req._id] ?? 0);
+                    if (unread) {
+                      const last = msgs[msgs.length - 1];
+                      setConversations(prev => ({
+                        ...prev,
+                        [req._id]: {
+                          lastMsg: last.text,
+                          time: last.createdAt,
+                          senderName: last.senderName,
+                          unread: true,
+                        },
+                      }));
+                      setUnreadCounts(prev => ({
+                        ...prev,
+                        [req._id]: ownerMsgCount - (seen[req._id] ?? 0),
+                      }));
+                    }
+                  })
+                  .catch(() => {});
+              });
+            })
+            .catch(() => {});
+        }
+      })
       .catch(() => {})
       .finally(() => setRequestsLoading(false));
   }, [isAuthenticated, token, user?.role]);
@@ -270,44 +315,61 @@ export default function TenantDashboard() {
 
   // Live notifications via WebSocket — update unread counts when a new message arrives
   const { count: notifCount } = useNotifications({
-    userId: isAuthenticated && user?.role === 'renter' ? (user as any)?._id ?? null : null,
+    userId: isAuthenticated && user?.role === 'renter' ? user?.id ?? null : null,
     token: token !== 'nextauth' ? token : null,
     enabled: isAuthenticated && user?.role === 'renter',
-    onNotification: ({ requestId: reqId }) => {
-      const seen: Record<string, number> = JSON.parse(localStorage.getItem('staybuddy_seen') || '{}');
-      const authToken = token !== 'nextauth' ? token : null;
-      fetch(`/api/messages/${reqId}`, {
-        headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
-      })
-        .then(r => r.json())
-        .then(data => {
-          if (!data.success || !data.messages?.length) return;
-          const msgs: any[] = data.messages;
-          const last = msgs[msgs.length - 1];
-          const ownerMsgCount = msgs.filter((m: any) => m.senderRole === 'landlord').length;
-          const isConversationOpen = chatRequest?._id === reqId;
-          setConversations(prev => ({
-            ...prev,
-            [reqId]: {
-              lastMsg: last.text,
-              time: last.createdAt,
-              senderName: last.senderName,
-              unread: !isConversationOpen && ownerMsgCount > (seen[reqId] ?? 0),
-            },
-          }));
-          if (!isConversationOpen) {
-            setUnreadCounts(prev => ({
-              ...prev,
-              [reqId]: Math.max(0, ownerMsgCount - (seen[reqId] ?? 0)),
-            }));
-          }
+    onNotification: ({ requestId: reqId, message }) => {
+      const isConversationOpen = chatRequestRef.current?._id === reqId;
+      if (message) {
+        setConversations(prev => ({
+          ...prev,
+          [reqId]: {
+            lastMsg: message.text,
+            time: message.createdAt,
+            senderName: message.senderName,
+            unread: !isConversationOpen,
+          },
+        }));
+        if (!isConversationOpen) {
+          setUnreadCounts(prev => ({ ...prev, [reqId]: (prev[reqId] ?? 0) + 1 }));
+        }
+      } else {
+        // Fallback: fetch if message payload not available
+        const authToken = token !== 'nextauth' ? token : null;
+        const seen: Record<string, number> = JSON.parse(localStorage.getItem('staybuddy_seen') || '{}');
+        fetch(`/api/messages/${reqId}`, {
+          headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
         })
-        .catch(() => {});
+          .then(r => r.json())
+          .then(data => {
+            if (!data.success || !data.messages?.length) return;
+            const msgs: any[] = data.messages;
+            const last = msgs[msgs.length - 1];
+            const ownerMsgCount = msgs.filter((m: any) => m.senderRole === 'landlord').length;
+            setConversations(prev => ({
+              ...prev,
+              [reqId]: {
+                lastMsg: last.text,
+                time: last.createdAt,
+                senderName: last.senderName,
+                unread: !isConversationOpen && ownerMsgCount > (seen[reqId] ?? 0),
+              },
+            }));
+            if (!isConversationOpen) {
+              setUnreadCounts(prev => ({
+                ...prev,
+                [reqId]: Math.max(0, ownerMsgCount - (seen[reqId] ?? 0)),
+              }));
+            }
+          })
+          .catch(() => {});
+      }
     },
   });
 
   const openChat = async (req: any) => {
     setChatRequest(req);
+    chatRequestRef.current = req;
     setChatMessages([]);
     setChatLoading(true);
     // clear unread for this request
@@ -364,6 +426,7 @@ export default function TenantDashboard() {
 
   const closeChat = () => {
     setChatRequest(null);
+    chatRequestRef.current = null;
     setChatMessages([]);
     setChatInput('');
   };
@@ -606,10 +669,11 @@ export default function TenantDashboard() {
   };
 
   const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
+  const requestsWithUnread = Object.keys(unreadCounts).filter(id => unreadCounts[id] > 0).length;
 
   const navItems = [
     { key: "saved",    icon: Heart,        label: tc.savedProperties },
-    { key: "requests", icon: MessageSquare,label: tc.myRequests },
+    { key: "requests", icon: MessageSquare,label: tc.myRequests, badge: requestsWithUnread },
     { key: "messages", icon: Send,         label: tc.messagesTab, badge: totalUnread },
     { key: "profile",  icon: User,         label: tc.profile },
   ];
@@ -656,15 +720,34 @@ export default function TenantDashboard() {
               {navItems.map(({ key, icon: Icon, label, badge }) => (
                 <button
                   key={key}
-                  onClick={() => setActiveTab(key)}
+                  onClick={() => {
+                    setActiveTab(key);
+                    // Clear unread badge when navigating to requests or messages tab
+                    if (key === 'requests') {
+                      setUnreadCounts({});
+                      setConversations(prev => {
+                        const next = { ...prev };
+                        Object.keys(next).forEach(id => { next[id] = { ...next[id], unread: false }; });
+                        return next;
+                      });
+                    }
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
                     activeTab === key ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
-                  <Icon className="w-5 h-5 flex-shrink-0" />
+                  <div className="relative flex-shrink-0">
+                    <Icon className="w-5 h-5" />
+                    {badge ? (
+                      <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+                      </span>
+                    ) : null}
+                  </div>
                   <span className="font-medium text-sm">{label}</span>
                   {badge ? (
-                    <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{badge}</span>
+                    <span className="ml-auto bg-red-500 text-white text-xs font-bold min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center">{badge}</span>
                   ) : null}
                 </button>
               ))}
@@ -1099,7 +1182,7 @@ export default function TenantDashboard() {
                 propertyTitle={chatRequest.propertyTitle}
                 otherPartyName={(chatRequest.owner as any)?.fullName || (language === 'fr' ? 'Propriétaire' : 'Owner')}
                 userId={user?.id || ''}
-                recipientId={(chatRequest.owner as any)?._id || chatRequest.owner || null}
+                recipientId={(chatRequest.owner as any)?._id ? String((chatRequest.owner as any)._id) : (chatRequest.owner ? String(chatRequest.owner) : null)}
                 token={token}
                 userRole="renter"
                 isDark={isDark}

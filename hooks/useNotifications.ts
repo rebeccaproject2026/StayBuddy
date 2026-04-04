@@ -6,18 +6,12 @@ type UseNotificationsOptions = {
   userId: string | null;
   token: string | null;
   enabled?: boolean;
-  /** Called whenever a new notification arrives (new message for this user) */
+  /** Called whenever a new notification arrives */
   onNotification?: (payload: { requestId: string; message: any }) => void;
 };
 
 const POLL_INTERVAL = 30_000;
 
-/**
- * Connects to the WS server's personal notification room (`notif:{userId}`).
- * Falls back to polling /api/notifications/count every 30s if WS is unavailable.
- *
- * Returns the live unread count and a `refresh` function to force a re-fetch.
- */
 export function useNotifications({ userId, token, enabled = true, onNotification }: UseNotificationsOptions) {
   const [count, setCount] = useState(0);
   const wsRef = useRef<WebSocket | null>(null);
@@ -26,6 +20,9 @@ export function useNotifications({ userId, token, enabled = true, onNotification
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wsFailedRef = useRef(false);
   const reconnectCount = useRef(0);
+  // Always-current ref so ws.onmessage never captures a stale callback
+  const onNotificationRef = useRef(onNotification);
+  useEffect(() => { onNotificationRef.current = onNotification; });
 
   const authHeaders = useCallback((): Record<string, string> => {
     if (!token || token === 'nextauth') return {};
@@ -82,7 +79,6 @@ export function useNotifications({ userId, token, enabled = true, onNotification
       reconnectCount.current = 0;
       stopPolling();
       ws.send(JSON.stringify({ type: 'join_notif', userId }));
-      // Fetch current count once on connect
       fetchCount();
     };
 
@@ -91,8 +87,8 @@ export function useNotifications({ userId, token, enabled = true, onNotification
       try {
         const data = JSON.parse(event.data);
         if (data.type === 'notification') {
-          onNotification?.({ requestId: data.requestId, message: data.message });
-          // Bump count optimistically; a full re-fetch keeps it accurate
+          // Use ref so we always call the latest callback, never a stale one
+          onNotificationRef.current?.({ requestId: data.requestId, message: data.message });
           setCount(c => c + 1);
           fetchCount();
         }
@@ -120,7 +116,7 @@ export function useNotifications({ userId, token, enabled = true, onNotification
       ws.close();
       if (mountedRef.current) startPolling();
     };
-  }, [userId, fetchCount, startPolling, stopPolling, onNotification]);
+  }, [userId, fetchCount, startPolling, stopPolling]);
 
   useEffect(() => {
     if (!enabled || !userId) return;
