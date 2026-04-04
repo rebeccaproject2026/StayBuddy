@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
-import { tokenKey, userKey } from "@/lib/token-storage";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -13,7 +12,6 @@ export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const router = useRouter();
   const params = useParams();
   const country = params?.country as string || "in";
 
@@ -37,12 +35,15 @@ export default function AdminLoginPage() {
       }
 
       if (data.token) {
-        localStorage.setItem(tokenKey(country), data.token);
-        localStorage.setItem(userKey(country), JSON.stringify(data.user));
+        const c = country === 'fr' ? 'fr' : 'in';
+        const tKey = `staybuddy_token_${c}`;
+        const uKey = `staybuddy_user_${c}`;
+        localStorage.setItem(tKey, data.token);
+        localStorage.setItem(uKey, JSON.stringify(data.user));
+        // Set a cookie so the middleware can verify admin access server-side
+        document.cookie = `staybuddy_token=${data.token}; path=/; max-age=86400; SameSite=Lax`;
       }
 
-      // Use window.location for a full page reload so AuthContext re-initializes
-      // and picks up the newly stored token from localStorage.
       window.location.href = `/${country}/dashboard/admin`;
     } catch {
       setError("Something went wrong. Please try again.");

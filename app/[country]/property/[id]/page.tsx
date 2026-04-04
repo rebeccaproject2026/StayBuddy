@@ -48,35 +48,43 @@ export default function PropertyDetailsPage() {
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const NAVBAR_HEIGHT = 96;
+    let rafId: number | null = null;
+
     const handleScroll = () => {
-      const sidebar = sidebarRef.current;
-      const content = contentRef.current;
-      if (!sidebar || !content) return;
+      if (rafId !== null) return; // already scheduled
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        const sidebar = sidebarRef.current;
+        const content = contentRef.current;
+        if (!sidebar || !content) return;
 
-      const NAVBAR_HEIGHT = 96; // top-24 = 6rem = 96px
-      const contentTop = content.getBoundingClientRect().top + window.scrollY;
-      const contentBottom = contentTop + content.offsetHeight;
-      const sidebarHeight = sidebar.offsetHeight;
-      const scrollY = window.scrollY;
+        // Batch ALL reads before any writes to avoid forced reflow
+        const contentRect = content.getBoundingClientRect();
+        const contentTop = contentRect.top + window.scrollY;
+        const contentHeight = content.offsetHeight;
+        const sidebarHeight = sidebar.offsetHeight;
+        const parentWidth = sidebar.parentElement?.offsetWidth ?? 0;
+        const scrollY = window.scrollY;
 
-      const startSticky = contentTop - NAVBAR_HEIGHT;
-      const stopSticky = contentBottom - sidebarHeight - NAVBAR_HEIGHT;
+        const startSticky = contentTop - NAVBAR_HEIGHT;
+        const stopSticky = contentTop + contentHeight - sidebarHeight - NAVBAR_HEIGHT;
 
-      if (scrollY < startSticky) {
-        // Before sticky zone: normal flow
-        sidebar.style.position = 'relative';
-        sidebar.style.top = '0';
-      } else if (scrollY >= startSticky && scrollY < stopSticky) {
-        // In sticky zone: fixed at top
-        sidebar.style.position = 'fixed';
-        sidebar.style.top = `${NAVBAR_HEIGHT}px`;
-        sidebar.style.width = `${sidebar.parentElement?.offsetWidth ?? 0}px`;
-      } else {
-        // Past sticky zone: pin to bottom of parent
-        sidebar.style.position = 'absolute';
-        sidebar.style.top = `${content.offsetHeight - sidebarHeight}px`;
-        sidebar.style.width = '';
-      }
+        // Now do all writes together
+        if (scrollY < startSticky) {
+          sidebar.style.position = 'relative';
+          sidebar.style.top = '0';
+          sidebar.style.width = '';
+        } else if (scrollY < stopSticky) {
+          sidebar.style.position = 'fixed';
+          sidebar.style.top = `${NAVBAR_HEIGHT}px`;
+          sidebar.style.width = `${parentWidth}px`;
+        } else {
+          sidebar.style.position = 'absolute';
+          sidebar.style.top = `${contentHeight - sidebarHeight}px`;
+          sidebar.style.width = '';
+        }
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -85,6 +93,7 @@ export default function PropertyDetailsPage() {
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
+      if (rafId !== null) cancelAnimationFrame(rafId);
     };
   }, []);
 

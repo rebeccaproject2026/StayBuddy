@@ -60,10 +60,14 @@ export default function Navbar() {
   const handleNavClick = (e: React.MouseEvent, path: string) => {
     e.preventDefault();
     setIsMobileMenuOpen(false);
-    // If path already includes country prefix, use as-is; otherwise prepend country
     const dest = path.startsWith(`/${urlCountry || 'in'}/`) || path === `/${urlCountry || 'in'}`
       ? path
       : `/${urlCountry || 'in'}${path}`;
+    // For admin dashboard, use full page navigation to ensure auth re-initializes
+    if (dest.includes('/dashboard/admin')) {
+      window.location.href = dest;
+      return;
+    }
     setNavDest(dest);
     setNavLoading(true);
     router.push(dest);
@@ -94,9 +98,19 @@ export default function Navbar() {
   }, [pathname]);
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    let rafId: number | null = null;
+    const handleScroll = () => {
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        setIsScrolled(window.scrollY > 20);
+      });
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
   }, []);
 
   // Close mobile menu on resize to desktop

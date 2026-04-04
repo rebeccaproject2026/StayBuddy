@@ -21,24 +21,24 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const country = searchParams.get('country'); // in | fr
+    const country = searchParams.get('country');
 
-    // First get reports, then filter by property country if needed
-    let reports = await Report.find({})
-      .populate('property', 'title location images propertyType country')
+    const filter: Record<string, any> = {};
+
+    const reports = await Report.find(filter)
+      .populate({
+        path: 'property',
+        select: 'title location images propertyType country',
+        ...(country ? { match: { country } } : {}),
+      })
       .populate('reportedBy', 'fullName email')
       .sort({ createdAt: -1 })
       .lean();
 
-    // Filter by country if provided (filter based on property's country)
-    if (country) {
-      reports = reports.filter(report => {
-        const property = report.property as any;
-        return property && property.country === country;
-      });
-    }
+    // Remove reports where property didn't match the country filter (populate returns null)
+    const filtered = country ? reports.filter(r => r.property != null) : reports;
 
-    return NextResponse.json({ success: true, reports });
+    return NextResponse.json({ success: true, reports: filtered });
   } catch (error) {
     console.error('[GET /api/admin/reports]', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

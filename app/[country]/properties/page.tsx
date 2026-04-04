@@ -60,6 +60,7 @@ function PropertiesPageContent() {
   const [tenantPref, setTenantPref] = useState<string[]>([]);
   const [propCategory, setPropCategory] = useState<string[]>([]);
   const [verifiedPG, setVerifiedPG] = useState(false);
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
 
   // Temp filter states (drawer)
   const [tempPriceRange, setTempPriceRange] = useState([0, 200000]);
@@ -69,6 +70,18 @@ function PropertiesPageContent() {
   const [tempTenantPref, setTempTenantPref] = useState<string[]>([]);
   const [tempPropCategory, setTempPropCategory] = useState<string[]>([]);
   const [tempVerifiedPG, setTempVerifiedPG] = useState(false);
+
+  // Fetch cities dynamically from DB
+  useEffect(() => {
+    fetch(`/api/properties/city-stats?country=${country}&top=20`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.cities) {
+          setAvailableCities(data.cities.map((c: { name: string }) => c.name).filter(Boolean));
+        }
+      })
+      .catch(() => {});
+  }, [country]);
 
   // Sync URL params → state AND fetch in one effect to avoid race condition
   useEffect(() => {
@@ -143,7 +156,7 @@ function PropertiesPageContent() {
       pgForOptions: ["Male", "Female", "Both"],
       tenantPrefOptions: ["Students", "Professionals", "Both"],
       propertyTypeOptions: ["Villa", "Flat", "House", "Penthouse"],
-      cities: ["Ahmedabad", "Gandhinagar"],
+      cities: availableCities,
       noResults: "No properties found matching your criteria.",
       loading: "Loading properties...",
     },
@@ -159,7 +172,7 @@ function PropertiesPageContent() {
       pgForOptions: ["Male", "Female", "Both"],
       tenantPrefOptions: ["Students", "Professionals", "Both"],
       propertyTypeOptions: ["Villa", "Flat", "House", "Penthouse"],
-      cities: ["Ahmedabad", "Gandhinagar"],
+      cities: availableCities,
       noResults: "Aucune propriété trouvée.",
       loading: "Chargement...",
     }

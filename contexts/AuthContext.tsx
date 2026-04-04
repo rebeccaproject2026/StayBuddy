@@ -22,6 +22,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
+  initialized: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string, country?: string) => Promise<boolean>;
   googleLogin: (role: string) => Promise<void>;
@@ -47,113 +48,75 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   const { data: session, status } = useSession();
 
   const isAuthenticated = !!user && !!token;
+  // Track whether the initial localStorage read has completed
+  const [initialized, setInitialized] = useState(false);
 
   // Sync from localStorage immediately after mount (avoids hydration mismatch)
   useEffect(() => {
-    setIsMounted(true);
     const country = countryFromPath();
     const storedToken = localStorage.getItem(tokenKey(country));
     const storedUser = localStorage.getItem(userKey(country));
     if (storedToken && storedUser) {
       try {
+        const parsedUser = JSON.parse(storedUser);
         setToken(storedToken);
-        setUser(JSON.parse(storedUser));
+        setUser(parsedUser);
       } catch {
         localStorage.removeItem(tokenKey(country));
         localStorage.removeItem(userKey(country));
       }
     }
-    if (storedToken) {
-      setIsLoading(false);
-    }
+    // Mark as initialized and unblock loading in one go
+    setInitialized(true);
+    setIsLoading(false);
   }, []);
 
-  // Load user data from localStorage and NextAuth session
+  // Handle NextAuth session (Google login only)
   useEffect(() => {
-    const loadUserData = async () => {
-      try {
-        // Check NextAuth session first
-        if (status === 'authenticated' && session?.user) {
-          const nextAuthUser: User = {
-            id: session.user.id,
-            fullName: session.user.name || '',
-            email: session.user.email || '',
-            role: session.user.role as 'renter' | 'landlord' | 'admin',
-            country: (session.user.country as 'fr' | 'in') || 'in',
-            isVerified: true,
-            profileImage: session.user.profileImage || session.user.image || undefined,
-            createdAt: new Date().toISOString(),
-          };
-          setUser(nextAuthUser);
-          setToken('nextauth');
-          setIsLoading(false);
+    if (status === 'loading') return;
 
-          // Fetch full profile to check if phone number is missing
-          try {
-            const res = await fetch('/api/auth/me', { credentials: 'include' });
-            if (res.ok) {
-              const data = await res.json();
-              const hasPhone = !!data.user?.phoneNumber;
-              const toastKey = `phone_toast_${session.user.id}`;
-              if (!hasPhone && !sessionStorage.getItem(toastKey)) {
-                sessionStorage.setItem(toastKey, '1');
-                setTimeout(() => {
-                  toast('📱 Add your mobile number in Profile for better contact.', {
-                    duration: 6000,
-                    position: 'top-center',
-                    style: { background: '#1d4ed8', color: 'white', fontWeight: '500', maxWidth: '380px' },
-                    icon: '👤',
-                  });
-                }, 1500);
-              }
-            }
-          } catch { /* silent */ }
+    if (status === 'authenticated' && session?.user) {
+      const nextAuthUser: User = {
+        id: session.user.id,
+        fullName: session.user.name || '',
+        email: session.user.email || '',
+        role: session.user.role as 'renter' | 'landlord' | 'admin',
+        country: (session.user.country as 'fr' | 'in') || 'in',
+        isVerified: true,
+        profileImage: session.user.profileImage || session.user.image || undefined,
+        createdAt: new Date().toISOString(),
+      };
+      setUser(nextAuthUser);
+      setToken('nextauth');
+      setIsLoading(false);
 
-          return;
-        }
-
-        // Fallback to custom auth — state already initialized from localStorage
-        const country = countryFromPath();
-        const storedToken = localStorage.getItem(tokenKey(country));
-
-        if (storedToken) {
-          // Verify token is still valid in the background
-          try {
-            const response = await fetch('/api/auth/me', {
-              headers: { 'Authorization': `Bearer ${storedToken}` },
-            });
-
-            if (!response.ok) {
-              localStorage.removeItem(tokenKey(country));
-              localStorage.removeItem(userKey(country));
-              setToken(null);
-              setUser(null);
-            } else {
-              const result = await response.json();
-              setUser(result.user);
-              localStorage.setItem(userKey(country), JSON.stringify(result.user));
-            }
-          } catch {
-            // Network error — keep existing state, don't log out
+      // Fetch full profile to check if phone number is missing
+      fetch('/api/auth/me', { credentials: 'include' })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (!data?.user) return;
+          const hasPhone = !!data.user.phoneNumber;
+          const toastKey = `phone_toast_${session.user.id}`;
+          if (!hasPhone && !sessionStorage.getItem(toastKey)) {
+            sessionStorage.setItem(toastKey, '1');
+            setTimeout(() => {
+              toast('📱 Add your mobile number in Profile for better contact.', {
+                duration: 6000,
+                position: 'top-center',
+                style: { background: '#1d4ed8', color: 'white', fontWeight: '500', maxWidth: '380px' },
+                icon: '👤',
+              });
+            }, 1500);
           }
-        }
-      } catch (error) {
-        console.error('AuthContext - Error loading user data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (status !== 'loading') {
-      loadUserData();
-    } else {
-      // NextAuth is still resolving — keep isLoading true (already set)
+        })
+        .catch(() => {});
     }
+    // Note: 'unauthenticated' status is intentionally ignored here —
+    // custom JWT auth (admin/landlord/renter) is handled via localStorage only.
   }, [session, status]);
 
   const googleLogin = async (role: string) => {
@@ -255,14 +218,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const updateUser = (userData: Partial<User>) => {
-    console.log('AuthContext - updateUser called with:', userData);
     if (user) {
       const updatedUser = { ...user, ...userData };
-      console.log('AuthContext - Updating existing user:', updatedUser);
       setUser(updatedUser);
       localStorage.setItem(userKey(updatedUser.country), JSON.stringify(updatedUser));
     } else {
-      console.log('AuthContext - Setting initial user:', userData);
       setUser(userData as User);
       const c = (userData as User).country || countryFromPath();
       localStorage.setItem(userKey(c), JSON.stringify(userData));
@@ -273,6 +233,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     token,
     isLoading,
+    initialized,
     isAuthenticated,
     login,
     googleLogin,

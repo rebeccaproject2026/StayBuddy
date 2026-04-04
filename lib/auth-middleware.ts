@@ -16,14 +16,23 @@ export interface AuthenticatedRequest extends NextRequest {
 
 export async function authenticateUser(request: NextRequest) {
   try {
-    await connectDB();
-
     // ── Try JWT first ──────────────────────────────────────────────────────
     const authHeader = request.headers.get('authorization');
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = extractTokenFromHeader(authHeader);
       const decoded = verifyToken(token);
-      const user = await User.findById(decoded.userId);
+      // Admin tokens skip the DB lookup — role/country are embedded in the signed JWT
+      if (decoded.role === 'admin') {
+        return {
+          id: decoded.userId,
+          email: decoded.email,
+          role: decoded.role,
+          country: decoded.country,
+        };
+      }
+      // For non-admin users, verify they still exist and aren't blocked
+      await connectDB();
+      const user = await User.findById(decoded.userId).select('_id email role country isBlocked').lean() as any;
       if (!user) throw new Error('User not found');
       if (user.isBlocked) throw new Error('Account blocked');
       return {
@@ -37,7 +46,8 @@ export async function authenticateUser(request: NextRequest) {
     // ── Fall back to NextAuth session (Google login) ───────────────────────
     const session = await getServerSession(authOptions);
     if (session?.user?.id) {
-      const user = await User.findById(session.user.id);
+      await connectDB();
+      const user = await User.findById(session.user.id).select('_id email role country').lean() as any;
       if (!user) throw new Error('User not found');
       return {
         id: user._id.toString(),

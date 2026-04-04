@@ -36,11 +36,14 @@ export function middleware(request: NextRequest) {
     );
 
     if (isAdminPath) {
-      const token = request.cookies.get('staybuddy_token')?.value;
+      const country = pathname.split('/')[1] || defaultCountry;
+      // Check generic cookie (set on admin login) or country-namespaced variants
+      const token =
+        request.cookies.get('staybuddy_token')?.value ||
+        request.cookies.get(`staybuddy_token_${country}`)?.value;
       if (!token) {
-        // No token at all — redirect to home (client-side auth check handles role verification)
-        const country = pathname.split('/')[1] || defaultCountry;
-        return NextResponse.redirect(new URL(`/${country}`, request.url));
+        // No token cookie — redirect to admin login
+        return NextResponse.redirect(new URL(`/${country}/control/login`, request.url));
       }
     }
 

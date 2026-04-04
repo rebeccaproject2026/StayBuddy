@@ -99,6 +99,14 @@ interface AdminProperty {
   totalFloors?: number;
   floorNumber?: number;
   maintenanceCharges?: number;
+  maintenanceType?: string;
+  flatsInProject?: string;
+  balcony?: string;
+  areaMin?: string;
+  areaMax?: string;
+  additionalRooms?: string[];
+  overlooking?: string[];
+  tenantsPrefer?: string[];
   commonAmenities?: string[];
   societyAmenities?: string[];
   pgRules?: string[];
@@ -108,6 +116,8 @@ interface AdminProperty {
   verificationImages?: string[];
   roomDetails?: Record<string, { totalBeds?: number; availableBeds?: number; totalRooms?: number; availableRooms?: number; monthlyRent: number; securityDeposit?: number; facilities?: string[] }>;
   roomImages?: Array<{ id: string; name: string; status?: string; image?: string }>;
+  tenantRooms?: Array<{ id: string; name: string; status: string; rent: string; maxPersons?: string; currentPersons?: string }>;
+  bhk?: string;
   latitude?: string;
   longitude?: string;
   createdAt: string;
@@ -129,16 +139,35 @@ interface AdminUser {
 
 export default function AdminDashboard() {
   const { language, t } = useLanguage();
-  const { user, isLoading, isAuthenticated, logout } = useAuth();
+  const { logout } = useAuth();
   const router = useRouter();
   const params = useParams();
   const currentCountry = (params?.country as string) || "in";
+
+  // Auth check: scan ALL possible localStorage keys for an admin token
+  const [authChecked, setAuthChecked] = useState(false);
+  const [authUser, setAuthUser] = useState<any>(null);
+
+  useEffect(() => {
+    const c = currentCountry === 'fr' ? 'fr' : 'in';
+    const raw = localStorage.getItem(`staybuddy_user_${c}`);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed.role === 'admin') {
+          setAuthUser(parsed);
+          setAuthChecked(true);
+          return;
+        }
+      } catch {}
+    }
+    // No valid admin session — redirect to admin login
+    window.location.replace(`/${c}/control/login`);
+  }, []); // run once on mount only
   
   const [activeTab, setActiveTab] = useState("analytics");
   const [listingFilter, setListingFilter] = useState("all");
-  const [listingCountry, setListingCountry] = useState(currentCountry);
   const [userFilter, setUserFilter] = useState("all");
-  const [userCountry, setUserCountry] = useState(currentCountry);
   const [reportFilter, setReportFilter] = useState("pending");
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [isDark, setIsDark] = useState(true);
@@ -210,25 +239,6 @@ export default function AdminDashboard() {
     localStorage.setItem("admin_theme", next ? "dark" : "light");
   };
 
-  // Authentication check
-  useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        router.push(`/${currentCountry}/control/login`);
-        return;
-      }
-      if (user?.role !== 'admin') {
-        router.push(`/${currentCountry}`);
-        return;
-      }
-    }
-  }, [user, isLoading, isAuthenticated, router, currentCountry]);
-
-  // Block render until auth is confirmed
-  if (isLoading || !isAuthenticated || user?.role !== 'admin') {
-    return null;
-  }
-
   // Fetch approved properties (listings tab)
   const fetchProperties = useCallback(async () => {
     const token = getToken();
@@ -240,8 +250,6 @@ export default function AdminDashboard() {
       });
       const data = await res.json();
       if (data.success) setProperties(data.properties);
-    } catch (err) {
-      console.error("Failed to fetch properties:", err);
     } finally {
       setPropertiesLoading(false);
     }
@@ -258,47 +266,10 @@ export default function AdminDashboard() {
       });
       const data = await res.json();
       if (data.success) setRequests(data.properties);
-    } catch (err) {
-      console.error("Failed to fetch requests:", err);
     } finally {
       setRequestsLoading(false);
     }
   }, [currentCountry]);
-
-  useEffect(() => {
-    if (!isAuthenticated || user?.role !== "admin") return;
-    fetchProperties();
-    fetchRequests();
-
-    // Connect to SSE — refresh requests only when a new property is posted
-    const token = getToken();
-    if (!token) return;
-
-    const es = new EventSource(`/api/admin/property-events?token=${encodeURIComponent(token)}`);
-
-    es.onmessage = (e) => {
-      try {
-        const payload = JSON.parse(e.data);
-        if (payload.type === "new_property") {
-          fetchRequests();
-        } else if (payload.type === "new_lead") {
-          // fetchLeads is declared later — call it via a small inline fetch
-          const t = getToken();
-          if (!t) return;
-          fetch(`/api/admin/leads?country=${currentCountry}`, { headers: { Authorization: `Bearer ${t}` } })
-            .then(r => r.json())
-            .then(d => { if (d.success) setLeads(d.leads); })
-            .catch(() => {});
-        }
-      } catch {}
-    };
-
-    es.onerror = () => {
-      // SSE will auto-reconnect; nothing to do
-    };
-
-    return () => es.close();
-  }, [isAuthenticated, user, fetchProperties, fetchRequests, currentCountry]);
 
   const fetchUsers = useCallback(async () => {
     const token = getToken();
@@ -310,18 +281,10 @@ export default function AdminDashboard() {
       });
       const data = await res.json();
       if (data.success) setAllUsers(data.users);
-    } catch (err) {
-      console.error("Failed to fetch users:", err);
     } finally {
       setUsersLoading(false);
     }
   }, [currentCountry]);
-
-  useEffect(() => {
-    if (isAuthenticated && user?.role === "admin") {
-      fetchUsers();
-    }
-  }, [isAuthenticated, user, fetchUsers]);
 
   const fetchReports = useCallback(async () => {
     const token = getToken();
@@ -333,18 +296,10 @@ export default function AdminDashboard() {
       });
       const data = await res.json();
       if (data.success) setAllReports(data.reports);
-    } catch (err) {
-      console.error("Failed to fetch reports:", err);
     } finally {
       setReportsLoading(false);
     }
   }, [currentCountry]);
-
-  useEffect(() => {
-    if (isAuthenticated && user?.role === "admin") {
-      fetchReports();
-    }
-  }, [isAuthenticated, user, fetchReports]);
 
   const fetchLeads = useCallback(async () => {
     const token = getToken();
@@ -356,18 +311,56 @@ export default function AdminDashboard() {
       });
       const data = await res.json();
       if (data.success) setLeads(data.leads);
-    } catch (err) {
-      console.error("Failed to fetch leads:", err);
     } finally {
       setLeadsLoading(false);
     }
   }, [currentCountry]);
 
   useEffect(() => {
-    if (isAuthenticated && user?.role === "admin") {
-      fetchLeads();
-    }
-  }, [isAuthenticated, user, fetchLeads]);
+    if (!authUser) return;
+
+    const token = getToken();
+    if (!token) return;
+
+    // Fire all fetches in parallel — no sequential waiting
+    Promise.all([
+      fetchProperties(),
+      fetchRequests(),
+      fetchUsers(),
+      fetchReports(),
+      fetchLeads(),
+    ]);
+
+    // Connect to SSE — refresh requests only when a new property is posted
+    const es = new EventSource(`/api/admin/property-events?token=${encodeURIComponent(token)}`);
+
+    es.onmessage = (e) => {
+      try {
+        const payload = JSON.parse(e.data);
+        if (payload.type === "new_property") {
+          fetchRequests();
+        } else if (payload.type === "new_lead") {
+          const t = getToken();
+          if (!t) return;
+          fetch(`/api/admin/leads?country=${currentCountry}`, { headers: { Authorization: `Bearer ${t}` } })
+            .then(r => r.json())
+            .then(d => { if (d.success) setLeads(d.leads); })
+            .catch(() => {});
+        }
+      } catch {}
+    };
+
+    return () => es.close();
+  }, [authUser, fetchProperties, fetchRequests, fetchUsers, fetchReports, fetchLeads, currentCountry]);
+
+  // Auth guard — all hooks are declared above, safe to return early here
+  if (!authChecked || !authUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-950">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+      </div>
+    );
+  }
 
   const handleUpdateReportStatus = async (reportId: string, status: string) => {
     const token = getToken();
@@ -382,8 +375,8 @@ export default function AdminDashboard() {
       if (data.success) {
         setAllReports(prev => prev.map(r => r._id === reportId ? { ...r, status } : r));
       }
-    } catch (err) {
-      console.error("Failed to update report:", err);
+    } catch {
+      // update report status failed silently
     }
   };
 
@@ -400,8 +393,8 @@ export default function AdminDashboard() {
       if (data.success) {
         setAllReports(prev => prev.filter(r => r._id !== reportId));
       }
-    } catch (err) {
-      console.error("Failed to delete report:", err);
+    } catch {
+      // delete report failed silently
     }
   };
 
@@ -423,8 +416,8 @@ export default function AdminDashboard() {
       });
       const data = await res.json();
       if (data.success) setAllUsers(prev => prev.map(u => u._id === userId ? { ...u, isBlocked: false } : u));
-    } catch (err) {
-      console.error("Failed to unblock:", err);
+    } catch {
+      // unblock failed silently
     }
   };
 
@@ -445,8 +438,8 @@ export default function AdminDashboard() {
         setBlockModal(null);
         setBlockReason("");
       }
-    } catch (err) {
-      console.error("Failed to block:", err);
+    } catch {
+      // block failed silently
     } finally {
       setBlockSubmitting(false);
     }
@@ -469,8 +462,8 @@ export default function AdminDashboard() {
         setDeleteModal(null);
         setDeleteReason("");
       }
-    } catch (err) {
-      console.error("Delete failed:", err);
+    } catch {
+      // delete property failed silently
     } finally {
       setDeletingId(null);
       setDeleteConfirmId(null);
@@ -491,8 +484,8 @@ export default function AdminDashboard() {
         setRequests(prev => prev.filter(r => r._id !== propertyId));
         if (viewingRequest?._id === propertyId) setViewingRequest(null);
       }
-    } catch (err) {
-      console.error("Delete rejected request failed:", err);
+    } catch {
+      // delete rejected request failed silently
     } finally {
       setDeletingId(null);
     }
@@ -524,8 +517,8 @@ export default function AdminDashboard() {
         }
         if (viewingRequest?._id === propertyId) setViewingRequest(prev => prev ? { ...prev, ...updated } : null);
       }
-    } catch (err) {
-      console.error("Action failed:", err);
+    } catch {
+      // property action failed silently
     } finally {
       setActioningId(null);
     }
@@ -549,30 +542,14 @@ export default function AdminDashboard() {
         setRejectModal(null);
         setRejectReason("");
       }
-    } catch (err) {
-      console.error("Reject failed:", err);
+    } catch {
+      // reject failed silently
     } finally {
       setRejectSubmitting(false);
     }
   };
 
-  // Show loading while checking authentication
-  if (isLoading) {
-    return (
-      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-gray-950" : "bg-gray-50"}`}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className={isDark ? "text-gray-400" : "text-gray-600"}>Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render if not authenticated or wrong role
-  if (!isAuthenticated || user?.role !== 'admin') {
-    return null;
-  }
-
+  // Show loading while checking authentication — handled above near the auth guard
   const reports = allReports;
 
   const stats = {
@@ -857,17 +834,17 @@ export default function AdminDashboard() {
                 className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-left group ${profileMenuOpen ? "bg-primary/10" : isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"}`}
               >
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm">
-                  {user?.profileImage ? (
-                    <Image src={user.profileImage} alt={user.fullName} width={40} height={40} className="object-cover w-full h-full" />
+                  {authUser?.profileImage ? (
+                    <Image src={authUser.profileImage} alt={authUser.fullName} width={40} height={40} className="object-cover w-full h-full" />
                   ) : (
                     <span className="text-white font-bold text-sm">
-                      {user?.fullName?.charAt(0)?.toUpperCase() || "A"}
+                      {authUser?.fullName?.charAt(0)?.toUpperCase() || "A"}
                     </span>
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{user?.fullName || "—"}</p>
-                  <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                  <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{authUser?.fullName || "—"}</p>
+                  <p className="text-xs text-gray-500 truncate">{authUser?.email}</p>
                 </div>
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${profileMenuOpen ? "bg-primary text-white" : isDark ? "bg-gray-700 text-gray-400 group-hover:bg-gray-600 group-hover:text-gray-200" : "bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600"}`}>
                   <ChevronDown className={`w-3.5 h-3.5 transition-transform ${profileMenuOpen ? "rotate-180" : ""}`} />
@@ -882,10 +859,17 @@ export default function AdminDashboard() {
                       <p className="text-xs font-semibold text-primary uppercase tracking-wide">
                         {language === "fr" ? "Connecté en tant que" : "Signed in as"}
                       </p>
-                      <p className={`text-sm font-bold truncate mt-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>{user?.fullName}</p>
+                      <p className={`text-sm font-bold truncate mt-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>{authUser?.fullName}</p>
                     </div>
                     <button
-                      onClick={() => { setProfileMenuOpen(false); logout(); router.push(`/in/control/login`); }}
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        // Clear the auth cookie set on login
+                        document.cookie = 'staybuddy_token=; path=/; max-age=0; SameSite=Lax';
+                        localStorage.removeItem(`staybuddy_token_${currentCountry}`);
+                        localStorage.removeItem(`staybuddy_user_${currentCountry}`);
+                        window.location.href = `/${currentCountry}`;
+                      }}
                       className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors group/item ${isDark ? "text-red-400 hover:bg-red-500/10" : "text-red-600 hover:bg-red-50"}`}
                     >
                       <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${isDark ? "bg-red-500/10 group-hover/item:bg-red-500/20" : "bg-red-50 group-hover/item:bg-red-100"}`}>
@@ -2569,18 +2553,22 @@ export default function AdminDashboard() {
                   <div className={`rounded-xl p-4 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
                     <p className={`text-xs font-bold uppercase tracking-wide mb-3 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Property Details</p>
                     <Row label="Category" value={req.category} />
+                    <Row label="BHK" value={req.bhk} />
+                    <Row label="Flats in Project" value={req.flatsInProject} />
                     <Row label="Price" value={`${currencySymbol}${req.price?.toLocaleString()} / month`} />
                     <Row label="Deposit" value={req.deposit ? `${currencySymbol}${req.deposit?.toLocaleString()}` : null} />
                     <Row label="Rooms" value={req.rooms} />
                     <Row label="Bathrooms" value={req.bathrooms} />
-                    <Row label="Area" value={req.area ? `${req.area} m²` : null} />
+                    <Row label="Balcony" value={req.balcony} />
+                    <Row label="Area" value={req.area ? `${req.area} m²` : (req.areaMin || req.areaMax) ? `${req.areaMin || "—"} – ${req.areaMax || "—"} m²` : null} />
                     <Row label="Available From" value={req.availableFrom} />
                     <Row label="Rental Period" value={req.rentalPeriod} />
                     <Row label="PG For" value={req.pgFor || req.preferredGender} />
                     <Row label="Furnishing" value={Array.isArray(req.furnishing) ? req.furnishing.join(", ") : null} />
                     <Row label="Facing" value={req.facing} />
                     <Row label="Floor" value={req.floorNumber != null ? `${req.floorNumber} / ${req.totalFloors ?? "?"}` : null} />
-                    <Row label="Maintenance" value={req.maintenanceCharges ? `${currencySymbol}${req.maintenanceCharges}` : null} />
+                    <Row label="Maintenance" value={req.maintenanceCharges ? `${currencySymbol}${req.maintenanceCharges}${req.maintenanceType ? ` / ${req.maintenanceType}` : ""}` : null} />
+                    <Row label="Society Name" value={req.societyName} />
                     <Row label="Submitted" value={new Date(req.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })} />
                   </div>
 
@@ -2675,6 +2663,49 @@ export default function AdminDashboard() {
                   </div>
                 )}
 
+                {/* Room Details — Tenant /fr with tenantRooms */}
+                {req.propertyType === "Tenant" && req.country === "fr" && req.tenantRooms && req.tenantRooms.length > 0 && (
+                  <div className={`rounded-xl p-4 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                    <p className={`text-xs font-bold uppercase tracking-wide mb-3 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Room Details</p>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      {req.tenantRooms.map((room, i) => {
+                        const max = parseInt(room.maxPersons || "1") || 1;
+                        const current = parseInt(room.currentPersons || "0") || 0;
+                        const statusColor =
+                          room.status === "Available" ? "bg-green-500/15 text-green-400 border-green-500/30" :
+                          room.status === "Partial"   ? "bg-yellow-500/15 text-yellow-400 border-yellow-500/30" :
+                                                        "bg-red-500/15 text-red-400 border-red-500/30";
+                        const statusColorLight =
+                          room.status === "Available" ? "bg-green-50 text-green-700 border-green-200" :
+                          room.status === "Partial"   ? "bg-yellow-50 text-yellow-700 border-yellow-200" :
+                                                        "bg-red-50 text-red-600 border-red-200";
+                        return (
+                          <div key={room.id || i} className={`rounded-xl p-3 border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className={`font-bold text-sm ${isDark ? "text-white" : "text-gray-900"}`}>{room.name || `Room ${i + 1}`}</span>
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${isDark ? statusColor : statusColorLight}`}>
+                                {room.status || "Available"}
+                              </span>
+                            </div>
+                            <div className="space-y-1">
+                              {room.rent && (
+                                <div className="flex justify-between text-xs">
+                                  <span className={isDark ? "text-gray-400" : "text-gray-500"}>Monthly Rent</span>
+                                  <span className="font-bold text-primary">{currencySymbol}{Number(room.rent).toLocaleString()}<span className={`font-normal ${isDark ? "text-gray-400" : "text-gray-500"}`}>/mo</span></span>
+                                </div>
+                              )}
+                              <div className="flex justify-between text-xs">
+                                <span className={isDark ? "text-gray-400" : "text-gray-500"}>Occupancy</span>
+                                <span className={`font-medium ${isDark ? "text-gray-200" : "text-gray-700"}`}>{current} / {max} persons</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Amenities */}
                 {amenities.length > 0 && (
                   <div className={`rounded-xl p-4 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
@@ -2682,6 +2713,42 @@ export default function AdminDashboard() {
                     <div className="flex flex-wrap gap-2">
                       {amenities.map((a, i) => (
                         <span key={i} className={`px-2.5 py-1 rounded-full text-xs font-medium ${isDark ? "bg-gray-700 text-gray-300" : "bg-white border border-gray-200 text-gray-700"}`}>{a}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Additional Rooms — Tenant */}
+                {req.propertyType === "Tenant" && req.additionalRooms && req.additionalRooms.length > 0 && (
+                  <div className={`rounded-xl p-4 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                    <p className={`text-xs font-bold uppercase tracking-wide mb-3 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Additional Rooms</p>
+                    <div className="flex flex-wrap gap-2">
+                      {req.additionalRooms.map((r, i) => (
+                        <span key={i} className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${isDark ? "bg-gray-700 text-gray-300" : "bg-white border border-gray-200 text-gray-700"}`}>{r.replace(/([A-Z])/g, " $1").trim()}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Overlooking — Tenant */}
+                {req.propertyType === "Tenant" && req.overlooking && req.overlooking.length > 0 && (
+                  <div className={`rounded-xl p-4 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                    <p className={`text-xs font-bold uppercase tracking-wide mb-3 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Overlooking</p>
+                    <div className="flex flex-wrap gap-2">
+                      {req.overlooking.map((o, i) => (
+                        <span key={i} className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${isDark ? "bg-gray-700 text-gray-300" : "bg-white border border-gray-200 text-gray-700"}`}>{o.replace(/([A-Z])/g, " $1").trim()}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tenants Preferred — Tenant */}
+                {req.propertyType === "Tenant" && req.tenantsPrefer && req.tenantsPrefer.length > 0 && (
+                  <div className={`rounded-xl p-4 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                    <p className={`text-xs font-bold uppercase tracking-wide mb-3 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Tenants Preferred</p>
+                    <div className="flex flex-wrap gap-2">
+                      {req.tenantsPrefer.map((t, i) => (
+                        <span key={i} className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${isDark ? "bg-primary/20 text-primary" : "bg-primary/10 text-primary border border-primary/20"}`}>{t.replace(/([A-Z])/g, " $1").trim()}</span>
                       ))}
                     </div>
                   </div>

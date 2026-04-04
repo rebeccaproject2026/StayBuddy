@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Search, SlidersHorizontal } from "lucide-react";
@@ -37,37 +37,25 @@ export default function FilterSection() {
   });
 
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [cityOptions, setCityOptions] = useState<string[]>([]);
 
   const categories = ["PG", "Tenant"] as const;
   const pgForOptions = ["Male", "Female", "Both"] as const;
   const tenantOptions = ["Students", "Professionals", "Both"] as const;
   const occupancyOptions = ["Single", "Double", "Triple", "Four"] as const;
-  const propertyTypes = [
-    "Villa",
-    "Flat",
-    "House",
-    "Penthouse",
-  ] as const;
+  const propertyTypes = ["Villa", "Flat", "House", "Penthouse"] as const;
 
-  // City options based on country — must match values stored in property.location
-  const indiaCities = [
-    "Ahmedabad",
-    "Gandhinagar",
-  ] as const;
-
-  const franceCities = [
-    "Talence",
-    "Venette",
-    "Aix-en-Provence",
-    "Montpellier Centre",
-    "Paris 16th",
-    "Lyon 7th",
-    "Marseille 8th",
-    "Toulouse Centre",
-  ] as const;
-
-  // Get cities based on current country
-  const cityOptions = country === 'in' || country === 'india' ? indiaCities : franceCities;
+  // Fetch cities dynamically from DB
+  useEffect(() => {
+    fetch(`/api/properties/city-stats?country=${country}&top=20`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.cities) {
+          setCityOptions(data.cities.map((c: { name: string }) => c.name).filter(Boolean));
+        }
+      })
+      .catch(() => {});
+  }, [country]);
 
   const getTranslatedOption = (option: string): string => {
     // Normalize key: lowercase, strip spaces/hyphens for lookup
