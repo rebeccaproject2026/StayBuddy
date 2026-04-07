@@ -8,8 +8,6 @@ import { useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
-import ChatPanel from "@/components/ChatPanel";
-import { useNotifications } from "@/hooks/useNotifications";
 import { getToken } from "@/lib/token-storage";
 import {
   Home,
@@ -688,16 +686,6 @@ export default function OwnerDashboard() {
   const [editVerifImages, setEditVerifImages] = useState<string[]>([]);
   const [editVerifNewFiles, setEditVerifNewFiles] = useState<File[]>([]);
 
-  // Chat state
-  const [chatRequest, setChatRequest] = useState<any | null>(null); // inquiry being chatted
-  const chatRequestRef = useRef<any | null>(null);
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
-  const [chatInput, setChatInput] = useState('');
-  const [chatLoading, setChatLoading] = useState(false);
-  const [chatSending, setChatSending] = useState(false);
-  // conversations: map requestId → last message snippet (for Messages tab)
-  const [conversations, setConversations] = useState<Record<string, { lastMsg: string; time: string; unread: boolean }>>({});
-
   // Authentication check
   useEffect(() => {
     if (!isLoading) {
@@ -747,40 +735,6 @@ export default function OwnerDashboard() {
         .then(data => {
           if (data.success) {
             setContactRequests(data.requests || []);
-            // After loading requests, fetch unread message counts to populate sidebar badges
-            fetch('/api/notifications/count', {
-              headers: token ? { Authorization: `Bearer ${token}` } : {},
-            })
-              .then(r => r.json())
-              .then(notifData => {
-                if (!notifData.success || notifData.total === 0) return;
-                // We know there are unread messages — fetch each request's messages to find which ones
-                const seen: Record<string, number> = JSON.parse(localStorage.getItem('staybuddy_owner_seen') || '{}');
-                (data.requests || []).forEach((req: any) => {
-                  fetch(`/api/messages/${req._id}`, {
-                    headers: token ? { Authorization: `Bearer ${token}` } : {},
-                  })
-                    .then(r => r.json())
-                    .then(msgData => {
-                      if (!msgData.success || !msgData.messages?.length) return;
-                      const msgs: any[] = msgData.messages;
-                      const tenantMsgCount = msgs.filter((m: any) => m.senderRole === 'renter').length;
-                      if (tenantMsgCount > (seen[req._id] ?? 0)) {
-                        const last = msgs[msgs.length - 1];
-                        setConversations(prev => ({
-                          ...prev,
-                          [req._id]: {
-                            lastMsg: last.text,
-                            time: last.createdAt,
-                            unread: true,
-                          },
-                        }));
-                      }
-                    })
-                    .catch(() => {});
-                });
-              })
-              .catch(() => {});
           }
         })
         .catch(() => {});
@@ -791,12 +745,6 @@ export default function OwnerDashboard() {
     const interval = setInterval(fetchRequests, 30000);
     return () => clearInterval(interval);
   }, [isAuthenticated, user]);
-
-  // seenCounts: requestId → number of tenant messages already seen (persisted in localStorage)
-  const [ownerSeenCounts, setOwnerSeenCounts] = useState<Record<string, number>>(() => {
-    if (typeof window === 'undefined') return {};
-    try { return JSON.parse(localStorage.getItem('staybuddy_owner_seen') || '{}'); } catch { return {}; }
-  });
 
   // seenInquiryIds: set of inquiry IDs the owner has already viewed (persisted in localStorage)
   const [seenInquiryIds, setSeenInquiryIds] = useState<Set<string>>(() => {
@@ -809,57 +757,6 @@ export default function OwnerDashboard() {
       localStorage.setItem('staybuddy_owner_inquiry_seen', JSON.stringify([...seenInquiryIds]));
     }
   }, [seenInquiryIds]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('staybuddy_owner_seen', JSON.stringify(ownerSeenCounts));
-    }
-  }, [ownerSeenCounts]);
-
-  // Live notifications via WebSocket — refresh conversations when a new message arrives
-  const ownerToken = typeof window !== 'undefined' ? getToken() : null;
-  const { count: notifCount } = useNotifications({
-    userId: isAuthenticated && user?.role === 'landlord' ? user?.id ?? null : null,
-    token: ownerToken,
-    enabled: isAuthenticated && user?.role === 'landlord',
-    onNotification: ({ requestId: reqId, message }) => {
-      const isOpen = chatRequestRef.current?._id === reqId;
-      // Update conversations list with the new message — no extra fetch needed
-      if (message) {
-        setConversations(prev => ({
-          ...prev,
-          [reqId]: {
-            lastMsg: message.text,
-            time: message.createdAt,
-            unread: !isOpen,
-          },
-        }));
-      } else {
-        // Fallback: fetch if message payload not available
-        const token = getToken();
-        const seen: Record<string, number> = JSON.parse(localStorage.getItem('staybuddy_owner_seen') || '{}');
-        fetch(`/api/messages/${reqId}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        })
-          .then(r => r.json())
-          .then(data => {
-            if (!data.success || !data.messages?.length) return;
-            const msgs: any[] = data.messages;
-            const last = msgs[msgs.length - 1];
-            const tenantMsgCount = msgs.filter((m: any) => m.senderRole === 'renter').length;
-            setConversations(prev => ({
-              ...prev,
-              [reqId]: {
-                lastMsg: last.text,
-                time: last.createdAt,
-                unread: !isOpen && tenantMsgCount > (seen[reqId] ?? 0),
-              },
-            }));
-          })
-          .catch(() => {});
-      }
-    },
-  });
 
   // Show loading while checking authentication
   if (isLoading) {
@@ -893,95 +790,11 @@ export default function OwnerDashboard() {
     } catch {}
   };
 
-  const openChat = async (req: any) => {
-    setChatRequest(req);
-    chatRequestRef.current = req;
-    setChatMessages([]);
-    setChatLoading(true);
-    // clear unread for this conversation
-    setConversations(prev => prev[req._id] ? { ...prev, [req._id]: { ...prev[req._id], unread: false } } : prev);
-    const token = getToken();
-    try {
-      const res = await fetch(`/api/messages/${req._id}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      const data = await res.json();
-      if (data.success) {
-        setChatMessages(data.messages || []);
-        const msgs = data.messages || [];
-        // record how many tenant messages have been seen
-        const tenantMsgCount = msgs.filter((m: any) => m.senderRole === 'renter').length;
-        setOwnerSeenCounts(prev => ({ ...prev, [req._id]: tenantMsgCount }));
-        if (msgs.length > 0) {
-          const last = msgs[msgs.length - 1];
-          setConversations(prev => ({
-            ...prev,
-            [req._id]: { lastMsg: last.text, time: last.createdAt, unread: false },
-          }));
-        }
-      }
-    } catch {}
-    setChatLoading(false);
-  };
-
-  const sendChatMessage = async () => {
-    if (!chatInput.trim() || !chatRequest || chatSending) return;
-    const token = getToken();
-    const text = chatInput.trim();
-    setChatInput('');
-    setChatSending(true);
-    try {
-      const res = await fetch(`/api/messages/${chatRequest._id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({ text }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setChatMessages(prev => [...prev, data.message]);
-        setConversations(prev => ({
-          ...prev,
-          [chatRequest._id]: { lastMsg: text, time: data.message.createdAt, unread: false },
-        }));
-      }
-    } catch {}
-    setChatSending(false);
-  };
-
-  const closeChat = () => {
-    setChatRequest(null);
-    chatRequestRef.current = null;
-    setChatMessages([]);
-    setChatInput('');
-  };
-
-  const deleteChat = async () => {
-    if (!chatRequest) return;
-    const token = getToken();
-    try {
-      await fetch(`/api/messages/${chatRequest._id}`, {
-        method: 'DELETE',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      setChatMessages([]);
-      setConversations(prev => {
-        const next = { ...prev };
-        delete next[chatRequest._id];
-        return next;
-      });
-      closeChat();
-    } catch {}
-  };
-
-
-
   const content = {
     en: {
       dashboard: "Owner Dashboard",
       myListings: "My Listings",
       bookingRequests: "Inquiries",
-      messages: "Messages",
-      noMessages: "No conversations yet",
       profile: "Profile",
       logout: "Logout",
       addNewListing: "Add New Listing",
@@ -1017,8 +830,6 @@ export default function OwnerDashboard() {
       dashboard: "Tableau de bord propriétaire",
       myListings: "Mes annonces",
       bookingRequests: "Demandes",
-      messages: "Messages",
-      noMessages: "Aucune conversation",
       profile: "Profil",
       logout: "Déconnexion",
       addNewListing: "Ajouter une annonce",
@@ -1355,11 +1166,6 @@ export default function OwnerDashboard() {
           <div className="flex items-center justify-between h-14 sm:h-16">
             <div className="flex items-center gap-2">
               <h1 className={`text-base sm:text-xl font-bold truncate ${isDark ? "text-primary-light" : "text-primary"}`}>{tc.dashboard}</h1>
-              {notifCount > 0 && (
-                <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full">
-                  {notifCount > 99 ? "99+" : notifCount}
-                </span>
-              )}
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -1421,28 +1227,6 @@ export default function OwnerDashboard() {
                   {contactRequests.filter((r: any) => !seenInquiryIds.has(r._id)).length > 0 && (
                     <span className="ml-auto bg-red-500 text-white text-xs font-bold min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center">
                       {contactRequests.filter((r: any) => !seenInquiryIds.has(r._id)).length}
-                    </span>
-                  )}
-                </button>
-                <button
-                  onClick={() => setActiveTab("messages")}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                    activeTab === "messages" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  <div className="relative flex-shrink-0">
-                    <MessageSquare className="w-5 h-5" />
-                    {Object.values(conversations).filter(c => c.unread).length > 0 && (
-                      <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
-                      </span>
-                    )}
-                  </div>
-                  <span className="font-medium text-sm">{tc.messages}</span>
-                  {Object.values(conversations).filter(c => c.unread).length > 0 && (
-                    <span className="ml-auto bg-red-500 text-white text-xs font-bold min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center">
-                      {Object.values(conversations).filter(c => c.unread).length}
                     </span>
                   )}
                 </button>
@@ -3162,13 +2946,6 @@ export default function OwnerDashboard() {
 
                         {/* Action buttons */}
                         <div className="flex flex-wrap gap-2">
-                          <button
-                            onClick={() => openChat(req)}
-                            className="flex items-center gap-1.5 px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-xs font-medium"
-                          >
-                            <MessageSquare className="w-3.5 h-3.5" />
-                            {language === "fr" ? "Chat" : "Chat"}
-                          </button>
                           {req.phone && (
                             <a
                               href={`https://wa.me/${req.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${req.fullName}, regarding your inquiry for "${req.propertyTitle}".`)}`}
@@ -3257,63 +3034,6 @@ export default function OwnerDashboard() {
               </div>
             )}
 
-            {/* Messages */}
-            {activeTab === "messages" && (
-              <div className="space-y-4">
-                <h2 className={`text-2xl font-bold mb-6 ${isDark ? "text-white" : "text-gray-900"}`}>{tc.messages}</h2>
-                {contactRequests.filter(r => conversations[r._id]).length === 0 ? (
-                  <div className={`rounded-2xl shadow-md p-12 text-center ${isDark ? "bg-gray-900" : "bg-white"}`}>
-                    <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className={isDark ? "text-gray-400" : "text-gray-600"}>{tc.noMessages}</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {contactRequests
-                      .filter(r => conversations[r._id])
-                      .map((req: any) => {
-                        const conv = conversations[req._id];
-                        return (
-                          <div
-                            key={req._id}
-                            onClick={() => { openChat(req); }}
-                            className={`rounded-2xl shadow-md p-5 flex items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow ${conv.unread ? 'border-l-4 border-primary' : ''} ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white"}`}
-                          >
-                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                              <User className="w-6 h-6 text-primary" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between mb-1">
-                                <p className={`truncate ${conv.unread ? 'font-bold' : 'font-semibold'} ${isDark ? "text-white" : "text-gray-900"}`}>{req.fullName}</p>
-                                <span className={`text-xs flex-shrink-0 ml-2 ${isDark ? "text-gray-500" : "text-gray-400"}`}>
-                                  {new Date(conv.time).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
-                                </span>
-                              </div>
-                              <p className="text-sm text-gray-500 truncate">{req.propertyTitle}</p>
-                              <p className={`text-sm truncate mt-0.5 ${conv.unread ? 'font-semibold' : ''} ${isDark ? "text-gray-300" : "text-gray-700"}`}>{conv.lastMsg}</p>
-                            </div>
-                            {conv.unread && (
-                              <span className="w-2.5 h-2.5 bg-primary rounded-full flex-shrink-0" />
-                            )}
-                            <button
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                const token = getToken();
-                                await fetch(`/api/messages/${req._id}`, { method: 'DELETE', headers: token ? { Authorization: `Bearer ${token}` } : {} });
-                                setConversations(prev => { const n = { ...prev }; delete n[req._id]; return n; });
-                              }}
-                              className="p-2 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
-                              title="Delete conversation"
-                            >
-                              <Trash2 className="w-4 h-4 text-red-400" />
-                            </button>
-                          </div>
-                        );
-                      })}
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Profile */}
             {activeTab === "profile" && (
               <ProfileSection user={user} tc={tc} language={language} isDark={isDark} />
@@ -3330,8 +3050,6 @@ export default function OwnerDashboard() {
             { key: "listings",  icon: Home,         label: language === "fr" ? "Annonces" : "Listings" },
             { key: "requests",  icon: Calendar,     label: language === "fr" ? "Demandes" : "Inquiries",
               badge: contactRequests.filter((r: any) => !seenInquiryIds.has(r._id)).length },
-            { key: "messages",  icon: MessageSquare,label: language === "fr" ? "Messages" : "Messages",
-              badge: Object.values(conversations).filter(c => c.unread).length },
             { key: "profile",   icon: User,         label: language === "fr" ? "Profil" : "Profile" },
           ].map(({ key, icon: Icon, label, badge }) => (
             <button
@@ -3378,31 +3096,6 @@ export default function OwnerDashboard() {
           </button>
         </div>
       </div>
-
-      {/* Chat Modal */}
-      {/* Chat Modal — WebSocket powered */}
-      <AnimatePresence>
-        {chatRequest && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-            <div className="absolute inset-0 bg-black/50" onClick={closeChat} />
-            <div className="relative w-full sm:max-w-lg">
-              <ChatPanel
-                requestId={chatRequest._id}
-                propertyTitle={chatRequest.propertyTitle}
-                otherPartyName={chatRequest.fullName || chatRequest.renter?.fullName || 'Tenant'}
-                userId={user?.id || ''}
-                recipientId={chatRequest.renter?._id ? String(chatRequest.renter._id) : (chatRequest.renter ? String(chatRequest.renter) : null)}
-                token={typeof window !== 'undefined' ? getToken() : null}
-                userRole="landlord"
-                isDark={isDark}
-                language={language}
-                onClose={closeChat}
-                onDelete={deleteChat}
-              />
-            </div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* Inquiry Detail Modal */}
       {selectedInquiry && (
@@ -3479,13 +3172,6 @@ export default function OwnerDashboard() {
 
               {/* Actions */}
               <div className={`flex flex-wrap gap-2 pt-2 border-t ${isDark ? "border-gray-800" : "border-gray-100"}`}>
-                <button
-                  onClick={() => { openChat(selectedInquiry); setSelectedInquiry(null); }}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  {language === 'fr' ? 'Chat' : 'Chat'}
-                </button>
                 {selectedInquiry.phone && (
                   <a
                     href={`https://wa.me/${selectedInquiry.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${selectedInquiry.fullName}, regarding your inquiry for "${selectedInquiry.propertyTitle}".`)}`}

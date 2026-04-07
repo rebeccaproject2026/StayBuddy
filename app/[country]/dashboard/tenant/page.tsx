@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { getToken } from "@/lib/token-storage";
@@ -9,9 +9,6 @@ import { useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
 import Image from "next/image";
 import toast from "react-hot-toast";
-import { AnimatePresence } from "framer-motion";
-import ChatPanel from "@/components/ChatPanel";
-import { useNotifications } from "@/hooks/useNotifications";
 import {
   Heart,
   MessageSquare,
@@ -21,34 +18,29 @@ import {
   Eye,
   EyeOff,
   Trash2,
-  Send,
   Lock,
   Mail,
   Phone,
   Home,
-  X,
   ChevronDown,
   Sun,
   Moon,
 } from "lucide-react";
 
 function RequestCard({
-  req, status, sc, statusLabel, hasUnread, lastConv, language, tc, onChat,
+  req, status, sc, statusLabel, language, tc,
 }: {
   req: any;
   status: string;
   sc: { bg: string; text: string; border: string; dot: string };
   statusLabel: string;
-  hasUnread: boolean;
-  lastConv: any;
   language: string;
   tc: any;
-  onChat: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className={`bg-white rounded-2xl border-l-4 border border-gray-100 shadow-sm transition-all duration-200 hover:shadow-md overflow-hidden ${sc.border} ${hasUnread ? 'ring-1 ring-primary/20' : ''}`}>
+    <div className={`bg-white rounded-2xl border-l-4 border border-gray-100 shadow-sm transition-all duration-200 hover:shadow-md overflow-hidden ${sc.border}`}>
       {/* Header row — always visible */}
       <button
         onClick={() => setExpanded(p => !p)}
@@ -60,17 +52,12 @@ function RequestCard({
         {/* Main info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className={`text-sm font-semibold truncate ${hasUnread ? 'text-gray-900' : 'text-gray-800'}`}>
+            <p className="text-sm font-semibold truncate text-gray-800">
               {req.propertyTitle}
             </p>
             <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${sc.bg} ${sc.text}`}>
               {statusLabel}
             </span>
-            {hasUnread && (
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary text-white flex-shrink-0 animate-pulse">
-                {language === 'fr' ? 'Nouveau message' : 'New message'}
-              </span>
-            )}
           </div>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             <span className="text-xs text-gray-400">
@@ -113,33 +100,6 @@ function RequestCard({
               <p className="text-sm text-gray-700 leading-relaxed">{req.message}</p>
             </div>
           )}
-
-          {/* Last conversation preview */}
-          {lastConv && (
-            <div className={`rounded-xl px-3 py-2.5 mb-3 ${hasUnread ? 'bg-primary/5 border border-primary/10' : 'bg-blue-50'}`}>
-              <p className="text-xs text-gray-400 font-medium mb-1 uppercase tracking-wide">
-                {language === 'fr' ? 'Dernier message' : 'Last message'}
-              </p>
-              <p className={`text-sm leading-relaxed ${hasUnread ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
-                {lastConv.lastMsg}
-              </p>
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex gap-2">
-            <button
-              onClick={onChat}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                hasUnread
-                  ? 'bg-primary text-white hover:bg-primary-dark shadow-sm shadow-primary/20'
-                  : 'bg-gray-900 text-white hover:bg-gray-700'
-              }`}
-            >
-              <MessageSquare className="w-4 h-4" />
-              {hasUnread ? (language === 'fr' ? 'Répondre' : 'Reply') : (language === 'fr' ? 'Ouvrir le chat' : 'Open Chat')}
-            </button>
-          </div>
         </div>
       )}
     </div>
@@ -180,18 +140,6 @@ export default function TenantDashboard() {
   const [myRequests, setMyRequests] = useState<any[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(false);
   const currencySymbol = t("currency.symbol");
-
-  // Chat state
-  const [chatRequest, setChatRequest] = useState<any | null>(null);
-  const chatRequestRef = useRef<any | null>(null);
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
-  const [chatInput, setChatInput] = useState('');
-  const [chatLoading, setChatLoading] = useState(false);
-  const [chatSending, setChatSending] = useState(false);
-  // unread counts per requestId
-  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
-  // conversations: requestId → last message snippet
-  const [conversations, setConversations] = useState<Record<string, { lastMsg: string; time: string; senderName: string; unread: boolean }>>({});
 
   // Authentication check
   useEffect(() => {
@@ -255,208 +203,11 @@ export default function TenantDashboard() {
       .then(data => {
         if (data.success) {
           setMyRequests(data.requests || []);
-          // Check for unread messages on load to populate sidebar badges immediately
-          fetch('/api/notifications/count', {
-            headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
-          })
-            .then(r => r.json())
-            .then(notifData => {
-              if (!notifData.success || notifData.total === 0) return;
-              const seen: Record<string, number> = JSON.parse(localStorage.getItem('staybuddy_seen') || '{}');
-              (data.requests || []).forEach((req: any) => {
-                fetch(`/api/messages/${req._id}`, {
-                  headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
-                })
-                  .then(r => r.json())
-                  .then(msgData => {
-                    if (!msgData.success || !msgData.messages?.length) return;
-                    const msgs: any[] = msgData.messages;
-                    const ownerMsgCount = msgs.filter((m: any) => m.senderRole === 'landlord').length;
-                    const unread = ownerMsgCount > (seen[req._id] ?? 0);
-                    if (unread) {
-                      const last = msgs[msgs.length - 1];
-                      setConversations(prev => ({
-                        ...prev,
-                        [req._id]: {
-                          lastMsg: last.text,
-                          time: last.createdAt,
-                          senderName: last.senderName,
-                          unread: true,
-                        },
-                      }));
-                      setUnreadCounts(prev => ({
-                        ...prev,
-                        [req._id]: ownerMsgCount - (seen[req._id] ?? 0),
-                      }));
-                    }
-                  })
-                  .catch(() => {});
-              });
-            })
-            .catch(() => {});
         }
       })
       .catch(() => {})
       .finally(() => setRequestsLoading(false));
   }, [isAuthenticated, token, user?.role]);
-
-  // seenCounts: requestId → number of landlord messages already seen (persisted in localStorage)
-  const [seenCounts, setSeenCounts] = useState<Record<string, number>>(() => {
-    if (typeof window === 'undefined') return {};
-    try { return JSON.parse(localStorage.getItem('staybuddy_seen') || '{}'); } catch { return {}; }
-  });
-
-  // Persist seenCounts to localStorage whenever it changes
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('staybuddy_seen', JSON.stringify(seenCounts));
-    }
-  }, [seenCounts]);
-
-  // Live notifications via WebSocket — update unread counts when a new message arrives
-  const { count: notifCount } = useNotifications({
-    userId: isAuthenticated && user?.role === 'renter' ? user?.id ?? null : null,
-    token: token !== 'nextauth' ? token : null,
-    enabled: isAuthenticated && user?.role === 'renter',
-    onNotification: ({ requestId: reqId, message }) => {
-      const isConversationOpen = chatRequestRef.current?._id === reqId;
-      if (message) {
-        setConversations(prev => ({
-          ...prev,
-          [reqId]: {
-            lastMsg: message.text,
-            time: message.createdAt,
-            senderName: message.senderName,
-            unread: !isConversationOpen,
-          },
-        }));
-        if (!isConversationOpen) {
-          setUnreadCounts(prev => ({ ...prev, [reqId]: (prev[reqId] ?? 0) + 1 }));
-        }
-      } else {
-        // Fallback: fetch if message payload not available
-        const authToken = token !== 'nextauth' ? token : null;
-        const seen: Record<string, number> = JSON.parse(localStorage.getItem('staybuddy_seen') || '{}');
-        fetch(`/api/messages/${reqId}`, {
-          headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
-        })
-          .then(r => r.json())
-          .then(data => {
-            if (!data.success || !data.messages?.length) return;
-            const msgs: any[] = data.messages;
-            const last = msgs[msgs.length - 1];
-            const ownerMsgCount = msgs.filter((m: any) => m.senderRole === 'landlord').length;
-            setConversations(prev => ({
-              ...prev,
-              [reqId]: {
-                lastMsg: last.text,
-                time: last.createdAt,
-                senderName: last.senderName,
-                unread: !isConversationOpen && ownerMsgCount > (seen[reqId] ?? 0),
-              },
-            }));
-            if (!isConversationOpen) {
-              setUnreadCounts(prev => ({
-                ...prev,
-                [reqId]: Math.max(0, ownerMsgCount - (seen[reqId] ?? 0)),
-              }));
-            }
-          })
-          .catch(() => {});
-      }
-    },
-  });
-
-  const openChat = async (req: any) => {
-    setChatRequest(req);
-    chatRequestRef.current = req;
-    setChatMessages([]);
-    setChatLoading(true);
-    // clear unread for this request
-    setUnreadCounts(prev => ({ ...prev, [req._id]: 0 }));
-    setConversations(prev => prev[req._id] ? { ...prev, [req._id]: { ...prev[req._id], unread: false } } : prev);
-    try {
-      const res = await fetch(`/api/messages/${req._id}`, {
-        headers: token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {},
-      });
-      const data = await res.json();
-      if (data.success) {
-        const msgs = data.messages || [];
-        setChatMessages(msgs);
-        // record how many owner messages have been seen
-        const ownerMsgCount = msgs.filter((m: any) => m.senderRole === 'landlord').length;
-        setSeenCounts(prev => ({ ...prev, [req._id]: ownerMsgCount }));
-        if (msgs.length > 0) {
-          const last = msgs[msgs.length - 1];
-          setConversations(prev => ({
-            ...prev,
-            [req._id]: { lastMsg: last.text, time: last.createdAt, senderName: last.senderName, unread: false },
-          }));
-        }
-      }
-    } catch {}
-    setChatLoading(false);
-  };
-
-  const sendChatMessage = async () => {
-    if (!chatInput.trim() || !chatRequest || chatSending) return;
-    const text = chatInput.trim();
-    setChatInput('');
-    setChatSending(true);
-    try {
-      const res = await fetch(`/api/messages/${chatRequest._id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ text }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setChatMessages(prev => [...prev, data.message]);
-        setConversations(prev => ({
-          ...prev,
-          [chatRequest._id]: { lastMsg: text, time: data.message.createdAt, senderName: user?.fullName || 'You', unread: false },
-        }));
-      }
-    } catch {}
-    setChatSending(false);
-  };
-
-  const closeChat = () => {
-    setChatRequest(null);
-    chatRequestRef.current = null;
-    setChatMessages([]);
-    setChatInput('');
-  };
-
-  const deleteChat = async () => {
-    if (!chatRequest) return;
-    try {
-      await fetch(`/api/messages/${chatRequest._id}`, {
-        method: 'DELETE',
-        headers: token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {},
-      });
-      setChatMessages([]);
-      setConversations(prev => {
-        const next = { ...prev };
-        delete next[chatRequest._id];
-        return next;
-      });
-      setSeenCounts(prev => {
-        const next = { ...prev };
-        delete next[chatRequest._id];
-        return next;
-      });
-      setUnreadCounts(prev => {
-        const next = { ...prev };
-        delete next[chatRequest._id];
-        return next;
-      });
-      closeChat();
-    } catch {}
-  };
 
   // Show loading while checking authentication
   if (isLoading) {
@@ -558,7 +309,6 @@ export default function TenantDashboard() {
       dashboard: "Tenant Dashboard",
       savedProperties: "Saved Properties",
       myRequests: "My Requests",
-      messagesTab: "Messages",
       profile: "Profile",
       logout: "Logout",
       viewDetails: "View Details",
@@ -604,7 +354,6 @@ export default function TenantDashboard() {
       dashboard: "Tableau de bord locataire",
       savedProperties: "Propriétés sauvegardées",
       myRequests: "Mes demandes",
-      messagesTab: "Messages",
       profile: "Profil",
       logout: "Déconnexion",
       viewDetails: "Voir les détails",
@@ -668,13 +417,9 @@ export default function TenantDashboard() {
     }
   };
 
-  const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
-  const requestsWithUnread = Object.keys(unreadCounts).filter(id => unreadCounts[id] > 0).length;
-
   const navItems = [
     { key: "saved",    icon: Heart,        label: tc.savedProperties },
-    { key: "requests", icon: MessageSquare,label: tc.myRequests, badge: requestsWithUnread },
-    { key: "messages", icon: Send,         label: tc.messagesTab, badge: totalUnread },
+    { key: "requests", icon: MessageSquare,label: tc.myRequests },
     { key: "profile",  icon: User,         label: tc.profile },
   ];
 
@@ -686,11 +431,6 @@ export default function TenantDashboard() {
           <div className="flex items-center justify-between h-14 sm:h-16">
             <div className="flex items-center gap-2">
               <h1 className={`text-base sm:text-xl font-bold truncate ${isDark ? "text-primary-light" : "text-primary"}`}>{tc.dashboard}</h1>
-              {notifCount > 0 && (
-                <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full">
-                  {notifCount > 99 ? "99+" : notifCount}
-                </span>
-              )}
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -717,20 +457,11 @@ export default function TenantDashboard() {
         <div className="hidden lg:block w-64 xl:w-72 flex-shrink-0">
           <div className={`p-4 h-full overflow-y-auto flex flex-col border-r ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
             <nav className="space-y-1">
-              {navItems.map(({ key, icon: Icon, label, badge }) => (
+              {navItems.map(({ key, icon: Icon, label }) => (
                 <button
                   key={key}
                   onClick={() => {
                     setActiveTab(key);
-                    // Clear unread badge when navigating to requests or messages tab
-                    if (key === 'requests') {
-                      setUnreadCounts({});
-                      setConversations(prev => {
-                        const next = { ...prev };
-                        Object.keys(next).forEach(id => { next[id] = { ...next[id], unread: false }; });
-                        return next;
-                      });
-                    }
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
                     activeTab === key ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-gray-100"
@@ -738,17 +469,8 @@ export default function TenantDashboard() {
                 >
                   <div className="relative flex-shrink-0">
                     <Icon className="w-5 h-5" />
-                    {badge ? (
-                      <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
-                      </span>
-                    ) : null}
                   </div>
                   <span className="font-medium text-sm">{label}</span>
-                  {badge ? (
-                    <span className="ml-auto bg-red-500 text-white text-xs font-bold min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center">{badge}</span>
-                  ) : null}
                 </button>
               ))}
             </nav>
@@ -908,8 +630,6 @@ export default function TenantDashboard() {
                     {myRequests.map((req: any) => {
                       const status = req.status || 'new';
                       const sc = statusColorMap[status] || statusColorMap.new;
-                      const hasUnread = conversations[req._id]?.unread;
-                      const lastConv = conversations[req._id];
                       return (
                         <RequestCard
                           key={req._id}
@@ -917,11 +637,8 @@ export default function TenantDashboard() {
                           status={status}
                           sc={sc}
                           statusLabel={statusLabelMap[status] || status}
-                          hasUnread={hasUnread}
-                          lastConv={lastConv}
                           language={language}
                           tc={tc}
-                          onChat={() => { openChat(req); setActiveTab('messages'); }}
                         />
                       );
                     })}
@@ -938,65 +655,6 @@ export default function TenantDashboard() {
               </div>
               );
             })()}
-
-            {/* Messages */}
-            {activeTab === "messages" && (
-              <div className="space-y-4">
-                <h2 className={`text-2xl font-bold mb-6 ${isDark ? "text-white" : "text-gray-900"}`}>{tc.messagesTab}</h2>
-                {myRequests.filter((r: any) => conversations[r._id]).length === 0 ? (
-                  <div className={`rounded-2xl p-12 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-md"}`}>
-                    <Send className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
-                    <p className={isDark ? "text-gray-500" : "text-gray-600"}>{tc.noMessages}</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {myRequests
-                      .filter((r: any) => conversations[r._id])
-                      .map((req: any) => {
-                        const conv = conversations[req._id];
-                        const hasUnread = conv.unread;
-                        return (
-                          <div
-                            key={req._id}
-                            onClick={() => openChat(req)}
-                            className={`rounded-2xl p-5 flex items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow border ${hasUnread ? 'border-l-4 border-primary' : ''} ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-md"}`}
-                          >
-                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                              <User className="w-6 h-6 text-primary" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between mb-1">
-                                <p className={`truncate ${hasUnread ? 'font-bold' : 'font-semibold'} ${isDark ? "text-white" : "text-gray-900"}`}>{req.propertyTitle}</p>
-                                <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
-                                  {new Date(conv.time).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
-                                </span>
-                              </div>
-                              <p className="text-sm text-gray-500 truncate">{conv.senderName}</p>
-                              <p className={`text-sm truncate mt-0.5 ${hasUnread ? 'font-semibold' : ''} ${isDark ? "text-gray-300" : "text-gray-700"}`}>{conv.lastMsg}</p>
-                            </div>
-                            {hasUnread && (
-                              <span className="w-2.5 h-2.5 bg-primary rounded-full flex-shrink-0" />
-                            )}
-                            <button
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                await fetch(`/api/messages/${req._id}`, { method: 'DELETE', headers: token !== 'nextauth' ? { Authorization: `Bearer ${token}` } : {} });
-                                setConversations(prev => { const n = { ...prev }; delete n[req._id]; return n; });
-                                setSeenCounts(prev => { const n = { ...prev }; delete n[req._id]; return n; });
-                                setUnreadCounts(prev => { const n = { ...prev }; delete n[req._id]; return n; });
-                              }}
-                              className={`p-2 rounded-lg transition-colors flex-shrink-0 ${isDark ? "hover:bg-red-500/10" : "hover:bg-red-50"}`}
-                              title="Delete conversation"
-                            >
-                              <Trash2 className="w-4 h-4 text-red-400" />
-                            </button>
-                          </div>
-                        );
-                      })}
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* Profile */}
             {activeTab === "profile" && (
@@ -1125,7 +783,7 @@ export default function TenantDashboard() {
       <div className={`lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="flex items-stretch h-16">
-          {navItems.map(({ key, icon: Icon, badge }) => (
+          {navItems.map(({ key, icon: Icon }) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
@@ -1145,16 +803,10 @@ export default function TenantDashboard() {
               )}
               <div className="relative z-10">
                 <Icon className={`transition-all duration-200 ${activeTab === key ? "w-5 h-5" : "w-5 h-5"}`} />
-                {badge ? (
-                  <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5">
-                    {badge > 9 ? '9+' : badge}
-                  </span>
-                ) : null}
               </div>
               <span className={`text-[9px] font-semibold z-10 transition-all duration-200 ${activeTab === key ? "opacity-100" : "opacity-60"}`}>
                 {key === "saved" ? (language === "fr" ? "Favoris" : "Saved")
                   : key === "requests" ? (language === "fr" ? "Demandes" : "Requests")
-                  : key === "messages" ? (language === "fr" ? "Messages" : "Messages")
                   : key === "profile" ? (language === "fr" ? "Profil" : "Profile")
                   : ""}
               </span>
@@ -1170,30 +822,6 @@ export default function TenantDashboard() {
           </button>
         </div>
       </div>
-
-      {/* Chat Modal — WebSocket powered */}
-      <AnimatePresence>
-        {chatRequest && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-            <div className="absolute inset-0 bg-black/50" onClick={closeChat} />
-            <div className="relative w-full sm:max-w-lg">
-              <ChatPanel
-                requestId={chatRequest._id}
-                propertyTitle={chatRequest.propertyTitle}
-                otherPartyName={(chatRequest.owner as any)?.fullName || (language === 'fr' ? 'Propriétaire' : 'Owner')}
-                userId={user?.id || ''}
-                recipientId={(chatRequest.owner as any)?._id ? String((chatRequest.owner as any)._id) : (chatRequest.owner ? String(chatRequest.owner) : null)}
-                token={token}
-                userRole="renter"
-                isDark={isDark}
-                language={language}
-                onClose={closeChat}
-                onDelete={deleteChat}
-              />
-            </div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

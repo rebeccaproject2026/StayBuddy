@@ -6,10 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Globe, LogOut, Settings, LayoutDashboard, ChevronDown, Menu, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { getToken } from "@/lib/token-storage";
 import { useParams, useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
-import { useNotifications } from "@/hooks/useNotifications";
 
 const dropdownVariants = {
   hidden: { opacity: 0, y: -8, scale: 0.97 },
@@ -74,13 +72,8 @@ export default function Navbar() {
   const isCountryMatch = !user || !urlCountry || user.role === 'admin' || user.country === urlCountry;
   const effectivelyAuthenticated = isAuthenticated && isCountryMatch;
 
-  // Live notification count via WebSocket (falls back to 30s polling)
-  const notifToken = mounted ? (getToken() ?? null) : null;
-  const { count: notifCount } = useNotifications({
-    userId: effectivelyAuthenticated && (user?.role === "landlord" || user?.role === "renter") ? user?.id ?? null : null,
-    token: notifToken,
-    enabled: mounted && effectivelyAuthenticated && (user?.role === "landlord" || user?.role === "renter"),
-  });
+  // Notification count removed (chat/messaging feature removed)
+  const notifCount = 0;
 
   const langMenuRef = useRef<HTMLDivElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
