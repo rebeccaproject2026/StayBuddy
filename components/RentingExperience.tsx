@@ -124,7 +124,7 @@ const RentingExperience = () => {
             initial={{ opacity: 0, x: -24 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-            className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 sm:p-8"
+            className="bg-white rounded-xl shadow-md border border-gray-100 p-6 sm:p-8"
           >
             <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
               {isFr ? 'Pourquoi choisir StayBuddy' : 'Why Choose StayBuddy'}
@@ -179,7 +179,7 @@ const RentingExperience = () => {
             initial={{ opacity: 0, x: 24 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 sm:p-8"
+            className="bg-white rounded-xl shadow-md border border-gray-100 p-6 sm:p-8"
           >
             <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
               {isFr ? 'Votre parcours de location' : 'Your Rental Journey'}

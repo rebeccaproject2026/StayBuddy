@@ -128,7 +128,7 @@ export default function FilterSection() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-xl p-4 sm:p-6"
+        className="bg-white rounded-xl border border-gray-200 shadow-xl p-4 sm:p-6"
       >
         {/* Top Row Filters */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 mb-4 sm:mb-5">

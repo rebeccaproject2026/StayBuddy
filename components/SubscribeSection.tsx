@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useParams } from "next/navigation";
 import { Mail, CheckCircle, AlertCircle, Bell, Sparkles, MapPin, Home } from "lucide-react";
+import Image from "next/image";
 import { motion, useInView } from "framer-motion";
 
 const CITIES: Record<string, string[]> = {
@@ -120,7 +121,7 @@ export default function SubscribeSection() {
           initial={{ opacity: 0, y: 40 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden"
+          className="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden"
         >
           <div className="grid md:grid-cols-5 gap-0">
             {/* Left — Info */}
@@ -128,8 +129,21 @@ export default function SubscribeSection() {
               initial={{ opacity: 0, x: -30 }}
               animate={isInView ? { opacity: 1, x: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.15, ease: "easeOut" }}
-              className="md:col-span-2 bg-gradient-to-br from-primary to-primary-dark p-6 sm:p-8 md:p-10 text-white flex flex-col justify-center"
+              className="md:col-span-2 relative p-6 sm:p-8 md:p-10 text-white flex flex-col justify-center overflow-hidden"
             >
+              {/* Background image */}
+              <Image
+                src="/subscribebg.png"
+                alt="apartment background"
+                fill
+                className="object-cover object-center"
+                sizes="(max-width: 768px) 100vw, 40vw"
+              />
+              {/* Dark gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-black/55 to-black/65" />
+
+              {/* Content — above overlay */}
+              <div className="relative z-10">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full mb-4 w-fit">
                 <Sparkles className="w-4 h-4" />
                 <span className="text-xs font-semibold">{t.badge}</span>
@@ -152,6 +166,7 @@ export default function SubscribeSection() {
                   </motion.div>
                 ))}
               </div>
+              </div>{/* end z-10 */}
             </motion.div>
 
             {/* Right — Form */}

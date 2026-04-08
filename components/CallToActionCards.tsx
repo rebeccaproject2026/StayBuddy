@@ -54,7 +54,7 @@ export default function CallToActionCards() {
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, ease: 'easeOut' }}
             whileHover={{ y: -4, boxShadow: '0 20px 40px rgba(0,0,0,0.10)' }}
-            className="bg-white rounded-2xl shadow-lg p-5 esm:p-6 md:p-10"
+            className="bg-white rounded-xl shadow-lg p-5 esm:p-6 md:p-10"
           >
             <h3 className="text-xl esm:text-2xl md:text-3xl font-bold text-gray-700 mb-3 md:mb-4">
               {t.findHome.title}

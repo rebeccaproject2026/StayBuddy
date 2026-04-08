@@ -79,7 +79,7 @@ const CityCard = ({ name, propertyCount, image, size = "medium", trending, count
       whileHover={{ scale: 1.02, y: -8 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
       onClick={() => router.push(`/${country || "in"}/properties?city=${encodeURIComponent(name)}`)}
-      className={`relative ${sizeClasses[size]} rounded-2xl overflow-hidden cursor-pointer group shadow-md hover:shadow-2xl transition-shadow duration-300`}
+      className={`relative ${sizeClasses[size]} rounded-xl overflow-hidden cursor-pointer group shadow-md hover:shadow-2xl transition-shadow duration-300`}
     >
       <div className="absolute inset-0">
         <Image

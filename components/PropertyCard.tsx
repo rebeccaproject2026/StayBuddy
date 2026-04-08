@@ -185,7 +185,7 @@ export default function PropertyCard({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer"
+        className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer"
       >
         {/* Image Carousel */}
         <div className="relative h-44 sm:h-52 md:h-56 bg-gray-200 overflow-hidden">
