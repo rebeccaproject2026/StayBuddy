@@ -17,6 +17,14 @@ const nextConfig = {
     ],
   },
   transpilePackages: ['framer-motion'],
+  // Prevent Next.js from trying to bundle the standalone Socket.IO server
+  webpack: (config, { isServer }) => {
+    config.watchOptions = {
+      ...config.watchOptions,
+      ignored: ['**/node_modules/**', '**/.git/**', '**/socket-server/**', '**/.socket-dist/**'],
+    };
+    return config;
+  },
 };
 
 module.exports = nextConfig;

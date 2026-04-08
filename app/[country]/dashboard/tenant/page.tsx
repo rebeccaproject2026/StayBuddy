@@ -9,6 +9,8 @@ import { useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
 import Image from "next/image";
 import toast from "react-hot-toast";
+import ChatWindow from "@/components/ChatWindow";
+import { useSocket } from "@/hooks/useSocket";
 import {
   Heart,
   MessageSquare,
@@ -108,7 +110,7 @@ function RequestCard({
 
 export default function TenantDashboard() {
   const { language, t } = useLanguage();
-  const { user, isLoading, isAuthenticated, token, logout } = useAuth();
+  const { user, isLoading, isAuthenticated, token, logout, updateUser } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'saved');
@@ -140,6 +142,20 @@ export default function TenantDashboard() {
   const [myRequests, setMyRequests] = useState<any[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(false);
   const currencySymbol = t("currency.symbol");
+
+  // Chat state
+  const { unreadCount, onNotification, resetUnread } = useSocket(token);
+  const [activeChatRequestId, setActiveChatRequestId] = useState<string | null>(null);
+
+  // Show toast on incoming message when not on messages tab
+  useEffect(() => {
+    const off = onNotification((n) => {
+      if (activeTab !== 'messages') {
+        toast(`New message received`, { icon: '💬' });
+      }
+    });
+    return off;
+  }, [onNotification, activeTab]);
 
   // Authentication check
   useEffect(() => {
@@ -225,8 +241,6 @@ export default function TenantDashboard() {
   if (!isAuthenticated || user?.role !== 'renter') {
     return null;
   }
-
-  const { updateUser } = useAuth();
 
   const handleSaveProfile = async () => {
     if (!profileForm.fullName.trim()) {
@@ -418,9 +432,10 @@ export default function TenantDashboard() {
   };
 
   const navItems = [
-    { key: "saved",    icon: Heart,        label: tc.savedProperties },
-    { key: "requests", icon: MessageSquare,label: tc.myRequests },
-    { key: "profile",  icon: User,         label: tc.profile },
+    { key: "saved",    icon: Heart,         label: tc.savedProperties },
+    { key: "requests", icon: MessageSquare, label: tc.myRequests },
+    { key: "messages", icon: MessageSquare, label: language === 'fr' ? 'Messages' : 'Messages', badge: unreadCount },
+    { key: "profile",  icon: User,          label: tc.profile },
   ];
 
   return (
@@ -457,11 +472,12 @@ export default function TenantDashboard() {
         <div className="hidden lg:block w-64 xl:w-72 flex-shrink-0">
           <div className={`p-4 h-full overflow-y-auto flex flex-col border-r ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
             <nav className="space-y-1">
-              {navItems.map(({ key, icon: Icon, label }) => (
+              {navItems.map(({ key, icon: Icon, label, badge }: any) => (
                 <button
                   key={key}
                   onClick={() => {
                     setActiveTab(key);
+                    if (key === 'messages') resetUnread();
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
                     activeTab === key ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-gray-100"
@@ -469,6 +485,11 @@ export default function TenantDashboard() {
                 >
                   <div className="relative flex-shrink-0">
                     <Icon className="w-5 h-5" />
+                    {badge > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                        {badge > 9 ? '9+' : badge}
+                      </span>
+                    )}
                   </div>
                   <span className="font-medium text-sm">{label}</span>
                 </button>
@@ -656,6 +677,101 @@ export default function TenantDashboard() {
               );
             })()}
 
+            {/* Messages */}
+            {activeTab === "messages" && (
+              <div className="h-full flex gap-4" style={{ minHeight: '60vh' }}>
+                {/* Conversation list */}
+                <div className={`w-full lg:w-72 xl:w-80 flex-shrink-0 rounded-2xl border overflow-hidden flex flex-col ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                  <div className={`px-4 py-3 border-b font-semibold text-sm ${isDark ? "border-gray-800 text-white" : "border-gray-100 text-gray-900"}`}>
+                    {language === 'fr' ? 'Conversations' : 'Conversations'}
+                  </div>
+                  <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
+                    {requestsLoading ? (
+                      <div className="p-4 space-y-3">
+                        {[...Array(3)].map((_, i) => (
+                          <div key={i} className={`h-14 rounded-xl animate-pulse ${isDark ? "bg-gray-800" : "bg-gray-100"}`} />
+                        ))}
+                      </div>
+                    ) : myRequests.length === 0 ? (
+                      <div className="p-8 text-center">
+                        <MessageSquare className={`w-8 h-8 mx-auto mb-2 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
+                        <p className={`text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                          {language === 'fr' ? 'Aucune conversation' : 'No conversations yet'}
+                        </p>
+                      </div>
+                    ) : (
+                      myRequests.map((req: any) => (
+                        <button
+                          key={req._id}
+                          onClick={() => setActiveChatRequestId(req._id)}
+                          className={`w-full text-left px-4 py-3 transition-colors ${
+                            activeChatRequestId === req._id
+                              ? isDark ? "bg-primary/20" : "bg-primary/10"
+                              : isDark ? "hover:bg-gray-800" : "hover:bg-gray-50"
+                          }`}
+                        >
+                          <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
+                            {req.propertyTitle}
+                          </p>
+                          <p className={`text-xs truncate mt-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                            {req.owner?.fullName || language === 'fr' ? 'Propriétaire' : 'Owner'}
+                          </p>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Chat window */}
+                <div className="flex-1 min-w-0 hidden lg:block" style={{ minHeight: '60vh' }}>
+                  {activeChatRequestId ? (
+                    (() => {
+                      const req = myRequests.find((r: any) => r._id === activeChatRequestId);
+                      return (
+                        <ChatWindow
+                          requestId={activeChatRequestId}
+                          currentUserId={user!.id}
+                          otherUserName={req?.owner?.fullName || 'Owner'}
+                          propertyTitle={req?.propertyTitle || ''}
+                          token={token}
+                          isDark={isDark}
+                          onUnreadChange={resetUnread}
+                        />
+                      );
+                    })()
+                  ) : (
+                    <div className={`h-full rounded-2xl border flex flex-col items-center justify-center gap-3 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                      <MessageSquare className={`w-12 h-12 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
+                      <p className={`text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                        {language === 'fr' ? 'Sélectionnez une conversation' : 'Select a conversation to start chatting'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Mobile: full-screen chat overlay */}
+                {activeChatRequestId && (
+                  <div className="lg:hidden fixed inset-0 z-50 p-4" style={{ background: isDark ? '#030712' : '#f9fafb' }}>
+                    {(() => {
+                      const req = myRequests.find((r: any) => r._id === activeChatRequestId);
+                      return (
+                        <ChatWindow
+                          requestId={activeChatRequestId}
+                          currentUserId={user!.id}
+                          otherUserName={req?.owner?.fullName || 'Owner'}
+                          propertyTitle={req?.propertyTitle || ''}
+                          token={token}
+                          isDark={isDark}
+                          onClose={() => setActiveChatRequestId(null)}
+                          onUnreadChange={resetUnread}
+                        />
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Profile */}
             {activeTab === "profile" && (
               <div className="space-y-5 max-w-2xl">
@@ -783,30 +899,34 @@ export default function TenantDashboard() {
       <div className={`lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="flex items-stretch h-16">
-          {navItems.map(({ key, icon: Icon }) => (
+          {navItems.map(({ key, icon: Icon, badge }: any) => (
             <button
               key={key}
-              onClick={() => setActiveTab(key)}
+              onClick={() => { setActiveTab(key); if (key === 'messages') resetUnread(); }}
               className={`flex-1 flex flex-col items-center justify-center gap-1 relative transition-all duration-200 ${
                 activeTab === key
                   ? isDark ? "text-primary" : "text-primary"
                   : isDark ? "text-gray-500 hover:text-gray-300" : "text-gray-400 hover:text-gray-600"
               }`}
             >
-              {/* Active indicator */}
               {activeTab === key && (
                 <span className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 bg-primary rounded-full" />
               )}
-              {/* Active background pill */}
               {activeTab === key && (
                 <span className={`absolute inset-x-1 inset-y-1 rounded-xl ${isDark ? "bg-primary/10" : "bg-primary/8"}`} />
               )}
               <div className="relative z-10">
-                <Icon className={`transition-all duration-200 ${activeTab === key ? "w-5 h-5" : "w-5 h-5"}`} />
+                <Icon className="w-5 h-5" />
+                {badge > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                    {badge > 9 ? '9+' : badge}
+                  </span>
+                )}
               </div>
               <span className={`text-[9px] font-semibold z-10 transition-all duration-200 ${activeTab === key ? "opacity-100" : "opacity-60"}`}>
                 {key === "saved" ? (language === "fr" ? "Favoris" : "Saved")
                   : key === "requests" ? (language === "fr" ? "Demandes" : "Requests")
+                  : key === "messages" ? "Messages"
                   : key === "profile" ? (language === "fr" ? "Profil" : "Profile")
                   : ""}
               </span>

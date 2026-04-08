@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es2017",
+    "outDir": ".socket-dist",
+    "noEmit": false,
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["socket-server/index.ts", "models/**/*.ts", "lib/email.ts", "lib/mongodb.ts"]
+}

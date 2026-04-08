@@ -9,6 +9,9 @@ import Link from "@/components/LocalizedLink";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { getToken } from "@/lib/token-storage";
+import toast from "react-hot-toast";
+import ChatWindow from "@/components/ChatWindow";
+import { useSocket } from "@/hooks/useSocket";
 import {
   Home,
   MessageSquare,
@@ -675,6 +678,21 @@ export default function OwnerDashboard() {
   const [editImages, setEditImages] = useState<string[]>([]); // current image URLs
   const [editNewFiles, setEditNewFiles] = useState<File[]>([]); // newly picked files
 
+  // Chat state
+  const ownerToken = getToken();
+  const { unreadCount: chatUnread, onNotification, resetUnread } = useSocket(ownerToken);
+  const [activeChatRequestId, setActiveChatRequestId] = useState<string | null>(null);
+
+  // Show toast on incoming chat message when not on messages tab
+  useEffect(() => {
+    const off = onNotification((n) => {
+      if (activeTab !== 'messages') {
+        toast(`New message received`, { icon: '💬' });
+      }
+    });
+    return off;
+  }, [onNotification, activeTab]);
+
   // Extra photo category state for edit form
   type PhotoCat = 'kitchen' | 'washroom' | 'commonArea';
   const [editCatImages, setEditCatImages] = useState<Record<PhotoCat, string[]>>({ kitchen: [], washroom: [], commonArea: [] });
@@ -1227,6 +1245,28 @@ export default function OwnerDashboard() {
                   {contactRequests.filter((r: any) => !seenInquiryIds.has(r._id)).length > 0 && (
                     <span className="ml-auto bg-red-500 text-white text-xs font-bold min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center">
                       {contactRequests.filter((r: any) => !seenInquiryIds.has(r._id)).length}
+                    </span>
+                  )}
+                </button>
+                {/* Messages nav */}
+                <button
+                  onClick={() => { setActiveTab("messages"); resetUnread(); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                    activeTab === "messages" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <div className="relative flex-shrink-0">
+                    <MessageSquare className="w-5 h-5" />
+                    {chatUnread > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                        {chatUnread > 9 ? '9+' : chatUnread}
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-medium text-sm">{language === 'fr' ? 'Messages' : 'Messages'}</span>
+                  {chatUnread > 0 && (
+                    <span className="ml-auto bg-red-500 text-white text-xs font-bold min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center">
+                      {chatUnread}
                     </span>
                   )}
                 </button>
@@ -3034,6 +3074,101 @@ export default function OwnerDashboard() {
               </div>
             )}
 
+            {/* Messages */}
+            {activeTab === "messages" && (
+              <div className="h-full flex gap-4" style={{ minHeight: '60vh' }}>
+                {/* Conversation list */}
+                <div className={`w-full lg:w-72 xl:w-80 flex-shrink-0 rounded-2xl border overflow-hidden flex flex-col ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                  <div className={`px-4 py-3 border-b font-semibold text-sm ${isDark ? "border-gray-800 text-white" : "border-gray-100 text-gray-900"}`}>
+                    {language === 'fr' ? 'Conversations' : 'Conversations'}
+                  </div>
+                  <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
+                    {requestsLoading ? (
+                      <div className="p-4 space-y-3">
+                        {[...Array(3)].map((_, i) => (
+                          <div key={i} className={`h-14 rounded-xl animate-pulse ${isDark ? "bg-gray-800" : "bg-gray-100"}`} />
+                        ))}
+                      </div>
+                    ) : contactRequests.length === 0 ? (
+                      <div className="p-8 text-center">
+                        <MessageSquare className={`w-8 h-8 mx-auto mb-2 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
+                        <p className={`text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                          {language === 'fr' ? 'Aucune conversation' : 'No conversations yet'}
+                        </p>
+                      </div>
+                    ) : (
+                      contactRequests.map((req: any) => (
+                        <button
+                          key={req._id}
+                          onClick={() => setActiveChatRequestId(req._id)}
+                          className={`w-full text-left px-4 py-3 transition-colors ${
+                            activeChatRequestId === req._id
+                              ? isDark ? "bg-primary/20" : "bg-primary/10"
+                              : isDark ? "hover:bg-gray-800" : "hover:bg-gray-50"
+                          }`}
+                        >
+                          <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
+                            {req.fullName}
+                          </p>
+                          <p className={`text-xs truncate mt-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                            {req.propertyTitle}
+                          </p>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Chat window */}
+                <div className="flex-1 min-w-0 hidden lg:block" style={{ minHeight: '60vh' }}>
+                  {activeChatRequestId ? (
+                    (() => {
+                      const req = contactRequests.find((r: any) => r._id === activeChatRequestId);
+                      return (
+                        <ChatWindow
+                          requestId={activeChatRequestId}
+                          currentUserId={user!.id}
+                          otherUserName={req?.renter?.fullName || req?.fullName || 'Tenant'}
+                          propertyTitle={req?.propertyTitle || ''}
+                          token={ownerToken}
+                          isDark={isDark}
+                          onUnreadChange={resetUnread}
+                        />
+                      );
+                    })()
+                  ) : (
+                    <div className={`h-full rounded-2xl border flex flex-col items-center justify-center gap-3 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                      <MessageSquare className={`w-12 h-12 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
+                      <p className={`text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                        {language === 'fr' ? 'Sélectionnez une conversation' : 'Select a conversation to start chatting'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Mobile: full-screen chat overlay */}
+                {activeChatRequestId && (
+                  <div className="lg:hidden fixed inset-0 z-50 p-4" style={{ background: isDark ? '#030712' : '#f9fafb' }}>
+                    {(() => {
+                      const req = contactRequests.find((r: any) => r._id === activeChatRequestId);
+                      return (
+                        <ChatWindow
+                          requestId={activeChatRequestId}
+                          currentUserId={user!.id}
+                          otherUserName={req?.renter?.fullName || req?.fullName || 'Tenant'}
+                          propertyTitle={req?.propertyTitle || ''}
+                          token={ownerToken}
+                          isDark={isDark}
+                          onClose={() => setActiveChatRequestId(null)}
+                          onUnreadChange={resetUnread}
+                        />
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Profile */}
             {activeTab === "profile" && (
               <ProfileSection user={user} tc={tc} language={language} isDark={isDark} />
@@ -3050,6 +3185,7 @@ export default function OwnerDashboard() {
             { key: "listings",  icon: Home,         label: language === "fr" ? "Annonces" : "Listings" },
             { key: "requests",  icon: Calendar,     label: language === "fr" ? "Demandes" : "Inquiries",
               badge: contactRequests.filter((r: any) => !seenInquiryIds.has(r._id)).length },
+            { key: "messages",  icon: MessageSquare, label: "Messages", badge: chatUnread },
             { key: "profile",   icon: User,         label: language === "fr" ? "Profil" : "Profile" },
           ].map(({ key, icon: Icon, label, badge }) => (
             <button
@@ -3063,6 +3199,7 @@ export default function OwnerDashboard() {
                     return updated;
                   });
                 }
+                if (key === "messages") resetUnread();
               }}
               className={`flex-1 flex flex-col items-center justify-center gap-1 relative transition-all duration-200 ${
                 activeTab === key
