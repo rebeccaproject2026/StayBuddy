@@ -10,7 +10,7 @@ import Link from "@/components/LocalizedLink";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import ChatWindow from "@/components/ChatWindow";
-import { useSocket } from "@/hooks/useSocket";
+import { useSocketContext } from "@/contexts/SocketContext";
 import {
   Heart,
   MessageSquare,
@@ -143,8 +143,8 @@ export default function TenantDashboard() {
   const [requestsLoading, setRequestsLoading] = useState(false);
   const currencySymbol = t("currency.symbol");
 
-  // Chat state
-  const { unreadCount, onNotification, resetUnread } = useSocket(token);
+  // Chat state — shared socket context
+  const { totalUnread: unreadCount, unreadByRequest, markSeen: socketMarkSeen, clearAll: resetUnread, onNotification } = useSocketContext();
   const [activeChatRequestId, setActiveChatRequestId] = useState<string | null>(null);
 
   // Show toast on incoming message when not on messages tab
@@ -477,7 +477,7 @@ export default function TenantDashboard() {
                   key={key}
                   onClick={() => {
                     setActiveTab(key);
-                    if (key === 'messages') resetUnread();
+                    // Don't clear unread here — only clear when a specific chat is opened
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
                     activeTab === key ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-gray-100"
@@ -542,8 +542,8 @@ export default function TenantDashboard() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 min-w-0 overflow-y-auto pb-16 lg:pb-0">
-          <div className="p-3 sm:p-5 lg:p-8">
+        <div className={`flex-1 min-w-0 pb-16 lg:pb-0 ${activeTab === 'messages' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+          <div className={activeTab === 'messages' ? 'p-3 sm:p-5 lg:p-6 h-full flex flex-col' : 'p-3 sm:p-5 lg:p-8'}>
             {/* Saved Properties */}
             {activeTab === "saved" && (
               <div className="space-y-4">
@@ -679,7 +679,7 @@ export default function TenantDashboard() {
 
             {/* Messages */}
             {activeTab === "messages" && (
-              <div className="h-full flex gap-4" style={{ minHeight: '60vh' }}>
+              <div className="flex gap-4 overflow-hidden" style={{ height: 'calc(100vh - 130px)' }}>
                 {/* Conversation list */}
                 <div className={`w-full lg:w-72 xl:w-80 flex-shrink-0 rounded-2xl border overflow-hidden flex flex-col ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                   <div className={`px-4 py-3 border-b font-semibold text-sm ${isDark ? "border-gray-800 text-white" : "border-gray-100 text-gray-900"}`}>
@@ -703,18 +703,28 @@ export default function TenantDashboard() {
                       myRequests.map((req: any) => (
                         <button
                           key={req._id}
-                          onClick={() => setActiveChatRequestId(req._id)}
+                          onClick={() => {
+                            setActiveChatRequestId(req._id);
+                            socketMarkSeen(req._id);
+                          }}
                           className={`w-full text-left px-4 py-3 transition-colors ${
                             activeChatRequestId === req._id
                               ? isDark ? "bg-primary/20" : "bg-primary/10"
                               : isDark ? "hover:bg-gray-800" : "hover:bg-gray-50"
                           }`}
                         >
-                          <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
-                            {req.propertyTitle}
-                          </p>
+                          <div className="flex items-center justify-between gap-2">
+                            <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
+                              {req.propertyTitle}
+                            </p>
+                            {(unreadByRequest[req._id] || 0) > 0 && (
+                              <span className="flex-shrink-0 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                                {unreadByRequest[req._id] > 9 ? '9+' : unreadByRequest[req._id]}
+                              </span>
+                            )}
+                          </div>
                           <p className={`text-xs truncate mt-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                            {req.owner?.fullName || language === 'fr' ? 'Propriétaire' : 'Owner'}
+                            {req.owner?.fullName || (language === 'fr' ? 'Propriétaire' : 'Owner')}
                           </p>
                         </button>
                       ))
@@ -723,7 +733,7 @@ export default function TenantDashboard() {
                 </div>
 
                 {/* Chat window */}
-                <div className="flex-1 min-w-0 hidden lg:block" style={{ minHeight: '60vh' }}>
+                <div className="flex-1 min-w-0 min-h-0 hidden lg:flex flex-col">
                   {activeChatRequestId ? (
                     (() => {
                       const req = myRequests.find((r: any) => r._id === activeChatRequestId);
@@ -902,7 +912,7 @@ export default function TenantDashboard() {
           {navItems.map(({ key, icon: Icon, badge }: any) => (
             <button
               key={key}
-              onClick={() => { setActiveTab(key); if (key === 'messages') resetUnread(); }}
+              onClick={() => { setActiveTab(key); }}
               className={`flex-1 flex flex-col items-center justify-center gap-1 relative transition-all duration-200 ${
                 activeTab === key
                   ? isDark ? "text-primary" : "text-primary"

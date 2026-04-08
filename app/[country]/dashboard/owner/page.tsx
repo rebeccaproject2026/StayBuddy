@@ -11,7 +11,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { getToken } from "@/lib/token-storage";
 import toast from "react-hot-toast";
 import ChatWindow from "@/components/ChatWindow";
-import { useSocket } from "@/hooks/useSocket";
+import { useSocketContext } from "@/contexts/SocketContext";
 import {
   Home,
   MessageSquare,
@@ -374,6 +374,107 @@ function getCurrency(country?: string) {
   return country === "fr" ? "€" : "₹";
 }
 
+// Rent cell for the list-view table — needs its own state for the bed/room dropdown
+function TableRentCell({ listing, isDark }: { listing: any; isDark: boolean }) {
+  const isPG = listing.propertyType === "PG";
+  const isFrTenant = listing.country === "fr" && listing.propertyType === "Tenant";
+  const currency = getCurrency(listing.country);
+
+  const bedTypes = isPG && listing.roomDetails ? Object.keys(listing.roomDetails) : [];
+  const tenantRooms: any[] = isFrTenant && listing.tenantRooms?.length ? listing.tenantRooms : [];
+
+  const [selectedBed, setSelectedBed] = useState<string>(bedTypes[0] || "");
+  const [selectedRoom, setSelectedRoom] = useState<any>(tenantRooms[0] ?? null);
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Derive displayed price from selection
+  const displayPrice = isPG && selectedBed && listing.roomDetails?.[selectedBed]
+    ? parseFloat(listing.roomDetails[selectedBed].monthlyRent) || listing.price
+    : isFrTenant && selectedRoom
+    ? parseFloat(selectedRoom.rent) || listing.price
+    : listing.price;
+
+  const hasDropdown = (isPG && bedTypes.length > 0) || (isFrTenant && tenantRooms.length > 0);
+
+  return (
+    <div className="flex flex-col gap-1" ref={ref} onClick={e => e.stopPropagation()}>
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <span className="font-bold text-primary">{currency} {displayPrice?.toLocaleString()}</span>
+        <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>/mo</span>
+
+        {/* Dropdown trigger */}
+        {hasDropdown && (
+          <div className="relative">
+            <button
+              onClick={() => setOpen(o => !o)}
+              className={`flex items-center gap-1 px-2 py-0.5 rounded-lg border text-xs font-medium transition-colors ${
+                isDark
+                  ? "border-gray-600 text-gray-300 hover:border-primary hover:text-primary bg-gray-800"
+                  : "border-gray-200 text-gray-600 hover:border-primary hover:text-primary bg-white"
+              }`}
+            >
+              {isPG ? `${selectedBed} Bed` : selectedRoom?.name ?? "Room"}
+              <ChevronDown className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`} />
+            </button>
+
+            {open && (
+              <div className={`absolute top-full left-0 mt-1 rounded-xl border shadow-xl z-50 min-w-[140px] overflow-hidden ${
+                isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+              }`}>
+                {isPG && bedTypes.map(bt => (
+                  <button
+                    key={bt}
+                    onClick={() => { setSelectedBed(bt); setOpen(false); }}
+                    className={`w-full text-left px-3 py-2 text-xs font-medium transition-colors ${
+                      selectedBed === bt
+                        ? "bg-primary/10 text-primary"
+                        : isDark ? "text-gray-300 hover:bg-gray-700" : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    {bt} Bed
+                    {listing.roomDetails?.[bt]?.monthlyRent && (
+                      <span className="block text-gray-400 font-normal">
+                        {currency}{parseFloat(listing.roomDetails[bt].monthlyRent).toLocaleString()}
+                      </span>
+                    )}
+                  </button>
+                ))}
+                {isFrTenant && tenantRooms.map((room: any) => (
+                  <button
+                    key={room.id}
+                    onClick={() => { setSelectedRoom(room); setOpen(false); }}
+                    className={`w-full text-left px-3 py-2 text-xs font-medium transition-colors ${
+                      selectedRoom?.id === room.id
+                        ? "bg-primary/10 text-primary"
+                        : isDark ? "text-gray-300 hover:bg-gray-700" : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    {room.name}
+                    {room.rent && (
+                      <span className="block text-gray-400 font-normal">
+                        {currency}{parseFloat(room.rent).toLocaleString()}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // Per-card component so each card has its own dropdown state
 function OwnerListingCard({
   listing,
@@ -678,9 +779,9 @@ export default function OwnerDashboard() {
   const [editImages, setEditImages] = useState<string[]>([]); // current image URLs
   const [editNewFiles, setEditNewFiles] = useState<File[]>([]); // newly picked files
 
-  // Chat state
+  // Chat state — shared socket context
   const ownerToken = getToken();
-  const { unreadCount: chatUnread, onNotification, resetUnread } = useSocket(ownerToken);
+  const { totalUnread: chatUnread, unreadByRequest, markSeen: socketMarkSeen, clearAll: resetUnread, onNotification } = useSocketContext();
   const [activeChatRequestId, setActiveChatRequestId] = useState<string | null>(null);
 
   // Show toast on incoming chat message when not on messages tab
@@ -1250,7 +1351,7 @@ export default function OwnerDashboard() {
                 </button>
                 {/* Messages nav */}
                 <button
-                  onClick={() => { setActiveTab("messages"); resetUnread(); }}
+                  onClick={() => { setActiveTab("messages"); }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
                     activeTab === "messages" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-gray-100"
                   }`}
@@ -1333,8 +1434,8 @@ export default function OwnerDashboard() {
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 min-w-0 overflow-y-auto pb-16 lg:pb-0">
-            <div className="p-3 sm:p-5 lg:p-8">
+          <div className={`flex-1 min-w-0 pb-16 lg:pb-0 ${activeTab === 'messages' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+            <div className={activeTab === 'messages' ? 'p-3 sm:p-5 lg:p-6 h-full flex flex-col' : 'p-3 sm:p-5 lg:p-8'}>
             {/* My Listings */}
             {activeTab === "listings" && (
               <div className="space-y-6">
@@ -2791,29 +2892,7 @@ export default function OwnerDashboard() {
                                     </td>
                                     {/* Rent */}
                                     <td className="px-4 py-4">
-                                      <span className="font-bold text-primary">{getCurrency(listing.country)} {listing.price?.toLocaleString()}</span>
-                                      <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>/mo</span>
-                                      {/* PG bed type prices */}
-                                      {listing.propertyType === "PG" && listing.roomDetails && (
-                                        <div className="flex flex-col gap-0.5 mt-1">
-                                          {Object.entries(listing.roomDetails as Record<string, any>).map(([type, detail]) => (
-                                            <span key={type} className="text-xs text-gray-400">
-                                              {type}: {getCurrency(listing.country)}{parseFloat(detail.monthlyRent || 0).toLocaleString()}
-                                            </span>
-                                          ))}
-                                        </div>
-                                      )}
-                                      {/* France Tenant room prices */}
-                                      {listing.country === "fr" && listing.propertyType === "Tenant" && listing.tenantRooms?.length > 0 && (
-                                        <div className="flex flex-col gap-0.5 mt-1">
-                                          {listing.tenantRooms.map((room: any) => (
-                                            <span key={room.id} className="text-xs text-gray-400">
-                                              {room.name}: {room.rent ? `${getCurrency(listing.country)}${parseFloat(room.rent).toLocaleString()}` : "—"}
-                                              {room.maxPersons ? ` (${room.currentPersons ?? 0}/${room.maxPersons})` : ""}
-                                            </span>
-                                          ))}
-                                        </div>
-                                      )}
+                                      <TableRentCell listing={listing} isDark={isDark} />
                                     </td>
                                     {/* Rooms */}
                                     <td className="px-4 py-4 hidden sm:table-cell">
@@ -3076,7 +3155,7 @@ export default function OwnerDashboard() {
 
             {/* Messages */}
             {activeTab === "messages" && (
-              <div className="h-full flex gap-4" style={{ minHeight: '60vh' }}>
+              <div className="flex gap-4 overflow-hidden" style={{ height: 'calc(100vh - 130px)' }}>
                 {/* Conversation list */}
                 <div className={`w-full lg:w-72 xl:w-80 flex-shrink-0 rounded-2xl border overflow-hidden flex flex-col ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                   <div className={`px-4 py-3 border-b font-semibold text-sm ${isDark ? "border-gray-800 text-white" : "border-gray-100 text-gray-900"}`}>
@@ -3100,16 +3179,26 @@ export default function OwnerDashboard() {
                       contactRequests.map((req: any) => (
                         <button
                           key={req._id}
-                          onClick={() => setActiveChatRequestId(req._id)}
+                          onClick={() => {
+                            setActiveChatRequestId(req._id);
+                            socketMarkSeen(req._id);
+                          }}
                           className={`w-full text-left px-4 py-3 transition-colors ${
                             activeChatRequestId === req._id
                               ? isDark ? "bg-primary/20" : "bg-primary/10"
                               : isDark ? "hover:bg-gray-800" : "hover:bg-gray-50"
                           }`}
                         >
-                          <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
-                            {req.fullName}
-                          </p>
+                          <div className="flex items-center justify-between gap-2">
+                            <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
+                              {req.fullName}
+                            </p>
+                            {(unreadByRequest[req._id] || 0) > 0 && (
+                              <span className="flex-shrink-0 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                                {unreadByRequest[req._id] > 9 ? '9+' : unreadByRequest[req._id]}
+                              </span>
+                            )}
+                          </div>
                           <p className={`text-xs truncate mt-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                             {req.propertyTitle}
                           </p>
@@ -3120,7 +3209,7 @@ export default function OwnerDashboard() {
                 </div>
 
                 {/* Chat window */}
-                <div className="flex-1 min-w-0 hidden lg:block" style={{ minHeight: '60vh' }}>
+                <div className="flex-1 min-w-0 min-h-0 hidden lg:flex flex-col">
                   {activeChatRequestId ? (
                     (() => {
                       const req = contactRequests.find((r: any) => r._id === activeChatRequestId);
@@ -3199,7 +3288,7 @@ export default function OwnerDashboard() {
                     return updated;
                   });
                 }
-                if (key === "messages") resetUnread();
+                // Don't clear messages unread here — only clear when a specific chat is opened
               }}
               className={`flex-1 flex flex-col items-center justify-center gap-1 relative transition-all duration-200 ${
                 activeTab === key

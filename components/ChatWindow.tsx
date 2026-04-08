@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, X, MessageSquare, Loader2 } from 'lucide-react';
-import { useSocket, ChatMessage } from '@/hooks/useSocket';
+import { useSocketContext, ChatMessage } from '@/contexts/SocketContext';
 import { getToken } from '@/lib/token-storage';
 
 interface ChatWindowProps {
@@ -33,7 +33,7 @@ export default function ChatWindow({
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { connected, joinRoom, sendMessage, markSeen, onMessage, onSeen } = useSocket(token);
+  const { connected, joinRoom, sendMessage, markSeen, onMessage, onSeen } = useSocketContext();
 
   // Fetch history
   useEffect(() => {
@@ -134,9 +134,9 @@ export default function ChatWindow({
     : { bg: 'bg-white', border: 'border-gray-200', text: 'text-gray-900', sub: 'text-gray-500', input: 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400', header: 'bg-gray-50 border-gray-200' };
 
   return (
-    <div className={`flex flex-col h-full rounded-2xl border overflow-hidden ${base.bg} ${base.border}`}>
-      {/* Header */}
-      <div className={`flex items-center gap-3 px-4 py-3 border-b ${base.header}`}>
+    <div className={`flex flex-col rounded-2xl border overflow-hidden ${base.bg} ${base.border}`} style={{ height: '100%', minHeight: 0 }}>
+      {/* Header — fixed height, never shrinks */}
+      <div className={`flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b ${base.header}`}>
         <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
           <span className="text-primary font-bold text-sm">{otherUserName.charAt(0).toUpperCase()}</span>
         </div>
@@ -157,8 +157,8 @@ export default function ChatWindow({
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      {/* Messages — takes remaining space, scrolls internally */}
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className={`w-6 h-6 animate-spin ${base.sub}`} />
@@ -199,8 +199,8 @@ export default function ChatWindow({
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
-      <div className={`px-3 py-3 border-t ${base.border}`}>
+      {/* Input — fixed height, never shrinks */}
+      <div className={`flex-shrink-0 px-3 py-3 border-t ${base.border}`}>
         <div className="flex items-center gap-2">
           <input
             ref={inputRef}

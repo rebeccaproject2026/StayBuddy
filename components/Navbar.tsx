@@ -8,6 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useParams, useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
+import { useSocketContext } from "@/contexts/SocketContext";
 
 const dropdownVariants = {
   hidden: { opacity: 0, y: -8, scale: 0.97 },
@@ -72,8 +73,8 @@ export default function Navbar() {
   const isCountryMatch = !user || !urlCountry || user.role === 'admin' || user.country === urlCountry;
   const effectivelyAuthenticated = isAuthenticated && isCountryMatch;
 
-  // Notification count removed (chat/messaging feature removed)
-  const notifCount = 0;
+  // Live unread message count via shared SocketContext
+  const { totalUnread: notifCount } = useSocketContext();
 
   const langMenuRef = useRef<HTMLDivElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -401,7 +402,10 @@ export default function Navbar() {
                             ].map((item, i) => (
                               <motion.div key={item.href} custom={i} variants={dropdownItemVariants} initial="hidden" animate="visible">
                                 <motion.button
-                                  onClick={(e) => { setIsProfileMenuOpen(false); handleNavClick(e, item.href); }}
+                                  onClick={(e) => {
+                                    setIsProfileMenuOpen(false);
+                                    handleNavClick(e, item.href);
+                                  }}
                                   whileHover={{ x: 3 }}
                                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
                                   className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-primary-light hover:text-primary transition-colors duration-200"
@@ -409,9 +413,15 @@ export default function Navbar() {
                                   {item.icon}
                                   <span className="font-medium text-sm flex-1 text-left">{item.label}</span>
                                   {item.badge > 0 && (
-                                    <span className="min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                                    <motion.span
+                                      key={item.badge}
+                                      initial={{ scale: 0.6, opacity: 0 }}
+                                      animate={{ scale: 1, opacity: 1 }}
+                                      transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                                      className="min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center"
+                                    >
                                       {item.badge > 99 ? "99+" : item.badge}
-                                    </span>
+                                    </motion.span>
                                   )}
                                 </motion.button>
                               </motion.div>
