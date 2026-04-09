@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useParams, useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import { useSocketContext } from "@/contexts/SocketContext";
+import { getToken } from "@/lib/token-storage";
 
 const dropdownVariants = {
   hidden: { opacity: 0, y: -8, scale: 0.97 },
@@ -73,8 +74,41 @@ export default function Navbar() {
   const isCountryMatch = !user || !urlCountry || user.role === 'admin' || user.country === urlCountry;
   const effectivelyAuthenticated = isAuthenticated && isCountryMatch;
 
-  // Live unread message count via shared SocketContext
-  const { totalUnread: notifCount } = useSocketContext();
+  // Live unread chat messages via shared SocketContext
+  const { totalUnread: unreadMessages } = useSocketContext();
+
+  // Unread inquiry count for landlords — fetched from API, polled every 30s
+  const [unreadInquiries, setUnreadInquiries] = useState(0);
+  useEffect(() => {
+    if (!isAuthenticated || user?.role !== 'landlord') {
+      setUnreadInquiries(0);
+      return;
+    }
+    const fetchInquiries = async () => {
+      try {
+        const token = getToken();
+        const res = await fetch('/api/contact-requests', {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        const data = await res.json();
+        if (data.success) {
+          // Count requests created in the last 7 days as "new" for the badge
+          const seenKey = 'staybuddy_owner_inquiry_seen';
+          let seen: Set<string>;
+          try { seen = new Set(JSON.parse(localStorage.getItem(seenKey) || '[]')); }
+          catch { seen = new Set(); }
+          const unseen = (data.requests || []).filter((r: any) => !seen.has(r._id)).length;
+          setUnreadInquiries(unseen);
+        }
+      } catch {}
+    };
+    fetchInquiries();
+    const interval = setInterval(fetchInquiries, 30000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, user?.role]);
+
+  // Total badge = unread chats + unread inquiries (for landlords)
+  const notifCount = unreadMessages + unreadInquiries;
 
   const langMenuRef = useRef<HTMLDivElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);

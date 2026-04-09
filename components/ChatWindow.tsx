@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, X, MessageSquare, Loader2 } from 'lucide-react';
+import { Send, X, MessageSquare, Loader2, Clock } from 'lucide-react';
 import { useSocketContext, ChatMessage } from '@/contexts/SocketContext';
 import { getToken } from '@/lib/token-storage';
 
@@ -159,6 +159,13 @@ export default function ChatWindow({
 
       {/* Messages — takes remaining space, scrolls internally */}
       <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
+        {/* Retention notice */}
+        {!loading && (
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs ${isDark ? 'bg-gray-800/60 text-gray-400' : 'bg-amber-50 text-amber-700 border border-amber-100'}`}>
+            <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+            <span>Messages are automatically deleted after 7 days.</span>
+          </div>
+        )}
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className={`w-6 h-6 animate-spin ${base.sub}`} />

@@ -23,6 +23,8 @@ const MessageSchema = new Schema<IMessage>(
 
 MessageSchema.index({ contactRequest: 1, createdAt: 1 });
 MessageSchema.index({ receiver: 1, seenByReceiver: 1 });
+// TTL index — MongoDB automatically deletes messages older than 7 days
+MessageSchema.index({ createdAt: 1 }, { expireAfterSeconds: 604800 });
 
 export default mongoose.models.Message ||
   mongoose.model<IMessage>('Message', MessageSchema);
