@@ -60,23 +60,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const country = countryFromPath();
     const storedToken = localStorage.getItem(tokenKey(country));
     const storedUser = localStorage.getItem(userKey(country));
+    const isGoogleToken = localStorage.getItem(`${tokenKey(country)}_google`) === '1';
+
     if (storedToken && storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
+        if (isGoogleToken) {
+          // Google token — must wait for NextAuth to confirm the session is still valid
+          // Pre-populate state so UI doesn't flash, but keep loading until NextAuth resolves
+          setToken(storedToken);
+          setUser(parsedUser);
+          setInitialized(true);
+          // Do NOT set isLoading=false here — let the NextAuth effect handle it
+          return;
+        }
+        // Credentials JWT — trust localStorage immediately
         setToken(storedToken);
         setUser(parsedUser);
+        setInitialized(true);
+        setIsLoading(false);
+        return;
       } catch {
         localStorage.removeItem(tokenKey(country));
         localStorage.removeItem(userKey(country));
+        localStorage.removeItem(`${tokenKey(country)}_google`);
       }
     }
-    // Mark as initialized and unblock loading in one go
+    // No localStorage token — could be a Google user; keep loading until NextAuth resolves
     setInitialized(true);
-    setIsLoading(false);
   }, []);
 
   // Handle NextAuth session (Google login only)
   useEffect(() => {
+    // Still waiting for NextAuth to resolve — keep loading
     if (status === 'loading') return;
 
     if (status === 'authenticated' && session?.user) {
@@ -91,8 +107,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         createdAt: new Date().toISOString(),
       };
       setUser(nextAuthUser);
-      setToken('nextauth');
-      setIsLoading(false);
+
+      // Exchange NextAuth session for a real JWT so socket.io and Bearer-auth APIs work
+      fetch('/api/auth/socket-token', { credentials: 'include' })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.token) {
+            const country = nextAuthUser.country || 'in';
+            storeToken(country, data.token);
+            localStorage.setItem(userKey(country), JSON.stringify(nextAuthUser));
+            // Mark this token as Google-issued so we validate it against NextAuth on next load
+            localStorage.setItem(`${tokenKey(country)}_google`, '1');
+            setToken(data.token);
+          } else {
+            // Fallback: mark as nextauth so the app still works via session cookies
+            setToken('nextauth');
+          }
+        })
+        .catch(() => setToken('nextauth'));
 
       // Fetch full profile to check if phone number is missing
       fetch('/api/auth/me', { credentials: 'include' })
@@ -115,8 +147,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         })
         .catch(() => {});
     }
-    // Note: 'unauthenticated' status is intentionally ignored here —
-    // custom JWT auth (admin/landlord/renter) is handled via localStorage only.
+
+    // NextAuth has resolved (authenticated or unauthenticated) — safe to unblock loading
+    // This covers Google users who have no localStorage token
+    if (status === 'unauthenticated') {
+      // Clear any stale Google-issued tokens from localStorage
+      ['in', 'fr'].forEach(c => {
+        const key = tokenKey(c);
+        if (localStorage.getItem(`${key}_google`) === '1') {
+          localStorage.removeItem(key);
+          localStorage.removeItem(userKey(c));
+          localStorage.removeItem(`${key}_google`);
+        }
+      });
+      // Only clear state if the current user was a Google user (don't touch credentials users)
+      setUser(prev => {
+        if (!prev) return null;
+        const storedToken = localStorage.getItem(tokenKey(prev.country));
+        // If no token left in storage for this user, they were a Google user — clear state
+        if (!storedToken) { setToken(null); return null; }
+        return prev;
+      });
+    }
+    setIsLoading(false);
   }, [session, status]);
 
   const googleLogin = async (role: string) => {
@@ -194,14 +247,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = () => {
     const userCountry = user?.country || 'in';
-    const isNextAuth = token === 'nextauth';
+    const isNextAuth = token === 'nextauth' || localStorage.getItem(`${tokenKey(userCountry)}_google`) === '1';
 
     // Clear state
     setUser(null);
     setToken(null);
 
-    // Clear localStorage
+    // Clear localStorage (including google flag)
     removeToken(userCountry);
+    localStorage.removeItem(`${tokenKey(userCountry)}_google`);
 
     toast.success('Logged out successfully', {
       duration: 2000,

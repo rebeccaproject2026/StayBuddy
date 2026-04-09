@@ -3157,7 +3157,7 @@ export default function OwnerDashboard() {
             {activeTab === "messages" && (
               <div className="flex gap-4 overflow-hidden" style={{ height: 'calc(100vh - 130px)' }}>
                 {/* Conversation list */}
-                <div className={`w-full lg:w-72 xl:w-80 flex-shrink-0 rounded-2xl border overflow-hidden flex flex-col ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                <div className={`w-full lg:w-72 xl:w-80 flex-shrink-0 rounded-xl border overflow-hidden flex flex-col ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                   <div className={`px-4 py-3 border-b font-semibold text-sm ${isDark ? "border-gray-800 text-white" : "border-gray-100 text-gray-900"}`}>
                     {language === 'fr' ? 'Conversations' : 'Conversations'}
                   </div>

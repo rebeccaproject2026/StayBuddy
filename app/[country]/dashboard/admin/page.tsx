@@ -889,7 +889,7 @@ export default function AdminDashboard() {
             {/* Stats Cards */}
             {activeTab === "analytics" && (
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
-              <div className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+              <div className={`rounded-xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>Total Property Listed</h3>
                   <Home className="w-8 h-8 text-primary" />
@@ -900,7 +900,7 @@ export default function AdminDashboard() {
                   {stats.verifiedListings} verified
                 </div>
               </div>
-              <div className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+              <div className={`rounded-xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>{tc.totalUsers}</h3>
                   <Users className="w-8 h-8 text-primary" />
@@ -917,7 +917,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               </div>
-              <div className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+              <div className={`rounded-xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>{tc.pendingReports}</h3>
                   <Flag className="w-8 h-8 text-red-500" />
@@ -930,7 +930,7 @@ export default function AdminDashboard() {
 
             {/* Listings Management */}
             {activeTab === "listings" && (
-              <div className="space-y-4">
+              <div className="space-y-4 mb-6">
                 {/* Header */}
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{tc.listingsManagement}</h2>
@@ -959,7 +959,7 @@ export default function AdminDashboard() {
                 ) : filteredListings.length > 0 ? (
                   <>
                     {/* Table */}
-                    <div className={`rounded-2xl border overflow-hidden ${isDark ? "border-gray-800" : "border-gray-200"}`}>
+                    <div className={`rounded-xl border overflow-hidden ${isDark ? "border-gray-800" : "border-gray-200"}`}>
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
@@ -1126,7 +1126,7 @@ export default function AdminDashboard() {
 
             {/* User Management */}
             {activeTab === "users" && (
-              <div className="space-y-4">
+              <div className="space-y-4 mb-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{tc.userManagement}</h2>
                   <div className="flex items-center gap-2">
@@ -1154,7 +1154,7 @@ export default function AdminDashboard() {
                   </div>
                 ) : filteredUsers.length > 0 ? (
                   <>
-                    <div className={`rounded-2xl border overflow-hidden ${isDark ? "border-gray-800" : "border-gray-200"}`}>
+                    <div className={`rounded-xl border overflow-hidden ${isDark ? "border-gray-800" : "border-gray-200"}`}>
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
@@ -1307,7 +1307,7 @@ export default function AdminDashboard() {
 
             {/* Reports & Moderation */}
             {activeTab === "reports" && (
-              <div className="space-y-4">
+              <div className="space-y-4 mb-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{tc.reportsModeration}</h2>
                   <div className="flex items-center gap-2">
@@ -1330,7 +1330,7 @@ export default function AdminDashboard() {
                     <Loader2 className={`w-8 h-8 animate-spin ${isDark ? "text-gray-400" : "text-gray-500"}`} />
                   </div>
                 ) : filteredReports.length > 0 ? (
-                  <div className={`rounded-2xl border overflow-hidden ${isDark ? "border-gray-800" : "border-gray-200"}`}>
+                  <div className={`rounded-xl border overflow-hidden ${isDark ? "border-gray-800" : "border-gray-200"}`}>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
@@ -1442,7 +1442,7 @@ export default function AdminDashboard() {
 
             {/* Property Requests */}
             {activeTab === "requests" && (
-              <div className="space-y-4">
+              <div className="space-y-4 mb-6">
                 {/* Header */}
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
@@ -1498,7 +1498,7 @@ export default function AdminDashboard() {
                   return filtered.length > 0 ? (
                     <>
                       {/* Desktop table */}
-                      <div className={`hidden sm:block rounded-2xl border overflow-hidden ${isDark ? "border-gray-800" : "border-gray-200"}`}>
+                      <div className={`hidden sm:block rounded-xl border overflow-hidden ${isDark ? "border-gray-800" : "border-gray-200"}`}>
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm min-w-[640px]">
                             <thead>
@@ -1764,7 +1764,7 @@ export default function AdminDashboard() {
               };
 
               return (
-                <div className="space-y-6">
+                <div className="space-y-6 mb-6">
                   <div className="flex items-center gap-3">
                     <TrendingUp className="w-6 h-6 text-primary" />
                     <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Analytics</h2>
@@ -1991,7 +1991,7 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* Recipients — right */}
-                    <div className={`lg:col-span-3 rounded-2xl border overflow-hidden ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                    <div className={`lg:col-span-3 rounded-xl border overflow-hidden ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                       <div className={`px-4 sm:px-5 py-3 sm:py-4 border-b flex items-center justify-between ${isDark ? "border-gray-800" : "border-gray-100"}`}>
                         <div className="flex items-center gap-2">
                           <p className={`font-semibold text-sm ${isDark ? "text-white" : "text-gray-900"}`}>Recipients</p>
@@ -2087,7 +2087,7 @@ export default function AdminDashboard() {
                   </>)}
 
                   {leadsTab === "database" && (
-                    <div className={`rounded-2xl border overflow-hidden ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                    <div className={`rounded-xl border overflow-hidden ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                       <div className={`px-4 sm:px-5 py-3 sm:py-4 border-b flex items-center justify-between gap-3 ${isDark ? "border-gray-800" : "border-gray-100"}`}>
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className={`font-bold text-sm ${isDark ? "text-white" : "text-gray-900"}`}>Lead Database</p>

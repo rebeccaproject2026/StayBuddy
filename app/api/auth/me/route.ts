@@ -12,15 +12,34 @@ export async function GET(request: NextRequest) {
     // Connect to database
     await connectDB();
 
-    // Extract token from Authorization header
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    let userId: string | null = null;
 
-    // Verify token
-    const decoded = verifyToken(token);
+    // Try JWT first
+    const authHeader = request.headers.get('authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = extractTokenFromHeader(authHeader);
+        const decoded = verifyToken(token);
+        userId = decoded.userId;
+      } catch {
+        // fall through to NextAuth
+      }
+    }
+
+    // Fall back to NextAuth session (Google OAuth users)
+    if (!userId) {
+      const session = await getServerSession(authOptions);
+      if (session?.user?.id) {
+        userId = session.user.id;
+      }
+    }
+
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     // Find user by ID
-    const user = await User.findById(decoded.userId);
+    const user = await User.findById(userId);
     if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
@@ -48,15 +67,13 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('Get user profile error:', error);
 
-    // Handle token errors
-    if (error.message.includes('token') || error.message.includes('Authorization')) {
+    if (error.message?.includes('token') || error.message?.includes('Authorization')) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    // Handle other errors
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

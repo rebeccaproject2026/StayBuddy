@@ -37,13 +37,14 @@ export default function ChatWindow({
 
   // Fetch history
   useEffect(() => {
+    if (!requestId) return;
     const authToken = token && token !== 'nextauth' ? token : getToken();
-    if (!authToken || !requestId) return;
     setLoading(true);
     fetch(`/api/messages/${requestId}`, {
-      headers: { Authorization: `Bearer ${authToken}` },
+      credentials: 'include', // needed for NextAuth session fallback
+      headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
     })
-      .then(r => r.json())
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
       .then(data => {
         if (data.success) setMessages(data.messages || []);
       })
@@ -106,6 +107,7 @@ export default function ChatWindow({
       try {
         const res = await fetch(`/api/messages/${requestId}`, {
           method: 'POST',
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
             ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
@@ -134,7 +136,7 @@ export default function ChatWindow({
     : { bg: 'bg-white', border: 'border-gray-200', text: 'text-gray-900', sub: 'text-gray-500', input: 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400', header: 'bg-gray-50 border-gray-200' };
 
   return (
-    <div className={`flex flex-col rounded-2xl border overflow-hidden ${base.bg} ${base.border}`} style={{ height: '100%', minHeight: 0 }}>
+    <div className={`flex flex-col rounded-xl border overflow-hidden ${base.bg} ${base.border}`} style={{ height: '100%', minHeight: 0 }}>
       {/* Header — fixed height, never shrinks */}
       <div className={`flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b ${base.header}`}>
         <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
@@ -193,7 +195,7 @@ export default function ChatWindow({
                       {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                     {isMine && (
-                      <span className={`text-[10px] ${msg.seenByReceiver ? 'text-blue-300' : 'text-white/50'}`}>
+                      <span className={`text-[10px] ${msg.seenByReceiver ? 'text-green-400' : 'text-white/50'}`}>
                         {msg.seenByReceiver ? '✓✓' : '✓'}
                       </span>
                     )}
