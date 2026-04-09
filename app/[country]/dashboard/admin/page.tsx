@@ -854,7 +854,7 @@ export default function AdminDashboard() {
               {profileMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setProfileMenuOpen(false)} />
-                  <div className={`absolute bottom-full left-0 right-0 mb-2 rounded-2xl shadow-xl border overflow-hidden z-20 ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}>
+                  <div className={`absolute bottom-full left-0 right-0 mb-2 rounded-xl shadow-xl border overflow-hidden z-20 ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}>
                     <div className={`px-4 py-3 border-b ${isDark ? "bg-primary/10 border-primary/20" : "bg-primary/5 border-primary/10"}`}>
                       <p className="text-xs font-semibold text-primary uppercase tracking-wide">
                         {language === "fr" ? "Connecté en tant que" : "Signed in as"}
@@ -1116,7 +1116,7 @@ export default function AdminDashboard() {
                     )}
                   </>
                 ) : (
-                  <div className={`rounded-2xl p-12 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                  <div className={`rounded-xl p-12 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                     <Building2 className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
                     <p className={isDark ? "text-gray-500" : "text-gray-500"}>{tc.noListings}</p>
                   </div>
@@ -1297,7 +1297,7 @@ export default function AdminDashboard() {
                     )}
                   </>
                 ) : (
-                  <div className={`rounded-2xl p-12 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                  <div className={`rounded-xl p-12 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                     <Users className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
                     <p className="text-gray-500">{tc.noUsers}</p>
                   </div>
@@ -1432,7 +1432,7 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 ) : (
-                  <div className={`rounded-2xl p-12 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                  <div className={`rounded-xl p-12 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                     <Flag className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
                     <p className="text-gray-500">{tc.noReports}</p>
                   </div>
@@ -1602,7 +1602,7 @@ export default function AdminDashboard() {
                           const isActioning = actioningId === req._id;
                           const statusStyle = req.approvalStatus === "pending" ? isDark ? "bg-yellow-500/20 text-yellow-400" : "bg-yellow-100 text-yellow-700" : req.approvalStatus === "approved" ? isDark ? "bg-green-500/20 text-green-400" : "bg-green-100 text-green-700" : isDark ? "bg-red-500/20 text-red-400" : "bg-red-100 text-red-700";
                           return (
-                            <div key={req._id} className={`rounded-2xl border p-4 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                            <div key={req._id} className={`rounded-xl border p-4 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                               <div className="flex items-start gap-3 mb-3">
                                 <div className="relative w-14 h-14 flex-shrink-0 rounded-xl overflow-hidden bg-gray-200">
                                   <Image src={img} alt={req.title} fill className="object-cover" />
@@ -1663,7 +1663,7 @@ export default function AdminDashboard() {
                       </div>
                     </>
                   ) : (
-                    <div className={`rounded-2xl p-10 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                    <div className={`rounded-xl p-10 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                       <ClipboardList className={`w-12 h-12 mx-auto mb-3 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
                       <p className={`font-semibold mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>No property requests</p>
                       <p className={`text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>New submissions will appear here for review</p>
@@ -1776,7 +1776,7 @@ export default function AdminDashboard() {
                   {/* Overview bar — quick numbers */}
 
                   {/* Monthly trend — Area chart */}
-                  <div className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                  <div className={`rounded-xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                     <h3 className={`text-base font-semibold mb-5 ${isDark ? "text-white" : "text-gray-900"}`}>Monthly Activity Trend</h3>
                     <ResponsiveContainer width="100%" height={260}>
                       <AreaChart data={monthlyData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
@@ -1811,7 +1811,7 @@ export default function AdminDashboard() {
                   {/* Pie charts row */}
                   <div className="grid md:grid-cols-2 gap-6">
                     {/* Approval status */}
-                    <div className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                    <div className={`rounded-xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                       <h3 className={`text-base font-semibold mb-5 ${isDark ? "text-white" : "text-gray-900"}`}>Approval Status</h3>
                       <ResponsiveContainer width="100%" height={220}>
                         <PieChart>
@@ -1827,7 +1827,7 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* Report status */}
-                    <div className={`rounded-2xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                    <div className={`rounded-xl p-6 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                       <h3 className={`text-base font-semibold mb-5 ${isDark ? "text-white" : "text-gray-900"}`}>Report Status</h3>
                       <ResponsiveContainer width="100%" height={220}>
                         <PieChart>
@@ -1923,13 +1923,13 @@ export default function AdminDashboard() {
               return (
                 <div className="space-y-4 sm:space-y-6">
                   {/* Hero header */}
-                  <div className={`relative overflow-hidden rounded-2xl p-4 sm:p-6 border ${isDark ? "bg-gradient-to-br from-green-950/60 via-gray-900 to-gray-900 border-green-800/30" : "bg-gradient-to-br from-green-50 via-white to-white border-green-200"}`}>
+                  <div className={`relative overflow-hidden rounded-xl p-4 sm:p-6 border ${isDark ? "bg-gradient-to-br from-green-950/60 via-gray-900 to-gray-900 border-green-800/30" : "bg-gradient-to-br from-green-50 via-white to-white border-green-200"}`}>
                     <div className="absolute top-0 right-0 w-32 sm:w-48 h-32 sm:h-48 opacity-5 pointer-events-none">
                       <div className="w-full h-full text-green-500 scale-150 translate-x-8 -translate-y-8">{WA_ICON}</div>
                     </div>
                     <div className="relative flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/30 flex-shrink-0">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/30 flex-shrink-0">
                           <div className="w-5 h-5 sm:w-6 sm:h-6 text-white">{WA_ICON}</div>
                         </div>
                         <div>
@@ -1971,14 +1971,14 @@ export default function AdminDashboard() {
                   {/* Two-column layout: message preview + recipients */}
                   <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6">
                     {/* Message preview — left */}
-                    <div className={`lg:col-span-2 rounded-2xl border p-4 sm:p-5 flex flex-col gap-3 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                    <div className={`lg:col-span-2 rounded-xl border p-4 sm:p-5 flex flex-col gap-3 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                         <p className={`text-xs font-semibold uppercase tracking-widest ${isDark ? "text-gray-400" : "text-gray-500"}`}>Message Template</p>
                       </div>
                       {/* WhatsApp bubble */}
                       <div className="relative">
-                        <div className={`rounded-2xl rounded-tl-sm p-3 sm:p-4 text-xs sm:text-sm leading-relaxed whitespace-pre-line ${isDark ? "bg-green-900/40 text-green-200 border border-green-800/40" : "bg-green-100 text-green-900 border border-green-200"}`}>
+                        <div className={`rounded-xl rounded-tl-sm p-3 sm:p-4 text-xs sm:text-sm leading-relaxed whitespace-pre-line ${isDark ? "bg-green-900/40 text-green-200 border border-green-800/40" : "bg-green-100 text-green-900 border border-green-200"}`}>
                           {WA_MESSAGE}
                         </div>
                         <div className={`absolute -top-1 -left-1 w-3 h-3 ${isDark ? "text-green-900/40" : "text-green-100"}`}>
@@ -2111,7 +2111,7 @@ export default function AdminDashboard() {
                         </div>
                       ) : leads.length === 0 ? (
                         <div className="py-20 text-center">
-                          <div className={`w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center ${isDark ? "bg-gray-800" : "bg-gray-100"}`}>
+                          <div className={`w-16 h-16 rounded-xl mx-auto mb-4 flex items-center justify-center ${isDark ? "bg-gray-800" : "bg-gray-100"}`}>
                             <div className={`w-8 h-8 ${isDark ? "text-gray-600" : "text-gray-400"}`}>{WA_ICON}</div>
                           </div>
                           <p className={`font-semibold mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>No leads yet</p>
@@ -2218,7 +2218,7 @@ export default function AdminDashboard() {
       {/* Reject Property Modal */}
       {rejectModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => !rejectSubmitting && setRejectModal(null)}>
-          <div className={`w-full max-w-md rounded-2xl shadow-2xl border overflow-hidden ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`} onClick={e => e.stopPropagation()}>
+          <div className={`w-full max-w-md rounded-xl shadow-2xl border overflow-hidden ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`} onClick={e => e.stopPropagation()}>
             {/* Header */}
             <div className={`flex items-center justify-between px-6 py-5 border-b ${isDark ? "border-gray-800" : "border-gray-100"}`}>
               <div className="flex items-center gap-3">
@@ -2283,7 +2283,7 @@ export default function AdminDashboard() {
       {blockModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => !blockSubmitting && setBlockModal(null)}>
           <div
-            className={`w-full max-w-md rounded-2xl shadow-2xl border overflow-hidden ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}
+            className={`w-full max-w-md rounded-xl shadow-2xl border overflow-hidden ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}
             onClick={e => e.stopPropagation()}
           >
             {/* Header */}
@@ -2355,7 +2355,7 @@ export default function AdminDashboard() {
         return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedProperty(null)}>
           <div
-            className={`w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}
+            className={`w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}
             onClick={e => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -2516,7 +2516,7 @@ export default function AdminDashboard() {
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm" onClick={() => setViewingRequest(null)}>
             <div
-              className={`w-full max-w-3xl max-h-[95vh] overflow-y-auto rounded-2xl shadow-2xl border flex flex-col ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}
+              className={`w-full max-w-3xl max-h-[95vh] overflow-y-auto rounded-xl shadow-2xl border flex flex-col ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}
               onClick={e => e.stopPropagation()}
             >
               {/* Sticky header */}
@@ -2889,7 +2889,7 @@ export default function AdminDashboard() {
       {/* ── Delete Listing Modal ─────────────────────────────────────────── */}
       {deleteModal && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className={`w-full max-w-md rounded-2xl shadow-2xl border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}>
+          <div className={`w-full max-w-md rounded-xl shadow-2xl border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}>
             {/* Header */}
             <div className={`flex items-center justify-between px-6 py-4 border-b ${isDark ? "border-gray-700" : "border-gray-100"}`}>
               <div className="flex items-center gap-3">

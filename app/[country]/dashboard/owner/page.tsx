@@ -206,7 +206,7 @@ function ProfileSection({ user, tc, language, isDark = false }: { user: any; tc:
       <h2 className={`text-xl sm:text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{tc.profileSettings}</h2>
 
       {/* Avatar + summary card */}
-      <div className={`rounded-2xl p-5 flex items-center gap-4 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
+      <div className={`rounded-xl p-5 flex items-center gap-4 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
         <div className="w-14 h-14 rounded-full flex-shrink-0 shadow-md overflow-hidden">
           {user?.profileImage ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -231,7 +231,7 @@ function ProfileSection({ user, tc, language, isDark = false }: { user: any; tc:
       </div>
 
       {/* Personal info */}
-      <div className={`rounded-2xl p-5 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
+      <div className={`rounded-xl p-5 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
         <h3 className={`text-base font-bold mb-4 ${isDark ? "text-white" : "text-gray-900"}`}>
           {language === "fr" ? "Informations personnelles" : "Personal Information"}
         </h3>
@@ -313,7 +313,7 @@ function ProfileSection({ user, tc, language, isDark = false }: { user: any; tc:
 
       {/* Change password — only for credentials users */}
       {user?.provider === "credentials" && (
-        <div className={`rounded-2xl p-5 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
+        <div className={`rounded-xl p-5 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
           <h3 className={`text-base font-bold mb-4 ${isDark ? "text-white" : "text-gray-900"}`}>
             {language === "fr" ? "Changer le mot de passe" : "Change Password"}
           </h3>
@@ -543,7 +543,7 @@ function OwnerListingCard({
     : null;
 
   return (
-    <div className={`rounded-2xl overflow-hidden flex flex-col hover:shadow-lg transition-shadow h-full ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white shadow-md"}`}>
+    <div className={`rounded-xl overflow-hidden flex flex-col hover:shadow-lg transition-shadow h-full ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white shadow-md"}`}>
       {/* Image */}
       <div className="relative h-40 sm:h-48 flex-shrink-0">
         <Image src={listing.images?.[0] || "/owner.png"} alt={listing.title} fill className="object-cover" />
@@ -1401,7 +1401,7 @@ export default function OwnerDashboard() {
                 {profileMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setProfileMenuOpen(false)} />
-                    <div className={`absolute bottom-full left-0 right-0 mb-2 rounded-2xl shadow-xl border overflow-hidden z-20 ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-100"}`}>
+                    <div className={`absolute bottom-full left-0 right-0 mb-2 rounded-xl shadow-xl border overflow-hidden z-20 ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-100"}`}>
                       <div className={`px-4 py-3 border-b ${isDark ? "bg-primary/10 border-primary/20" : "bg-gradient-to-r from-primary/5 to-primary/10 border-primary/10"}`}>
                         <p className="text-xs font-semibold text-primary uppercase tracking-wide">
                           {language === "fr" ? "Connecté en tant que" : "Signed in as"}
@@ -1444,7 +1444,7 @@ export default function OwnerDashboard() {
                 {!listingsLoading && myListings.some(l => !l.verificationImages?.length) && (() => {
                   const missing = myListings.filter(l => !l.verificationImages?.length);
                   return (
-                    <div className={`px-4 py-3.5 rounded-2xl border space-y-2.5 ${isDark ? "bg-amber-500/10 border-amber-500/30" : "bg-amber-50 border-amber-200"}`}>
+                    <div className={`px-4 py-3.5 rounded-xl border space-y-2.5 ${isDark ? "bg-amber-500/10 border-amber-500/30" : "bg-amber-50 border-amber-200"}`}>
                       <div className="flex items-center gap-2">
                         <span className="text-amber-500 text-base leading-none">⚠</span>
                         <p className={`text-sm font-semibold ${isDark ? "text-amber-400" : "text-amber-700"}`}>
@@ -1510,7 +1510,7 @@ export default function OwnerDashboard() {
                 {listingsLoading ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                     {Array.from({ length: 3 }).map((_, i) => (
-                      <div key={i} className={`rounded-2xl overflow-hidden animate-pulse ${isDark ? "bg-gray-800" : "bg-white shadow-md"}`}>
+                      <div key={i} className={`rounded-xl overflow-hidden animate-pulse ${isDark ? "bg-gray-800" : "bg-white shadow-md"}`}>
                         <div className={`h-40 ${isDark ? "bg-gray-700" : "bg-gray-200"}`} />
                         <div className="p-4 space-y-3">
                           <div className={`h-4 rounded w-3/4 ${isDark ? "bg-gray-700" : "bg-gray-200"}`} />
@@ -1524,7 +1524,7 @@ export default function OwnerDashboard() {
                   <>
                     {/* Inline edit panel */}
                     {editingListing ? (
-                      <div className={`rounded-2xl overflow-hidden ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white shadow-md"}`}>
+                      <div className={`rounded-xl overflow-hidden ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white shadow-md"}`}>
                         {/* Header */}
                         <div className={`flex items-center gap-3 p-4 sm:p-6 border-b ${isDark ? "bg-gray-800/50 border-gray-700" : "bg-gradient-to-r from-primary/5 to-transparent border-gray-100"}`}>
                           <button
@@ -1550,7 +1550,7 @@ export default function OwnerDashboard() {
                         <div className="p-4 sm:p-6 space-y-6">
 
                           {/* ── Section: Basic Info ── */}
-                          <div className={`rounded-2xl p-4 sm:p-5 space-y-4 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                          <div className={`rounded-xl p-4 sm:p-5 space-y-4 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
                             <h3 className="text-sm font-bold text-primary uppercase tracking-wide flex items-center gap-2">
                               <span className="w-1 h-4 bg-primary rounded-full inline-block" />
                               Basic Information
@@ -1607,7 +1607,7 @@ export default function OwnerDashboard() {
                           </div>
 
                           {/* ── Section: Location ── */}
-                          <div className={`rounded-2xl p-4 sm:p-5 space-y-4 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                          <div className={`rounded-xl p-4 sm:p-5 space-y-4 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
                             <h3 className="text-sm font-bold text-primary uppercase tracking-wide flex items-center gap-2">
                               <span className="w-1 h-4 bg-primary rounded-full inline-block" />
                               Location
@@ -1647,7 +1647,7 @@ export default function OwnerDashboard() {
                           </div>
 
                           {/* ── Type-specific sections ── */}
-                          <div className={`rounded-2xl p-4 sm:p-5 space-y-4 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                          <div className={`rounded-xl p-4 sm:p-5 space-y-4 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
                             <h3 className="text-sm font-bold text-primary uppercase tracking-wide flex items-center gap-2">
                               <span className="w-1 h-4 bg-primary rounded-full inline-block" />
                               {editForm.propertyType === "PG" ? "PG Details" : "Property Details"}
@@ -2193,7 +2193,7 @@ export default function OwnerDashboard() {
                           </div>
 
                           {/* ── Section: Description & USP ── */}
-                          <div className={`rounded-2xl p-4 sm:p-5 space-y-4 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                          <div className={`rounded-xl p-4 sm:p-5 space-y-4 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
                             <h3 className="text-sm font-bold text-primary uppercase tracking-wide flex items-center gap-2">
                               <span className="w-1 h-4 bg-primary rounded-full inline-block" />
                               Description & Highlights
@@ -2280,7 +2280,7 @@ export default function OwnerDashboard() {
                           </div>
 
                           {/* ── Section: Photos ── */}
-                          <div className={`rounded-2xl p-4 sm:p-5 space-y-5 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                          <div className={`rounded-xl p-4 sm:p-5 space-y-5 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
                             <h3 className="text-sm font-bold text-primary uppercase tracking-wide flex items-center gap-2">
                               <span className="w-1 h-4 bg-primary rounded-full inline-block" />
                               Photos
@@ -2429,7 +2429,7 @@ export default function OwnerDashboard() {
 
                           {/* ── Section: Verification Documents ── */}
                           {editVerifImages.length === 0 ? (
-                            <div className={`rounded-2xl p-4 sm:p-5 space-y-4 border-2 border-dashed ${isDark ? "bg-gray-800 border-amber-500/30" : "bg-amber-50 border-amber-300"}`}>
+                            <div className={`rounded-xl p-4 sm:p-5 space-y-4 border-2 border-dashed ${isDark ? "bg-gray-800 border-amber-500/30" : "bg-amber-50 border-amber-300"}`}>
                               <h3 className="text-sm font-bold text-amber-600 uppercase tracking-wide flex items-center gap-2">
                                 <span className="w-1 h-4 bg-amber-500 rounded-full inline-block" />
                                 Verification Documents
@@ -2472,7 +2472,7 @@ export default function OwnerDashboard() {
                               </label>
                             </div>
                           ) : (
-                            <div className={`rounded-2xl p-4 sm:p-5 flex items-center gap-3 border ${isDark ? "bg-gray-800 border-gray-700" : "bg-green-50 border-green-200"}`}>
+                            <div className={`rounded-xl p-4 sm:p-5 flex items-center gap-3 border ${isDark ? "bg-gray-800 border-gray-700" : "bg-green-50 border-green-200"}`}>
                               <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${isDark ? "bg-green-500/20 text-green-400" : "bg-green-100 text-green-700"}`}>
                                 ✓ Verification documents already uploaded
                               </span>
@@ -2502,7 +2502,7 @@ export default function OwnerDashboard() {
                         </div>
                       </div>
                     ) : selectedListing ? (
-                      <div className={`rounded-2xl shadow-md overflow-hidden ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white"}`}>
+                      <div className={`rounded-xl shadow-md overflow-hidden ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white"}`}>
                         {/* Header */}
                         <div className={`flex items-center justify-between gap-3 p-4 sm:p-6 border-b ${isDark ? "border-gray-800" : "border-gray-200"}`}>
                           <button
@@ -2527,7 +2527,7 @@ export default function OwnerDashboard() {
                         <div className="p-4 sm:p-6 space-y-6">
                           {/* Title & location */}
                           <div>
-                            <h2 className={`text-xl sm:text-2xl font-bold mb-1 ${isDark ? "text-white" : "text-gray-900"}`}>
+                            <h2 className={`text-xl sm:text-xl font-bold mb-1 ${isDark ? "text-white" : "text-gray-900"}`}>
                               {selectedListing.propertyType === "Tenant" && selectedListing.societyName ? selectedListing.societyName : selectedListing.title}
                             </h2>
                             <p className="text-sm text-gray-500 flex items-center gap-1">
@@ -2538,7 +2538,7 @@ export default function OwnerDashboard() {
 
                           {/* Price */}
                           <div className="flex items-baseline gap-2 flex-wrap">
-                            <span className="text-2xl font-bold text-primary">{getCurrency(selectedListing.country)} {selectedListing.price?.toLocaleString()}</span>
+                            <span className="text-xl font-bold text-primary">{getCurrency(selectedListing.country)} {selectedListing.price?.toLocaleString()}</span>
                             <span className="text-gray-500 text-sm">/month</span>
                             {selectedListing.deposit > 0 && (
                               <span className="text-sm text-gray-500">· Deposit: {getCurrency(selectedListing.country)} {selectedListing.deposit?.toLocaleString()}</span>
@@ -2836,7 +2836,7 @@ export default function OwnerDashboard() {
 
                     {/* List View — Table */}
                     {viewMode === "list" && (
-                      <div className={`rounded-2xl shadow-md overflow-hidden ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white"}`}>
+                      <div className={`rounded-xl shadow-md overflow-hidden ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white"}`}>
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
                             <thead>
@@ -2952,7 +2952,7 @@ export default function OwnerDashboard() {
                     )}
                   </>
                 ) : (
-                  <div className={`rounded-2xl shadow-md p-12 text-center ${isDark ? "bg-gray-900" : "bg-white"}`}>
+                  <div className={`rounded-xl shadow-md p-12 text-center ${isDark ? "bg-gray-900" : "bg-white"}`}>
                     <Home className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                     <p className={isDark ? "text-gray-400" : "text-gray-600"}>{tc.noListings}</p>
                   </div>
@@ -3007,7 +3007,7 @@ export default function OwnerDashboard() {
                 {requestsLoading ? (
                   <div className="space-y-4">
                     {[...Array(2)].map((_, i) => (
-                      <div key={i} className={`rounded-2xl shadow-md h-40 animate-pulse ${isDark ? "bg-gray-800" : "bg-white"}`} />
+                      <div key={i} className={`rounded-xl shadow-md h-40 animate-pulse ${isDark ? "bg-gray-800" : "bg-white"}`} />
                     ))}
                   </div>
                 ) : contactRequests.length > 0 ? (
@@ -3021,7 +3021,7 @@ export default function OwnerDashboard() {
                       <>
                   <div className="space-y-4">
                     {paginated.map((req: any) => (
-                      <div key={req._id} className={`rounded-2xl shadow-md p-5 ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white"}`}>
+                      <div key={req._id} className={`rounded-xl shadow-md p-5 ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white"}`}>
                         {/* Single info row: name + phone + email + status */}
                         <div className="flex flex-wrap items-center gap-3 mb-4">
                           <h3 className={`text-base font-bold flex-shrink-0 ${isDark ? "text-white" : "text-gray-900"}`}>{req.fullName}</h3>
@@ -3138,14 +3138,14 @@ export default function OwnerDashboard() {
                       )}
                       </>
                     ) : (
-                      <div className={`rounded-2xl shadow-md p-12 text-center ${isDark ? "bg-gray-900" : "bg-white"}`}>
+                      <div className={`rounded-xl shadow-md p-12 text-center ${isDark ? "bg-gray-900" : "bg-white"}`}>
                         <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                         <p className={isDark ? "text-gray-400" : "text-gray-600"}>{language === 'fr' ? 'Aucune demande dans cette catégorie.' : 'No inquiries in this category.'}</p>
                       </div>
                     );
                   })()
                 ) : (
-                  <div className={`rounded-2xl shadow-md p-12 text-center ${isDark ? "bg-gray-900" : "bg-white"}`}>
+                  <div className={`rounded-xl shadow-md p-12 text-center ${isDark ? "bg-gray-900" : "bg-white"}`}>
                     <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                     <p className={isDark ? "text-gray-400" : "text-gray-600"}>{tc.noRequests}</p>
                   </div>
@@ -3226,7 +3226,7 @@ export default function OwnerDashboard() {
                       );
                     })()
                   ) : (
-                    <div className={`h-full rounded-2xl border flex flex-col items-center justify-center gap-3 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                    <div className={`h-full rounded-xl border flex flex-col items-center justify-center gap-3 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                       <MessageSquare className={`w-12 h-12 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
                       <p className={`text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>
                         {language === 'fr' ? 'Sélectionnez une conversation' : 'Select a conversation to start chatting'}
@@ -3327,9 +3327,9 @@ export default function OwnerDashboard() {
       {selectedInquiry && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50" onClick={() => setSelectedInquiry(null)} />
-          <div className={`relative rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto ${isDark ? "bg-gray-900" : "bg-white"}`}>
+          <div className={`relative rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto ${isDark ? "bg-gray-900" : "bg-white"}`}>
             {/* Header */}
-            <div className={`flex items-center justify-between p-5 border-b sticky top-0 rounded-t-2xl z-10 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
+            <div className={`flex items-center justify-between p-5 border-b sticky top-0 rounded-t-xl z-10 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
               <div>
                 <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{selectedInquiry.fullName}</h3>
                 <p className="text-sm text-gray-500">{selectedInquiry.propertyTitle}</p>
@@ -3427,7 +3427,7 @@ export default function OwnerDashboard() {
       {deleteConfirmId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50" onClick={() => setDeleteConfirmId(null)} />
-          <div className={`relative rounded-2xl shadow-xl p-6 w-full max-w-sm ${isDark ? "bg-gray-900" : "bg-white"}`}>
+          <div className={`relative rounded-xl shadow-xl p-6 w-full max-w-sm ${isDark ? "bg-gray-900" : "bg-white"}`}>
             <div className="flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mx-auto mb-4">
               <Trash2 className="w-6 h-6 text-red-500" />
             </div>

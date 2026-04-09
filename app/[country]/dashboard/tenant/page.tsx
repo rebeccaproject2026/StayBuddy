@@ -42,7 +42,7 @@ function RequestCard({
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className={`bg-white rounded-2xl border-l-4 border border-gray-100 shadow-sm transition-all duration-200 hover:shadow-md overflow-hidden ${sc.border}`}>
+    <div className={`bg-white rounded-xl border-l-4 border border-gray-100 shadow-sm transition-all duration-200 hover:shadow-md overflow-hidden ${sc.border}`}>
       {/* Header row — always visible */}
       <button
         onClick={() => setExpanded(p => !p)}
@@ -515,7 +515,7 @@ export default function TenantDashboard() {
               {profileMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setProfileMenuOpen(false)} />
-                  <div className={`absolute bottom-full left-0 right-0 mb-2 rounded-2xl shadow-xl border overflow-hidden z-20 ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-100"}`}>
+                  <div className={`absolute bottom-full left-0 right-0 mb-2 rounded-xl shadow-xl border overflow-hidden z-20 ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-100"}`}>
                     <div className={`px-4 py-3 border-b ${isDark ? "bg-primary/10 border-primary/20" : "bg-gradient-to-r from-primary/5 to-primary/10 border-primary/10"}`}>
                       <p className="text-xs font-semibold text-primary uppercase tracking-wide">{language === "fr" ? "Connecté en tant que" : "Signed in as"}</p>
                       <p className={`text-sm font-bold truncate mt-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>{user?.fullName}</p>
@@ -551,13 +551,13 @@ export default function TenantDashboard() {
                 {favLoading ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                     {[...Array(3)].map((_, i) => (
-                      <div key={i} className={`rounded-2xl h-64 animate-pulse ${isDark ? "bg-gray-800" : "bg-white shadow-md"}`} />
+                      <div key={i} className={`rounded-xl h-64 animate-pulse ${isDark ? "bg-gray-800" : "bg-white shadow-md"}`} />
                     ))}
                   </div>
                 ) : savedProperties.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                     {savedProperties.map((property: any) => (
-                      <div key={property._id} className={`rounded-2xl overflow-hidden hover:shadow-lg transition-shadow border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-md"}`}>
+                      <div key={property._id} className={`rounded-xl overflow-hidden hover:shadow-lg transition-shadow border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-md"}`}>
                         <div className="relative h-40 sm:h-48">
                           <Image
                             src={property.images?.[0] || "/owner.png"}
@@ -605,7 +605,7 @@ export default function TenantDashboard() {
                     ))}
                   </div>
                 ) : (
-                  <div className={`rounded-2xl p-12 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-md"}`}>
+                  <div className={`rounded-xl p-12 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-md"}`}>
                     <Heart className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
                     <p className={isDark ? "text-gray-500" : "text-gray-600"}>{tc.noSavedProperties}</p>
                   </div>
@@ -643,7 +643,7 @@ export default function TenantDashboard() {
                 {requestsLoading ? (
                   <div className="space-y-3">
                     {[...Array(3)].map((_, i) => (
-                      <div key={i} className={`rounded-2xl h-20 animate-pulse border ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"}`} />
+                      <div key={i} className={`rounded-xl h-20 animate-pulse border ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"}`} />
                     ))}
                   </div>
                 ) : myRequests.length > 0 ? (
@@ -665,7 +665,7 @@ export default function TenantDashboard() {
                     })}
                   </div>
                 ) : (
-                  <div className={`rounded-2xl p-16 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
+                  <div className={`rounded-xl p-16 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
                     <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${isDark ? "bg-gray-800" : "bg-gray-100"}`}>
                       <MessageSquare className={`w-8 h-8 ${isDark ? "text-gray-600" : "text-gray-400"}`} />
                     </div>
@@ -750,7 +750,7 @@ export default function TenantDashboard() {
                       );
                     })()
                   ) : (
-                    <div className={`h-full rounded-2xl border flex flex-col items-center justify-center gap-3 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                    <div className={`h-full rounded-xl border flex flex-col items-center justify-center gap-3 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
                       <MessageSquare className={`w-12 h-12 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
                       <p className={`text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>
                         {language === 'fr' ? 'Sélectionnez une conversation' : 'Select a conversation to start chatting'}
@@ -788,7 +788,7 @@ export default function TenantDashboard() {
                 <h2 className={`text-xl sm:text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{tc.profileSettings}</h2>
 
                 {/* Avatar card */}
-                <div className={`rounded-2xl p-4 flex items-center gap-4 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
+                <div className={`rounded-xl p-4 flex items-center gap-4 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
                   <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center flex-shrink-0 shadow-md">
                     <span className="text-white font-bold text-xl">{profileSavedName?.charAt(0)?.toUpperCase() || "U"}</span>
                   </div>
@@ -802,7 +802,7 @@ export default function TenantDashboard() {
                 </div>
 
                 {/* Personal info */}
-                <div className={`rounded-2xl p-5 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
+                <div className={`rounded-xl p-5 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
                   <h3 className={`text-base font-bold mb-4 ${isDark ? "text-white" : "text-gray-900"}`}>
                     {language === "fr" ? "Informations personnelles" : "Personal Information"}
                   </h3>
@@ -862,7 +862,7 @@ export default function TenantDashboard() {
 
                 {/* Change password */}
                 {(user as any)?.provider === "credentials" && (
-                  <div className={`rounded-2xl p-5 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
+                  <div className={`rounded-xl p-5 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
                     <h3 className={`text-base font-bold mb-4 ${isDark ? "text-white" : "text-gray-900"}`}>{tc.changePassword}</h3>
                     <div className="space-y-4">
                       {([
