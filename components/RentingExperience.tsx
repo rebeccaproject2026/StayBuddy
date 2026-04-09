@@ -88,12 +88,12 @@ const RentingExperience = () => {
   ];
 
   return (
-    <section ref={ref} className="py-14 sm:py-20 px-4 sm:px-6 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
+    <section ref={ref} className="py-10 sm:py-14 lg:py-20 px-4 sm:px-6 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
         <motion.div
-          className="text-center mb-12 sm:mb-16"
+          className="text-center mb-8 sm:mb-12 lg:mb-16"
           initial={{ opacity: 0, y: 24 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
@@ -107,32 +107,32 @@ const RentingExperience = () => {
             <Zap className="w-3.5 h-3.5" />
             {isFr ? 'Expérience de location' : 'Renting Experience'}
           </motion.span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 max-w-2xl mx-auto leading-tight">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 max-w-2xl mx-auto leading-tight">
             {isFr ? 'Une location simple, rapide et sans stress.' : 'Simple, fast, and stress-free renting.'}
           </h2>
-          <p className="text-gray-500 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
+          <p className="text-gray-500 text-sm sm:text-base lg:text-lg max-w-xl mx-auto leading-relaxed">
             {isFr
               ? 'StayBuddy simplifie chaque étape — de la recherche à l\'emménagement.'
               : 'StayBuddy simplifies every step — from searching to moving in.'}
           </p>
         </motion.div>
 
-        <div className="grid lg:grid-cols-2 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
 
           {/* Left — Feature cards */}
           <motion.div
             initial={{ opacity: 0, x: -24 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-            className="bg-white rounded-xl shadow-md border border-gray-100 p-6 sm:p-8"
+            className="bg-white rounded-xl shadow-md border border-gray-100 p-4 sm:p-6 lg:p-8"
           >
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
+            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1">
               {isFr ? 'Pourquoi choisir StayBuddy' : 'Why Choose StayBuddy'}
             </h3>
-            <p className="text-gray-500 text-sm sm:text-base mb-6">
+            <p className="text-gray-500 text-xs sm:text-sm lg:text-base mb-4 sm:mb-6">
               {isFr ? 'Tout ce dont vous avez besoin, en un seul endroit.' : 'Everything you need, all in one place.'}
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               {leftSteps.map((step, i) => {
                 const Icon = step.icon;
                 const isActive = activeStep === i;
@@ -144,16 +144,16 @@ const RentingExperience = () => {
                     transition={{ duration: 0.4, delay: 0.2 + i * 0.07 }}
                     onMouseEnter={() => setActiveStep(i)}
                     onMouseLeave={() => setActiveStep(null)}
-                    className={`relative rounded-xl p-4 cursor-default transition-all duration-300 border ${
+                    className={`relative rounded-xl p-3 sm:p-4 cursor-default transition-all duration-300 border ${
                       isActive
                         ? 'border-primary/30 bg-primary/5 shadow-md'
                         : 'border-gray-100 bg-gray-50 hover:border-gray-200'
                     }`}
                   >
-                    <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${step.color} flex items-center justify-center mb-3 shadow-sm transition-transform duration-300 ${isActive ? 'scale-110' : ''}`}>
-                      <Icon className="w-4 h-4 text-white" />
+                    <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br ${step.color} flex items-center justify-center mb-2 sm:mb-3 shadow-sm transition-transform duration-300 ${isActive ? 'scale-110' : ''}`}>
+                      <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                     </div>
-                    <p className="font-semibold text-gray-900 text-sm sm:text-base mb-0.5">{step.title}</p>
+                    <p className="font-semibold text-gray-900 text-xs sm:text-sm lg:text-base mb-0.5 leading-snug">{step.title}</p>
                     <AnimatePresence>
                       {isActive && (
                         <motion.p
@@ -161,13 +161,13 @@ const RentingExperience = () => {
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
                           transition={{ duration: 0.2 }}
-                          className="text-gray-500 text-xs sm:text-sm leading-relaxed overflow-hidden"
+                          className="text-gray-500 text-[11px] sm:text-xs lg:text-sm leading-relaxed overflow-hidden"
                         >
                           {step.desc}
                         </motion.p>
                       )}
                     </AnimatePresence>
-                    {!isActive && <p className="text-gray-400 text-xs sm:text-sm">{step.desc}</p>}
+                    {!isActive && <p className="text-gray-400 text-[11px] sm:text-xs lg:text-sm leading-snug">{step.desc}</p>}
                   </motion.div>
                 );
               })}
@@ -179,15 +179,15 @@ const RentingExperience = () => {
             initial={{ opacity: 0, x: 24 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="bg-white rounded-xl shadow-md border border-gray-100 p-6 sm:p-8"
+            className="bg-white rounded-xl shadow-md border border-gray-100 p-4 sm:p-6 lg:p-8"
           >
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
+            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1">
               {isFr ? 'Votre parcours de location' : 'Your Rental Journey'}
             </h3>
-            <p className="text-gray-500 text-sm sm:text-base mb-6">
+            <p className="text-gray-500 text-xs sm:text-sm lg:text-base mb-4 sm:mb-6">
               {isFr ? 'Cinq étapes simples vers votre nouveau chez-vous.' : 'Five simple steps to your new home.'}
             </p>
-            <div className="space-y-2">
+            <div className="space-y-1 sm:space-y-2">
               {rightSteps.map((step, i) => {
                 const Icon = step.icon;
                 return (
@@ -197,25 +197,25 @@ const RentingExperience = () => {
                     animate={isInView ? { opacity: 1, x: 0 } : {}}
                     transition={{ duration: 0.4, delay: 0.3 + i * 0.09 }}
                     whileHover={{ x: 4 }}
-                    className="flex items-start gap-4 p-3.5 rounded-xl hover:bg-gray-50 transition-all duration-200 group cursor-default"
+                    className="flex items-start gap-3 sm:gap-4 p-2.5 sm:p-3.5 rounded-xl hover:bg-gray-50 transition-all duration-200 group cursor-default"
                   >
-                    {/* Step number + line */}
+                    {/* Step icon + connector line */}
                     <div className="flex flex-col items-center flex-shrink-0">
-                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-accent-hover flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300">
-                        <Icon className="w-4 h-4 text-white" />
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-accent to-accent-hover flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300">
+                        <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                       </div>
                       {i < rightSteps.length - 1 && (
-                        <div className="w-0.5 h-5 bg-gradient-to-b from-accent/40 to-transparent mt-1" />
+                        <div className="w-0.5 h-4 sm:h-5 bg-gradient-to-b from-accent/40 to-transparent mt-1" />
                       )}
                     </div>
-                    <div className="flex-1 min-w-0 pt-1">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-xs font-bold text-accent/60">{step.num}</span>
-                        <p className="font-semibold text-gray-900 text-sm sm:text-base group-hover:text-primary transition-colors">{step.title}</p>
+                    <div className="flex-1 min-w-0 pt-0.5 sm:pt-1">
+                      <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5">
+                        <span className="text-[10px] sm:text-xs font-bold text-accent/60">{step.num}</span>
+                        <p className="font-semibold text-gray-900 text-xs sm:text-sm lg:text-base group-hover:text-primary transition-colors leading-snug">{step.title}</p>
                       </div>
-                      <p className="text-gray-500 text-xs sm:text-sm leading-relaxed">{step.desc}</p>
+                      <p className="text-gray-500 text-[11px] sm:text-xs lg:text-sm leading-relaxed">{step.desc}</p>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-primary group-hover:translate-x-1 transition-all duration-200 flex-shrink-0 mt-2" />
+                    <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-300 group-hover:text-primary group-hover:translate-x-1 transition-all duration-200 flex-shrink-0 mt-1.5 sm:mt-2" />
                   </motion.div>
                 );
               })}
@@ -226,19 +226,19 @@ const RentingExperience = () => {
               initial={{ opacity: 0 }}
               animate={isInView ? { opacity: 1 } : {}}
               transition={{ duration: 0.5, delay: 0.8 }}
-              className="mt-6 pt-5 border-t border-gray-100 flex items-center justify-between"
+              className="mt-4 sm:mt-6 pt-4 sm:pt-5 border-t border-gray-100 flex items-center justify-between gap-3"
             >
-              <p className="text-sm text-gray-400">
+              <p className="text-xs sm:text-sm text-gray-400">
                 {isFr ? 'Prêt à commencer?' : 'Ready to get started?'}
               </p>
               <motion.a
                 href="/properties"
                 whileHover={{ scale: 1.04, x: 2 }}
                 whileTap={{ scale: 0.97 }}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent text-white rounded-xl text-sm font-semibold shadow-md hover:bg-accent-hover transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-accent text-white rounded-xl text-xs sm:text-sm font-semibold shadow-md hover:bg-accent-hover transition-colors whitespace-nowrap"
               >
                 {isFr ? 'Explorer' : 'Explore Now'}
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               </motion.a>
             </motion.div>
           </motion.div>

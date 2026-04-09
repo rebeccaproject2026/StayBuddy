@@ -159,9 +159,24 @@ export async function PUT(
       bedsIncreased = sumBeds(body.roomDetails) > 0;
     }
 
+    // Check 3: France Tenant rooms — available spots increased
+    // Available = maxPersons - currentPersons; if this sum goes up, vacancy increased
+    let tenantRoomsIncreased = false;
+    if (Array.isArray(body.tenantRooms) && Array.isArray((property as any).tenantRooms)) {
+      const sumAvailable = (rooms: any[]) =>
+        rooms.reduce((acc: number, r: any) => {
+          const max = parseInt(r.maxPersons) || 0;
+          const cur = parseInt(r.currentPersons) || 0;
+          return acc + Math.max(0, max - cur);
+        }, 0);
+      const oldAvail = sumAvailable((property as any).tenantRooms);
+      const newAvail = sumAvailable(body.tenantRooms);
+      tenantRoomsIncreased = newAvail > oldAvail;
+    }
+
     if (
       updated &&
-      (roomsIncreased || bedsIncreased) &&
+      (roomsIncreased || bedsIncreased || tenantRoomsIncreased) &&
       (updated as any).approvalStatus === 'approved'
     ) {
       sendVacancyAlert({

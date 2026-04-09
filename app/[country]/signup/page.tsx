@@ -182,7 +182,7 @@ export default function SignupPage() {
       <Toaster />
       <div
         className="min-h-screen flex items-center justify-center px-3 sm:px-4 py-8 sm:py-12 relative bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop')` }}
+        style={{ backgroundImage: `url('/homebg.png')` }}
       >
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
         <motion.div
