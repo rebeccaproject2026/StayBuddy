@@ -49,7 +49,6 @@ const userSchema = new Schema<IUser>(
     },
     phoneNumber: {
       type: String,
-      required: [true, 'Phone number is required'],
       trim: true,
       match: [
         /^[\+]?[1-9][\d]{0,15}$/,

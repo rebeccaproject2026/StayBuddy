@@ -90,12 +90,13 @@ export const authOptions: NextAuthOptions = {
       // Honor the callbackUrl if it starts with baseUrl
       if (url.startsWith(baseUrl)) return url;
       if (url.startsWith('/')) return `${baseUrl}${url}`;
-      return baseUrl;
+      // For error redirects, send to /in/login as fallback
+      return `${baseUrl}/in/login`;
     },
   },
   pages: {
     signIn: '/login',
-    error: '/auth/error',
+    error: '/in/login',
   },
   session: {
     strategy: 'jwt',
