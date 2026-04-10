@@ -133,7 +133,7 @@ export default function SubscribeSection() {
             >
               {/* Background image */}
               <Image
-                src="/subscribebg.png"
+                src="/subscribebg.jpeg"
                 alt="apartment background"
                 fill
                 className="object-cover object-center"

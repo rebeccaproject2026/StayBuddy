@@ -105,7 +105,7 @@ export default function LoginPage() {
       <Toaster toastOptions={{ duration: 3000 }} />
       <div
         className="min-h-screen flex items-center justify-center px-3 sm:px-4 py-8 sm:py-12 relative bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url('/homebg.png')` }}
+        style={{ backgroundImage: `url('/homebg.jpeg')` }}
       >
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
         <motion.div

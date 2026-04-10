@@ -196,7 +196,7 @@ export default function AboutPage() {
             <motion.div {...fadeUp(0.15)} className="relative">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/3]">
                 <img
-                  src="/homebg.png"
+                  src="/homebg.jpeg"
                   alt="Mission"
                   className="w-full h-full object-cover"
                 />

@@ -258,7 +258,7 @@ export default function ResetPasswordPage() {
       <Toaster />
       <div
         className="min-h-screen flex items-center justify-center px-4 py-12 relative bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url('/homebg.png')` }}
+        style={{ backgroundImage: `url('/homebg.jpeg')` }}
       >
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
         <motion.div

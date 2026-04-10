@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 const IN_CITY_IMAGES: Record<string, string> = {
   ahmedabad: "/ahmedabad.png",
   gandhinagar: "/gandhinagar.png",
-  surat: "/surat.png",
+  surat: "/surat.jpeg",
   vadodara: "/vadodara.png",
   rajkot: "/rajkot.png",
 };
@@ -27,7 +27,7 @@ const FR_CITY_IMAGES: Record<string, string> = {
 };
 
 // Fallback pool — reuse available images for unknown cities
-const IN_FALLBACK = ["/ahmedabad.png", "/surat.png", "/vadodara.png", "/gandhinagar.png", "/rajkot.png"];
+const IN_FALLBACK = ["/ahmedabad.png", "/surat.jpeg", "/vadodara.png", "/gandhinagar.png", "/rajkot.png"];
 const FR_FALLBACK = ["/paris.png", "/lyon.png", "/Marseille.png", "/Toulouse.png", "/Nice.png"];
 
 function getCityImage(name: string, country: string, usedImages: Set<string>): string {

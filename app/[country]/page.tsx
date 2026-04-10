@@ -25,7 +25,7 @@ export default function HomePage() {
         className="relative min-h-[420px] sm:min-h-[450px] bg-cover bg-center bg-no-repeat overflow-hidden"
         style={{
           backgroundImage:
-            "url('/homebg.png')",
+            "url('/homebg.jpeg')",
         }}
       >
         {/* Animated Overlay */}
