@@ -163,13 +163,15 @@ export async function sendPropertyRequestEmail(
 export async function sendPropertyApprovedEmail(
   ownerEmail: string,
   ownerName: string,
-  propertyTitle: string,
-  propertyUrl: string
+  propertyUrl: string,
+  propertyType:string,
+  pgName: string,
+  societyName: string
 ) {
   await transporter.sendMail({
     from: `"StayBuddy" <${process.env.SMTP_USER}>`,
     to: ownerEmail,
-    subject: `🎉 Your property "${propertyTitle}" has been approved!`,
+    subject: `🎉 Your property "${propertyType === "PG" ? pgName : societyName}" has been approved!`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px; background: #f9fafb; border-radius: 12px;">
         <div style="text-align: center; margin-bottom: 24px;">
@@ -178,7 +180,7 @@ export async function sendPropertyApprovedEmail(
         <div style="background: white; border-radius: 12px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
           <h2 style="color: #111827; font-size: 20px; margin-top: 0;">Hi ${ownerName},</h2>
           <p style="color: #6b7280; line-height: 1.6;">
-            Great news! Your property listing <strong style="color: #111827;">${propertyTitle}</strong> has been
+            Great news! Your property listing <strong style="color: #111827;">${propertyType === "PG" ? pgName : societyName}</strong> has been
             <strong style="color: #16a34a;">approved</strong> by our team and is now live on StayBuddy.
           </p>
           <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 20px; margin: 24px 0; text-align: center;">
@@ -201,13 +203,15 @@ export async function sendPropertyApprovedEmail(
 export async function sendPropertyVerifiedEmail(
   ownerEmail: string,
   ownerName: string,
-  propertyTitle: string,
+  propertyType:string,
+  pgName: string,
+  societyName: string,
   propertyUrl: string
 ) {
   await transporter.sendMail({
     from: `"StayBuddy" <${process.env.SMTP_USER}>`,
     to: ownerEmail,
-    subject: `✅ Your property "${propertyTitle}" is now Verified!`,
+    subject: `✅ Your property "${propertyType === "PG" ? pgName : societyName}" is now Verified!`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px; background: #f9fafb; border-radius: 12px;">
         <div style="text-align: center; margin-bottom: 24px;">
@@ -216,7 +220,7 @@ export async function sendPropertyVerifiedEmail(
         <div style="background: white; border-radius: 12px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
           <h2 style="color: #111827; font-size: 20px; margin-top: 0;">Hi ${ownerName},</h2>
           <p style="color: #6b7280; line-height: 1.6;">
-            Your property <strong style="color: #111827;">${propertyTitle}</strong> has been
+            Your property <strong style="color: #111827;">${propertyType === "PG" ? pgName : societyName}</strong> has been
             <strong style="color: #059669;">verified</strong> by our team.
             It now displays a <strong>Verified badge</strong> on the listing, increasing trust with potential tenants.
           </p>
@@ -278,13 +282,15 @@ export async function sendAccountBlockedEmail(
 export async function sendPropertyDeletedEmail(
   ownerEmail: string,
   ownerName: string,
-  propertyTitle: string,
+  propertyType:string,
+  pgName: string,
+  societyName: string,
   reason: string
 ) {
   await transporter.sendMail({
     from: `"StayBuddy" <${process.env.SMTP_USER}>`,
     to: ownerEmail,
-    subject: `Your listing "${propertyTitle}" has been removed`,
+    subject: `Your listing "${propertyType === "PG" ? pgName : societyName}" has been removed`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px; background: #f9fafb; border-radius: 12px;">
         <div style="text-align: center; margin-bottom: 24px;">
@@ -293,7 +299,7 @@ export async function sendPropertyDeletedEmail(
         <div style="background: white; border-radius: 12px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
           <h2 style="color: #111827; font-size: 20px; margin-top: 0;">Hi ${ownerName},</h2>
           <p style="color: #6b7280; line-height: 1.6;">
-            Your property listing <strong style="color: #111827;">${propertyTitle}</strong> has been
+            Your property listing <strong style="color: #111827;">${propertyType === "PG" ? pgName : societyName}</strong> has been
             <strong style="color: #dc2626;">removed</strong> from StayBuddy by our admin team.
           </p>
           <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 20px; margin: 24px 0;">
@@ -358,6 +364,8 @@ export async function sendNewPropertyEmail(property: {
   price: number;
   propertyType: string;
   country?: string;
+  pgName?: string;
+  societyName?: string;
 }) {
   const Subscriber = (await import('@/models/Subscriber')).default;
   const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
@@ -394,7 +402,7 @@ export async function sendNewPropertyEmail(property: {
         <p style="color:#6b7280;line-height:1.6;">A new listing matching your preferences just went live.</p>
         <div style="background:#f3f4f6;border-radius:10px;padding:20px;margin:20px 0;">
           <table style="width:100%;border-collapse:collapse;">
-            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;width:120px;">Property</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${property.title}</td></tr>
+            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;width:120px;">Property</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${property.propertyType === "PG" ? property.pgName : property.societyName}}</td></tr>
             <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Location</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${property.location}</td></tr>
             <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Type</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${property.propertyType}</td></tr>
             <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Price</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">₹${property.price.toLocaleString()} / month</td></tr>
@@ -441,6 +449,8 @@ export async function sendVacancyAlert(property: {
   price: number;
   propertyType: string;
   country?: string;
+  pgName?: string;
+  societyName?: string;
 }) {
   const Subscriber = (await import('@/models/Subscriber')).default;
   const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
@@ -479,7 +489,7 @@ export async function sendVacancyAlert(property: {
         <p style="color:#6b7280;line-height:1.6;">A vacancy matching your preferences is now available. Act fast — rooms fill up quickly!</p>
         <div style="background:#f3f4f6;border-radius:10px;padding:20px;margin:20px 0;">
           <table style="width:100%;border-collapse:collapse;">
-            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;width:120px;">Property</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${property.title}</td></tr>
+            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;width:120px;">Property</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${property.propertyType ? property.pgName : property.societyName}</td></tr>
             <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Location</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${property.location}</td></tr>
             <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Type</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${property.propertyType}</td></tr>
             <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Price</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">₹${property.price.toLocaleString()} / month</td></tr>
@@ -518,6 +528,9 @@ export async function sendPropertyRejectedEmail(
   ownerEmail: string,
   ownerName: string,
   propertyTitle: string,
+  pgName: string,
+  societyName: string,
+  propertyType: string,
   reason: string
 ) {
   await transporter.sendMail({
@@ -532,7 +545,7 @@ export async function sendPropertyRejectedEmail(
         <div style="background: white; border-radius: 12px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
           <h2 style="color: #111827; font-size: 20px; margin-top: 0;">Hi ${ownerName},</h2>
           <p style="color: #6b7280; line-height: 1.6;">
-            Thank you for submitting your property <strong style="color: #111827;">${propertyTitle}</strong> to StayBuddy.
+            Thank you for submitting your property <strong style="color: #111827;">${propertyType === "PG" ? pgName : societyName}</strong> to StayBuddy.
             After review, our team was unable to approve this listing at this time.
           </p>
           <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 20px; margin: 24px 0;">
@@ -555,7 +568,9 @@ export async function sendChatMessageEmail(
   receiverEmail: string,
   receiverName: string,
   senderName: string,
-  propertyTitle: string,
+  propertyType: string,
+  pgName: string,
+  societyName: string,
   messagePreview: string,
   dashboardUrl: string
 ) {
@@ -572,7 +587,7 @@ export async function sendChatMessageEmail(
           <h2 style="color: #111827; font-size: 20px; margin-top: 0;">Hi ${receiverName},</h2>
           <p style="color: #6b7280; line-height: 1.6;">
             You have a new message from <strong style="color: #111827;">${senderName}</strong>
-            regarding <strong style="color: #111827;">${propertyTitle}</strong>.
+            regarding <strong style="color: #111827;">${propertyType === "PG" ? pgName : societyName}</strong>.
           </p>
           <div style="background: #f3f4f6; border-left: 4px solid #4f46e5; border-radius: 0 8px 8px 0; padding: 16px; margin: 24px 0;">
             <p style="color: #374151; font-size: 14px; margin: 0; line-height: 1.6;">"${messagePreview}"</p>

@@ -52,14 +52,23 @@ export default function PropertyDetailsPage() {
     let rafId: number | null = null;
 
     const handleScroll = () => {
-      if (rafId !== null) return; // already scheduled
+      // Disable sticky sidebar on mobile/tablet (< 1024px)
+      if (window.innerWidth < 1024) {
+        const sidebar = sidebarRef.current;
+        if (sidebar) {
+          sidebar.style.position = '';
+          sidebar.style.top = '';
+          sidebar.style.width = '';
+        }
+        return;
+      }
+      if (rafId !== null) return;
       rafId = requestAnimationFrame(() => {
         rafId = null;
         const sidebar = sidebarRef.current;
         const content = contentRef.current;
         if (!sidebar || !content) return;
 
-        // Batch ALL reads before any writes to avoid forced reflow
         const contentRect = content.getBoundingClientRect();
         const contentTop = contentRect.top + window.scrollY;
         const contentHeight = content.offsetHeight;
@@ -70,7 +79,6 @@ export default function PropertyDetailsPage() {
         const startSticky = contentTop - NAVBAR_HEIGHT;
         const stopSticky = contentTop + contentHeight - sidebarHeight - NAVBAR_HEIGHT;
 
-        // Now do all writes together
         if (scrollY < startSticky) {
           sidebar.style.position = 'relative';
           sidebar.style.top = '0';
@@ -422,7 +430,7 @@ export default function PropertyDetailsPage() {
   const imgSrc = currentImg?.image || property.images?.[0] || "";
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-24 lg:pb-0">
       {/* Image Gallery */}
       <div className="relative h-[300px] sm:h-[400px] md:h-[450px] lg:h-[480px] bg-gray-900">
         {imgSrc && (
@@ -523,8 +531,116 @@ export default function PropertyDetailsPage() {
       <div className="px-4">
         <div className="max-w-7xl mx-auto py-4 sm:py-6 md:py-8">
           <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 lg:items-start relative" ref={contentRef}>
+            {/* Mobile sidebar card — shown only on mobile/tablet, mirrors desktop sidebar */}
+            <div className="lg:hidden col-span-full bg-white rounded-xl shadow-lg p-4 sm:p-5 mb-2">
+              {/* Pricing */}
+              {property.propertyType === 'PG' && property.roomDetails && Object.keys(property.roomDetails).length > 0 ? (
+                <>
+                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-3">
+                    {language === 'fr' ? 'Prix par type de chambre' : 'Price by Room Type'}
+                  </p>
+                  <div className="space-y-2 mb-3">
+                    {Object.entries(property.roomDetails as Record<string, any>).map(([category, detail]) => (
+                      <div key={category} className="flex items-center justify-between p-2.5 bg-gray-50 rounded-xl border border-gray-100">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></span>
+                          <span className="text-sm font-medium text-gray-700">{category} Bed</span>
+                          {(detail.availableBeds ?? detail.availableRooms) && (
+                            <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full flex-shrink-0">
+                              {detail.availableBeds ?? detail.availableRooms} {language === 'fr' ? 'dispo' : 'avail.'}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-sm font-bold text-primary flex-shrink-0 ml-2">
+                          {currencySymbol} {Number(detail.monthlyRent).toLocaleString()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 mb-3">{t.securityDeposit}: {currencySymbol} {property.deposit}</p>
+                </>
+              ) : property.propertyType === 'Tenant' && property.country === 'fr' && property.tenantRooms?.length > 0 ? (
+                <>
+                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-3">
+                    {language === 'fr' ? 'Prix par chambre' : 'Price by Room'}
+                  </p>
+                  <div className="space-y-2 mb-3">
+                    {(property.tenantRooms as any[]).map((room: any, i: number) => {
+                      const max = parseInt(room.maxPersons) || 1;
+                      const current = parseInt(room.currentPersons) || 0;
+                      const status = current >= max ? 'Occupied' : current > 0 ? 'Partial' : 'Available';
+                      const statusCls = status === 'Available' ? 'bg-green-100 text-green-700' : status === 'Partial' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-600';
+                      return (
+                        <div key={room.id ?? i} className="flex items-center justify-between p-2.5 bg-gray-50 rounded-xl border border-gray-100">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${status === 'Available' ? 'bg-green-500' : status === 'Partial' ? 'bg-yellow-500' : 'bg-red-500'}`} />
+                            <span className="text-sm font-medium text-gray-700 truncate">{room.name || `Room ${i + 1}`}</span>
+                            <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${statusCls}`}>{status}</span>
+                          </div>
+                          {room.rent && Number(room.rent) > 0 ? (
+                            <span className="text-sm font-bold text-primary ml-2 flex-shrink-0">{currencySymbol} {Number(room.rent).toLocaleString()}</span>
+                          ) : (
+                            <span className="text-xs text-gray-400 ml-2 flex-shrink-0">—</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-gray-500 mb-3">{t.securityDeposit}: {currencySymbol} {property.deposit}</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs text-gray-600 mb-1">{t.monthlyRent}</p>
+                  <p className="text-3xl font-bold text-gray-900 mb-1">{currencySymbol} {property.price}</p>
+                  <p className="text-xs text-gray-600 mb-3">{t.securityDeposit}: {currencySymbol} {property.deposit}</p>
+                </>
+              )}
+
+              {/* Budget bar */}
+              <div className="mb-4">
+                <p className="text-xs font-semibold text-gray-700 mb-1.5">
+                  {t.budgetFriendly} <span className="text-green-600">{t.belowAverage}</span>
+                </p>
+                <div className="w-full h-1.5 bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 rounded-full mb-1.5"></div>
+                <p className="text-xs text-gray-500">{t.priceDescription}</p>
+              </div>
+
+              {/* Rental period & available from */}
+              <div className="space-y-2 mb-4 pb-4 border-b border-gray-100">
+                <div className="flex justify-between">
+                  <span className="text-xs text-gray-600">{t.rentalPeriod}</span>
+                  <span className="text-xs font-semibold text-green-600">{property.rentalPeriod}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-xs text-gray-600">{t.availableFrom}</span>
+                  <span className="text-xs font-semibold text-green-600">{property.availableFrom}</span>
+                </div>
+              </div>
+
+              {/* Report concern */}
+              <div className="pt-1">
+                <p className="text-xs text-gray-500 text-center">{t.anyConcerns}</p>
+                <p className="text-xs text-center mt-0.5">
+                  {user?.role === 'renter' ? (
+                    <button onClick={() => { setShowReportModal(true); setReportDone(false); setReportReason(""); setReportDescription(""); }}
+                      className="text-red-600 hover:text-red-700 font-semibold">{t.reportIt}
+                    </button>
+                  ) : !isAuthenticated ? (
+                    <span className="text-red-600 font-semibold">{t.reportIt}</span>
+                  ) : null}{" "}
+                  {(user?.role === 'renter' || !isAuthenticated) && (
+                    <span className="text-gray-500">{t.toOurTeam}</span>
+                  )}
+                </p>
+                {!isAuthenticated && (
+                  <p className="text-xs text-gray-400 text-center mt-1">
+                    <Link href={`/${country}/login`} className="text-primary underline">Login</Link> as a tenant to report
+                  </p>
+                )}
+              </div>
+            </div>
             {/* Left Column */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 min-w-0">
               {/* Breadcrumb */}
               <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 overflow-x-auto">
                 <Link href="/" className="hover:text-primary whitespace-nowrap">{t.home}</Link>
@@ -535,30 +651,29 @@ export default function PropertyDetailsPage() {
               </div>
 
               {/* Title */}
-              <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 sm:gap-3 mb-2 flex-wrap">
-                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
+              <div className="mb-4 sm:mb-6">
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
                       {property.propertyType === "Tenant" && property.societyName ? property.societyName : property.title}
                     </h1>
-                    <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-semibold ${property.propertyType === "PG" ? "bg-blue-600 text-white" : "bg-green-600 text-white"}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0 ${property.propertyType === "PG" ? "bg-blue-600 text-white" : "bg-green-600 text-white"}`}>
                       {property.propertyType}
                     </span>
                   </div>
-                  <p className="text-sm sm:text-base text-gray-600 flex items-center gap-1.5 sm:gap-2">
-                    <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                    <span className="line-clamp-2">{property.fullAddress}, {property.areaName}, {property.state}</span>
-                  </p>
+                  {user?.role !== 'landlord' && (
+                    <button onClick={handleToggleFavorite}
+                      disabled={isTogglingFav}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-70 flex-shrink-0 ${isFavorite ? 'bg-red-50 border-2 border-red-500 text-red-600 hover:bg-red-100' : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-primary hover:bg-primary/5 hover:text-primary'}`}>
+                      <Heart className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300 ${isFavorite ? "fill-red-500 text-red-500 scale-110" : "text-current"}`} />
+                      <span className="hidden sm:inline whitespace-nowrap">{t.addToFavorites}</span>
+                    </button>
+                  )}
                 </div>
-                {user?.role !== 'landlord' && (
-                <button onClick={handleToggleFavorite}
-                  disabled={isTogglingFav}
-                  className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl text-xs sm:text-sm md:text-base font-semibold transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-70 ${isFavorite ? 'bg-red-50 border-2 border-red-500 text-red-600 hover:bg-red-100' : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-primary hover:bg-primary/5 hover:text-primary'}`}>
-                  <Heart className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300 ${isFavorite ? "fill-red-500 text-red-500 scale-110" : "text-current"}`} />
-                  <span className="whitespace-nowrap hidden sm:inline">{t.addToFavorites}</span>
-                  <span className="whitespace-nowrap sm:hidden">Favorite</span>
-                </button>
-                )}
+                <p className="text-sm sm:text-base text-gray-600 flex items-start gap-1.5">
+                  <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>{property.fullAddress}, {property.areaName}, {property.state}</span>
+                </p>
               </div>
 
               {/* Description */}
@@ -1042,10 +1157,10 @@ export default function PropertyDetailsPage() {
               )}
             </div>
 
-            {/* Sidebar */}
-            <div className="lg:col-span-1">
+            {/* Sidebar — desktop only */}
+            <div className="hidden lg:block lg:col-span-1">
               <div ref={sidebarRef}>
-                <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-4 sm:p-5 md:p-6 mb-4 sm:mb-6">
+                <div className="bg-white rounded-xl shadow-lg p-5 md:p-6 mb-6">
                   {/* PG: show per-room-type pricing */}
                   {property.propertyType === 'PG' && property.roomDetails && Object.keys(property.roomDetails).length > 0 ? (
                     <>
@@ -1206,6 +1321,46 @@ export default function PropertyDetailsPage() {
         </div>
       </div>
 
+      {/* Mobile sticky bottom action bar */}
+      {!isOwner && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-2xl px-4 py-3 flex gap-3">
+          <button
+            onClick={() => {
+              if (!isAuthenticated) {
+                router.push(`/${country}/login?redirect=${encodeURIComponent(`/${country}/property/${propertyId}`)}`);
+                return;
+              }
+              setShowContactForm(true);
+            }}
+            className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-xl transition-colors"
+          >
+            {t.contactOwner}
+          </button>
+          <button
+            onClick={() => {
+              if (!isAuthenticated) {
+                router.push(`/${country}/login?redirect=${encodeURIComponent(`/${country}/property/${propertyId}`)}&reason=call`);
+                return;
+              }
+              const phone = property.ownerPhone || property.landlord?.phone;
+              if (phone) window.location.href = `tel:${phone}`;
+            }}
+            className={`flex-1 py-3 text-white text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 ${
+              property.ownerPhone || property.landlord?.phone ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-300 cursor-not-allowed'
+            }`}
+          >
+            <Phone className="w-4 h-4" />
+            {language === 'fr' ? 'Appeler' : 'Call'}
+          </button>
+          <button
+            onClick={() => setShowShareModal(true)}
+            className="w-12 py-3 border-2 border-gray-300 hover:border-primary text-gray-700 rounded-xl transition-colors flex items-center justify-center"
+          >
+            <Share2 className="w-5 h-5" />
+          </button>
+        </div>
+      )}
+
       {/* WhatsApp floating button — only for tenants/guests, not for the owner */}
       {!isOwner && (<>
       <style>{`
@@ -1216,7 +1371,7 @@ export default function PropertyDetailsPage() {
         .wa-float { animation: wa-bounce 2s ease-in-out infinite; }
         .wa-float:hover { animation-play-state: paused; }
       `}</style>
-      <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 group/wa">
+      <div className="fixed bottom-24 lg:bottom-6 right-6 z-50 flex items-center gap-3 group/wa">
         <span className="hidden group-hover/wa:block bg-gray-900 text-white text-xs font-medium px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap">
           {language === 'fr' ? 'Discuter sur WhatsApp avec le propriétaire' : 'Chat on WhatsApp with owner'}
         </span>

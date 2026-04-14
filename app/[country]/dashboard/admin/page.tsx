@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, ReactNode } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { getToken } from "@/lib/token-storage";
@@ -67,6 +67,7 @@ interface PropertyOwner {
 }
 
 interface AdminProperty {
+  pgName: string;
   _id: string;
   title: string;
   societyName?: string;
@@ -1001,7 +1002,7 @@ export default function AdminDashboard() {
                                             </span>
                                           )}
                                         </div>
-                                        <p className={`font-semibold truncate max-w-[160px] mt-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>{property.title}</p>
+                                        <p className={`font-semibold truncate max-w-[160px] mt-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>{property.propertyType === "PG" ? property.pgName : property.societyName}</p>
                                       </div>
                                     </div>
                                   </td>
@@ -1528,7 +1529,7 @@ export default function AdminDashboard() {
                                         </div>
                                         <div className="min-w-0">
                                           <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold text-white ${req.propertyType === "PG" ? "bg-blue-600" : "bg-green-600"}`}>{req.propertyType}</span>
-                                          <p className={`font-semibold text-xs truncate max-w-[120px] mt-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>{req.title}</p>
+                                          <p className={`font-semibold text-xs truncate max-w-[120px] mt-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>{req.propertyType === "PG" ? req.pgName : req.societyName}</p>
                                         </div>
                                       </div>
                                     </td>
