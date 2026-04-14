@@ -109,7 +109,7 @@ export default function Footer() {
 
   return (
     <footer className="bg-gradient-to-b from-gray-50 to-gray-100 border-t border-gray-200 px-4 sm:px-6 md:px-4">
-      <div className="max-w-7xl mx-auto py-10 sm:py-12 md:py-12">
+      <div className="max-w-7xl mx-auto pt-10 pb-6 sm:pt-12 sm:pb-12">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 esm:gap-8 lg:gap-12 mb-8">
 
@@ -203,7 +203,7 @@ export default function Footer() {
 
           {/* Contact */}
           <motion.div {...fadeUp(0.26)}>
-            <h4 className="font-bold text-gray-800 mb-4 esm:mb-6 text-lg esm:text-xl md:text-xl">
+            <h4 className="font-bold text-gray-800 mb-2 esm:mb-6 text-lg esm:text-xl md:text-xl">
               {t.contact.title}
             </h4>
             <div className="space-y-2">
@@ -264,15 +264,15 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <motion.div
-          className="border-t border-gray-300 pt-6"
+          className="border-t border-gray-300 pt-3 sm:pt-6"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.1 }}
         >
-          <div className="flex flex-col md:flex-row justify-between items-center gap-3 esm:gap-4 text-xs esm:text-sm md:text-sm text-gray-600 text-center md:text-left">
-            <p>{t.copyright}</p>
-            <div className="flex flex-col esm:flex-row gap-2 esm:gap-6">
+          <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-3 esm:gap-4 text-sm md:text-sm text-gray-600 text-center md:text-left">
+            <p className='w-full'>{t.copyright}</p>
+            <div className="flex flex-row gap-2 esm:gap-6 sm:justify-end justify-between w-full">
               {[
                 { href: "/terms", label: t.terms },
                 { href: "/privacy", label: t.privacy },

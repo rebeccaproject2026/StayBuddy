@@ -133,7 +133,7 @@ export default function FilterSection() {
         {/* Top Row Filters */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 mb-4 sm:mb-5">
           {/* Category Dropdown */}
-          <div className="sm:col-span-1 lg:col-span-2">
+          <div className="col-span-2">
             <Menu as="div" className="relative">
               <Menu.Button className="w-full flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-primary text-primary rounded-xl text-sm sm:text-base font-semibold hover:bg-primary-light transition-all duration-300">
                 <span>{getTranslatedOption(filters.category)}</span>
@@ -163,7 +163,7 @@ export default function FilterSection() {
           </div>
 
           {/* Search Input */}
-          <div className="col-span-1 sm:col-span-2 lg:col-span-7">
+          <div className="col-span-2 lg:col-span-7">
             <div className="relative">
               <label htmlFor="filter-search" className="sr-only">Search by property name or city</label>
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />

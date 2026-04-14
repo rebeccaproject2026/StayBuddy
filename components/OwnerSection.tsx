@@ -28,7 +28,7 @@ export default function OwnerSection() {
   const t = content[language as keyof typeof content] || content.en;
 
   return (
-    <section className="py-10 md:py-8 px-4 sm:px-6 bg-gradient-to-b from-white to-gray-50" ref={ref}>
+    <section className="py-0 px-4 sm:px-6 bg-gradient-to-b from-white to-gray-50" ref={ref}>
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
@@ -77,13 +77,24 @@ export default function OwnerSection() {
               </ul>
 
               <motion.button
-                whileHover={{ scale: 1.03, backgroundColor: '#2563eb', color: '#fff' }}
                 whileTap={{ scale: 0.97 }}
-                transition={{ duration: 0.2 }}
-                className="inline-flex items-center justify-center gap-3 esm:gap-4 px-6 esm:px-8 md:px-10 py-2.5 border-2 border-blue-600 text-blue-600 rounded-xl w-full esm:w-fit font-semibold text-base esm:text-lg md:text-lg shadow-sm hover:shadow-md transition-colors duration-300"
+                className="group inline-flex items-center justify-center gap-3 esm:gap-4 px-6 esm:px-8 md:px-10 py-2.5 border-2 border-blue-600 hover:bg-blue-600 text-blue-600 hover:text-white rounded-xl w-full esm:w-fit font-semibold text-base esm:text-lg md:text-lg shadow-sm hover:shadow-md transition-colors duration-300 overflow-hidden"
               >
-                {t.button}
-                <svg className="w-4 h-4 esm:w-5 esm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {/* Left arrow — zero width before hover, expands in place */}
+                <span className="w-0 overflow-hidden group-hover:w-4 esm:group-hover:w-5 transition-all duration-300 ease-in-out flex-shrink-0 flex items-center">
+                  <svg className="w-4 h-4 esm:w-5 esm:h-5 scale-0 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-300 ease-in-out flex-shrink-0"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </span>
+                <span className="translate-x-0 group-hover:translate-x-1 transition-transform duration-300 ease-in-out">
+                  {t.button}
+                </span>
+                {/* Right arrow — slides out to the edge */}
+                <svg
+                  className="w-4 h-4 esm:w-5 esm:h-5 flex-shrink-0 translate-x-0 opacity-100 group-hover:translate-x-8 group-hover:opacity-0 transition-all duration-300 ease-in-out"
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
               </motion.button>

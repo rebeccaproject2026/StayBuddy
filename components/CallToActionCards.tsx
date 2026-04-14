@@ -38,14 +38,36 @@ export default function CallToActionCards() {
 
   const t = content[language as keyof typeof content] || content.en;
 
-  const ArrowIcon = () => (
-    <svg className="w-4 h-4 esm:w-5 esm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-    </svg>
+  const LearnMoreButton = ({ label }: { label: string }) => (
+    <motion.button
+      whileTap={{ scale: 0.97 }}
+      className="group relative inline-flex items-center justify-center gap-2 px-5 esm:px-6 py-2.5 md:py-3 border-2 border-gray-400 hover:border-blue-600 text-gray-600 hover:text-blue-600 rounded-lg font-medium w-full esm:w-fit transition-colors duration-200 overflow-hidden"
+    >
+      {/* Left arrow — zero width before hover, expands in place */}
+      <span className="w-0 overflow-hidden group-hover:w-4 esm:group-hover:w-5 transition-all duration-300 ease-in-out flex-shrink-0 flex items-center">
+        <svg className="w-4 h-4 esm:w-5 esm:h-5 scale-0 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-300 ease-in-out flex-shrink-0"
+          fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </span>
+
+      {/* Text shifts right when arrow appears */}
+      <span className="translate-x-0 group-hover:translate-x-1 transition-transform duration-300 ease-in-out">
+        {label}
+      </span>
+
+      {/* Right arrow — slides out to the edge */}
+      <svg
+        className="w-4 h-4 esm:w-5 esm:h-5 flex-shrink-0 translate-x-0 opacity-100 group-hover:translate-x-8 group-hover:opacity-0 transition-all duration-300 ease-in-out"
+        fill="none" stroke="currentColor" viewBox="0 0 24 24"
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+      </svg>
+    </motion.button>
   );
 
   return (
-    <section className="py-10 md:py-8 px-4 sm:px-6" ref={ref}>
+    <section className="pt-10 pb-2 md:pt-8 md:pb-8 px-4 sm:px-6" ref={ref}>
       <div className="max-w-7xl mx-auto">
         <div className="grid md:grid-cols-2 gap-4 esm:gap-6 lg:gap-8">
           {/* Left card — slides from left */}
@@ -62,15 +84,7 @@ export default function CallToActionCards() {
             <p className="text-gray-500 text-sm esm:text-sm md:text-base mb-6 esm:mb-7 md:mb-8 leading-relaxed">
               {t.findHome.description}
             </p>
-            <motion.button
-              whileHover={{ borderColor: '#2563eb', color: '#2563eb', x: 4 }}
-              whileTap={{ scale: 0.97 }}
-              transition={{ duration: 0.2 }}
-              className="inline-flex items-center justify-center gap-2 px-5 esm:px-6 py-2.5 md:py-3 border-2 border-gray-400 text-gray-600 rounded-lg font-medium w-full esm:w-fit transition-colors duration-200"
-            >
-              {t.findHome.button}
-              <ArrowIcon />
-            </motion.button>
+            <LearnMoreButton label={t.findHome.button} />
           </motion.div>
 
           {/* Right card — slides from right */}
@@ -87,15 +101,7 @@ export default function CallToActionCards() {
             <p className="text-gray-500 text-sm esm:text-sm md:text-base mb-6 esm:mb-7 md:mb-8 leading-relaxed">
               {t.rentHome.description}
             </p>
-            <motion.button
-              whileHover={{ borderColor: '#2563eb', color: '#2563eb', x: 4 }}
-              whileTap={{ scale: 0.97 }}
-              transition={{ duration: 0.2 }}
-              className="inline-flex items-center justify-center gap-2 px-5 esm:px-6 py-2.5 md:py-3 border-2 border-gray-400 text-gray-600 rounded-lg font-medium w-full esm:w-fit transition-colors duration-200"
-            >
-              {t.rentHome.button}
-              <ArrowIcon />
-            </motion.button>
+            <LearnMoreButton label={t.rentHome.button} />
           </motion.div>
         </div>
       </div>

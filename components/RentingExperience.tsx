@@ -88,7 +88,7 @@ const RentingExperience = () => {
   ];
 
   return (
-    <section ref={ref} className="py-10 sm:py-14 lg:py-20 px-4 sm:px-6 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
+    <section ref={ref} className="py-8 sm:py-14 lg:py-16 px-4 sm:px-6 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
@@ -124,15 +124,15 @@ const RentingExperience = () => {
             initial={{ opacity: 0, x: -24 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-            className="bg-white rounded-xl shadow-md border border-gray-100 p-4 sm:p-6 lg:p-8"
+            className="bg-white rounded-xl shadow-md border border-gray-100 p-3.5 sm:p-6"
           >
-            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1">
+            <h3 className="text-xl lg:text-2xl font-bold text-gray-900 mb-1">
               {isFr ? 'Pourquoi choisir StayBuddy' : 'Why Choose StayBuddy'}
             </h3>
-            <p className="text-gray-500 text-xs sm:text-sm lg:text-base mb-4 sm:mb-6">
+            <p className="text-gray-500 text-sm lg:text-base mb-4 sm:mb-6">
               {isFr ? 'Tout ce dont vous avez besoin, en un seul endroit.' : 'Everything you need, all in one place.'}
             </p>
-            <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               {leftSteps.map((step, i) => {
                 const Icon = step.icon;
                 const isActive = activeStep === i;
@@ -150,10 +150,10 @@ const RentingExperience = () => {
                         : 'border-gray-100 bg-gray-50 hover:border-gray-200'
                     }`}
                   >
-                    <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br ${step.color} flex items-center justify-center mb-2 sm:mb-3 shadow-sm transition-transform duration-300 ${isActive ? 'scale-110' : ''}`}>
-                      <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+                    <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${step.color} flex items-center justify-center mb-2 sm:mb-3 shadow-sm transition-transform duration-300 ${isActive ? 'scale-110' : ''}`}>
+                      <Icon className="w-4 h-4 text-white" />
                     </div>
-                    <p className="font-semibold text-gray-900 text-xs sm:text-sm lg:text-base mb-0.5 leading-snug">{step.title}</p>
+                    <p className="font-semibold text-gray-900 text-base sm:text-lg mb-0.5 leading-snug">{step.title}</p>
                     <AnimatePresence>
                       {isActive && (
                         <motion.p
@@ -161,13 +161,13 @@ const RentingExperience = () => {
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
                           transition={{ duration: 0.2 }}
-                          className="text-gray-500 text-[11px] sm:text-xs lg:text-sm leading-relaxed overflow-hidden"
+                          className="text-gray-500 text-sm sm:text-base leading-relaxed overflow-hidden"
                         >
                           {step.desc}
                         </motion.p>
                       )}
                     </AnimatePresence>
-                    {!isActive && <p className="text-gray-400 text-[11px] sm:text-xs lg:text-sm leading-snug">{step.desc}</p>}
+                    {!isActive && <p className="text-gray-400 text-sm sm:text-base leading-snug">{step.desc}</p>}
                   </motion.div>
                 );
               })}
@@ -179,12 +179,12 @@ const RentingExperience = () => {
             initial={{ opacity: 0, x: 24 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="bg-white rounded-xl shadow-md border border-gray-100 p-4 sm:p-6 lg:p-8"
+            className="bg-white rounded-xl shadow-md border border-gray-100 p-3.5 sm:p-6  "
           >
-            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1">
+            <h3 className="text-xl lg:text-2xl font-bold text-gray-900 mb-1">
               {isFr ? 'Votre parcours de location' : 'Your Rental Journey'}
             </h3>
-            <p className="text-gray-500 text-xs sm:text-sm lg:text-base mb-4 sm:mb-6">
+            <p className="text-gray-500 text-sm lg:text-base mb-4 sm:mb-6">
               {isFr ? 'Cinq étapes simples vers votre nouveau chez-vous.' : 'Five simple steps to your new home.'}
             </p>
             <div className="space-y-1 sm:space-y-2">
@@ -197,23 +197,23 @@ const RentingExperience = () => {
                     animate={isInView ? { opacity: 1, x: 0 } : {}}
                     transition={{ duration: 0.4, delay: 0.3 + i * 0.09 }}
                     whileHover={{ x: 4 }}
-                    className="flex items-start gap-3 sm:gap-4 p-2.5 sm:p-3.5 rounded-xl hover:bg-gray-50 transition-all duration-200 group cursor-default"
+                    className="flex items-start gap-3 sm:gap-4 py-2.5 px-0 sm:px-3.5 sm:py-3.5 rounded-xl hover:bg-gray-50 transition-all duration-200 group cursor-default"
                   >
                     {/* Step icon + connector line */}
                     <div className="flex flex-col items-center flex-shrink-0">
                       <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-accent to-accent-hover flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300">
-                        <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+                        <Icon className="w-4 h-4 text-white" />
                       </div>
                       {i < rightSteps.length - 1 && (
-                        <div className="w-0.5 h-4 sm:h-5 bg-gradient-to-b from-accent/40 to-transparent mt-1" />
+                        <div className="w-0.5 h-5 sm:h-6 bg-gradient-to-b from-accent/40 to-transparent mt-1" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0 pt-0.5 sm:pt-1">
                       <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5">
-                        <span className="text-[10px] sm:text-xs font-bold text-accent/60">{step.num}</span>
-                        <p className="font-semibold text-gray-900 text-xs sm:text-sm lg:text-base group-hover:text-primary transition-colors leading-snug">{step.title}</p>
+                        <span className="text-xs sm:text-sm font-bold text-accent/60">{step.num}</span>
+                        <p className="font-semibold text-gray-900 text-base lg:text-lg group-hover:text-primary transition-colors leading-snug">{step.title}</p>
                       </div>
-                      <p className="text-gray-500 text-[11px] sm:text-xs lg:text-sm leading-relaxed">{step.desc}</p>
+                      <p className="text-gray-500 text-sm lg:text-base leading-relaxed">{step.desc}</p>
                     </div>
                     <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-300 group-hover:text-primary group-hover:translate-x-1 transition-all duration-200 flex-shrink-0 mt-1.5 sm:mt-2" />
                   </motion.div>
@@ -233,12 +233,18 @@ const RentingExperience = () => {
               </p>
               <motion.a
                 href="/properties"
-                whileHover={{ scale: 1.04, x: 2 }}
                 whileTap={{ scale: 0.97 }}
-                className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-accent text-white rounded-xl text-xs sm:text-sm font-semibold shadow-md hover:bg-accent-hover transition-colors whitespace-nowrap"
+                className="group inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-accent hover:bg-accent-hover text-white rounded-xl text-xs esm:text-sm sm:text-base font-semibold shadow-md transition-colors whitespace-nowrap overflow-hidden"
               >
-                {isFr ? 'Explorer' : 'Explore Now'}
-                <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                {/* Left arrow — zero width before hover, expands in place */}
+                <span className="w-0 overflow-hidden group-hover:w-3 sm:group-hover:w-4 transition-all duration-300 ease-in-out flex-shrink-0 flex items-center">
+                  <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 scale-0 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-300 ease-in-out flex-shrink-0" />
+                </span>
+                <span className="translate-x-0 group-hover:translate-x-1 transition-transform duration-300 ease-in-out">
+                  {isFr ? 'Explorer' : 'Explore Now'}
+                </span>
+                {/* Right arrow — slides out to the edge */}
+                <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0 translate-x-0 opacity-100 group-hover:translate-x-6 group-hover:opacity-0 transition-all duration-300 ease-in-out" />
               </motion.a>
             </motion.div>
           </motion.div>

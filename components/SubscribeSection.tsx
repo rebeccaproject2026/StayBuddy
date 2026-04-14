@@ -129,7 +129,7 @@ export default function SubscribeSection() {
               initial={{ opacity: 0, x: -30 }}
               animate={isInView ? { opacity: 1, x: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.15, ease: "easeOut" }}
-              className="md:col-span-2 relative p-6 sm:p-8 md:p-10 text-white flex flex-col justify-center overflow-hidden"
+              className="md:col-span-2 relative p-4 sm:p-8 md:p-10 text-white flex flex-col justify-center overflow-hidden"
             >
               {/* Background image */}
               <Image
@@ -149,7 +149,7 @@ export default function SubscribeSection() {
                 <span className="text-xs font-semibold">{t.badge}</span>
               </div>
               <h2 className="text-xl esm:text-2xl sm:text-3xl md:text-3xl font-bold mb-3 leading-tight">{t.title}</h2>
-              <p className="text-white/90 text-xs esm:text-sm sm:text-base mb-5 esm:mb-6 leading-relaxed">{t.subtitle}</p>
+              <p className="text-white/90 text-sm sm:text-base mb-5 esm:mb-6 leading-relaxed">{t.subtitle}</p>
               <div className="space-y-2.5">
                 {t.features.map((feature, index) => (
                   <motion.div
@@ -162,7 +162,7 @@ export default function SubscribeSection() {
                     <div className="w-4 h-4 esm:w-5 esm:h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
                       <CheckCircle className="w-3 h-3 esm:w-3.5 esm:h-3.5 text-white" />
                     </div>
-                    <span className="text-xs esm:text-sm text-white/95">{feature}</span>
+                    <span className="text-sm text-white/95">{feature}</span>
                   </motion.div>
                 ))}
               </div>
@@ -174,7 +174,7 @@ export default function SubscribeSection() {
               initial={{ opacity: 0, x: 30 }}
               animate={isInView ? { opacity: 1, x: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.25, ease: "easeOut" }}
-              className="md:col-span-3 p-6 sm:p-8 md:p-10 flex flex-col justify-center"
+              className="md:col-span-3 p-4 sm:p-8 md:p-10 flex flex-col justify-center"
             >
               <div className="mb-4 flex items-start gap-3 esm:gap-4">
                 <motion.div
@@ -203,14 +203,14 @@ export default function SubscribeSection() {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder={t.emailPlaceholder}
                       disabled={isSubmitting || submitStatus === "success"}
-                      className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+                      className="w-full pl-11 pr-4 py-2.5 sm:py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
                       required
                     />
                   </div>
                 </div>
 
                 {/* Preferences row */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label htmlFor="sub-city" className="block text-sm font-semibold text-gray-600 mb-1.5">{t.cityLabel}</label>
                     <div className="relative">
@@ -220,7 +220,7 @@ export default function SubscribeSection() {
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
                         disabled={isSubmitting || submitStatus === "success"}
-                        className="w-full pl-9 pr-3 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors disabled:bg-gray-100 text-sm appearance-none bg-white"
+                        className="w-full pl-9 pr-3 py-2.5 sm:py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors disabled:bg-gray-100 text-sm appearance-none bg-white"
                       >
                         <option value="">{t.cityPlaceholder}</option>
                         {(CITIES[language] ?? CITIES.en).map((c) => <option key={c} value={c}>{c}</option>)}
@@ -236,7 +236,7 @@ export default function SubscribeSection() {
                         value={propertyType}
                         onChange={(e) => setPropertyType(e.target.value as "" | "PG" | "Tenant")}
                         disabled={isSubmitting || submitStatus === "success"}
-                        className="w-full pl-9 pr-3 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors disabled:bg-gray-100 text-sm appearance-none bg-white"
+                        className="w-full pl-9 pr-3 py-2.5 sm:py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors disabled:bg-gray-100 text-sm appearance-none bg-white"
                       >
                         <option value="">{t.anyType}</option>
                         <option value="PG">PG</option>
@@ -251,7 +251,7 @@ export default function SubscribeSection() {
                   disabled={isSubmitting || submitStatus === "success"}
                   whileHover={!isSubmitting && submitStatus !== "success" ? { scale: 1.02 } : {}}
                   whileTap={!isSubmitting && submitStatus !== "success" ? { scale: 0.97 } : {}}
-                  className="w-full py-3 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-base"
+                  className="w-full py-2.5 sm:py-3 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-base"
                 >
                   {isSubmitting ? (
                     <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />{t.subscribing}</>

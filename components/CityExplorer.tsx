@@ -24,6 +24,16 @@ const FR_CITY_IMAGES: Record<string, string> = {
   marseille: "/Marseille.png",
   toulouse: "/Toulouse.png",
   nice: "/Nice.png",
+  nantes: "/paris.png",
+  strasbourg: "/lyon.png",
+  montpellier: "/Marseille.png",
+  bordeaux: "/Toulouse.png",
+  lille: "/Nice.png",
+  rennes: "/paris.png",
+  reims: "/lyon.png",
+  grenoble: "/Marseille.png",
+  dijon: "/Toulouse.png",
+  toulon: "/Nice.png",
 };
 
 // Fallback pool — reuse available images for unknown cities
@@ -44,7 +54,7 @@ function getCityImage(name: string, country: string, usedImages: Set<string>): s
 
 // ── Trending cities (top 2 by count) ─────────────────────────────────────────
 const TRENDING_IN = new Set(["ahmedabad", "vadodara"]);
-const TRENDING_FR = new Set(["paris", "marseille"]);
+const TRENDING_FR = new Set(["paris", "lyon", "marseille"]);
 
 // ── Size assignment: first = large, next 2 = medium, rest = small ─────────────
 type CardSize = "large" | "medium" | "small";
@@ -153,23 +163,38 @@ export default function CityExplorer() {
 
   useEffect(() => {
     setPage(0);
+    setLoading(true);
     const countryCode = country === "fr" ? "fr" : "in";
 
     const DEFAULT_IN = ["Ahmedabad", "Surat", "Vadodara", "Gandhinagar", "Rajkot"];
     const DEFAULT_FR = ["Paris", "Lyon", "Marseille", "Toulouse", "Nice"];
     const defaults = countryCode === "fr" ? DEFAULT_FR : DEFAULT_IN;
 
-    fetch(`/api/properties/city-stats?country=${countryCode}&top=5`)
+    fetch(`/api/properties/city-stats?country=${countryCode}&top=8`)
       .then((r) => r.json())
       .then((data) => {
         const realCities: { name: string; count: number }[] = data.success && data.cities?.length
-          ? data.cities.slice(0, 5)
+          ? data.cities
           : [];
 
-        buildCities(realCities.length > 0 ? realCities : defaults.slice(0, 5).map((name) => ({ name, count: 0 })), countryCode);
+        if (realCities.length >= 5) {
+          // Enough real cities — show only real data
+          buildCities(realCities, countryCode);
+        } else if (realCities.length > 0) {
+          // Some real cities — pad with defaults (excluding cities already in real data)
+          const realNames = new Set(realCities.map((c) => c.name.toLowerCase()));
+          const padding = defaults
+            .filter((name) => !realNames.has(name.toLowerCase()))
+            .slice(0, 5 - realCities.length)
+            .map((name) => ({ name, count: 0 }));
+          buildCities([...realCities, ...padding], countryCode);
+        } else {
+          // No properties yet — show all 5 defaults with count 0
+          buildCities(defaults.map((name) => ({ name, count: 0 })), countryCode);
+        }
       })
       .catch(() => {
-        buildCities(defaults.slice(0, 5).map((name) => ({ name, count: 0 })), countryCode);
+        buildCities(defaults.map((name) => ({ name, count: 0 })), countryCode);
       })
       .finally(() => setLoading(false));
 

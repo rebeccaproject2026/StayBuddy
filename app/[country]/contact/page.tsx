@@ -147,7 +147,7 @@ export default function ContactPage() {
 
       {/* ── Hero ── */}
       <div
-        className="relative min-h-[420px] sm:min-h-[480px] bg-cover bg-center bg-no-repeat"
+        className="relative min-h-[280px] sm:min-h-[400px] bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/contactb.png')" }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-black/75 via-black/60 to-primary/40" />
@@ -158,23 +158,23 @@ export default function ContactPage() {
           animate={{ scale: 1 }}
           transition={{ duration: 2, ease: "easeOut" }}
         />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-28 sm:pt-32 pb-24 sm:pb-32 flex flex-col items-center text-center gap-4">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-28 md:pt-32 pb-14 sm:pb-24 md:pb-32 flex flex-col items-center text-center gap-3 sm:gap-4">
           <motion.div {...fadeUp(0.1)} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 text-white/90 text-sm font-medium">
             <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
             {labels.badge}
           </motion.div>
-          <motion.h1 {...fadeUp(0.25)} className="text-3xl sm:text-5xl md:text-6xl font-bold text-white drop-shadow-lg max-w-3xl leading-tight">
+          <motion.h1 {...fadeUp(0.25)} className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white drop-shadow-lg max-w-3xl leading-tight">
             {labels.title}
           </motion.h1>
-          <motion.p {...fadeUp(0.4)} className="text-base sm:text-lg text-white/85 max-w-xl leading-relaxed">
+          <motion.p {...fadeUp(0.4)} className="text-sm sm:text-base md:text-lg text-white/85 max-w-xl leading-relaxed px-2">
             {labels.subtitle}
           </motion.p>
         </div>
       </div>
 
       {/* ── Contact Cards ── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 -mt-10 sm:-mt-14 relative z-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 -mt-8 sm:-mt-14 relative z-10">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 items-stretch">
           {contactCards.map((card, i) => {
             const Icon = card.icon;
             const inner = (
@@ -183,14 +183,14 @@ export default function ContactPage() {
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-                className="bg-white rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-gray-200 group cursor-pointer h-full flex flex-col"
+                className="bg-white rounded-2xl p-4 sm:p-5 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-gray-200 group cursor-pointer h-full flex flex-col"
               >
-                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${card.color} flex items-center justify-center mb-3 shadow-md group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className="w-5 h-5 text-white" />
+                <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br ${card.color} flex items-center justify-center mb-2 sm:mb-3 shadow-md group-hover:scale-110 transition-transform duration-300`}>
+                  <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{card.title}</p>
-                <p className="text-gray-900 font-semibold text-sm leading-snug">{card.value}</p>
-                <p className="text-gray-500 text-xs mt-0.5">{card.desc}</p>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1 leading-tight">{card.title}</p>
+                <p className="text-gray-900 font-semibold text-xs sm:text-sm leading-snug">{card.value}</p>
+                <p className="text-gray-500 text-xs mt-0.5 leading-tight">{card.desc}</p>
                 {card.href && (
                   <div className="flex items-center gap-1 mt-2 text-primary text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                     {isFr ? "Ouvrir" : "Open"} <ArrowRight className="w-3 h-3" />
@@ -208,8 +208,8 @@ export default function ContactPage() {
       </section>
 
       {/* ── Main Content ── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
-        <div className="grid lg:grid-cols-5 gap-8 lg:gap-12 items-start">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-10 pb-10 sm:pb-16">
+        <div className="grid lg:grid-cols-5 gap-6 sm:gap-8 lg:gap-12 items-start">
 
           {/* ── Form ── */}
           <div className="lg:col-span-3">
@@ -220,16 +220,16 @@ export default function ContactPage() {
               className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden"
             >
               {/* Form header */}
-              <div className="bg-gradient-to-r from-primary to-primary-dark px-6 sm:px-8 py-6">
-                <h2 className="text-xl sm:text-2xl font-bold text-white">
+              <div className="bg-gradient-to-r from-primary to-primary-dark px-5 sm:px-8 py-5 sm:py-6">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white">
                   {isFr ? "Envoyez-nous un message" : "Send Us a Message"}
                 </h2>
-                <p className="text-white/75 text-sm mt-1">
+                <p className="text-white/75 text-xs sm:text-sm mt-1">
                   {isFr ? "Tous les champs marqués * sont obligatoires" : "All fields marked * are required"}
                 </p>
               </div>
 
-              <div className="p-6 sm:p-8">
+              <div className="p-4 sm:p-6 md:p-8">
                 <AnimatePresence mode="wait">
                   {!isSubmitted ? (
                     <motion.form
@@ -238,9 +238,9 @@ export default function ContactPage() {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0, scale: 0.97 }}
                       onSubmit={handleSubmit}
-                      className="space-y-5"
+                      className="space-y-4 sm:space-y-5"
                     >
-                      <div className="grid sm:grid-cols-2 gap-5">
+                      <div className="grid sm:grid-cols-2 gap-4 sm:gap-5">
                         {/* Name */}
                         <div>
                           <label className="block text-gray-700 font-semibold text-sm mb-1.5">
@@ -279,7 +279,7 @@ export default function ContactPage() {
                         </div>
                       </div>
 
-                      <div className="grid sm:grid-cols-2 gap-5">
+                      <div className="grid sm:grid-cols-2 gap-4 sm:gap-5">
                         {/* Phone */}
                         <div>
                           <label className="block text-gray-700 font-semibold text-sm mb-1.5">
@@ -356,7 +356,7 @@ export default function ContactPage() {
                         disabled={isSubmitting}
                         whileHover={{ scale: isSubmitting ? 1 : 1.02, y: isSubmitting ? 0 : -1 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full py-3.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed text-sm sm:text-base"
+                        className="w-full py-3 sm:py-3.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed text-sm sm:text-base"
                       >
                         {isSubmitting ? (
                           <>
@@ -377,7 +377,7 @@ export default function ContactPage() {
                       initial={{ opacity: 0, scale: 0.92 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.4, ease: "easeOut" }}
-                      className="text-center py-10 sm:py-14"
+                      className="text-center py-8 sm:py-12 md:py-14"
                     >
                       <motion.div
                         initial={{ scale: 0 }}
@@ -411,19 +411,19 @@ export default function ContactPage() {
           </div>
 
           {/* ── Sidebar ── */}
-          <div className="lg:col-span-2 flex flex-col gap-6">
+          <div className="lg:col-span-2 flex flex-col gap-4 sm:gap-6">
 
             {/* Info card */}
             <motion.div
               initial={{ opacity: 0, x: 24 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.35 }}
-              className="bg-gradient-to-br from-primary to-primary-dark rounded-2xl p-6 sm:p-7 text-white shadow-xl"
+              className="relative bg-gradient-to-br from-primary to-primary-dark rounded-2xl p-5 sm:p-6 md:p-7 text-white shadow-xl overflow-hidden"
             >
-              <h3 className="text-xl font-bold mb-1">{labels.infoTitle}</h3>
-              <p className="text-white/70 text-sm mb-6">{labels.infoSub}</p>
+              <h3 className="text-lg sm:text-xl font-bold mb-1">{labels.infoTitle}</h3>
+              <p className="text-white/70 text-xs sm:text-sm mb-4 sm:mb-6">{labels.infoSub}</p>
 
-              <div className="space-y-5">
+              <div className="space-y-4 sm:space-y-5">
                 {[
                   { icon: Mail, title: labels.emailTitle, value: "support@staybuddy.com", desc: labels.emailDesc, href: "mailto:support@staybuddy.com" },
                   { icon: Phone, title: labels.phoneTitle, value: "+91 99999 99999", desc: labels.phoneDesc, href: "tel:+919999999999" },
@@ -432,15 +432,15 @@ export default function ContactPage() {
                   const Icon = item.icon;
                   return (
                     <motion.div key={i} {...wipeIn(0.4 + i * 0.1)} className="flex items-start gap-3 group">
-                      <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-white/25 transition-colors">
-                        <Icon className="w-5 h-5" />
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white/15 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-white/25 transition-colors">
+                        <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-white/60 text-xs font-medium uppercase tracking-wide">{item.title}</p>
                         {item.href ? (
-                          <a href={item.href} className="text-white font-semibold text-sm hover:text-white/80 transition-colors">{item.value}</a>
+                          <a href={item.href} className="text-white font-semibold text-xs sm:text-sm hover:text-white/80 transition-colors break-all">{item.value}</a>
                         ) : (
-                          <p className="text-white font-semibold text-sm">{item.value}</p>
+                          <p className="text-white font-semibold text-xs sm:text-sm">{item.value}</p>
                         )}
                         <p className="text-white/55 text-xs mt-0.5">{item.desc}</p>
                       </div>
@@ -449,9 +449,9 @@ export default function ContactPage() {
                 })}
               </div>
 
-              {/* Decorative circles */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+              {/* Decorative circles — clipped by overflow-hidden */}
+              <div className="absolute top-0 right-0 w-28 h-28 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none" />
             </motion.div>
 
             {/* Map embed */}
@@ -461,11 +461,11 @@ export default function ContactPage() {
               transition={{ duration: 0.6, delay: 0.5 }}
               className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden"
             >
-              <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+              <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-gray-100 flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-primary" />
                 <span className="font-semibold text-gray-800 text-sm">{isFr ? "Notre emplacement" : "Our Location"}</span>
               </div>
-              <div className="relative h-52 sm:h-60 bg-gray-100">
+              <div className="relative h-44 sm:h-52 md:h-60 bg-gray-100">
                 <iframe
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3672.0!2d72.6!3d23.0!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjPCsDAwJzAwLjAiTiA3MsKwMzYnMDAuMCJF!5e0!3m2!1sen!2sin!4v1234567890"
                   width="100%" height="100%"
@@ -477,7 +477,7 @@ export default function ContactPage() {
                   title="StayBuddy Location"
                 />
               </div>
-              <div className="px-5 py-3 bg-gray-50">
+              <div className="px-4 sm:px-5 py-2.5 sm:py-3 bg-gray-50">
                 <p className="text-xs text-gray-500">213 Sanidhya Arcade, Vastral, Ahmedabad, Gujarat 382418</p>
               </div>
             </motion.div>
@@ -487,9 +487,9 @@ export default function ContactPage() {
               initial={{ opacity: 0, x: 24 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
-              className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6"
+              className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-6"
             >
-              <h4 className="font-bold text-gray-900 mb-4 text-base">
+              <h4 className="font-bold text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">
                 {isFr ? "Questions fréquentes" : "Quick Answers"}
               </h4>
               <div className="space-y-3">
@@ -505,7 +505,7 @@ export default function ContactPage() {
                       <CheckCircle className="w-3 h-3 text-primary" />
                     </div>
                     <div>
-                      <p className="text-gray-800 font-semibold text-sm">{faq.q}</p>
+                      <p className="text-gray-800 font-semibold text-xs sm:text-sm">{faq.q}</p>
                       <p className="text-gray-500 text-xs mt-0.5">{faq.a}</p>
                     </div>
                   </div>

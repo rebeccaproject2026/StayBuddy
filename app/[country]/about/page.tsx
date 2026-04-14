@@ -69,7 +69,7 @@ export default function AboutPage() {
 
       {/* ── Hero ── */}
       <div
-        className="relative min-h-[520px] sm:min-h-[580px] bg-cover bg-center bg-no-repeat"
+        className="relative min-h-[380px] sm:min-h-[520px] md:min-h-[580px] bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/aboutbg.png')" }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-black/75 via-black/60 to-primary/40" />
@@ -80,7 +80,7 @@ export default function AboutPage() {
           animate={{ scale: 1 }}
           transition={{ duration: 2, ease: "easeOut" }}
         />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-24 sm:py-32 flex flex-col items-center text-center gap-5">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24 md:py-32 flex flex-col items-center text-center gap-4 sm:gap-5">
           <motion.div
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -94,7 +94,7 @@ export default function AboutPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="text-3xl sm:text-5xl md:text-6xl font-bold text-white drop-shadow-lg max-w-4xl leading-tight"
+            className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white drop-shadow-lg max-w-3xl leading-tight px-2"
           >
             {isFr ? 'Trouvez votre séjour parfait avec StayBuddy' : 'Find Your Perfect Stay with StayBuddy'}
           </motion.h1>
@@ -102,7 +102,7 @@ export default function AboutPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.42 }}
-            className="text-base sm:text-lg md:text-xl text-white/90 max-w-2xl leading-relaxed"
+            className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 max-w-2xl leading-relaxed px-2"
           >
             {isFr
               ? "Une plateforme de location moderne reliant les gens à des logements PG et des maisons de qualité."
@@ -112,7 +112,7 @@ export default function AboutPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.55 }}
-            className="text-sm sm:text-base text-white/80 max-w-xl"
+            className="text-xs sm:text-sm md:text-base text-white/80 max-w-2xl px-2"
           >
             {isFr
               ? "Que vous soyez étudiant, professionnel ou en déménagement, StayBuddy vous connecte avec des lieux confortables et vérifiés."
@@ -122,22 +122,22 @@ export default function AboutPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.68 }}
-            className="flex flex-col sm:flex-row gap-3 mt-2"
+            className="flex flex-col sm:flex-row gap-3 mt-1 sm:mt-2 w-full sm:w-auto px-4 sm:px-0"
           >
-            <Link href="/properties">
+            <Link href="/properties" className="w-full sm:w-auto">
               <motion.button
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.96 }}
-                className="px-7 py-3 bg-white text-primary rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-sm sm:text-base"
+                className="w-full sm:w-auto px-7 py-3 bg-white text-primary rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-sm sm:text-base"
               >
                 {isFr ? 'Explorer les propriétés' : 'Explore Properties'}
               </motion.button>
             </Link>
-            <Link href="/contact">
+            <Link href="/contact" className="w-full sm:w-auto">
               <motion.button
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.96 }}
-                className="px-7 py-3 bg-white/15 backdrop-blur-sm border border-white/30 text-white rounded-xl font-semibold hover:bg-white/25 transition-all duration-300 text-sm sm:text-base"
+                className="w-full sm:w-auto px-7 py-3 bg-white/15 backdrop-blur-sm border border-white/30 text-white rounded-xl font-semibold hover:bg-white/25 transition-all duration-300 text-sm sm:text-base"
               >
                 {isFr ? 'Contactez-nous' : 'Contact Us'}
               </motion.button>
@@ -147,23 +147,19 @@ export default function AboutPage() {
       </div>
 
       {/* ── Stats Bar ── */}
-      <section className="bg-white border-b border-gray-100 py-8 sm:py-10">
+      <section className="bg-white border-b border-gray-100 py-6 sm:py-8 md:py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
             {stats.map((s, i) => (
-              <motion.div
-                key={i}
-                {...scaleIn(i * 0.1)}
-                className="text-center group"
-              >
+              <motion.div key={i} {...scaleIn(i * 0.1)} className="text-center group">
                 <motion.p
-                  className="text-3xl sm:text-4xl font-bold text-primary"
+                  className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary"
                   whileHover={{ scale: 1.08 }}
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 >
                   {s.value}
                 </motion.p>
-                <p className="text-gray-500 text-sm sm:text-base mt-1">{s.label}</p>
+                <p className="text-gray-500 text-xs sm:text-sm md:text-base mt-1">{s.label}</p>
               </motion.div>
             ))}
           </div>
@@ -171,49 +167,46 @@ export default function AboutPage() {
       </section>
 
       {/* ── Mission ── */}
-      <section className="py-16 sm:py-20 px-4 sm:px-6 bg-white">
+      <section className="py-10 sm:py-16 md:py-20 px-4 sm:px-6 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          <div className="grid lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-16 items-center">
             <motion.div {...fadeUp(0)}>
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-5">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-4 sm:mb-5">
                 <Target className="w-4 h-4" />
                 {isFr ? 'Notre Mission' : 'Our Mission'}
               </div>
-              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-5 leading-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 sm:mb-5 leading-tight">
                 {isFr ? 'Simplifier la recherche de logement' : 'Simplifying the Search for Home'}
               </h2>
-              <p className="text-gray-600 text-base sm:text-lg leading-relaxed mb-6">
+              <p className="text-gray-600 text-sm sm:text-base md:text-lg leading-relaxed mb-4 sm:mb-6">
                 {isFr
                   ? "Chez StayBuddy, notre mission est de simplifier le processus de recherche d'espaces de vie sûrs et abordables. Nous croyons que chacun mérite un endroit confortable sans stress inutile."
                   : "At StayBuddy, our mission is to simplify the process of finding safe and affordable living spaces. We believe everyone deserves a comfortable place to stay without unnecessary stress or complicated processes."}
               </p>
-              <p className="text-gray-600 text-base sm:text-lg leading-relaxed">
+              <p className="text-gray-600 text-sm sm:text-base md:text-lg leading-relaxed">
                 {isFr
                   ? "Notre plateforme se concentre sur la transparence, la commodité et la confiance pour que locataires et propriétaires puissent se connecter facilement."
                   : "Our platform focuses on transparency, convenience, and trust so tenants and property owners can connect easily and confidently."}
               </p>
             </motion.div>
-            <motion.div {...fadeUp(0.15)} className="relative">
+            <motion.div {...fadeUp(0.15)} className="relative mt-4 sm:mt-0">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/3]">
-                <img
-                  src="/homebg.jpeg"
-                  alt="Mission"
-                  className="w-full h-full object-cover"
-                />
+                <img src="/homebg.jpeg" alt="Mission" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/30 to-transparent" />
               </div>
+              {/* Floating badge — repositioned to stay inside on mobile */}
               <motion.div
-                className="absolute -bottom-4 -left-4 bg-white rounded-2xl shadow-xl p-4 flex items-center gap-3"
+                className="absolute bottom-3 left-3 sm:-bottom-4 sm:-left-4 bg-white rounded-2xl shadow-xl p-3 sm:p-4 flex items-center gap-2 sm:gap-3"
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.4 }}
               >
-                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-                  <CheckCircle className="w-5 h-5 text-primary" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-bold text-gray-900 text-sm">{isFr ? 'Propriétés vérifiées' : 'Verified Properties'}</p>
+                  <p className="font-bold text-gray-900 text-xs sm:text-sm">{isFr ? 'Propriétés vérifiées' : 'Verified Properties'}</p>
                   <p className="text-gray-500 text-xs">{isFr ? 'Chaque annonce est contrôlée' : 'Every listing is checked'}</p>
                 </div>
               </motion.div>
@@ -223,35 +216,35 @@ export default function AboutPage() {
       </section>
 
       {/* ── Features ── */}
-      <section className="py-16 sm:py-20 px-4 sm:px-6 bg-gradient-to-b from-gray-50 to-white">
+      <section className="py-10 sm:py-16 md:py-20 px-4 sm:px-6 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto">
-          <motion.div {...fadeUp(0)} className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+          <motion.div {...fadeUp(0)} className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3">
               {isFr ? 'Ce que StayBuddy offre' : 'What StayBuddy Offers'}
             </h2>
-            <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto">
+            <p className="text-gray-600 text-sm sm:text-base md:text-lg max-w-2xl mx-auto">
               {isFr ? 'Des outils puissants pour locataires et propriétaires' : 'Powerful tools for both tenants and property owners'}
             </p>
           </motion.div>
 
-          <div className="grid lg:grid-cols-2 gap-6 sm:gap-8">
+          <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
             {/* Tenants */}
             <motion.div
               {...fadeUp(0.1)}
-              className="group bg-white rounded-2xl p-6 sm:p-8 shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100 hover:border-primary/30 relative overflow-hidden"
+              className="group bg-white rounded-2xl p-5 sm:p-6 md:p-8 shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100 hover:border-primary/30 relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/5 to-transparent rounded-bl-full" />
               <div className="relative">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center shadow-lg">
-                    <Users className="w-6 h-6 text-white" />
+                <div className="flex items-center gap-3 mb-4 sm:mb-5">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                    <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900">{isFr ? 'Pour les locataires' : 'For Tenants'}</h3>
-                    <p className="text-gray-500 text-sm">{isFr ? 'Découvrez votre espace idéal' : 'Discover your ideal space'}</p>
+                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{isFr ? 'Pour les locataires' : 'For Tenants'}</h3>
+                    <p className="text-gray-500 text-xs sm:text-sm">{isFr ? 'Découvrez votre espace idéal' : 'Discover your ideal space'}</p>
                   </div>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {tenantItems.map((item, idx) => {
                     const Icon = item.icon;
                     return (
@@ -263,10 +256,10 @@ export default function AboutPage() {
                         transition={{ duration: 0.3, delay: idx * 0.05 }}
                         className="flex items-center gap-3 group/item hover:translate-x-1 transition-transform duration-200"
                       >
-                        <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0 group-hover/item:bg-primary/20 transition-colors">
-                          <Icon className="w-4 h-4 text-primary" />
+                        <div className="w-8 h-8 sm:w-9 sm:h-9 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0 group-hover/item:bg-primary/20 transition-colors">
+                          <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
                         </div>
-                        <p className="text-gray-700 text-sm sm:text-base font-medium">{item.text}</p>
+                        <p className="text-gray-700 text-xs sm:text-sm md:text-base font-medium">{item.text}</p>
                       </motion.div>
                     );
                   })}
@@ -277,20 +270,20 @@ export default function AboutPage() {
             {/* Owners */}
             <motion.div
               {...fadeUp(0.2)}
-              className="group bg-white rounded-2xl p-6 sm:p-8 shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100 hover:border-accent/30 relative overflow-hidden"
+              className="group bg-white rounded-2xl p-5 sm:p-6 md:p-8 shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100 hover:border-accent/30 relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-accent/5 to-transparent rounded-bl-full" />
               <div className="relative">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-12 h-12 bg-gradient-to-br from-accent to-accent-hover rounded-xl flex items-center justify-center shadow-lg">
-                    <Building2 className="w-6 h-6 text-white" />
+                <div className="flex items-center gap-3 mb-4 sm:mb-5">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-accent to-accent-hover rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                    <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900">{isFr ? 'Pour les propriétaires' : 'For Property Owners'}</h3>
-                    <p className="text-gray-500 text-sm">{isFr ? 'Gérez facilement' : 'Manage with ease'}</p>
+                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{isFr ? 'Pour les propriétaires' : 'For Property Owners'}</h3>
+                    <p className="text-gray-500 text-xs sm:text-sm">{isFr ? 'Gérez facilement' : 'Manage with ease'}</p>
                   </div>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {ownerItems.map((item, idx) => {
                     const Icon = item.icon;
                     return (
@@ -302,10 +295,10 @@ export default function AboutPage() {
                         transition={{ duration: 0.3, delay: idx * 0.05 }}
                         className="flex items-center gap-3 group/item hover:translate-x-1 transition-transform duration-200"
                       >
-                        <div className="w-9 h-9 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0 group-hover/item:bg-accent/20 transition-colors">
-                          <Icon className="w-4 h-4 text-accent" />
+                        <div className="w-8 h-8 sm:w-9 sm:h-9 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0 group-hover/item:bg-accent/20 transition-colors">
+                          <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />
                         </div>
-                        <p className="text-gray-700 text-sm sm:text-base font-medium">{item.text}</p>
+                        <p className="text-gray-700 text-xs sm:text-sm md:text-base font-medium">{item.text}</p>
                       </motion.div>
                     );
                   })}
@@ -317,32 +310,32 @@ export default function AboutPage() {
       </section>
 
       {/* ── Why Choose Us ── */}
-      <section className="py-16 sm:py-20 px-4 sm:px-6 bg-white">
+      <section className="py-10 sm:py-16 md:py-20 px-4 sm:px-6 bg-white">
         <div className="max-w-7xl mx-auto">
-          <motion.div {...fadeUp(0)} className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+          <motion.div {...fadeUp(0)} className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3">
               {isFr ? 'Pourquoi choisir StayBuddy' : 'Why Choose StayBuddy'}
             </h2>
-            <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto">
+            <p className="text-gray-600 text-sm sm:text-base md:text-lg max-w-2xl mx-auto">
               {isFr ? 'Découvrez la différence avec notre plateforme' : 'Experience the difference with our platform'}
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
             {advantages.map((adv, i) => {
               const Icon = adv.icon;
               return (
                 <motion.div
                   key={i}
                   {...fadeUp(i * 0.07)}
-                  className="group relative bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-400 overflow-hidden cursor-default"
+                  className="group relative bg-white rounded-2xl p-5 sm:p-6 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-400 overflow-hidden cursor-default"
                 >
                   <div className={`absolute inset-0 bg-gradient-to-br ${adv.color} opacity-0 group-hover:opacity-5 transition-opacity duration-400`} />
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${adv.color} flex items-center justify-center mb-4 shadow-md group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className="w-7 h-7 text-white" />
+                  <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br ${adv.color} flex items-center justify-center mb-3 sm:mb-4 shadow-md group-hover:scale-110 transition-transform duration-300`}>
+                    <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">{adv.title}</h3>
-                  <p className="text-gray-500 text-sm leading-relaxed">{adv.desc}</p>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1.5 sm:mb-2">{adv.title}</h3>
+                  <p className="text-gray-500 text-xs sm:text-sm leading-relaxed">{adv.desc}</p>
                 </motion.div>
               );
             })}
@@ -351,27 +344,27 @@ export default function AboutPage() {
       </section>
 
       {/* ── Core Values ── */}
-      <section className="py-16 sm:py-20 px-4 sm:px-6 bg-gradient-to-b from-gray-50 to-white">
+      <section className="py-10 sm:py-16 md:py-20 px-4 sm:px-6 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto">
-          <motion.div {...fadeUp(0)} className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+          <motion.div {...fadeUp(0)} className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3">
               {isFr ? 'Nos valeurs fondamentales' : 'Our Core Values'}
             </h2>
           </motion.div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
             {values.map((v, i) => {
               const Icon = v.icon;
               return (
                 <motion.div
                   key={i}
                   {...scaleIn(i * 0.1)}
-                  className={`${v.bg} rounded-2xl p-6 text-center group hover:scale-105 transition-transform duration-300 cursor-default`}
+                  className={`${v.bg} rounded-2xl p-4 sm:p-6 text-center group hover:scale-105 transition-transform duration-300 cursor-default`}
                 >
-                  <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm group-hover:shadow-md transition-shadow">
-                    <Icon className={`w-7 h-7 ${v.iconColor}`} />
+                  <div className="w-11 h-11 sm:w-14 sm:h-14 bg-white rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-sm group-hover:shadow-md transition-shadow">
+                    <Icon className={`w-5 h-5 sm:w-7 sm:h-7 ${v.iconColor}`} />
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">{v.title}</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed">{v.desc}</p>
+                  <h3 className="text-sm sm:text-lg font-bold text-gray-900 mb-1 sm:mb-2">{v.title}</h3>
+                  <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">{v.desc}</p>
                 </motion.div>
               );
             })}
@@ -380,48 +373,45 @@ export default function AboutPage() {
       </section>
 
       {/* ── Vision ── */}
-      <section className="py-16 sm:py-20 px-4 sm:px-6 bg-white">
+      <section className="py-10 sm:py-16 md:py-20 px-4 sm:px-6 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            <motion.div {...fadeUp(0.1)} className="order-2 lg:order-1 relative">
+          <div className="grid lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-16 items-center">
+            <motion.div {...fadeUp(0.1)} className="order-2 lg:order-1 relative mt-4 sm:mt-0">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/3]">
-                <img
-                  src="/about2.png"
-                  alt="Vision"
-                  className="w-full h-full object-cover"
-                />
+                <img src="/about2.png" alt="Vision" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
               </div>
+              {/* Floating badge — stays inside on mobile */}
               <motion.div
-                className="absolute -top-4 -right-4 bg-white rounded-2xl shadow-xl p-4 flex items-center gap-3"
+                className="absolute top-3 right-3 sm:-top-4 sm:-right-4 bg-white rounded-2xl shadow-xl p-3 sm:p-4 flex items-center gap-2 sm:gap-3"
                 initial={{ opacity: 0, x: 20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.4 }}
               >
-                <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-accent" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-accent/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
                 </div>
                 <div>
-                  <p className="font-bold text-gray-900 text-sm">{isFr ? 'En croissance' : 'Growing Fast'}</p>
+                  <p className="font-bold text-gray-900 text-xs sm:text-sm">{isFr ? 'En croissance' : 'Growing Fast'}</p>
                   <p className="text-gray-500 text-xs">{isFr ? 'Nouvelles villes chaque mois' : 'New cities every month'}</p>
                 </div>
               </motion.div>
             </motion.div>
             <motion.div {...fadeUp(0)} className="order-1 lg:order-2">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 text-accent text-sm font-semibold mb-5">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 text-accent text-sm font-semibold mb-4 sm:mb-5">
                 <TrendingUp className="w-4 h-4" />
                 {isFr ? 'Notre Vision' : 'Our Vision'}
               </div>
-              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-5 leading-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 sm:mb-5 leading-tight">
                 {isFr ? 'Construire la plateforme de location de demain' : 'Building the Rental Platform of Tomorrow'}
               </h2>
-              <p className="text-gray-600 text-base sm:text-lg leading-relaxed mb-6">
+              <p className="text-gray-600 text-sm sm:text-base md:text-lg leading-relaxed mb-4 sm:mb-6">
                 {isFr
                   ? "StayBuddy vise à devenir la plateforme la plus fiable pour les locations. Nous améliorons continuellement avec de meilleurs outils de recherche et une gestion immobilière plus intelligente."
                   : "StayBuddy aims to become the most trusted platform for rental accommodations. We're continuously improving with better search tools, smarter property management, and innovative features."}
               </p>
-              <p className="text-gray-600 text-base sm:text-lg leading-relaxed">
+              <p className="text-gray-600 text-sm sm:text-base md:text-lg leading-relaxed">
                 {isFr
                   ? "Notre objectif est de rendre la découverte de propriétés simple et efficace pour tout le monde."
                   : "Our goal is to make property discovery simple and efficient for everyone, everywhere."}
@@ -432,28 +422,28 @@ export default function AboutPage() {
       </section>
 
       {/* ── CTA ── */}
-      <section className="py-16 sm:py-20 px-4 sm:px-6 bg-gradient-to-r from-primary to-primary-dark relative overflow-hidden">
+      <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 bg-gradient-to-r from-primary to-primary-dark relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full -translate-x-1/2 -translate-y-1/2" />
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/3 translate-y-1/3" />
         </div>
         <div className="relative max-w-7xl mx-auto text-center">
           <motion.div {...fadeUp(0)}>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3 sm:mb-4">
               {isFr ? 'Prêt à trouver votre prochain séjour?' : 'Ready to Find Your Next Stay?'}
             </h2>
-            <p className="text-white/85 text-base sm:text-lg mb-8 max-w-2xl mx-auto">
+            <p className="text-white/85 text-sm sm:text-base md:text-lg mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
               {isFr
                 ? "Rejoignez des milliers de locataires et propriétaires satisfaits sur StayBuddy."
                 : "Join thousands of happy tenants and property owners on StayBuddy."}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/properties">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0">
+              <Link href="/properties" className="w-full sm:w-auto">
                 <motion.button
                   whileHover={{ scale: 1.05, y: -2, boxShadow: "0 16px 40px rgba(0,0,0,0.25)" }}
                   whileTap={{ scale: 0.96 }}
                   transition={{ type: "spring", stiffness: 380, damping: 20 }}
-                  className="w-full sm:w-auto px-8 py-4 bg-white text-primary rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-sm sm:text-base"
+                  className="w-full sm:w-auto px-8 py-3 sm:py-4 bg-white text-primary rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-sm sm:text-base"
                 >
                   {isFr ? 'Explorer les propriétés' : 'Explore Properties'}
                 </motion.button>
