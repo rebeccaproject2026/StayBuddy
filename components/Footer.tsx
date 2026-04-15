@@ -12,17 +12,6 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] },
 });
 
-const staggerList = {
-  initial: {},
-  whileInView: { transition: { staggerChildren: 0.07 } },
-  viewport: { once: true, margin: "-60px" },
-};
-
-const listItem = {
-  initial: { opacity: 0, x: -10 },
-  whileInView: { opacity: 1, x: 0 },
-  transition: { duration: 0.35, ease: "easeOut" },
-};
 
 export default function Footer() {
   const { language } = useLanguage();
@@ -159,7 +148,7 @@ export default function Footer() {
             <h4 className="font-bold text-gray-800 mb-4 esm:mb-6 text-lg esm:text-xl md:text-xl">
               {t.discover.title}
             </h4>
-            <motion.ul key={`discover-${language}`} className="space-y-2" variants={staggerList} initial="initial" whileInView="whileInView" viewport={{ once: true, margin: "-60px" }}>
+            <ul className="space-y-2">
               {[
                 { href: "/properties?tab=pg&pgFor=Female", label: t.discover.links[0] },
                 { href: "/properties?tab=pg&pgFor=Male", label: t.discover.links[1] },
@@ -167,15 +156,13 @@ export default function Footer() {
                 { href: "/properties?tab=tenant", label: t.discover.links[3] },
                 { href: "/properties?tab=tenant", label: t.discover.links[4] },
               ].map((item) => (
-                <motion.li key={item.label} variants={listItem}>
-                  <motion.div whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 400, damping: 25 }}>
-                    <Link href={item.href} className="text-gray-600 hover:text-blue-600 transition-colors duration-200">
-                      {item.label}
-                    </Link>
-                  </motion.div>
-                </motion.li>
+                <li key={item.label}>
+                  <Link href={item.href} className="text-gray-600 hover:text-blue-600 hover:translate-x-1 transition-all duration-200 inline-block">
+                    {item.label}
+                  </Link>
+                </li>
               ))}
-            </motion.ul>
+            </ul>
           </motion.div>
 
           {/* Quick Links */}
@@ -183,22 +170,20 @@ export default function Footer() {
             <h4 className="font-bold text-gray-800 mb-4 esm:mb-6 text-lg esm:text-xl md:text-xl">
               {t.quickLinks.title}
             </h4>
-            <motion.ul key={`quicklinks-${language}`} className="space-y-2" variants={staggerList} initial="initial" whileInView="whileInView" viewport={{ once: true, margin: "-60px" }}>
+            <ul className="space-y-2">
               {[
                 { href: "/about", label: t.quickLinks.links[0] },
                 { href: "/contact", label: t.quickLinks.links[1] },
                 { href: "#", label: t.quickLinks.links[2] },
                 { href: "#", label: t.quickLinks.links[3] },
               ].map((item) => (
-                <motion.li key={item.label} variants={listItem}>
-                  <motion.div whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 400, damping: 25 }}>
-                    <Link href={item.href} className="text-gray-600 hover:text-blue-600 transition-colors duration-200">
-                      {item.label}
-                    </Link>
-                  </motion.div>
-                </motion.li>
+                <li key={item.label}>
+                  <Link href={item.href} className="text-gray-600 hover:text-blue-600 hover:translate-x-1 transition-all duration-200 inline-block">
+                    {item.label}
+                  </Link>
+                </li>
               ))}
-            </motion.ul>
+            </ul>
           </motion.div>
 
           {/* Contact */}
@@ -277,11 +262,9 @@ export default function Footer() {
                 { href: "/terms", label: t.terms },
                 { href: "/privacy", label: t.privacy },
               ].map((item) => (
-                <motion.div key={item.href} whileHover={{ y: -1 }} transition={{ type: "spring", stiffness: 400, damping: 20 }}>
-                  <Link href={item.href} className="hover:text-blue-600 transition-colors duration-200">
-                    {item.label}
-                  </Link>
-                </motion.div>
+                <Link key={item.href} href={item.href} className="hover:text-blue-600 hover:-translate-y-px transition-all duration-200 inline-block">
+                  {item.label}
+                </Link>
               ))}
             </div>
           </div>

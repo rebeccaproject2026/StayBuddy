@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Heart, ShieldCheck, ShieldOff, ChevronUp } from "lucide-react";
 import Image from "next/image";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import Link from "@/components/LocalizedLink";
 
 interface RoomDetail {
   monthlyRent: string;
@@ -70,7 +71,6 @@ export default function PropertyCard({
 }: PropertyCardProps) {
   const { t } = useLanguage();
   const params = useParams();
-  const router = useRouter();
   const country = (params?.country as string) || 'in';
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(isFavoriteProp);
@@ -157,10 +157,7 @@ export default function PropertyCard({
     }
   };
 
-  const handleCardClick = () => {
-    router.push(`/${country}/property/${id}`);
-  };
-
+  const handleCardClick = () => {}; // navigation handled by Link wrapper
   const variants = {
     enter: (direction: number) => ({
       x: direction > 0 ? 1000 : -1000,
@@ -180,11 +177,8 @@ export default function PropertyCard({
 
   return (
     <>
-      <motion.div
-        onClick={handleCardClick}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
+      <Link href={`/property/${id}`} className="block">
+      <div
         className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer"
       >
         {/* Image Carousel */}
@@ -429,7 +423,8 @@ export default function PropertyCard({
             )}
           </div>
         </div>
-      </motion.div>
+      </div>
+      </Link>
     </>
   );
 }

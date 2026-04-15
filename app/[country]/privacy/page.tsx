@@ -7,137 +7,110 @@ import { ArrowLeft } from "lucide-react";
 const sections = [
   {
     id: "introduction",
-    title: "Introduction",
-    content: `This Privacy Policy ("Policy") explains how StayBuddy ("StayBuddy / We / Us / Company") collects, uses, discloses, and transfers your information when you use our website, mobile application, and related platforms (collectively "Sites") for delivery of information, products, offerings, and content via any mobile or internet-connected device (collectively the "Services").
+    title: "1. Introduction",
+    content: `This Privacy Policy explains how StayBuddy ("StayBuddy / We / Us") collects, uses, and protects your personal information when you use our website and platform ("Site") and related services ("Services").
 
-This Policy forms part of the Terms of Use and other terms on the Site. Please read this Privacy Policy and our Terms of Use carefully before using our Services.
+By using StayBuddy, you consent to the data practices described in this Policy. We are committed to protecting your privacy and handling your information responsibly.
 
-StayBuddy respects the privacy of its users and is committed to protecting it in all respects. The information about the user as collected by StayBuddy is: (a) information supplied by users and (b) information automatically tracked while navigating.
-
-By using the StayBuddy website or its services, you consent to the collection, storage, use, transfer, sharing, and distribution of the personal information you provide (including any changes thereto as provided by you) for any of the services that we offer.`
+This Policy may be updated from time to time. We will notify you of significant changes by posting the updated Policy on the Site. Continued use of the platform after changes are posted constitutes your acceptance.`
   },
   {
     id: "collection",
-    title: "1. Information Received, Collected and Stored",
-    content: `A. Information Supplied By Users
+    title: "2. Information We Collect",
+    content: `We collect the following types of information:
 
-Registration Data
-When you register on the Sites for the Service, we ask you to provide basic contact information such as your name, sex, age, address, pin code, contact number, occupation, interests, and email address. When you register using other accounts like Facebook, Google, etc., we shall retrieve information from such accounts to continue providing the Services.
+Account Information
+When you register, we collect your name, email address, phone number, and any other details you provide during sign-up.
 
-Subscription or Paid Service Data
-When you choose any subscription or paid service, we or our payment gateway provider may collect your purchase, address, or billing information, including your credit card number and expiration date. Subscriptions may be on auto-renewal mode unless cancelled.
+Property Listings
+If you are a landlord or property owner, we collect property details including address, photos, pricing, and availability that you submit to the platform.
 
-Voluntary Information
-We may collect additional information at other times, including but not limited to when you provide feedback, comments, change your content or email preferences, respond to a survey, or communicate with us.`
-  },
-  {
-    id: "automatic",
-    title: "2. Information Automatically Collected While Navigating",
-    content: `Cookies
-To improve the responsiveness of the Sites for our Users, we may use "cookies" or similar electronic tools to collect information and assign each visitor a unique, random number as a User Identification (User ID) to understand the User's individual interests. Unless you voluntarily identify yourself (through registration, for example), we will have no way of knowing who you are, even if we assign a cookie to your computer or device. A cookie cannot read data off your hard drive or device.
+Usage Data
+We automatically collect information about how you use the platform, including pages visited, search queries, and interactions with listings. This helps us improve the platform experience.
 
-Opting Out
-If a User opts out using Ads Settings, the unique cookie ID on the User's browser is overwritten. Because there is no longer a unique cookie ID, the opt-out cookie cannot be associated with a particular browser.
+Device & Technical Data
+We may collect your IP address, browser type, device type, and operating system to ensure the platform functions correctly and securely.
 
-Log File Information
-We automatically collect limited information about your computer's connection to the Internet, including your IP address, when you visit our site, application, or service. We automatically receive and log information from your browser, including your IP address, your computer's name, your operating system, browser type and version, CPU speed, and connection speed.
-
-Clear GIFs (Web Beacons)
-We may use "clear GIFs" to track the online usage patterns of our Users in an anonymous manner, without personally identifying the User. We may also use clear GIFs in HTML-based emails sent to our Users to track which emails are opened by recipients.`
-  },
-  {
-    id: "other-sources",
-    title: "3. Information from Other Sources",
-    content: `We may receive information about you from other sources, add it to our account information, and treat it in accordance with this Policy. If you provide information to a platform provider or other partner whom we provide services, your account information and order information may be passed on to us.
-
-Demographic and Other Information
-We may reference other sources of demographic and other information in order to provide you with more targeted communications and promotions. We use analytics tools, among others, to track user behaviour on our Sites. The reports are anonymous and cannot be associated with any individual personally identifiable information that you may have shared with us.
-
-Links to Third Party Sites
-The Sites may include links to other websites or applications. Such websites or applications are governed by their respective privacy policies, which are beyond our control. Once you leave our servers, use of any information you provide is governed by the privacy policy of the operator of the application you are visiting.
-
-We do not provide any personally identifiable information to third-party websites, advertisers, or ad-servers without your consent.`
+Communications
+If you contact us or use our messaging features to communicate with property owners or tenants, we may store those communications to provide the service and resolve disputes.`
   },
   {
     id: "usage",
-    title: "4. How Collected Data is Used",
-    content: `The information supplied by users enables us to improve the Services and provide you the most user-friendly experience. We may use your information to:
+    title: "3. How We Use Your Information",
+    content: `We use your information to:
 
-• Maintain, protect, and improve the Services (including advertising and personalisation on the Sites).
-• Develop new services.
-• Send commercial or marketing messages about our Services and/or updates about third-party products and services, with an option to subscribe/unsubscribe.
-• Use your email address for non-marketing or administrative purposes (such as notifying you of major changes, for customer service purposes, billing, etc.).
+• Create and manage your account.
+• Display property listings and connect tenants with landlords.
+• Send you notifications about inquiries, messages, and account activity.
+• Improve and personalise your experience on the platform.
+• Respond to your support requests and resolve disputes.
+• Send service-related communications (e.g., account verification, password reset).
+• Comply with legal obligations.
 
-We use third-party advertising companies to serve ads when you visit or use our Sites or Services. These companies may use information (excluding your name, address, email address, telephone number, or any personally identifiable information) about your visits to provide advertisements about goods and services of interest to you.
-
-Any personally identifiable information provided by you will not be considered sensitive if it is freely available and/or accessible in the public domain.`
+We do not sell your personal information to third parties.`
   },
   {
     id: "sharing",
-    title: "5. Information Sharing",
-    content: `Personal information will be used to allow you to log in to your account on the Site, resolve specific service issues, inform you of our new services or features, and communicate with you in relation to your use of the Site.
+    title: "4. Information Sharing",
+    content: `We share your information only in the following circumstances:
 
-The Company shares your information with third parties without obtaining prior consent of the User only in the following limited circumstances:
+Between Users
+When a tenant contacts a landlord (or vice versa), relevant contact and listing information is shared to facilitate the connection.
 
-• To conduct its business and to share such information within its group companies and officers and employees of such group companies for the purpose of processing personal information on its behalf.
-• To present information to advertisers and third parties in the form of aggregated statistics on traffic to various pages within our site.
-• To share your information regarding your activities on Sites with third-party social websites to populate your social wall, where you will have an option to set your privacy settings.
-• To enforce or protect our rights or any of its affiliates, associates, employees, directors, or officers, or when we have reason to believe that disclosing information is necessary to identify, contact, or bring legal action against someone who may be causing interference with our rights.
-• Your email address may be made available to other organisations whose products or services we think you might find interesting.
-• Registered telephone numbers of customers may receive telephone or text message contact from us with information regarding new products and services or upcoming events.`
-  },
-  {
-    id: "access",
-    title: "6. Accessing and Updating Personal Information",
-    content: `When you use the Services or Sites, we make good faith efforts to provide you, as and when requested by you, with access to your personal information and shall further ensure that any personal information found to be inaccurate or deficient shall be corrected or amended as feasible, subject to any requirement for such personal information to be retained by law or for legitimate business purposes.
+Service Providers
+We may share data with trusted third-party service providers (e.g., email delivery, cloud hosting, analytics) who assist us in operating the platform. These providers are bound by confidentiality obligations.
 
-We ask individual users to identify themselves and the information requested to be accessed, corrected, or removed before processing such requests. We may decline to process requests that are unreasonably repetitive or systematic, require disproportionate technical effort, jeopardize the privacy of others, or would be extremely impractical.
+Legal Requirements
+We may disclose your information if required by law, court order, or to protect the rights and safety of StayBuddy, its users, or the public.
 
-Because of the way we maintain certain services, after you delete your information, residual copies may take a period of time before they are deleted from our active servers and may remain in our backup systems.`
+We do not share your personal information with advertisers or unrelated third parties without your consent.`
   },
   {
     id: "security",
-    title: "7. Information Security",
-    content: `We take appropriate security measures to protect against unauthorized access to or unauthorized alteration, disclosure, or destruction of data. These include internal reviews of our data collection, storage, and processing practices and security measures, including appropriate encryption and physical security measures to guard against unauthorized access to systems where we store personal data.
+    title: "5. Data Security",
+    content: `We take reasonable technical and organisational measures to protect your personal information from unauthorised access, loss, or misuse. These include secure servers, encrypted connections (HTTPS), and access controls.
 
-All information gathered on StayBuddy is securely stored within the Company-controlled database. The database is stored on servers secured behind a firewall; access to the servers is password-protected and is strictly limited.
+However, no system is completely secure. We cannot guarantee absolute security of data transmitted over the internet. You are responsible for keeping your account credentials confidential.
 
-However, as effective as our security measures are, no security system is impenetrable. We cannot guarantee the security of our database, nor can we guarantee that information you supply will not be intercepted while being transmitted to us over the Internet.
-
-We use commercially reasonable security measures to protect the loss, misuse, and alteration of the information under our control. However, we cannot absolutely guarantee the protection of any information shared with us.`
+If you suspect any unauthorised access to your account, please contact us immediately at staybuddy2026@gmail.com.`
   },
   {
-    id: "updates",
-    title: "8. Updates / Changes",
-    content: `The internet is an ever-evolving medium. We may alter our Policy from time to time to incorporate necessary changes in technology, applicable law, or any other variant. In any case, we reserve the right to change (at any point of time) the terms of this Policy or the Terms of Use.
+    id: "cookies",
+    title: "6. Cookies",
+    content: `We use cookies and similar technologies to improve your experience on the platform. Cookies help us remember your preferences, keep you logged in, and understand how users interact with the Site.
 
-Any changes we make will be effective immediately on notice, which we may give by posting the new policy on the Sites. Your use of the Sites or Services after such notice will be deemed acceptance of such changes. We may also make reasonable efforts to inform you via electronic mail.
-
-In any case, you are advised to review this Policy periodically on the Sites to ensure that you are aware of the latest version.`
+You can control cookie settings through your browser. Disabling cookies may affect some features of the platform.`
   },
   {
-    id: "miscellaneous",
-    title: "9. Miscellaneous",
-    content: `Security
-We use commercially reasonable security measures to protect the loss, misuse, and alteration of the information under our control. However, we cannot absolutely guarantee the protection of any information shared with us.
-
-Accuracy and Confidentiality of Account Information
-Customers are responsible for maintaining the secrecy and accuracy of their password, email address, and other account information at all times. StayBuddy is not responsible for any personal data transmitted to a third party as a result of incorrect account-related information.
-
-Third-Party Websites
-Our Site may contain links to third-party websites. Navigating to another website does not make StayBuddy liable for misuse of any information by any website controller to which we may link.`
+    id: "retention",
+    title: "7. Data Retention",
+    content: `We retain your personal information for as long as your account is active or as needed to provide the Services. If you delete your account, we will remove your personal data within a reasonable period, except where retention is required by law or for legitimate business purposes (e.g., resolving disputes, preventing fraud).`
   },
   {
-    id: "grievance",
-    title: "10. Questions / Grievance Redressal",
-    content: `Redressal Mechanism: Any complaints, abuse, or concerns with regards to the use, processing, and disclosure of information provided by you or breach of these terms should immediately be informed to our designated Grievance Officer via writing or through email.
+    id: "rights",
+    title: "8. Your Rights",
+    content: `You have the right to:
 
-You may contact us at:
+• Access the personal information we hold about you.
+• Request correction of inaccurate or incomplete data.
+• Request deletion of your account and associated data.
+• Opt out of non-essential communications at any time.
 
-StayBuddy Support Team
-Email: support@staybuddy.com
+To exercise any of these rights, please contact us at staybuddy2026@gmail.com. We will respond within a reasonable timeframe.`
+  },
+  {
+    id: "thirdparty",
+    title: "9. Third-Party Links",
+    content: `The platform may contain links to third-party websites (e.g., Google Maps). These sites have their own privacy policies, and we are not responsible for their practices. We encourage you to review the privacy policies of any third-party sites you visit.`
+  },
+  {
+    id: "contact",
+    title: "10. Contact Us",
+    content: `If you have any questions, concerns, or requests regarding this Privacy Policy, please contact us:
 
-This Privacy Policy is subject to changes. Please periodically review this page for the latest information on our privacy practices.`
+StayBuddy Support
+Email: staybuddy2026@gmail.com
+Address: 213 Sanidhya Arcade, Vastral, Ahmedabad, Gujarat 382418`
   },
 ];
 
@@ -158,7 +131,7 @@ export default function PrivacyPolicyPage() {
             {isFr ? "Politique de Confidentialité" : "Privacy Policy"}
           </h1>
           <p className="text-white/80 text-sm">
-            {isFr ? "Dernière mise à jour : 1er janvier 2024" : "Last Updated: January 1, 2024"}
+            {isFr ? "Dernière mise à jour : 1er janvier 2025" : "Last Updated: January 1, 2025"}
           </p>
         </div>
       </div>

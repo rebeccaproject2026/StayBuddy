@@ -478,22 +478,24 @@ export default function Navbar() {
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <motion.button
-                      onClick={() => router.push(`/${urlCountry || 'in'}/login`)}
-                      whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                      className="px-3 py-2 text-gray-700 hover:text-primary rounded-lg hover:bg-primary-light font-semibold text-base transition-colors duration-200"
-                    >
-                      {t("nav.login")}
-                    </motion.button>
-                    <motion.button
-                      onClick={() => router.push(`/${urlCountry || 'in'}/signup`)}
-                      whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                      className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium text-base shadow-md hover:shadow-lg transition-colors duration-200"
-                    >
-                      {t("nav.signup")}
-                    </motion.button>
+                    <Link href={`/login`}>
+                      <motion.span
+                        whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                        className="inline-block px-3 py-2 text-gray-700 hover:text-primary rounded-lg hover:bg-primary-light font-semibold text-base transition-colors duration-200"
+                      >
+                        {t("nav.login")}
+                      </motion.span>
+                    </Link>
+                    <Link href={`/signup`}>
+                      <motion.span
+                        whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                        className="inline-block px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium text-base shadow-md hover:shadow-lg transition-colors duration-200"
+                      >
+                        {t("nav.signup")}
+                      </motion.span>
+                    </Link>
                   </div>
                 )}
               </>
@@ -618,16 +620,16 @@ export default function Navbar() {
                   </div>
                 ) : (
                   <div className="flex flex-col gap-2 px-3 pt-1 pb-2">
-                    <button onClick={() => { setIsMobileMenuOpen(false); router.push(`/${urlCountry || 'in'}/login`); }} className="w-full">
+                    <Link href={`/login`} onClick={() => setIsMobileMenuOpen(false)} className="w-full">
                       <div className="w-full text-center px-4 py-3 rounded-xl border-2 border-primary text-primary font-semibold text-sm hover:bg-primary-light transition-colors">
                         {t("nav.login")}
                       </div>
-                    </button>
-                    <button onClick={() => { setIsMobileMenuOpen(false); router.push(`/${urlCountry || 'in'}/signup`); }} className="w-full">
+                    </Link>
+                    <Link href={`/signup`} onClick={() => setIsMobileMenuOpen(false)} className="w-full">
                       <div className="w-full text-center px-4 py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary-dark transition-colors shadow-md">
                         {t("nav.signup")}
                       </div>
-                    </button>
+                    </Link>
                   </div>
                 )}
               </div>
