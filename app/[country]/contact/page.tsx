@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Mail, Phone, MapPin, Send, User, MessageSquare, CheckCircle, Clock, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -157,18 +158,22 @@ export default function ContactPage() {
     <div className="min-h-screen bg-gray-50 overflow-x-hidden">
 
       {/* ── Hero ── */}
-      <div
-        className="relative min-h-[280px] sm:min-h-[400px] bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/contactb.png')" }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-black/75 via-black/60 to-primary/40" />
+      <div className="relative min-h-[280px] sm:min-h-[400px] overflow-hidden">
         <motion.div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('/contactb.png')", zIndex: -1 }}
+          className="absolute inset-0"
           initial={{ scale: 1.07 }}
           animate={{ scale: 1 }}
           transition={{ duration: 2, ease: "easeOut" }}
-        />
+        >
+          <Image
+            src="/contactb.png"
+            alt="Contact banner background"
+            fill
+            className="object-cover"
+            sizes="100vw"
+          />
+        </motion.div>
+        <div className="absolute inset-0 bg-gradient-to-br from-black/75 via-black/60 to-primary/40" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-28 md:pt-32 pb-14 sm:pb-24 md:pb-32 flex flex-col items-center text-center gap-3 sm:gap-4">
           <motion.div {...fadeUp(0.1)} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 text-white/90 text-sm font-medium">
             <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />

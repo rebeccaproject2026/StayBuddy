@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "@/components/LocalizedLink";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import dynamic from "next/dynamic";
@@ -21,13 +22,15 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       {/* Hero Section with Background Image */}
-      <div
-        className="relative min-h-[420px] sm:min-h-[450px] bg-cover bg-center bg-no-repeat overflow-hidden"
-        style={{
-          backgroundImage:
-            "url('/homebg.jpeg')",
-        }}
-      >
+      <div className="relative min-h-[420px] sm:min-h-[450px] overflow-hidden">
+        <Image
+          src="/homebg.jpeg"
+          alt="StayBuddy hero background"
+          fill
+          className="object-cover"
+          priority
+          sizes="100vw"
+        />
         {/* Animated Overlay */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/50 to-black/60" />
 
