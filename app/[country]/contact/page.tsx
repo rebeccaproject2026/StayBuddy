@@ -28,6 +28,17 @@ export default function ContactPage() {
   const [submitCount, setSubmitCount] = useState(0);
 
   const isFr = language === "fr";
+  const country = typeof window !== "undefined" ? window.location.pathname.split("/")[1] : "in";
+  const phoneNumber = country === "in"
+    ? "+91 9904725163"
+    : country === "fr"
+    ? "+33 782094294"
+    : "+1 555-555-5555";
+  const phoneHref = country === "in"
+    ? "tel:+919904725163"
+    : country === "fr"
+    ? "tel:+33 782094294"
+    : "tel:+15555555555";
 
   const labels = {
     title: isFr ? "Contactez-nous" : "Get In Touch",
@@ -40,7 +51,7 @@ export default function ContactPage() {
     email: isFr ? "Adresse Email" : "Email Address",
     emailPh: isFr ? "votre@email.com" : "your@email.com",
     phone: isFr ? "Téléphone" : "Phone Number",
-    phonePh: "+91 99999 99999",
+    phonePh: phoneNumber,
     subject: isFr ? "Sujet" : "Subject",
     subjectPh: isFr ? "Comment pouvons-nous vous aider?" : "How can we help you?",
     message: isFr ? "Message" : "Message",
@@ -113,9 +124,9 @@ export default function ContactPage() {
     {
       icon: Phone,
       title: labels.phoneTitle,
-      value: "+91 99999 99999",
+      value: phoneNumber,
       desc: labels.phoneDesc,
-      href: "tel:+919999999999",
+      href: phoneHref,
       color: "from-emerald-500 to-emerald-600",
       bg: "bg-emerald-50",
       iconColor: "text-emerald-500",

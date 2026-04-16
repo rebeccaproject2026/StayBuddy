@@ -33,7 +33,7 @@ export default function AboutPage() {
 
   const ownerItems = [
     { icon: Building2, text: language === 'fr' ? 'Lister les propriétés PG et locatives' : 'List PG & rental properties' },
-    { icon: ImageIcon, text: language === 'fr' ? 'Télécharger des images illimitées' : 'Upload unlimited images' },
+    { icon: ImageIcon, text: language === 'fr' ? 'Télécharger des images illimitées' : 'Upload limited images' },
     { icon: Calendar, text: language === 'fr' ? 'Mettre à jour la disponibilité instantanément' : 'Update availability instantly' },
     { icon: Users, text: language === 'fr' ? 'Recevoir des demandes vérifiées' : 'Receive verified inquiries' },
     { icon: TrendingUp, text: language === 'fr' ? 'Suivre les performances' : 'Track property performance' },

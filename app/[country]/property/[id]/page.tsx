@@ -1133,7 +1133,7 @@ export default function PropertyDetailsPage() {
                 <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 md:p-6">
                   <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">{t.relatedListings}</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
-                    {relatedProperties.map((rel: any) => (
+                     {relatedProperties.map((rel: any) => (
                       <Link key={rel._id} href={`/property/${rel._id}`} className="group">
                         <div className="relative h-48 rounded-lg overflow-hidden mb-3">
                           <Image src={rel.images?.[0] || ""} alt={rel.title} fill className="object-cover group-hover:scale-110 transition-transform duration-300" />
@@ -1144,7 +1144,7 @@ export default function PropertyDetailsPage() {
                             <span className={`absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-semibold ${rel.propertyType === "PG" ? "bg-blue-600 text-white" : "bg-green-600 text-white"}`}>{rel.propertyType}</span>
                           )}
                         </div>
-                        <h4 className="font-semibold text-gray-900 mb-1 group-hover:text-primary transition-colors line-clamp-1">{rel.title}</h4>
+                        <h4 className="font-semibold text-gray-900 mb-1 group-hover:text-primary transition-colors line-clamp-1">{rel.propertyType === "PG" ? rel.pgName : rel.societyName}</h4>
                         <p className="text-sm text-gray-600 mb-2 line-clamp-1">{rel.location}</p>
                         <p className="text-lg font-bold text-primary">{currencySymbol} {rel.price} <span className="text-sm font-normal text-gray-600">/ {monthText}</span></p>
                       </Link>
@@ -1397,7 +1397,7 @@ export default function PropertyDetailsPage() {
       </div>
       </>)}
 
-      <ContactOwnerForm isOpen={showContactForm} onClose={() => setShowContactForm(false)} property={property} language={language} token={token} />
+      <ContactOwnerForm isOpen={showContactForm} onClose={() => setShowContactForm(false)} property={property} language={language} country={params.country as string} token={token} />
 
       {/* Share Modal */}
       {showShareModal && (

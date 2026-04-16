@@ -8,10 +8,11 @@ interface ContactOwnerFormProps {
   onClose: () => void;
   property: any;
   language: string;
+  country?: string;
   token?: string | null;
 }
 
-export default function ContactOwnerForm({ isOpen, onClose, property, language, token }: ContactOwnerFormProps) {
+export default function ContactOwnerForm({ isOpen, onClose, property, language, country, token }: ContactOwnerFormProps) {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -229,8 +230,10 @@ export default function ContactOwnerForm({ isOpen, onClose, property, language, 
             <div style={{ overflowY: 'auto', flex: 1 }}>
               {/* Property Info */}
               <div className="p-6 bg-gray-50 border-b border-gray-200">
-                <h3 className="font-semibold text-gray-900 mb-1">{property.title}</h3>
-                <p className="text-sm text-gray-600">{property.location}</p>
+                <h3 className="font-semibold text-gray-900 mb-1">
+                  {property.propertyType === 'PG' ? property.pgName : property.societyName || property.title}
+                </h3>
+                <p className="text-sm text-gray-600">{property.fullAddress}, {property.location}</p>
               </div>
 
               {/* Form */}
@@ -459,7 +462,7 @@ export default function ContactOwnerForm({ isOpen, onClose, property, language, 
                       onChange={handleChange}
                       required
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
-                      placeholder="e.g., €500 - €700"
+                      placeholder={country === 'in' ? "e.g., ₹500 - ₹700" : "e.g., €500 - €700"}
                     />
                   </div>
 

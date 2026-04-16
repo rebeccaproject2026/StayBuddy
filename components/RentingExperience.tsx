@@ -35,9 +35,9 @@ const RentingExperience = () => {
       color: 'from-emerald-500 to-emerald-600',
     },
     {
-      icon: CreditCard,
-      title: isFr ? 'Paiements flexibles' : 'Flexible Payments',
-      desc: isFr ? 'Plusieurs options de paiement sécurisées.' : 'Multiple secure payment options available.',
+      icon: Search,
+      title: isFr ? 'Site convivial' : 'Website Experience',
+      desc: isFr ? 'Trouvez et réservez des propriétés rapidement sur notre site.' : 'Find and book properties fast on our easy-to-use platform.',
       color: 'from-pink-500 to-pink-600',
     },
     {
