@@ -164,7 +164,9 @@ io.on('connection', async (socket: AuthSocket) => {
               receiver.email,
               receiver.fullName || 'User',
               sender?.fullName || 'Someone',
-              cr.propertyTitle || 'a property',
+              cr.propertyType || 'Tenant',
+              cr.pgName || '',
+              cr.societyName || cr.propertyTitle || 'a property',
               text.trim().slice(0, 120),
               dashboardUrl
             ).catch(e => console.error('[email]', e));
