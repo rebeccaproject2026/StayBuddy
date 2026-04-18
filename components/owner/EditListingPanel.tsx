@@ -112,14 +112,18 @@ export default function EditListingPanel({
                 onChange={e => setEditForm((p: any) => editForm.propertyType === "PG" ? { ...p, pgName: e.target.value } : { ...p, societyName: e.target.value })}
                 className={inputCls} />
             </div>
-            <div>
-              <label className={labelCls}>Monthly Rent ({getCurrency(editingListing?.country)})</label>
-              <input value={editForm.price} onChange={e => setEditForm(p => ({ ...p, price: e.target.value }))} inputMode="numeric" className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>Security Deposit ({getCurrency(editingListing?.country)})</label>
-              <input value={editForm.deposit} onChange={e => setEditForm(p => ({ ...p, deposit: e.target.value }))} inputMode="numeric" className={inputCls} />
-            </div>
+            {editForm.propertyType !== "PG" && (
+              <>
+                <div>
+                  <label className={labelCls}>Monthly Rent ({getCurrency(editingListing?.country)})</label>
+                  <input value={editForm.price} onChange={e => setEditForm(p => ({ ...p, price: e.target.value }))} inputMode="numeric" className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls}>Security Deposit ({getCurrency(editingListing?.country)})</label>
+                  <input value={editForm.deposit} onChange={e => setEditForm(p => ({ ...p, deposit: e.target.value }))} inputMode="numeric" className={inputCls} />
+                </div>
+              </>
+            )}
             <div>
               <label className={labelCls}>Rooms</label>
               <input value={editForm.rooms} onChange={e => setEditForm(p => ({ ...p, rooms: e.target.value }))} inputMode="numeric" className={inputCls} />

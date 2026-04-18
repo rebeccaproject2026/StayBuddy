@@ -54,7 +54,6 @@ export default function PostPropertyPage() {
   const [state, setState] = useState("");
   const [pincode, setPincode] = useState("");
   const [landmark, setLandmark] = useState("");
-  const [googleMapLink, setGoogleMapLink] = useState("");
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
   const [nearbyPlaces, setNearbyPlaces] = useState<{ name: string; distance: string }[]>([]);

@@ -229,13 +229,72 @@ function ListingDetailView({
           </p>
         </div>
 
-        <div className="flex items-baseline gap-2 flex-wrap">
-          <span className="text-xl font-bold text-primary">{getCurrency(selectedListing.country)} {selectedListing.price?.toLocaleString()}</span>
-          <span className="text-gray-500 text-sm">/month</span>
-          {selectedListing.deposit > 0 && (
-            <span className="text-sm text-gray-500">· Deposit: {getCurrency(selectedListing.country)} {selectedListing.deposit?.toLocaleString()}</span>
-          )}
-        </div>
+        {/* Pricing — per bed type for PG, per room for FR tenant, flat otherwise */}
+        {selectedListing.propertyType === "PG" && selectedListing.roomDetails && Object.keys(selectedListing.roomDetails).length > 0 ? (
+          <div className={`rounded-xl p-4 border ${isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
+            <p className="text-xs font-semibold text-gray-500 uppercase mb-3">Price by Room Type</p>
+            <div className="space-y-2">
+              {Object.entries(selectedListing.roomDetails as Record<string, any>).map(([category, detail]) => (
+                <div key={category} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
+                    <span className={`text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>{category} Bed</span>
+                    {(detail.availableBeds ?? detail.availableRooms) != null && (
+                      <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full">
+                        {detail.availableBeds ?? detail.availableRooms} avail.
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-sm font-bold text-primary">
+                    {getCurrency(selectedListing.country)} {Number(detail.monthlyRent).toLocaleString()}<span className={`text-xs font-normal ml-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>/mo</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+            {selectedListing.deposit > 0 && (
+              <p className={`text-xs mt-3 pt-3 border-t ${isDark ? "border-gray-700 text-gray-400" : "border-gray-200 text-gray-500"}`}>
+                Security Deposit: {getCurrency(selectedListing.country)} {selectedListing.deposit?.toLocaleString()}
+              </p>
+            )}
+          </div>
+        ) : selectedListing.propertyType === "Tenant" && selectedListing.country === "fr" && selectedListing.tenantRooms?.length > 0 ? (
+          <div className={`rounded-xl p-4 border ${isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
+            <p className="text-xs font-semibold text-gray-500 uppercase mb-3">Price by Room</p>
+            <div className="space-y-2">
+              {(selectedListing.tenantRooms as any[]).map((room: any, i: number) => {
+                const max = parseInt(room.maxPersons) || 1;
+                const current = parseInt(room.currentPersons) || 0;
+                const status = current >= max ? "Occupied" : current > 0 ? "Partial" : "Available";
+                const dotCls = status === "Available" ? "bg-green-500" : status === "Partial" ? "bg-yellow-500" : "bg-red-500";
+                return (
+                  <div key={room.id ?? i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dotCls}`} />
+                      <span className={`text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>{room.name || `Room ${i + 1}`}</span>
+                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${status === "Available" ? "bg-green-100 text-green-700" : status === "Partial" ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-600"}`}>{status}</span>
+                    </div>
+                    {room.rent && Number(room.rent) > 0
+                      ? <span className="text-sm font-bold text-primary">{getCurrency(selectedListing.country)} {Number(room.rent).toLocaleString()}<span className={`text-xs font-normal ml-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>/mo</span></span>
+                      : <span className="text-xs text-gray-400">—</span>}
+                  </div>
+                );
+              })}
+            </div>
+            {selectedListing.deposit > 0 && (
+              <p className={`text-xs mt-3 pt-3 border-t ${isDark ? "border-gray-700 text-gray-400" : "border-gray-200 text-gray-500"}`}>
+                Security Deposit: {getCurrency(selectedListing.country)} {selectedListing.deposit?.toLocaleString()}
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span className="text-xl font-bold text-primary">{getCurrency(selectedListing.country)} {selectedListing.price?.toLocaleString()}</span>
+            <span className="text-gray-500 text-sm">/month</span>
+            {selectedListing.deposit > 0 && (
+              <span className="text-sm text-gray-500">· Deposit: {getCurrency(selectedListing.country)} {selectedListing.deposit?.toLocaleString()}</span>
+            )}
+          </div>
+        )}
 
         {/* Key details grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
