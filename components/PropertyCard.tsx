@@ -331,9 +331,9 @@ export default function PropertyCard({
 
             {/* Bed type dropdown — PG only */}
             {type === "PG" && bedTypes.length > 0 && (
-              <div ref={dropdownRef} className="relative ml-auto" onClick={(e) => e.stopPropagation()}>
+              <div ref={dropdownRef} className="relative ml-auto" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
                 <button
-                  onClick={(e) => { e.stopPropagation(); setDropdownOpen((o) => !o); }}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDropdownOpen((o) => !o); }}
                   className="flex items-center gap-1 px-2.5 py-1.5 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:border-primary hover:text-primary transition-colors bg-white"
                 >
                   <span>{selectedBedType ? `${selectedBedType} Bed` : "Bed Type"}</span>
@@ -352,7 +352,7 @@ export default function PropertyCard({
                       {bedTypes.map((bt) => (
                         <button
                           key={bt}
-                          onClick={(e) => { e.stopPropagation(); setSelectedBedType(bt); setDropdownOpen(false); }}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedBedType(bt); setDropdownOpen(false); }}
                           className={`w-full text-left px-3 py-2 text-xs font-medium transition-colors ${
                             selectedBedType === bt
                               ? "bg-primary/10 text-primary"
@@ -375,9 +375,9 @@ export default function PropertyCard({
 
             {/* Room dropdown — France Tenant only */}
             {showTenantRoomDropdown && (
-              <div ref={tenantRoomDropdownRef} className="relative ml-auto" onClick={(e) => e.stopPropagation()}>
+              <div ref={tenantRoomDropdownRef} className="relative ml-auto" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
                 <button
-                  onClick={(e) => { e.stopPropagation(); setTenantRoomDropdownOpen((o) => !o); }}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTenantRoomDropdownOpen((o) => !o); }}
                   className="flex items-center gap-1 px-2.5 py-1.5 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:border-primary hover:text-primary transition-colors bg-white"
                 >
                   <span>{selectedTenantRoom ? selectedTenantRoom.name : "Room"}</span>
@@ -396,7 +396,7 @@ export default function PropertyCard({
                       {tenantRooms!.map((room) => (
                         <button
                           key={room.id}
-                          onClick={(e) => { e.stopPropagation(); setSelectedTenantRoom(room); setTenantRoomDropdownOpen(false); }}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedTenantRoom(room); setTenantRoomDropdownOpen(false); }}
                           className={`w-full text-left px-3 py-2 text-xs font-medium transition-colors ${
                             selectedTenantRoom?.id === room.id
                               ? "bg-primary/10 text-primary"
