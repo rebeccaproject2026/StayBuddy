@@ -331,7 +331,8 @@ export default function Navbar() {
               </motion.button>
             )}
 
-            {/* Language selector */}
+            {/* Language selector — only for /fr */}
+            {urlCountry === "fr" && (
             <div className="relative">
               <motion.button
                 ref={langMenuButtonRef}
@@ -373,6 +374,7 @@ export default function Navbar() {
                 )}
               </AnimatePresence>
             </div>
+            )}
 
             {/* Auth */}
             {!mounted ? (
@@ -504,7 +506,8 @@ export default function Navbar() {
 
           {/* Mobile right — lang + hamburger */}
           <div className="flex md:hidden items-center gap-2">
-            {/* Mobile lang toggle (icon only) */}
+            {/* Mobile lang toggle (icon only) — only for /fr */}
+            {urlCountry === "fr" && (
             <button
               onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
               className="p-2 text-gray-600 hover:text-primary rounded-lg hover:bg-primary-light transition-colors"
@@ -512,6 +515,7 @@ export default function Navbar() {
             >
               <Globe className="w-5 h-5" />
             </button>
+            )}
 
             {/* Notification badge on mobile for authenticated users */}
             {mounted && effectivelyAuthenticated && user && notifCount > 0 && (
@@ -637,9 +641,9 @@ export default function Navbar() {
           )}
         </AnimatePresence>
 
-        {/* Mobile language dropdown (separate from drawer) */}
+        {/* Mobile language dropdown (separate from drawer) — only for /fr */}
         <AnimatePresence>
-          {isLangMenuOpen && (
+          {isLangMenuOpen && urlCountry === "fr" && (
             <motion.div
               variants={dropdownVariants}
               initial="hidden" animate="visible" exit="exit"

@@ -15,7 +15,9 @@ export async function sendBookingRequestEmail(
   ownerName: string,
   renterName: string,
   renterPhone: string,
-  propertyTitle: string,
+  propertyType: string,
+  pgName: string,
+  societyName: string,
   details: {
     roomType: string;
     moveInDate: string;
@@ -28,7 +30,7 @@ export async function sendBookingRequestEmail(
   await transporter.sendMail({
     from: `"StayBuddy" <${process.env.SMTP_USER}>`,
     to: ownerEmail,
-    subject: `New Booking Request for "${propertyTitle}"`,
+    subject: `New Booking Request for "${propertyType === "PG" ? pgName : societyName}""`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px; background: #f9fafb; border-radius: 12px;">
         <div style="text-align: center; margin-bottom: 24px;">
@@ -37,7 +39,7 @@ export async function sendBookingRequestEmail(
         <div style="background: white; border-radius: 12px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
           <h2 style="color: #111827; font-size: 20px; margin-top: 0;">Hi ${ownerName},</h2>
           <p style="color: #6b7280; line-height: 1.6;">
-            You have a new booking request for your property <strong style="color: #111827;">${propertyTitle}</strong>.
+            You have a new booking request for your property <strong style="color: #111827;">${propertyType === "PG" ? pgName : societyName}"</strong>.
           </p>
 
           <div style="background: #f3f4f6; border-radius: 10px; padding: 20px; margin: 24px 0;">
@@ -104,6 +106,8 @@ export async function sendPropertyRequestEmail(
   ownerEmail: string,
   propertyTitle: string,
   propertyType: string,
+  pgName: string,
+  societyName: string,
   location: string,
   price: number,
   hasVerificationDocs: boolean,
@@ -115,7 +119,7 @@ export async function sendPropertyRequestEmail(
   await transporter.sendMail({
     from: `"StayBuddy" <${process.env.SMTP_USER}>`,
     to: adminEmail,
-    subject: `New Property Request — "${propertyTitle}"`,
+    subject: `New Property Request — "${propertyType === "PG" ? pgName : societyName}"`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px; background: #f9fafb; border-radius: 12px;">
         <div style="text-align: center; margin-bottom: 24px;">
