@@ -186,6 +186,8 @@ export async function PUT(
         price: (updated as any).price,
         propertyType: (updated as any).propertyType,
         country: (updated as any).country,
+        pgName: (updated as any).pgName,
+        societyName: (updated as any).societyName,
       }).catch(err => console.error('[email] Vacancy alert failed:', err));
     }
 
@@ -251,7 +253,9 @@ export async function DELETE(
           await sendPropertyDeletedEmail(
             owner.email,
             owner.fullName || 'there',
-            property.title,
+            property.propertyType,
+            property.pgName,
+            property.societyName,
             reason
           );
         }

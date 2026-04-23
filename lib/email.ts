@@ -406,7 +406,7 @@ export async function sendNewPropertyEmail(property: {
         <p style="color:#6b7280;line-height:1.6;">A new listing matching your preferences just went live.</p>
         <div style="background:#f3f4f6;border-radius:10px;padding:20px;margin:20px 0;">
           <table style="width:100%;border-collapse:collapse;">
-            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;width:120px;">Property</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${property.propertyType === "PG" ? property.pgName : property.societyName}}</td></tr>
+            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;width:120px;">Property</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${property.propertyType === "PG" ? property.pgName : property.societyName}</td></tr>
             <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Location</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${property.location}</td></tr>
             <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Type</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${property.propertyType}</td></tr>
             <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Price</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">₹${property.price.toLocaleString()} / month</td></tr>
@@ -493,7 +493,7 @@ export async function sendVacancyAlert(property: {
         <p style="color:#6b7280;line-height:1.6;">A vacancy matching your preferences is now available. Act fast — rooms fill up quickly!</p>
         <div style="background:#f3f4f6;border-radius:10px;padding:20px;margin:20px 0;">
           <table style="width:100%;border-collapse:collapse;">
-            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;width:120px;">Property</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${property.propertyType ? property.pgName : property.societyName}</td></tr>
+            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;width:120px;">Property</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${property.propertyType === "PG" ? property.pgName : property.societyName}</td></tr>
             <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Location</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${property.location}</td></tr>
             <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Type</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${property.propertyType}</td></tr>
             <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Price</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">₹${property.price.toLocaleString()} / month</td></tr>

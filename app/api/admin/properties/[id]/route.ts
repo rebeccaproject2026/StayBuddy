@@ -56,7 +56,7 @@ export async function PATCH(
       const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
       const propertyUrl = `${baseUrl}/in/property/${params.id}`;
       if (action === 'approve') {
-        sendPropertyApprovedEmail(owner.email, owner.fullName || 'Owner', (property as any).title, propertyUrl)
+        sendPropertyApprovedEmail(owner.email, owner.fullName || 'Owner', (property as any).propertyType, (property as any).pgName, (property as any).societyName, propertyUrl)
           .catch(err => console.error('[email] Approved notification failed:', err));
 
         // Notify subscribers — only now that the property is live
@@ -70,11 +70,11 @@ export async function PATCH(
         }).catch(err => console.error('[email] Subscriber new-property notification failed:', err));
       }
       if (action === 'reject' && reason) {
-        sendPropertyRejectedEmail(owner.email, owner.fullName || 'Owner', (property as any).title, reason)
+        sendPropertyRejectedEmail(owner.email, owner.fullName || 'Owner', (property as any).title, (property as any).pgName, (property as any).societyName, (property as any).propertyType, reason)
           .catch(err => console.error('[email] Rejected notification failed:', err));
       }
       if (action === 'verify') {
-        sendPropertyVerifiedEmail(owner.email, owner.fullName || 'Owner', (property as any).title, propertyUrl)
+        sendPropertyVerifiedEmail(owner.email, owner.fullName || 'Owner', (property as any).propertyType, (property as any).pgName, (property as any).societyName, propertyUrl)
           .catch(err => console.error('[email] Verified notification failed:', err));
       }
     }
