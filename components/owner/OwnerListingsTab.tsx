@@ -572,13 +572,13 @@ function ListingsTable({
         <table className="w-full text-sm">
           <thead>
             <tr className={`border-b ${isDark ? "bg-gray-800 border-gray-700" : "bg-gradient-to-r from-primary/5 to-primary/10 border-primary/10"}`}>
-              <th className="text-left px-5 py-4 text-xs font-bold text-primary uppercase tracking-wide">Property</th>
-              <th className="text-left px-4 py-4 text-xs font-bold text-primary uppercase tracking-wide hidden md:table-cell">Location</th>
-              <th className="text-left px-4 py-4 text-xs font-bold text-primary uppercase tracking-wide">Rent</th>
-              <th className="text-left px-4 py-4 text-xs font-bold text-primary uppercase tracking-wide hidden sm:table-cell">Rooms</th>
-              <th className="text-left px-4 py-4 text-xs font-bold text-primary uppercase tracking-wide hidden lg:table-cell">Available</th>
-              <th className="text-left px-4 py-4 text-xs font-bold text-primary uppercase tracking-wide hidden lg:table-cell">Type</th>
-              <th className="text-right px-5 py-4 text-xs font-bold text-primary uppercase tracking-wide">Actions</th>
+              <th className={`text-left px-5 py-4 text-xs font-bold  ${isDark ? "text-white" : "text-primary"} uppercase tracking-wide`}>Property</th>
+              <th className={`text-left px-4 py-4 text-xs font-bold  ${isDark ? "text-white" : "text-primary"} uppercase tracking-wide hidden md:table-cell`}>Location</th>
+              <th className={`text-left px-4 py-4 text-xs font-bold  ${isDark ? "text-white" : "text-primary"} uppercase tracking-wide`}>Rent</th>
+              <th className={`text-left px-4 py-4 text-xs font-bold  ${isDark ? "text-white" : "text-primary"} uppercase tracking-wide hidden sm:table-cell`}>Beds</th>
+              <th className={`text-left px-4 py-4 text-xs font-bold  ${isDark ? "text-white" : "text-primary"} uppercase tracking-wide hidden lg:table-cell`}>Available</th>
+              <th className={`text-left px-4 py-4 text-xs font-bold  ${isDark ? "text-white" : "text-primary"} uppercase tracking-wide hidden lg:table-cell`}>Type</th>
+              <th className={`text-right px-5 py-4 text-xs font-bold  ${isDark ? "text-white" : "text-primary"} uppercase tracking-wide`}>Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
