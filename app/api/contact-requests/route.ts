@@ -47,7 +47,9 @@ export async function POST(req: NextRequest) {
           owner.fullName || 'Owner',
           fullName,
           phone,
+          property.propertyType || 'PG',
           property.title,
+          property.location || '',
           { roomType, moveInDate, stayDuration, occupation, budgetRange, message }
         );
       }

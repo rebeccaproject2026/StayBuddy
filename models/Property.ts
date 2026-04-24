@@ -41,7 +41,6 @@ export interface IProperty extends Document {
   pgRules?: string[];
   noticePeriod?: string;
   gateClosingTime?: string;
-  // services?: string[]; // Removed duplicate, keep only Record<string, string>
   foodProvided?: boolean;
   meals?: string[];
   vegNonVeg?: string;

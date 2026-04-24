@@ -91,7 +91,7 @@ export default function SignupPage() {
         if (result.details && Array.isArray(result.details)) {
           result.details.forEach((detail: any) => {
             toast.error(`${detail.field}: ${detail.message}`, {
-              duration: 4000,
+              duration: 3000,
               position: 'top-center',
             });
           });
@@ -99,7 +99,7 @@ export default function SignupPage() {
           toast.error(
             result.error || (language === 'fr' ? 'Erreur lors de la création du compte' : 'Failed to create account'),
             {
-              duration: 4000,
+              duration: 3000,
               position: 'top-center',
               style: {
                 background: '#EF4444',
@@ -117,7 +117,7 @@ export default function SignupPage() {
           ? 'Erreur de connexion. Veuillez réessayer.' 
           : 'Connection error. Please try again.',
         {
-          duration: 4000,
+          duration: 3000,
           position: 'top-center',
           style: {
             background: '#EF4444',
