@@ -106,6 +106,7 @@ export default function PostPropertyPage() {
   const [maintenanceType, setMaintenanceType] = useState("");
   const [availableFrom, setAvailableFrom] = useState("Immediately");
   const [availableDate, setAvailableDate] = useState("");
+  const [maxPeople, setMaxPeople] = useState("");
   const [additionalRooms, setAdditionalRooms] = useState<string[]>([]);
   const [overlooking, setOverlooking] = useState<string[]>([]);
   const [facing, setFacing] = useState("");
@@ -188,8 +189,16 @@ export default function PostPropertyPage() {
     flatsInProject: yup.string().required("Please select number of flats in project"),
     bhk: yup.string().required("Please select BHK type"),
     bathrooms: yup.string().required("Please select number of bathrooms"),
-    totalFloors: yup.string().required("Please select total floors"),
-    floorNumber: yup.string().required("Please select floor number"),
+    totalFloors: yup.string().when([], {
+      is: () => country !== "fr" && propertyCategory === "Flat",
+      then: (s) => s.required("Please select total floors"),
+      otherwise: (s) => s.optional(),
+    }),
+    floorNumber: yup.string().when([], {
+      is: () => country !== "fr" && propertyCategory === "Flat",
+      then: (s) => s.required("Please select floor number"),
+      otherwise: (s) => s.optional(),
+    }),
     societyName: yup.string().trim().required("Society name is required"),
   });
 
@@ -496,7 +505,7 @@ export default function PostPropertyPage() {
         title: propertyType === 'PG' ? pgName || `${selectedCity.split(',')[0]} PG` : `${propertyCategory} in ${selectedCity.split(',')[0]}`,
         category: propertyCategory || (propertyType === 'PG' ? 'PG' : 'Flat'),
         rentalPeriod: 'Monthly',
-        availableFrom: availableFrom === 'Immediately' ? new Date().toISOString().split('T')[0] : availableDate,
+        availableFrom: availableFrom === 'Immediately' ? 'Immediately' : availableDate,
         price: propertyType === 'PG' ? pgPrice : (country === 'fr' && tenantRooms.length > 0 ? parseFloat(tenantRooms[0].rent) || 0 : parseFloat(monthlyRentAmount) || 0),
         deposit: propertyType === 'PG' ? pgDeposit : parseFloat(securityAmount) || 0,
         rooms: propertyType === 'PG' ? selectedRoomCategories.length : 1,
@@ -575,6 +584,7 @@ export default function PostPropertyPage() {
           societyAmenities,
           tenantsPrefer,
           localityDescription,
+          ...(country !== 'fr' && maxPeople && parseInt(maxPeople) > 0 ? { maxPeople: parseInt(maxPeople) } : {}),
         });
       }
 
@@ -1358,6 +1368,8 @@ export default function PostPropertyPage() {
                     setAvailableFrom={setAvailableFrom}
                     availableDate={availableDate}
                     setAvailableDate={setAvailableDate}
+                    maxPeople={maxPeople}
+                    setMaxPeople={setMaxPeople}
                     additionalRooms={additionalRooms}
                     toggleAdditionalRoom={toggleAdditionalRoom}
                     overlooking={overlooking}

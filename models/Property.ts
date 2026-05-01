@@ -69,6 +69,7 @@ export interface IProperty extends Document {
   societyAmenities?: string[];
   tenantsPrefer?: string[];
   localityDescription?: string;
+  maxPeople?: number;
   nearbyPlaces?: { name: string; distance: string }[];
   // Common fields
   uspCategory?: string;
@@ -169,6 +170,7 @@ const PropertySchema: Schema = new Schema<IProperty>({
   societyAmenities: [{ type: String }],
   tenantsPrefer: [{ type: String }],
   localityDescription: { type: String },
+  maxPeople: { type: Number },
   nearbyPlaces: [{ name: String, distance: String }],
   uspCategory: { type: String },
   uspText: { type: String },

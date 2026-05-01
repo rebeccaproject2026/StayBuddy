@@ -115,7 +115,7 @@ export default function SubscribeSection() {
   };
 
   return (
-    <section className="relative px-4 sm:px-6 md:px-4 py-8 sm:py-10 md:py-10 overflow-hidden" ref={ref}>
+    <section className="relative py-8 sm:py-10 md:py-10 overflow-hidden" ref={ref}>
       <div className="relative max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 40 }}

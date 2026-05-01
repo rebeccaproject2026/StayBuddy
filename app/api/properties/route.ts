@@ -184,6 +184,8 @@ export async function POST(req: NextRequest) {
       (owner as any)?.email || authUser.email,
       (property as any).title,
       (property as any).propertyType,
+      (property as any).pgName || '',
+      (property as any).societyName || '',
       (property as any).location,
       (property as any).price,
       ((property as any).verificationImages?.length ?? 0) > 0,

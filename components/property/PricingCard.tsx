@@ -123,22 +123,26 @@ export default function PricingCard({
       </div>
 
       {/* Action buttons — desktop only */}
-      {!isMobile && !isOwner && (
+      {!isMobile && (
         <>
-          <button onClick={onContact}
-            className="w-full py-2.5 sm:py-3 bg-green-600 hover:bg-green-700 text-white text-sm sm:text-base font-semibold rounded-lg transition-colors mb-3">
-            {t.contactOwner}
-          </button>
-          <button
-            onClick={() => {
-              if (!isAuthenticated) { onLoginRedirect("call"); return; }
-              const phone = property.ownerPhone || property.landlord?.phone;
-              if (phone) window.location.href = `tel:${phone}`;
-            }}
-            className={`w-full py-2.5 sm:py-3 text-white text-sm sm:text-base font-semibold rounded-lg transition-colors mb-3 flex items-center justify-center gap-2 ${hasPhone ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-300 cursor-not-allowed"}`}>
-            <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
-            {language === "fr" ? "Appeler le propriétaire" : "Call Owner"}
-          </button>
+          {!isOwner && (
+            <>
+              <button onClick={onContact}
+                className="w-full py-2.5 sm:py-3 bg-green-600 hover:bg-green-700 text-white text-sm sm:text-base font-semibold rounded-lg transition-colors mb-3">
+                {t.contactOwner}
+              </button>
+              <button
+                onClick={() => {
+                  if (!isAuthenticated) { onLoginRedirect("call"); return; }
+                  const phone = property.ownerPhone || property.landlord?.phone;
+                  if (phone) window.location.href = `tel:${phone}`;
+                }}
+                className={`w-full py-2.5 sm:py-3 text-white text-sm sm:text-base font-semibold rounded-lg transition-colors mb-3 flex items-center justify-center gap-2 ${hasPhone ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-300 cursor-not-allowed"}`}>
+                <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
+                {language === "fr" ? "Appeler le propriétaire" : "Call Owner"}
+              </button>
+            </>
+          )}
           <button onClick={onShare}
             className="w-full py-2.5 sm:py-3 border-2 border-gray-300 hover:border-primary text-gray-700 text-sm sm:text-base font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
             <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />{t.share}

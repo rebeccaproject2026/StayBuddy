@@ -20,6 +20,8 @@ interface Props {
   setAvailableFrom: (v: string) => void;
   availableDate: string;
   setAvailableDate: (v: string) => void;
+  maxPeople: string;
+  setMaxPeople: (v: string) => void;
   additionalRooms: string[];
   toggleAdditionalRoom: (r: string) => void;
   overlooking: string[];
@@ -52,6 +54,7 @@ export default function TenantStep3Pricing({
   maintenanceType, setMaintenanceType,
   availableFrom, setAvailableFrom,
   availableDate, setAvailableDate,
+  maxPeople, setMaxPeople,
   additionalRooms, toggleAdditionalRoom,
   overlooking, toggleOverlooking,
   facing, setFacing,
@@ -81,6 +84,23 @@ export default function TenantStep3Pricing({
               />
             </div>
             <FieldError name="monthlyRentAmount" />
+          </div>
+        )}
+        {/* Max People — only for /in */}
+        {country !== "fr" && (
+          <div>
+            <label className="block text-sm sm:text-base text-gray-700 font-medium mb-2">
+              Max People <span className="text-gray-400 text-xs font-normal">(Optional)</span>
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={maxPeople}
+              onChange={(e) => setMaxPeople(e.target.value)}
+              placeholder="e.g. 4"
+              className="w-full px-4 py-2.5 sm:py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary transition-colors"
+            />
+            <p className="text-xs text-gray-400 mt-1">Maximum number of people allowed in this property</p>
           </div>
         )}
         <div>

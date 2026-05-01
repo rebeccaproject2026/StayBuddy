@@ -212,6 +212,7 @@ export default function OwnerDashboard() {
       uspCategory: listing.uspCategory || "", uspText: listing.uspText || "",
       roomDetails: listing.roomDetails ? JSON.parse(JSON.stringify(listing.roomDetails)) : {},
       tenantRooms: listing.tenantRooms ? JSON.parse(JSON.stringify(listing.tenantRooms)) : [],
+      maxPeople: listing.maxPeople ? String(listing.maxPeople) : "",
     });
     setEditImages(listing.images || []);
     setEditNewFiles([]);
@@ -300,6 +301,7 @@ export default function OwnerDashboard() {
       updates.additionalRooms = editForm.additionalRooms || []; updates.overlooking = editForm.overlooking || [];
       updates.societyAmenities = editForm.societyAmenities || []; updates.tenantsPrefer = editForm.tenantsPrefer || [];
       if (editForm.localityDescription) updates.localityDescription = editForm.localityDescription;
+      if (editForm.maxPeople && parseInt(editForm.maxPeople) > 0) updates.maxPeople = parseInt(editForm.maxPeople);
     }
     if (editForm.latitude) updates.latitude = editForm.latitude.trim();
     if (editForm.longitude) updates.longitude = editForm.longitude.trim();

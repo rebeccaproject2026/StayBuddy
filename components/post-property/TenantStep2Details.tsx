@@ -272,7 +272,8 @@ export default function TenantStep2Details({
         </div>
       </div>
 
-      {/* Total Floors */}
+      {/* Total Floors — only for Flat category in India */}
+      {country !== "fr" && propertyCategory === "Flat" && (
       <div data-field="totalFloors">
         <label className="block text-sm sm:text-base text-gray-700 font-medium mb-3">{t.totalFloorsInBuilding}</label>
         <div className="grid grid-cols-3 esm:grid-cols-4 md:grid-cols-6 gap-2">
@@ -285,8 +286,10 @@ export default function TenantStep2Details({
         </div>
         <FieldError name="totalFloors" />
       </div>
+      )}
 
-      {/* Floor Number */}
+      {/* Floor Number — only for Flat category in India */}
+      {country !== "fr" && propertyCategory === "Flat" && (
       <div data-field="floorNumber">
         <label className="block text-sm sm:text-base text-gray-700 font-medium mb-3">{t.floorNoOfProperty}</label>
         <div className="grid grid-cols-3 esm:grid-cols-4 md:grid-cols-6 gap-2">
@@ -299,6 +302,7 @@ export default function TenantStep2Details({
         </div>
         <FieldError name="floorNumber" />
       </div>
+      )}
 
       {/* Furnishing */}
       <div>

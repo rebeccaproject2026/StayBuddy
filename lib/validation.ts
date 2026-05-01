@@ -168,6 +168,7 @@ export const propertySchema = z.object({
   societyAmenities: z.array(z.string()).optional(),
   tenantsPrefer: z.array(z.string()).optional(),
   localityDescription: z.string().optional(),
+  maxPeople: z.number().int().positive().optional(),
   nearbyPlaces: z.array(z.object({ name: z.string(), distance: z.string() })).optional(),
   preferredTenants: z.string().optional(),
 
@@ -244,10 +245,10 @@ export const propertySchema = z.object({
     if (!data.bhk) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'BHK type is required', path: ['bhk'] });
     }
-    if (!data.totalFloors) {
+    if (!data.totalFloors && data.country !== 'fr' && data.category === 'Flat') {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Total floors is required', path: ['totalFloors'] });
     }
-    if (!data.floorNumber) {
+    if (!data.floorNumber && data.country !== 'fr' && data.category === 'Flat') {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Floor number is required', path: ['floorNumber'] });
     }
     if (!data.societyName?.trim()) {

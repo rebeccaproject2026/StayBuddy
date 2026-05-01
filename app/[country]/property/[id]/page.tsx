@@ -390,17 +390,16 @@ export default function PropertyDetailsPage() {
       </div>
 
       {/* Mobile sticky bar */}
-      {!isOwner && (
-        <MobileActionBar
-          property={property}
-          language={language}
-          isAuthenticated={isAuthenticated}
-          t={t}
-          onContact={handleContact}
-          onShare={() => setShowShareModal(true)}
-          onLoginRedirect={loginRedirect}
-        />
-      )}
+      <MobileActionBar
+        property={property}
+        language={language}
+        isAuthenticated={isAuthenticated}
+        isOwner={isOwner}
+        t={t}
+        onContact={handleContact}
+        onShare={() => setShowShareModal(true)}
+        onLoginRedirect={loginRedirect}
+      />
 
       {/* WhatsApp button */}
       {!isOwner && (

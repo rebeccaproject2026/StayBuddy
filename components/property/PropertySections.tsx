@@ -156,12 +156,15 @@ export default function PropertySections({
             { label: t.category, value: property.category },
             property.propertyType === "PG" && (property.pgFor || property.preferredGender) && { label: t.pgFor, value: property.pgFor || property.preferredGender },
             property.propertyType === "PG" && (property.preferredTenants || property.tenantPreference) && { label: t.preferredTenants, value: property.preferredTenants || property.tenantPreference },
-            (property.propertyType === "PG" || property.country !== "fr") && { label: t.rooms, value: property.rooms },
+            (property.propertyType === "PG" || property.country !== "fr") && (
+              property.propertyType === "Tenant" && property.country !== "fr" && property.maxPeople
+                ? { label: "Max People", value: property.maxPeople }
+                : { label: t.rooms, value: property.rooms }
+            ),
             { label: t.bathrooms, value: property.bathrooms },
             { label: t.size, value: `${property.area} m²` },
             !(property.propertyType === "Tenant" && property.country === "fr") && { label: t.rent, value: `${currencySymbol} ${property.price}` },
             { label: t.deposit, value: `${currencySymbol} ${property.deposit}` },
-            { label: t.availableFrom, value: property.availableFrom, green: true },
             property.propertyType === "Tenant" && property.bhk && { label: "BHK", value: property.bhk },
             property.propertyType === "Tenant" && property.country !== "fr" && property.balcony && { label: t.balcony, value: property.balcony },
             property.propertyType === "Tenant" && property.country !== "fr" && property.totalFloors && { label: t.totalFloors, value: property.totalFloors },

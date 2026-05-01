@@ -124,10 +124,17 @@ export default function EditListingPanel({
                 </div>
               </>
             )}
-            <div>
-              <label className={labelCls}>Rooms</label>
-              <input value={editForm.rooms} onChange={e => setEditForm(p => ({ ...p, rooms: e.target.value }))} inputMode="numeric" className={inputCls} />
-            </div>
+            {editForm.propertyType !== "PG" ? (
+              <div>
+                <label className={labelCls}>Max People <span className={`text-xs font-normal ${isDark ? "text-gray-500" : "text-gray-400"}`}>(Optional)</span></label>
+                <input value={editForm.maxPeople || ""} onChange={e => setEditForm(p => ({ ...p, maxPeople: e.target.value }))} inputMode="numeric" placeholder="e.g. 4" className={inputCls} />
+              </div>
+            ) : (
+              <div>
+                <label className={labelCls}>Rooms</label>
+                <input value={editForm.rooms} onChange={e => setEditForm(p => ({ ...p, rooms: e.target.value }))} inputMode="numeric" className={inputCls} />
+              </div>
+            )}
             <div>
               <label className={labelCls}>Bathrooms</label>
               <input value={editForm.bathrooms} onChange={e => setEditForm(p => ({ ...p, bathrooms: e.target.value }))} inputMode="numeric" className={inputCls} />

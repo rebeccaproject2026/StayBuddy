@@ -300,7 +300,9 @@ function ListingDetailView({
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {[
             { label: "Category", value: selectedListing.category },
-            { label: "Rooms", value: selectedListing.rooms },
+            selectedListing.propertyType === "Tenant"
+              ? { label: "Max People", value: selectedListing.maxPeople ?? null }
+              : { label: "Rooms", value: selectedListing.rooms },
             { label: "Bathrooms", value: selectedListing.bathrooms },
             { label: "Area", value: selectedListing.area ? `${selectedListing.area} m²` : null },
             { label: "Available From", value: selectedListing.availableFrom },
