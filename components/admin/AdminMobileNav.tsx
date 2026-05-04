@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, Users, Flag, ClipboardList, MessageSquare, BarChart3 } from "lucide-react";
+import { Home, Users, Flag, ClipboardList, MessageSquare, BarChart3, Scale } from "lucide-react";
 import { AdminStats } from "./types";
 
 interface AdminMobileNavProps {
@@ -18,6 +18,7 @@ export default function AdminMobileNav({ isDark, activeTab, setActiveTab, stats 
     { key: "reports",    icon: Flag,          label: "Reports",  badge: stats.pendingReports },
     { key: "requests",   icon: ClipboardList, label: "Requests", badge: stats.pendingRequests },
     { key: "outreach",   icon: MessageSquare, label: "Outreach" },
+    { key: "lawyers",    icon: Scale,         label: "Lawyers",  badge: stats.pendingLawyers },
   ];
 
   return (

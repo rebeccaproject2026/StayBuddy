@@ -18,6 +18,7 @@ import OwnerContactsTab from "@/components/owner/OwnerContactsTab";
 import OwnerMessagesTab from "@/components/owner/OwnerMessagesTab";
 import OwnerProfileTab from "@/components/owner/OwnerProfileTab";
 import OwnerModals from "@/components/owner/OwnerModals";
+import OwnerLawyerRequestsTab from "@/components/owner/OwnerLawyerRequestsTab";
 import type { TcContent, PhotoCat } from "@/components/owner/types";
 
 export default function OwnerDashboard() {
@@ -75,6 +76,11 @@ export default function OwnerDashboard() {
   const ownerToken = getToken();
   const { totalUnread: chatUnread, unreadByRequest, markSeen: socketMarkSeen, clearAll: resetUnread, onNotification } = useSocketContext();
   const [activeChatRequestId, setActiveChatRequestId] = useState<string | null>(null);
+
+  // ── Lawyer requests state ───────────────────────────────────────────────────
+  const [lawyerRequests, setLawyerRequests] = useState<any[]>([]);
+  const [lawyerRequestsLoading, setLawyerRequestsLoading] = useState(false);
+  const [lawyerRequestsFetched, setLawyerRequestsFetched] = useState(false);
 
   useEffect(() => {
     const off = onNotification(() => {
@@ -137,6 +143,18 @@ export default function OwnerDashboard() {
     return () => clearInterval(interval);
   }, [isAuthenticated, user]);
 
+  // ── Fetch lawyer requests (on tab open) ─────────────────────────────────────
+  useEffect(() => {
+    if (activeTab !== "lawyer-requests" || lawyerRequestsFetched || !isAuthenticated) return;
+    const token = getToken();
+    setLawyerRequestsLoading(true);
+    fetch("/api/lawyer-requests", { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      .then(r => r.json())
+      .then(data => { if (data.success) setLawyerRequests(data.requests || []); })
+      .catch(() => {})
+      .finally(() => { setLawyerRequestsLoading(false); setLawyerRequestsFetched(true); });
+  }, [activeTab, lawyerRequestsFetched, isAuthenticated]);
+
   // ── Loading / auth guard renders ────────────────────────────────────────────
   if (isLoading) {
     return (
@@ -174,6 +192,19 @@ export default function OwnerDashboard() {
       });
       const data = await res.json();
       if (data.success) setContactRequests(prev => prev.map(r => r._id === id ? { ...r, status } : r));
+    } catch {}
+  };
+
+  const handleLawyerRequestAction = async (id: string, status: "accepted" | "rejected") => {
+    const token = getToken();
+    try {
+      const res = await fetch(`/api/lawyer-requests/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json();
+      if (data.success) setLawyerRequests(prev => prev.map(r => r._id === id ? { ...r, status } : r));
     } catch {}
   };
 
@@ -421,7 +452,9 @@ export default function OwnerDashboard() {
           activeTab={activeTab} setActiveTab={setActiveTab}
           isDark={isDark} language={language} user={user}
           contactRequests={contactRequests} seenInquiryIds={seenInquiryIds} setSeenInquiryIds={setSeenInquiryIds}
-          chatUnread={chatUnread} profileMenuOpen={profileMenuOpen} setProfileMenuOpen={setProfileMenuOpen}
+          chatUnread={chatUnread}
+          lawyerRequestCount={lawyerRequests.filter(r => r.status === "pending").length}
+          profileMenuOpen={profileMenuOpen} setProfileMenuOpen={setProfileMenuOpen}
           logout={logout} tc={tc}
         />
 
@@ -479,6 +512,15 @@ export default function OwnerDashboard() {
               <OwnerProfileTab user={user} tc={tc} language={language} isDark={isDark} />
             )}
 
+            {activeTab === "lawyer-requests" && (
+              <OwnerLawyerRequestsTab
+                isDark={isDark}
+                requests={lawyerRequests}
+                loading={lawyerRequestsLoading}
+                onAction={handleLawyerRequestAction}
+              />
+            )}
+
           </div>
         </div>
       </div>
@@ -488,7 +530,9 @@ export default function OwnerDashboard() {
         activeTab={activeTab} setActiveTab={setActiveTab}
         isDark={isDark} language={language}
         contactRequests={contactRequests} seenInquiryIds={seenInquiryIds} setSeenInquiryIds={setSeenInquiryIds}
-        chatUnread={chatUnread} logout={logout}
+        chatUnread={chatUnread}
+        lawyerRequestCount={lawyerRequests.filter(r => r.status === "pending").length}
+        logout={logout}
       />
 
       {/* Modals */}

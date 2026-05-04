@@ -57,6 +57,7 @@ export default function AdminUsersTab({
             <option value="all">{tc.all}</option>
             <option value="landlord">Landlords</option>
             <option value="renter">Renters</option>
+            <option value="lawyer">Lawyers</option>
             <option value="verified">Verified</option>
             <option value="unverified">Unverified</option>
           </select>
@@ -93,11 +94,14 @@ export default function AdminUsersTab({
                   {pagedUsers.map((u, idx) => {
                     const rowNum = (userPage - 1) * USER_PAGE_SIZE + idx + 1;
                     const initials = u.fullName?.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) || "?";
-                    const roleColor = u.role === "landlord"
-                      ? isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-100 text-blue-700"
-                      : u.role === "admin"
-                      ? isDark ? "bg-purple-500/20 text-purple-400" : "bg-purple-100 text-purple-700"
-                      : isDark ? "bg-green-500/20 text-green-400" : "bg-green-100 text-green-700";
+                    const roleColor =
+                      u.role === "landlord"
+                        ? isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-100 text-blue-700"
+                        : u.role === "admin"
+                        ? isDark ? "bg-purple-500/20 text-purple-400" : "bg-purple-100 text-purple-700"
+                        : u.role === "lawyer"
+                        ? isDark ? "bg-yellow-500/20 text-yellow-400" : "bg-yellow-100 text-yellow-700"
+                        : isDark ? "bg-green-500/20 text-green-400" : "bg-green-100 text-green-700";
                     return (
                       <tr key={u._id} className={`transition-colors ${isDark ? "bg-gray-900 hover:bg-gray-800" : "bg-white hover:bg-gray-50"}`}>
                         <td className={`px-4 py-3 text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>{rowNum}</td>
@@ -144,13 +148,13 @@ export default function AdminUsersTab({
                           {new Date(u.createdAt).toLocaleDateString()}
                         </td>
                         <td className="px-4 py-3 text-center">
-                          {u.role !== 'admin' && (
+                          {u.role !== "admin" && (
                             <button
                               onClick={() => handleToggleBlock(u._id, !u.isBlocked, u.fullName, u.email)}
                               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                                 u.isBlocked
-                                  ? isDark ? "bg-green-600 hover:bg-green-700 text-white" : "bg-green-600 hover:bg-green-700 text-white"
-                                  : isDark ? "bg-red-600 hover:bg-red-700 text-white" : "bg-red-600 hover:bg-red-700 text-white"
+                                  ? "bg-green-600 hover:bg-green-700 text-white"
+                                  : "bg-red-600 hover:bg-red-700 text-white"
                               }`}
                             >
                               {u.isBlocked ? "Unblock" : "Block"}

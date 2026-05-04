@@ -9,7 +9,7 @@ export interface AuthenticatedRequest extends NextRequest {
   user?: {
     id: string;
     email: string;
-    role: 'renter' | 'landlord' | 'admin';
+    role: 'renter' | 'landlord' | 'admin' | 'lawyer';
     country: 'fr' | 'in';
   };
 }
@@ -38,7 +38,7 @@ export async function authenticateUser(request: NextRequest) {
       return {
         id: user._id.toString(),
         email: user.email,
-        role: user.role as 'renter' | 'landlord' | 'admin',
+        role: user.role as 'renter' | 'landlord' | 'admin' | 'lawyer',
         country: user.country as 'fr' | 'in',
       };
     }
@@ -52,7 +52,7 @@ export async function authenticateUser(request: NextRequest) {
       return {
         id: user._id.toString(),
         email: user.email,
-        role: user.role as 'renter' | 'landlord' | 'admin',
+        role: user.role as 'renter' | 'landlord' | 'admin' | 'lawyer',
         country: user.country as 'fr' | 'in',
       };
     }

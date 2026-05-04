@@ -22,6 +22,7 @@ function VerifyOTPContent() {
   const searchParams = useSearchParams();
   const country = params.country as string;
   const email = searchParams.get("email") || "";
+  const pendingApproval = searchParams.get("pendingApproval") === "true";
   const { language } = useLanguage();
 
   const t = {
@@ -65,17 +66,21 @@ function VerifyOTPContent() {
       const data = await res.json();
 
       if (res.ok) {
-        toast.success(
-          language === "fr"
-            ? "Email vérifié avec succès!"
-            : "Email verified successfully!",
-          {
-            duration: 3000,
-            position: "top-center",
-            style: { background: "#10B981", color: "white", fontWeight: "500" },
-          }
-        );
-        setTimeout(() => router.push(`/login`), 2000);
+        if (pendingApproval) {
+          toast.success(
+            language === "fr"
+              ? "Email vérifié! Votre compte est en attente d'approbation."
+              : "Email verified! Your account is pending admin approval.",
+            { duration: 5000, position: "top-center", style: { background: "#F59E0B", color: "white", fontWeight: "500" } }
+          );
+          setTimeout(() => router.push(`/${country}/login`), 3000);
+        } else {
+          toast.success(
+            language === "fr" ? "Email vérifié avec succès!" : "Email verified successfully!",
+            { duration: 3000, position: "top-center", style: { background: "#10B981", color: "white", fontWeight: "500" } }
+          );
+          setTimeout(() => router.push(`/login`), 2000);
+        }
       } else {
         toast.error(data.error || "Verification failed", { position: "top-center" });
         const cleared = ["", "", "", "", "", ""];

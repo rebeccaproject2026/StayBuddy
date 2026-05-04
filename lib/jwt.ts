@@ -9,7 +9,7 @@ if (!JWT_SECRET) {
 export interface JWTPayload {
   userId: string;
   email: string;
-  role: 'renter' | 'landlord' | 'admin';
+  role: 'renter' | 'landlord' | 'admin' | 'lawyer';
   country: 'fr' | 'in';
 }
 

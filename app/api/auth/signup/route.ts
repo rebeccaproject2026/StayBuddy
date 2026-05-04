@@ -52,6 +52,14 @@ export async function POST(request: NextRequest) {
         isVerified: false,
         otpCode: otp,
         otpExpires,
+        // Lawyer-specific fields
+        ...(validatedData.role === 'lawyer' && {
+          barCouncilNumber: validatedData.barCouncilNumber,
+          experienceYears: validatedData.experienceYears,
+          aadharNumber: validatedData.aadharNumber,
+          barCouncilCertificate: validatedData.barCouncilCertificate,
+          isApproved: false,
+        }),
       });
       await user.save();
       console.log('[signup] Created new user with OTP');
@@ -64,7 +72,10 @@ export async function POST(request: NextRequest) {
     await sendOTPEmail(emailLower, otp, validatedData.fullName);
 
     return NextResponse.json(
-      { message: 'OTP sent to your email. Please verify your account.' },
+      {
+        message: 'OTP sent to your email. Please verify your account.',
+        pendingApproval: validatedData.role === 'lawyer',
+      },
       { status: 200 }
     );
   } catch (error: any) {

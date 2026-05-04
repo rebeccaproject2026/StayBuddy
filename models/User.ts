@@ -7,10 +7,11 @@ export interface IUser extends Document {
   email: string;
   phoneNumber: string;
   password?: string;
-  role: 'renter' | 'landlord' | 'admin';
+  role: 'renter' | 'landlord' | 'admin' | 'lawyer';
   country: 'fr' | 'in';
   isVerified: boolean;
   isBlocked: boolean;
+  isApproved: boolean; // for lawyer accounts — admin must approve before login
   provider: 'credentials' | 'google';
   googleId?: string;
   profileImage?: string;
@@ -19,6 +20,11 @@ export interface IUser extends Document {
   resetPasswordExpires?: Date;
   otpCode?: string;
   otpExpires?: Date;
+  // Lawyer-specific fields
+  barCouncilNumber?: string;
+  experienceYears?: number;
+  aadharNumber?: string;
+  barCouncilCertificate?: string; // URL/base64 of uploaded certificate
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -63,8 +69,8 @@ const userSchema = new Schema<IUser>(
     role: {
       type: String,
       enum: {
-        values: ['renter', 'landlord', 'admin'],
-        message: 'Role must be either renter, landlord, or admin'
+        values: ['renter', 'landlord', 'admin', 'lawyer'],
+        message: 'Role must be either renter, landlord, admin, or lawyer'
       },
       default: 'renter'
     },
@@ -83,6 +89,10 @@ const userSchema = new Schema<IUser>(
     isBlocked: {
       type: Boolean,
       default: false
+    },
+    isApproved: {
+      type: Boolean,
+      default: false // lawyers start unapproved; other roles default to true via pre-save
     },
     provider: {
       type: String,
@@ -112,7 +122,12 @@ const userSchema = new Schema<IUser>(
     otpExpires: {
       type: Date,
       select: false
-    }
+    },
+    // Lawyer-specific fields
+    barCouncilNumber: { type: String, trim: true },
+    experienceYears: { type: Number, min: 0 },
+    aadharNumber: { type: String, trim: true },
+    barCouncilCertificate: { type: String }, // stored URL or base64
   },
   {
     timestamps: true,
@@ -132,8 +147,12 @@ userSchema.index({ country: 1 });
 userSchema.index({ email: 1, country: 1 }, { unique: true });
 userSchema.index({ googleId: 1, country: 1 }, { unique: true, partialFilterExpression: { googleId: { $type: 'string' } } });
 
-// Pre-save middleware to hash password
+// Pre-save middleware to hash password and set isApproved
 userSchema.pre('save', async function() {
+  // Non-lawyer roles are always approved
+  if (this.isNew && this.role !== 'lawyer') {
+    this.isApproved = true;
+  }
   // Only hash the password if it has been modified (or is new), exists, and provider is credentials
   if (!this.isModified('password') || !this.password || this.provider !== 'credentials') return;
 
@@ -158,7 +177,7 @@ let User: IUserModel;
 
 try {
   User = mongoose.model<IUser, IUserModel>('User');
-  if (!User.schema.path('otpCode') || !User.schema.path('isBlocked')) {
+  if (!User.schema.path('otpCode') || !User.schema.path('isBlocked') || !User.schema.path('isApproved')) {
     delete (mongoose.models as any).User;
     User = mongoose.model<IUser, IUserModel>('User', userSchema);
   }

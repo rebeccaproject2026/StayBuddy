@@ -18,6 +18,7 @@ import AdminRequestsTab from "@/components/admin/AdminRequestsTab";
 import AdminOutreachTab from "@/components/admin/AdminOutreachTab";
 import AdminPropertyModal from "@/components/admin/AdminPropertyModal";
 import AdminModals from "@/components/admin/AdminModals";
+import AdminLawyersTab from "@/components/admin/AdminLawyersTab";
 
 import type { AdminProperty, AdminUser, AdminStats, AdminContent } from "@/components/admin/types";
 
@@ -81,6 +82,11 @@ export default function AdminDashboard() {
   const [allUsers, setAllUsers] = useState<AdminUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [userPage, setUserPage] = useState(1);
+
+  // Pending lawyers
+  const [pendingLawyers, setPendingLawyers] = useState<AdminUser[]>([]);
+  const [approvedLawyers, setApprovedLawyers] = useState<AdminUser[]>([]);
+  const [lawyersLoading, setLawyersLoading] = useState(false);
 
   // Reports
   const [allReports, setAllReports] = useState<any[]>([]);
@@ -166,6 +172,23 @@ export default function AdminDashboard() {
     }
   }, [currentCountry]);
 
+  const fetchPendingLawyers = useCallback(async () => {
+    const token = getToken();
+    if (!token) return;
+    setLawyersLoading(true);
+    try {
+      const [pendingRes, approvedRes] = await Promise.all([
+        fetch(`/api/admin/lawyers?status=pending`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`/api/admin/lawyers?status=approved`, { headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+      const [pendingData, approvedData] = await Promise.all([pendingRes.json(), approvedRes.json()]);
+      if (pendingData.success) setPendingLawyers(pendingData.lawyers);
+      if (approvedData.success) setApprovedLawyers(approvedData.lawyers);
+    } finally {
+      setLawyersLoading(false);
+    }
+  }, []);
+
   const fetchReports = useCallback(async () => {
     const token = getToken();
     if (!token) return;
@@ -201,7 +224,7 @@ export default function AdminDashboard() {
     const token = getToken();
     if (!token) return;
 
-    Promise.all([fetchProperties(), fetchRequests(), fetchUsers(), fetchReports(), fetchLeads()]);
+    Promise.all([fetchProperties(), fetchRequests(), fetchUsers(), fetchReports(), fetchLeads(), fetchPendingLawyers()]);
 
     const es = new EventSource(`/api/admin/property-events?token=${encodeURIComponent(token)}`);
     es.onmessage = (e) => {
@@ -220,7 +243,7 @@ export default function AdminDashboard() {
       } catch {}
     };
     return () => es.close();
-  }, [authUser, fetchProperties, fetchRequests, fetchUsers, fetchReports, fetchLeads, currentCountry]);
+  }, [authUser, fetchProperties, fetchRequests, fetchUsers, fetchReports, fetchLeads, fetchPendingLawyers, currentCountry]);
 
   if (!authChecked || !authUser) {
     return (
@@ -275,6 +298,43 @@ export default function AdminDashboard() {
       });
       const data = await res.json();
       if (data.success) setAllUsers(prev => prev.map(u => u._id === userId ? { ...u, isBlocked: false } : u));
+    } catch {}
+  };
+
+  const handleLawyerApproval = async (lawyerId: string, approve: boolean) => {
+    const token = getToken();
+    if (!token) return;
+    try {
+      const res = await fetch("/api/admin/lawyers", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ lawyerId, isApproved: approve }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Find the lawyer in either list
+        const lawyer =
+          pendingLawyers.find((l) => l._id === lawyerId) ||
+          approvedLawyers.find((l) => l._id === lawyerId);
+
+        if (approve) {
+          // Move from pending → approved
+          setPendingLawyers((prev) => prev.filter((l) => l._id !== lawyerId));
+          if (lawyer) setApprovedLawyers((prev) => [{ ...lawyer, isApproved: true }, ...prev.filter((l) => l._id !== lawyerId)]);
+        } else {
+          // Move from approved → pending (revoke) or remove (reject from pending)
+          setApprovedLawyers((prev) => prev.filter((l) => l._id !== lawyerId));
+          if (lawyer && lawyer.isApproved) {
+            // Was approved, now revoked → back to pending
+            setPendingLawyers((prev) => [{ ...lawyer, isApproved: false }, ...prev.filter((l) => l._id !== lawyerId)]);
+          } else {
+            // Was pending, rejected → remove entirely
+            setPendingLawyers((prev) => prev.filter((l) => l._id !== lawyerId));
+          }
+        }
+        // Sync allUsers list too
+        setAllUsers((prev) => prev.map((u) => u._id === lawyerId ? { ...u, isApproved: approve } : u));
+      }
     } catch {}
   };
 
@@ -403,6 +463,7 @@ export default function AdminDashboard() {
     tenants: allUsers.filter(u => u.role === "renter").length,
     pendingReports: allReports.filter(r => r.status === "pending").length,
     pendingRequests: requests.filter(r => r.approvalStatus === "pending").length,
+    pendingLawyers: pendingLawyers.length,
   };
 
   const content: Record<string, AdminContent> = {
@@ -445,6 +506,7 @@ export default function AdminDashboard() {
   const filteredUsers = allUsers.filter(u => {
     if (userFilter === "landlord") return u.role === "landlord";
     if (userFilter === "renter") return u.role === "renter";
+    if (userFilter === "lawyer") return u.role === "lawyer";
     if (userFilter === "verified") return u.isVerified;
     if (userFilter === "unverified") return !u.isVerified;
     return true;
@@ -584,6 +646,16 @@ export default function AdminDashboard() {
                 setWaSent={setWaSent}
                 setLeads={setLeads}
                 fetchLeads={fetchLeads}
+              />
+            )}
+
+            {activeTab === "lawyers" && (
+              <AdminLawyersTab
+                isDark={isDark}
+                pendingLawyers={pendingLawyers}
+                approvedLawyers={approvedLawyers}
+                lawyersLoading={lawyersLoading}
+                handleLawyerApproval={handleLawyerApproval}
               />
             )}
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, Calendar, MessageSquare, User, LogOut, ChevronDown } from "lucide-react";
+import { Home, Calendar, MessageSquare, User, LogOut, ChevronDown, Scale } from "lucide-react";
 import type { OwnerSidebarProps } from "./types";
 
 export default function OwnerSidebar({
@@ -13,6 +13,7 @@ export default function OwnerSidebar({
   seenInquiryIds,
   setSeenInquiryIds,
   chatUnread,
+  lawyerRequestCount,
   profileMenuOpen,
   setProfileMenuOpen,
   logout,
@@ -79,6 +80,29 @@ export default function OwnerSidebar({
             {chatUnread > 0 && (
               <span className="ml-auto bg-red-500 text-white text-xs font-bold min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center">
                 {chatUnread}
+              </span>
+            )}
+          </button>
+          {/* Lawyer Requests nav */}
+          <button
+            onClick={() => setActiveTab("lawyer-requests")}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+              activeTab === "lawyer-requests" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            <div className="relative flex-shrink-0">
+              <Scale className="w-5 h-5" />
+              {lawyerRequestCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-500" />
+                </span>
+              )}
+            </div>
+            <span className="font-medium text-sm">Lawyer Requests</span>
+            {lawyerRequestCount > 0 && (
+              <span className="ml-auto bg-yellow-500 text-white text-xs font-bold min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center">
+                {lawyerRequestCount}
               </span>
             )}
           </button>

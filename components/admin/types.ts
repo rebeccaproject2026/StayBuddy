@@ -70,12 +70,18 @@ export interface AdminUser {
   fullName: string;
   email: string;
   phoneNumber?: string;
-  role: 'renter' | 'landlord' | 'admin';
+  role: 'renter' | 'landlord' | 'admin' | 'lawyer';
   country: string;
   isVerified: boolean;
   isBlocked: boolean;
+  isApproved?: boolean;
   provider: string;
   createdAt: string;
+  // Lawyer-specific
+  barCouncilNumber?: string;
+  experienceYears?: number;
+  aadharNumber?: string;
+  barCouncilCertificate?: string;
 }
 
 export interface AdminStats {
@@ -86,6 +92,7 @@ export interface AdminStats {
   tenants: number;
   pendingReports: number;
   pendingRequests: number;
+  pendingLawyers: number;
 }
 
 export interface AdminContent {

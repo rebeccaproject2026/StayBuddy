@@ -11,7 +11,7 @@ interface User {
   fullName: string;
   email: string;
   phoneNumber?: string;
-  role: 'renter' | 'landlord' | 'admin';
+  role: 'renter' | 'landlord' | 'admin' | 'lawyer';
   country: 'fr' | 'in';
   isVerified: boolean;
   profileImage?: string;
@@ -100,7 +100,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         id: session.user.id,
         fullName: session.user.name || '',
         email: session.user.email || '',
-        role: session.user.role as 'renter' | 'landlord' | 'admin',
+        role: session.user.role as 'renter' | 'landlord' | 'admin' | 'lawyer',
         country: (session.user.country as 'fr' | 'in') || 'in',
         isVerified: true,
         profileImage: session.user.profileImage || session.user.image || undefined,

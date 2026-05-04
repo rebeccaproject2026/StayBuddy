@@ -42,6 +42,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Block lawyers pending admin approval
+    if (user.role === 'lawyer' && !user.isApproved) {
+      return NextResponse.json(
+        { error: 'Your lawyer account is pending admin approval. You will be notified once approved.' },
+        { status: 403 }
+      );
+    }
+
     // Block blocked users
     if (user.isBlocked) {
       return NextResponse.json(

@@ -24,15 +24,35 @@ export const signupSchema = z.object({
       'Password must contain at least one lowercase letter, one uppercase letter, and one number'
     ),
   confirmPassword: z.string(),
-  role: z.enum(['renter', 'landlord'], {
-    message: 'Role must be either renter or landlord',
+  role: z.enum(['renter', 'landlord', 'lawyer'], {
+    message: 'Role must be renter, landlord, or lawyer',
   }),
   country: z.enum(['fr', 'in'], {
     message: 'Country must be either fr or in',
   }),
+  // Lawyer-specific fields (optional at schema level, validated conditionally)
+  barCouncilNumber: z.string().trim().optional(),
+  experienceYears: z.number().min(0).optional(),
+  aadharNumber: z.string().trim().optional(),
+  barCouncilCertificate: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Passwords do not match',
   path: ['confirmPassword'],
+}).superRefine((data, ctx) => {
+  if (data.role === 'lawyer') {
+    if (!data.barCouncilNumber?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Bar council number is required', path: ['barCouncilNumber'] });
+    }
+    if (data.experienceYears === undefined || data.experienceYears === null) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Experience years is required', path: ['experienceYears'] });
+    }
+    if (!data.aadharNumber?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Aadhar number is required', path: ['aadharNumber'] });
+    }
+    if (!data.barCouncilCertificate?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Bar council certificate is required', path: ['barCouncilCertificate'] });
+    }
+  }
 });
 
 // Login validation schema

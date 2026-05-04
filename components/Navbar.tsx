@@ -187,6 +187,7 @@ export default function Navbar() {
     switch (user.role) {
       case "admin": return "/dashboard/admin";
       case "landlord": return "/dashboard/owner";
+      case "lawyer": return "/dashboard/lawyer";
       case "renter": return "/dashboard/tenant";
       default: return "/dashboard";
     }
@@ -198,6 +199,7 @@ export default function Navbar() {
       case "landlord": return "/dashboard/owner?tab=profile";
       case "renter": return "/dashboard/tenant?tab=profile";
       case "admin": return "/dashboard/admin?tab=profile";
+      case "lawyer": return "/dashboard/lawyer?tab=profile";
       default: return "/dashboard";
     }
   };
@@ -217,10 +219,12 @@ export default function Navbar() {
   const roleLabel = user?.role === "renter" ? "Renter"
     : user?.role === "landlord" ? "Landlord"
     : user?.role === "admin" ? "Admin"
+    : user?.role === "lawyer" ? "Lawyer"
     : user?.role || "User";
 
   const dashboardLabel = user?.role === "admin" ? "Admin Dashboard"
     : user?.role === "landlord" ? "Owner Dashboard"
+    : user?.role === "lawyer" ? "Lawyer Dashboard"
     : "Tenant Dashboard";
 
   return (

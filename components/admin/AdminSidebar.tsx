@@ -10,6 +10,7 @@ import {
   ClipboardList,
   MessageSquare,
   BarChart3,
+  Scale,
 } from "lucide-react";
 import { AdminContent, AdminStats } from "./types";
 
@@ -70,6 +71,41 @@ export default function AdminSidebar({
             <span className="font-medium">{tc.userManagement}</span>
           </button>
           <button
+            onClick={() => setActiveTab("requests")}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+              activeTab === "requests" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+            }`}
+          >
+            <ClipboardList className="w-5 h-5" />
+            <span className="font-medium">Property Requests</span>
+            {stats.pendingRequests > 0 && (
+              <span className="ml-auto bg-yellow-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{stats.pendingRequests}</span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("lawyers")}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+              activeTab === "lawyers" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+            }`}
+          >
+            <Scale className="w-5 h-5" />
+            <span className="font-medium">Lawyer Requests</span>
+            {stats.pendingLawyers > 0 && (
+              <span className="ml-auto bg-yellow-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                {stats.pendingLawyers}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("outreach")}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+              activeTab === "outreach" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+            }`}
+          >
+            <MessageSquare className="w-5 h-5" />
+            <span className="font-medium">WA Outreach</span>
+          </button>
+          <button
             onClick={() => setActiveTab("reports")}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
               activeTab === "reports" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
@@ -83,27 +119,7 @@ export default function AdminSidebar({
               </span>
             )}
           </button>
-          <button
-            onClick={() => setActiveTab("requests")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-              activeTab === "requests" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-            }`}
-          >
-            <ClipboardList className="w-5 h-5" />
-            <span className="font-medium">Property Requests</span>
-            {stats.pendingRequests > 0 && (
-              <span className="ml-auto bg-yellow-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{stats.pendingRequests}</span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("outreach")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-              activeTab === "outreach" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-            }`}
-          >
-            <MessageSquare className="w-5 h-5" />
-            <span className="font-medium">WA Outreach</span>
-          </button>
+          
         </nav>
 
         {/* Profile card */}
