@@ -12,6 +12,7 @@ import { getToken } from "@/lib/token-storage";
 import LawyerSidebar from "@/components/lawyer/LawyerSidebar";
 import LawyerMobileNav from "@/components/lawyer/LawyerMobileNav";
 import LawyerOwnersTab from "@/components/lawyer/LawyerOwnersTab";
+import LawyerContractsTab from "@/components/lawyer/LawyerContractsTab";
 
 // ── Dummy stats ───────────────────────────────────────────────────────────────
 const DUMMY_STATS = [
@@ -37,6 +38,9 @@ export default function LawyerDashboard() {
   const [ownersLoading, setOwnersLoading] = useState(false);
   const [ownersFetched, setOwnersFetched] = useState(false);
 
+  // Accepted owners (for contract creation)
+  const [acceptedOwners, setAcceptedOwners] = useState<any[]>([]);
+
   useEffect(() => {
     const saved = localStorage.getItem("lawyer_theme");
     setIsDark(saved === "dark");
@@ -55,6 +59,27 @@ export default function LawyerDashboard() {
       .catch(() => {})
       .finally(() => { setOwnersLoading(false); setOwnersFetched(true); });
   }, [activeTab, ownersFetched, isAuthenticated]);
+
+  // Fetch accepted owners for contract creation (once authenticated)
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const token = getToken();
+    // Fetch both requests and owners list, then cross-reference
+    Promise.all([
+      fetch("/api/lawyer-requests", { headers: token ? { Authorization: `Bearer ${token}` } : {} }).then(r => r.json()),
+      fetch("/api/lawyer/owners", { headers: token ? { Authorization: `Bearer ${token}` } : {} }).then(r => r.json()),
+    ]).then(([reqData, ownersData]) => {
+      if (reqData.success && ownersData.success) {
+        const acceptedIds = new Set(
+          reqData.requests.filter((r: any) => r.status === "accepted").map((r: any) => r.owner)
+        );
+        const filtered = ownersData.owners.filter((o: any) => acceptedIds.has(o._id));
+        setAcceptedOwners(filtered);
+        if (!ownersFetched) { setOwners(ownersData.owners); setOwnersFetched(true); }
+      }
+    }).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   const toggleTheme = () => {
     const next = !isDark;
@@ -207,6 +232,15 @@ export default function LawyerDashboard() {
                 isDark={isDark}
                 owners={owners}
                 loading={ownersLoading}
+                onCreateContract={() => setActiveTab("contracts")}
+              />
+            )}
+
+            {/* Contracts tab */}
+            {activeTab === "contracts" && (
+              <LawyerContractsTab
+                isDark={isDark}
+                acceptedOwners={acceptedOwners}
               />
             )}
 

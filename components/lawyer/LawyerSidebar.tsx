@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, User, LogOut, ChevronDown, Scale, Building2 } from "lucide-react";
+import { LayoutDashboard, User, LogOut, ChevronDown, Scale, Building2, FileText } from "lucide-react";
 
 interface LawyerSidebarProps {
   activeTab: string;
@@ -24,9 +24,10 @@ export default function LawyerSidebar({
   logout,
 }: LawyerSidebarProps) {
   const navItems = [
-    { key: "overview", icon: LayoutDashboard, label: language === "fr" ? "Aperçu" : "Overview" },
-    { key: "owners",   icon: Building2,       label: language === "fr" ? "Propriétaires" : "Owners" },
-    { key: "profile",  icon: User,            label: language === "fr" ? "Profil" : "Profile" },
+    { key: "overview",   icon: LayoutDashboard, label: language === "fr" ? "Aperçu" : "Overview" },
+    { key: "owners",     icon: Building2,       label: language === "fr" ? "Propriétaires" : "Owners" },
+    { key: "contracts",  icon: FileText,        label: language === "fr" ? "Contrats" : "Contracts" },
+    { key: "profile",    icon: User,            label: language === "fr" ? "Profil" : "Profile" },
   ];
 
   return (

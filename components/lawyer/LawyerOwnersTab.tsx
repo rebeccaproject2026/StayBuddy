@@ -39,6 +39,7 @@ interface LawyerOwnersTabProps {
   isDark: boolean;
   owners: Owner[];
   loading: boolean;
+  onCreateContract: () => void;
 }
 
 const statusBadge = (status: string, isDark: boolean) => {
@@ -50,7 +51,7 @@ const statusBadge = (status: string, isDark: boolean) => {
   return map[status] ?? (isDark ? "bg-gray-700 text-gray-400" : "bg-gray-100 text-gray-500");
 };
 
-export default function LawyerOwnersTab({ isDark, owners, loading }: LawyerOwnersTabProps) {
+export default function LawyerOwnersTab({ isDark, owners, loading, onCreateContract }: LawyerOwnersTabProps) {
   const params = useParams();
   const country = (params?.country as string) || "in";
 
@@ -349,7 +350,7 @@ export default function LawyerOwnersTab({ isDark, owners, loading }: LawyerOwner
                             if (status === "accepted") {
                               return (
                                 <button
-                                  onClick={(e) => e.stopPropagation()}
+                                  onClick={(e) => { e.stopPropagation(); onCreateContract(); }}
                                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                                     isDark
                                       ? "bg-green-500/20 text-green-400 hover:bg-green-500 hover:text-white"

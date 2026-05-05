@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { getToken } from "@/lib/token-storage";
@@ -11,6 +11,7 @@ import Image from "next/image";
 import toast from "react-hot-toast";
 import ChatWindow from "@/components/ChatWindow";
 import { useSocketContext } from "@/contexts/SocketContext";
+import TenantContractsTab from "@/components/tenant/TenantContractsTab";
 import {
   Heart,
   MessageSquare,
@@ -27,6 +28,7 @@ import {
   ChevronDown,
   Sun,
   Moon,
+  FileText,
 } from "lucide-react";
 
 function RequestCard({
@@ -144,18 +146,32 @@ export default function TenantDashboard() {
   const currencySymbol = t("currency.symbol");
 
   // Chat state — shared socket context
-  const { totalUnread: unreadCount, unreadByRequest, markSeen: socketMarkSeen, clearAll: resetUnread, onNotification } = useSocketContext();
+  const { totalUnread: unreadCount, unreadByRequest, markSeen: socketMarkSeen, clearAll: resetUnread, onNotification, contractUnread, clearContractUnread } = useSocketContext();
   const [activeChatRequestId, setActiveChatRequestId] = useState<string | null>(null);
+  const activeTabRef = useRef(activeTab);
+  useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
 
-  // Show toast on incoming message when not on messages tab
+  // Live contract badge count
+  const [baseContractCount, setBaseContractCount] = useState(0);
+  const tenantContractBadge = baseContractCount + contractUnread;
+
+  // Show toast on incoming notifications
   useEffect(() => {
     const off = onNotification((n) => {
-      if (activeTab !== 'messages') {
-        toast(`New message received`, { icon: '💬' });
+      if (n.type === "new_contract_tenant") {
+        setBaseContractCount(prev => prev + 1);
+        if (activeTabRef.current !== "contracts") {
+          toast(`New contract from ${n.lawyerName || "your lawyer"}`, { icon: "📄" });
+        }
+      } else if (n.type === "new_message") {
+        if (activeTabRef.current !== "messages") {
+          toast("New message received", { icon: "💬" });
+        }
       }
     });
     return off;
-  }, [onNotification, activeTab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onNotification]);
 
   // Authentication check
   useEffect(() => {
@@ -432,10 +448,11 @@ export default function TenantDashboard() {
   };
 
   const navItems = [
-    { key: "saved",    icon: Heart,         label: tc.savedProperties },
-    { key: "requests", icon: MessageSquare, label: tc.myRequests },
-    { key: "messages", icon: MessageSquare, label: language === 'fr' ? 'Messages' : 'Messages', badge: unreadCount },
-    { key: "profile",  icon: User,          label: tc.profile },
+    { key: "saved",     icon: Heart,         label: tc.savedProperties },
+    { key: "requests",  icon: MessageSquare, label: tc.myRequests },
+    { key: "messages",  icon: MessageSquare, label: language === 'fr' ? 'Messages' : 'Messages', badge: unreadCount },
+    { key: "contracts", icon: FileText,      label: language === 'fr' ? 'Contrats' : 'Contracts', badge: tenantContractBadge },
+    { key: "profile",   icon: User,          label: tc.profile },
   ];
 
   return (
@@ -676,6 +693,14 @@ export default function TenantDashboard() {
               </div>
               );
             })()}
+
+            {/* Contracts */}
+            {activeTab === "contracts" && (
+              <TenantContractsTab
+                isDark={isDark}
+                onViewed={() => { setBaseContractCount(0); clearContractUnread(); }}
+              />
+            )}
 
             {/* Messages */}
             {activeTab === "messages" && (
@@ -937,6 +962,7 @@ export default function TenantDashboard() {
                 {key === "saved" ? (language === "fr" ? "Favoris" : "Saved")
                   : key === "requests" ? (language === "fr" ? "Demandes" : "Requests")
                   : key === "messages" ? "Messages"
+                  : key === "contracts" ? (language === "fr" ? "Contrats" : "Contracts")
                   : key === "profile" ? (language === "fr" ? "Profil" : "Profile")
                   : ""}
               </span>

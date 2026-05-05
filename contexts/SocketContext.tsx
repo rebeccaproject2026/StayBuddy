@@ -22,10 +22,13 @@ export interface ChatMessage {
 }
 
 export interface Notification {
-  type: 'new_message';
-  requestId: string;
-  senderId: string;
-  preview: string;
+  type: 'new_message' | 'new_contract' | 'new_contract_tenant' | 'tenant_signed';
+  requestId?: string;
+  senderId?: string;
+  preview?: string;
+  contractId?: string;
+  lawyerName?: string;
+  tenantName?: string;
 }
 
 interface SocketContextValue {
@@ -34,10 +37,16 @@ interface SocketContextValue {
   unreadByRequest: Record<string, number>;
   // Total unread across all conversations
   totalUnread: number;
+  // Pending contract notifications count
+  contractUnread: number;
+  clearContractUnread: () => void;
   joinRoom: (requestId: string) => void;
   sendMessage: (requestId: string, text: string) => void;
   markSeen: (requestId: string) => void;
   clearAll: () => void;
+  emitContractNotify: (contractId: string, ownerId: string) => void;
+  emitTenantContractNotify: (contractId: string, tenantEmail: string) => void;
+  emitTenantSigned: (contractId: string, lawyerId: string, tenantName: string) => void;
   onMessage: (handler: (msg: ChatMessage) => void) => () => void;
   onSeen: (handler: (data: { requestId: string; seenBy: string }) => void) => () => void;
   onNotification: (handler: (n: Notification) => void) => () => void;
@@ -50,6 +59,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const socketRef = useRef<Socket | null>(null);
   const [connected, setConnected] = useState(false);
   const [unreadByRequest, setUnreadByRequest] = useState<Record<string, number>>({});
+  const [contractUnread, setContractUnread] = useState(0);
   const notifHandlers = useRef<((n: Notification) => void)[]>([]);
   const msgHandlers = useRef<((m: ChatMessage) => void)[]>([]);
   const seenHandlers = useRef<((d: { requestId: string; seenBy: string }) => void)[]>([]);
@@ -78,10 +88,12 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       if (n.type === 'new_message') {
         setUnreadByRequest(prev => ({
           ...prev,
-          [n.requestId]: (prev[n.requestId] || 0) + 1,
+          [n.requestId!]: (prev[n.requestId!] || 0) + 1,
         }));
-        notifHandlers.current.forEach(h => h(n));
+      } else if (n.type === 'new_contract') {
+        setContractUnread(c => c + 1);
       }
+      notifHandlers.current.forEach(h => h(n));
     });
 
     socket.on('new_message', (msg: ChatMessage) => {
@@ -106,6 +118,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       socketRef.current = null;
       setConnected(false);
       setUnreadByRequest({});
+      setContractUnread(0);
     }
   }, [isAuthenticated]);
 
@@ -131,6 +144,22 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     setUnreadByRequest({});
   }, []);
 
+  const clearContractUnread = useCallback(() => {
+    setContractUnread(0);
+  }, []);
+
+  const emitContractNotify = useCallback((contractId: string, ownerId: string) => {
+    socketRef.current?.emit('notify_contract', { contractId, ownerId });
+  }, []);
+
+  const emitTenantContractNotify = useCallback((contractId: string, tenantEmail: string) => {
+    socketRef.current?.emit('notify_tenant_contract', { contractId, tenantEmail });
+  }, []);
+
+  const emitTenantSigned = useCallback((contractId: string, lawyerId: string, tenantName: string) => {
+    socketRef.current?.emit('notify_tenant_signed', { contractId, lawyerId, tenantName });
+  }, []);
+
   const onMessage = useCallback((handler: (msg: ChatMessage) => void) => {
     msgHandlers.current.push(handler);
     return () => { msgHandlers.current = msgHandlers.current.filter(h => h !== handler); };
@@ -153,6 +182,11 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       connected,
       unreadByRequest,
       totalUnread,
+      contractUnread,
+      clearContractUnread,
+      emitContractNotify,
+      emitTenantContractNotify,
+      emitTenantSigned,
       joinRoom,
       sendMessage,
       markSeen,

@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, Calendar, MessageSquare, User, LogOut, Scale } from "lucide-react";
+import { Home, Calendar, MessageSquare, User, LogOut, Scale, FileText } from "lucide-react";
 import type { OwnerMobileNavProps } from "./types";
 
 export default function OwnerMobileNav({
@@ -13,6 +13,7 @@ export default function OwnerMobileNav({
   setSeenInquiryIds,
   chatUnread,
   lawyerRequestCount,
+  contractPendingCount,
   logout,
 }: OwnerMobileNavProps) {
   return (
@@ -27,7 +28,7 @@ export default function OwnerMobileNav({
             badge: contactRequests.filter((r: any) => !seenInquiryIds.has(r._id)).length },
           { key: "messages",         icon: MessageSquare, label: "Messages", badge: chatUnread },
           { key: "lawyer-requests",  icon: Scale,         label: "Lawyers",  badge: lawyerRequestCount },
-          { key: "profile",          icon: User,          label: language === "fr" ? "Profil" : "Profile" },
+          { key: "contracts",        icon: FileText,      label: "Contracts", badge: contractPendingCount },
         ].map(({ key, icon: Icon, label, badge }) => (
           <button
             key={key}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
@@ -19,6 +19,7 @@ import OwnerMessagesTab from "@/components/owner/OwnerMessagesTab";
 import OwnerProfileTab from "@/components/owner/OwnerProfileTab";
 import OwnerModals from "@/components/owner/OwnerModals";
 import OwnerLawyerRequestsTab from "@/components/owner/OwnerLawyerRequestsTab";
+import OwnerContractsTab from "@/components/owner/OwnerContractsTab";
 import type { TcContent, PhotoCat } from "@/components/owner/types";
 
 export default function OwnerDashboard() {
@@ -74,22 +75,38 @@ export default function OwnerDashboard() {
 
   // ── Chat / socket state ─────────────────────────────────────────────────────
   const ownerToken = getToken();
-  const { totalUnread: chatUnread, unreadByRequest, markSeen: socketMarkSeen, clearAll: resetUnread, onNotification } = useSocketContext();
+  const { totalUnread: chatUnread, unreadByRequest, markSeen: socketMarkSeen, clearAll: resetUnread, onNotification, contractUnread, clearContractUnread } = useSocketContext();
   const [activeChatRequestId, setActiveChatRequestId] = useState<string | null>(null);
+  const activeTabRef = useRef(activeTab);
+  useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
 
   // ── Lawyer requests state ───────────────────────────────────────────────────
   const [lawyerRequests, setLawyerRequests] = useState<any[]>([]);
   const [lawyerRequestsLoading, setLawyerRequestsLoading] = useState(false);
   const [lawyerRequestsFetched, setLawyerRequestsFetched] = useState(false);
 
+  // ── Contracts: base count from API + live socket increments ─────────────────
+  const [baseContractCount, setBaseContractCount] = useState(0);
+  // Total badge = persisted pending + any new ones pushed via socket since page load
+  const contractPendingCount = baseContractCount + contractUnread;
+
+  // Toast on new contract notification (use ref to avoid stale closure)
   useEffect(() => {
-    const off = onNotification(() => {
-      if (activeTab !== "messages") {
-        toast("New message received", { icon: "💬" });
+    const off = onNotification((n) => {
+      if (n.type === "new_contract") {
+        if (activeTabRef.current !== "contracts") {
+          toast(`New contract from ${n.lawyerName || "your lawyer"}`, { icon: "📄" });
+        }
+      } else if (n.type === "new_message") {
+        if (activeTabRef.current !== "messages") {
+          toast("New message received", { icon: "💬" });
+        }
       }
     });
     return off;
-  }, [onNotification, activeTab]);
+  // onNotification is stable (useCallback), register once only
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onNotification]);
 
   // ── Seen inquiry IDs ────────────────────────────────────────────────────────
   const [seenInquiryIds, setSeenInquiryIds] = useState<Set<string>>(() => {
@@ -154,6 +171,27 @@ export default function OwnerDashboard() {
       .catch(() => {})
       .finally(() => { setLawyerRequestsLoading(false); setLawyerRequestsFetched(true); });
   }, [activeTab, lawyerRequestsFetched, isAuthenticated]);
+
+  // ── Fetch contract pending count for badge ───────────────────────────────────
+  useEffect(() => {
+    if (!isAuthenticated || user?.role !== "landlord") return;
+    const token = getToken();
+    fetch("/api/contracts", { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          setBaseContractCount(data.contracts.filter((c: any) => c.status === "PENDING_OWNER_REVIEW").length);
+        }
+      })
+      .catch(() => {});
+  }, [isAuthenticated, user]);
+
+  // Clear contract badge when owner opens the contracts tab
+  useEffect(() => {
+    if (activeTab === "contracts") {
+      clearContractUnread();
+    }
+  }, [activeTab, clearContractUnread]);
 
   // ── Loading / auth guard renders ────────────────────────────────────────────
   if (isLoading) {
@@ -454,6 +492,7 @@ export default function OwnerDashboard() {
           contactRequests={contactRequests} seenInquiryIds={seenInquiryIds} setSeenInquiryIds={setSeenInquiryIds}
           chatUnread={chatUnread}
           lawyerRequestCount={lawyerRequests.filter(r => r.status === "pending").length}
+          contractPendingCount={contractPendingCount}
           profileMenuOpen={profileMenuOpen} setProfileMenuOpen={setProfileMenuOpen}
           logout={logout} tc={tc}
         />
@@ -521,6 +560,10 @@ export default function OwnerDashboard() {
               />
             )}
 
+            {activeTab === "contracts" && (
+              <OwnerContractsTab isDark={isDark} />
+            )}
+
           </div>
         </div>
       </div>
@@ -532,6 +575,7 @@ export default function OwnerDashboard() {
         contactRequests={contactRequests} seenInquiryIds={seenInquiryIds} setSeenInquiryIds={setSeenInquiryIds}
         chatUnread={chatUnread}
         lawyerRequestCount={lawyerRequests.filter(r => r.status === "pending").length}
+        contractPendingCount={contractPendingCount}
         logout={logout}
       />
 

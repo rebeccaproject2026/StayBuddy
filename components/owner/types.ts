@@ -78,6 +78,7 @@ export interface OwnerSidebarProps {
   setSeenInquiryIds: React.Dispatch<React.SetStateAction<Set<string>>>;
   chatUnread: number;
   lawyerRequestCount: number;
+  contractPendingCount: number;
   profileMenuOpen: boolean;
   setProfileMenuOpen: (open: boolean) => void;
   logout: () => void;
@@ -94,6 +95,7 @@ export interface OwnerMobileNavProps {
   setSeenInquiryIds: React.Dispatch<React.SetStateAction<Set<string>>>;
   chatUnread: number;
   lawyerRequestCount: number;
+  contractPendingCount: number;
   logout: () => void;
 }
 

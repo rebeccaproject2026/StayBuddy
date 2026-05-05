@@ -609,3 +609,149 @@ export async function sendChatMessageEmail(
     `,
   });
 }
+
+// ─── Contract Emails ──────────────────────────────────────────────────────────
+
+export async function sendContractToOwnerEmail(params: {
+  ownerEmail: string;
+  ownerName: string;
+  lawyerName: string;
+  propertyAddress: string;
+  monthlyRent: number;
+  dashboardUrl: string;
+}) {
+  await transporter.sendMail({
+    from: `"StayBuddy" <${process.env.SMTP_USER}>`,
+    to: params.ownerEmail,
+    subject: `📄 Rental contract ready for your review — StayBuddy`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;background:#f9fafb;border-radius:12px;">
+        <div style="text-align:center;margin-bottom:24px;">
+          <h1 style="color:#4f46e5;font-size:28px;margin:0;">StayBuddy</h1>
+        </div>
+        <div style="background:white;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+          <h2 style="color:#111827;font-size:20px;margin-top:0;">Hi ${params.ownerName},</h2>
+          <p style="color:#6b7280;line-height:1.6;">
+            Your lawyer <strong style="color:#111827;">${params.lawyerName}</strong> has prepared a rental contract for your review and signature.
+          </p>
+          <div style="background:#f3f4f6;border-radius:10px;padding:20px;margin:24px 0;">
+            <table style="width:100%;border-collapse:collapse;">
+              <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;width:160px;">Property</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${params.propertyAddress}</td></tr>
+              <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Monthly Rent</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">₹${params.monthlyRent.toLocaleString('en-IN')}</td></tr>
+              <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Prepared by</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${params.lawyerName}</td></tr>
+            </table>
+          </div>
+          <p style="color:#6b7280;font-size:14px;line-height:1.6;">
+            Please log in to your dashboard to review the full contract, request changes, or sign it.
+          </p>
+          <div style="text-align:center;margin-top:24px;">
+            <a href="${params.dashboardUrl}" style="display:inline-block;background:#4f46e5;color:white;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;">
+              Review &amp; Sign Contract →
+            </a>
+          </div>
+        </div>
+        <p style="color:#9ca3af;font-size:12px;text-align:center;margin-top:16px;">© StayBuddy — Contract notification</p>
+      </div>
+    `,
+  });
+}
+
+export async function sendContractToTenantEmail(params: {
+  tenantEmail: string;
+  tenantName: string;
+  lawyerName: string;
+  ownerName: string;
+  propertyAddress: string;
+  monthlyRent: number;
+  securityDeposit: number;
+  leaseDuration: string;
+  startDate: string;
+  signingUrl: string;
+}) {
+  await transporter.sendMail({
+    from: `"StayBuddy" <${process.env.SMTP_USER}>`,
+    to: params.tenantEmail,
+    subject: `📄 Rental agreement ready for your signature — StayBuddy`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;background:#f9fafb;border-radius:12px;">
+        <div style="text-align:center;margin-bottom:24px;">
+          <h1 style="color:#4f46e5;font-size:28px;margin:0;">StayBuddy</h1>
+        </div>
+        <div style="background:white;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+          <h2 style="color:#111827;font-size:20px;margin-top:0;">Hi ${params.tenantName},</h2>
+          <p style="color:#6b7280;line-height:1.6;">
+            A rental agreement has been prepared for you by <strong style="color:#111827;">${params.lawyerName}</strong> on behalf of owner <strong style="color:#111827;">${params.ownerName}</strong>. The owner has already signed it.
+          </p>
+          <div style="background:#f3f4f6;border-radius:10px;padding:20px;margin:24px 0;">
+            <table style="width:100%;border-collapse:collapse;">
+              <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;width:160px;">Property</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${params.propertyAddress}</td></tr>
+              <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Monthly Rent</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">₹${params.monthlyRent.toLocaleString('en-IN')}</td></tr>
+              <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Security Deposit</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">₹${params.securityDeposit.toLocaleString('en-IN')}</td></tr>
+              <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Lease Duration</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${params.leaseDuration}</td></tr>
+              <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Start Date</td><td style="padding:6px 0;color:#111827;font-weight:600;font-size:14px;">${params.startDate || '—'}</td></tr>
+            </table>
+          </div>
+          <p style="color:#6b7280;font-size:14px;line-height:1.6;">
+            Please review the agreement carefully and sign it using the button below. This link is unique to you and expires after use.
+          </p>
+          <div style="text-align:center;margin-top:24px;">
+            <a href="${params.signingUrl}" style="display:inline-block;background:#16a34a;color:white;padding:14px 36px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;">
+              ✍️ Review &amp; Sign Agreement →
+            </a>
+          </div>
+          <p style="color:#9ca3af;font-size:12px;text-align:center;margin-top:20px;">
+            If you did not expect this email, please ignore it or contact support.
+          </p>
+        </div>
+        <p style="color:#9ca3af;font-size:12px;text-align:center;margin-top:16px;">© StayBuddy — Contract notification</p>
+      </div>
+    `,
+  });
+}
+
+export async function sendContractPdfEmail(params: {
+  recipientEmail: string;
+  recipientName: string;
+  role: 'owner' | 'tenant';
+  lawyerName: string;
+  propertyAddress: string;
+  pdfBase64: string; // base64-encoded PDF
+}) {
+  const { recipientEmail, recipientName, role, lawyerName, propertyAddress, pdfBase64 } = params;
+  const roleLabel = role === 'owner' ? 'Owner' : 'Tenant';
+
+  await transporter.sendMail({
+    from: `"StayBuddy" <${process.env.SMTP_USER}>`,
+    to: recipientEmail,
+    subject: `Your Fully Executed Rental Agreement — StayBuddy`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;background:#f9fafb;border-radius:12px;">
+        <div style="text-align:center;margin-bottom:24px;">
+          <h1 style="color:#4f46e5;font-size:28px;margin:0;">StayBuddy</h1>
+        </div>
+        <div style="background:white;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+          <h2 style="color:#111827;font-size:20px;margin-top:0;">Hi ${recipientName},</h2>
+          <p style="color:#6b7280;line-height:1.6;">
+            Please find attached your fully executed rental agreement for
+            <strong style="color:#111827;">${propertyAddress || 'the property'}</strong>,
+            prepared by <strong style="color:#111827;">${lawyerName}</strong>.
+          </p>
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px;margin:20px 0;text-align:center;">
+            <p style="color:#15803d;font-size:15px;font-weight:600;margin:0;">✅ Contract Fully Executed — Both Parties Signed</p>
+          </div>
+          <p style="color:#6b7280;font-size:14px;line-height:1.6;">
+            This document is your official copy as the <strong>${roleLabel}</strong>. Please keep it for your records.
+          </p>
+        </div>
+        <p style="color:#9ca3af;font-size:12px;text-align:center;margin-top:16px;">© StayBuddy — Contract copy</p>
+      </div>
+    `,
+    attachments: [
+      {
+        filename: 'rental-agreement.pdf',
+        content: Buffer.from(pdfBase64, 'base64'),
+        contentType: 'application/pdf',
+      },
+    ],
+  });
+}

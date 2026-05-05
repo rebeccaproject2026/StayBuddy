@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, Calendar, MessageSquare, User, LogOut, ChevronDown, Scale } from "lucide-react";
+import { Home, Calendar, MessageSquare, User, LogOut, ChevronDown, Scale, FileText } from "lucide-react";
 import type { OwnerSidebarProps } from "./types";
 
 export default function OwnerSidebar({
@@ -14,6 +14,7 @@ export default function OwnerSidebar({
   setSeenInquiryIds,
   chatUnread,
   lawyerRequestCount,
+  contractPendingCount,
   profileMenuOpen,
   setProfileMenuOpen,
   logout,
@@ -103,6 +104,29 @@ export default function OwnerSidebar({
             {lawyerRequestCount > 0 && (
               <span className="ml-auto bg-yellow-500 text-white text-xs font-bold min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center">
                 {lawyerRequestCount}
+              </span>
+            )}
+          </button>
+          {/* Contracts nav */}
+          <button
+            onClick={() => setActiveTab("contracts")}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+              activeTab === "contracts" ? "bg-primary text-white" : isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            <div className="relative flex-shrink-0">
+              <FileText className="w-5 h-5" />
+              {contractPendingCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500" />
+                </span>
+              )}
+            </div>
+            <span className="font-medium text-sm">Contracts</span>
+            {contractPendingCount > 0 && (
+              <span className="ml-auto bg-blue-500 text-white text-xs font-bold min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center">
+                {contractPendingCount}
               </span>
             )}
           </button>
