@@ -166,7 +166,7 @@ export default function LawyerDashboard() {
         />
 
         {/* Main content */}
-        <div className="flex-1 min-w-0 overflow-y-auto pb-16 lg:pb-0">
+        <div className="flex-1 min-w-0 overflow-y-auto pb-16 lg:pb-0" data-lenis-prevent>
           <div className="p-3 sm:p-5 lg:p-8">
 
             {/* Overview tab */}

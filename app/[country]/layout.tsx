@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import { Providers } from "@/components/Providers";
 import { Toaster } from "react-hot-toast";
 import NextLink from "next/link";
+import SmoothScroll from "@/components/SmoothScroll";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -42,11 +43,13 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} overflow-x-hidden`}>
         <Providers>
-          <PrefetchRoutes />
-          {!isDashboard && <Navbar />}
-          <main className={!isDashboard ? "pt-16 sm:pt-20" : ""}>{children}</main>
-          {!isDashboard && <Footer />}
-          <Toaster position="top-center" />
+          <SmoothScroll>
+            <PrefetchRoutes />
+            {!isDashboard && <Navbar />}
+            <main className={!isDashboard ? "pt-16 sm:pt-20" : ""}>{children}</main>
+            {!isDashboard && <Footer />}
+            <Toaster position="top-center" />
+          </SmoothScroll>
         </Providers>
       </body>
     </html>

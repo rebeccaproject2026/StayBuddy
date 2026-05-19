@@ -31,7 +31,7 @@ export default function OwnerMessagesTab({
         <div className={`px-4 py-3 border-b font-semibold text-sm ${isDark ? "border-gray-800 text-white" : "border-gray-100 text-gray-900"}`}>
           {language === "fr" ? "Conversations" : "Conversations"}
         </div>
-        <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
+        <div className="flex-1 overflow-y-auto divide-y divide-gray-100" data-lenis-prevent>
           {requestsLoading ? (
             <div className="p-4 space-y-3">
               {[...Array(3)].map((_, i) => (

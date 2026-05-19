@@ -812,7 +812,7 @@ export default function LawyerContractsTab({ isDark, acceptedOwners }: Props) {
                 <p className="text-xs mt-1">Send a request to an owner and wait for acceptance.</p>
               </div>
             ) : (
-              <div className="space-y-2 max-h-60 overflow-y-auto mb-4">
+              <div className="space-y-2 max-h-60 overflow-y-auto mb-4" data-lenis-prevent>
                 {acceptedOwners.map(o => (
                   <button
                     key={o._id}

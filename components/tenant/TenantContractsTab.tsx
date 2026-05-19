@@ -319,11 +319,11 @@ export default function TenantContractsTab({ isDark, onViewed }: Props) {
                     {/* Terms */}
                     <div className={`rounded-xl p-3 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
                       <p className={`text-xs font-semibold uppercase tracking-wide mb-2 ${isDark ? "text-gray-500" : "text-gray-400"}`}>Terms & Conditions</p>
-                      <pre className={`text-xs whitespace-pre-wrap font-sans leading-relaxed max-h-48 overflow-y-auto ${isDark ? "text-gray-300" : "text-gray-700"}`}>{c.terms || "—"}</pre>
+                      <pre className={`text-xs whitespace-pre-wrap font-sans leading-relaxed max-h-48 overflow-y-auto ${isDark ? "text-gray-300" : "text-gray-700"}`} data-lenis-prevent>{c.terms || "—"}</pre>
                       {c.policies && (
                         <>
                           <p className={`text-xs font-semibold uppercase tracking-wide mt-3 mb-2 ${isDark ? "text-gray-500" : "text-gray-400"}`}>Policies</p>
-                          <pre className={`text-xs whitespace-pre-wrap font-sans leading-relaxed max-h-32 overflow-y-auto ${isDark ? "text-gray-300" : "text-gray-700"}`}>{c.policies}</pre>
+                          <pre className={`text-xs whitespace-pre-wrap font-sans leading-relaxed max-h-32 overflow-y-auto ${isDark ? "text-gray-300" : "text-gray-700"}`} data-lenis-prevent>{c.policies}</pre>
                         </>
                       )}
                     </div>

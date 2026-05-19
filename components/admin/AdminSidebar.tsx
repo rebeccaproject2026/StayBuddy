@@ -41,7 +41,7 @@ export default function AdminSidebar({
 }: AdminSidebarProps) {
   return (
     <div className="hidden lg:block w-64 xl:w-72 flex-shrink-0">
-      <div className={`p-4 h-full overflow-y-auto flex flex-col border-r ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
+      <div className={`p-4 h-full overflow-y-auto flex flex-col border-r ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`} data-lenis-prevent>
         <nav className="space-y-1">
           <button
             onClick={() => setActiveTab("analytics")}

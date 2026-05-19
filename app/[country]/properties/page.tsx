@@ -348,7 +348,7 @@ function PropertiesPageContent() {
       {showFilters && (
         <>
           <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowFilters(false)} />
-          <div className="fixed right-0 top-0 h-full w-full md:w-96 bg-white shadow-2xl z-50 overflow-y-auto">
+          <div className="fixed right-0 top-0 h-full w-full md:w-96 bg-white shadow-2xl z-50 overflow-y-auto" data-lenis-prevent>
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold text-gray-900">{t.filters}</h2>

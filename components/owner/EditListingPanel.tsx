@@ -655,7 +655,7 @@ function TenantDetailsSection({ isDark, language, editForm, setEditForm, editing
       </div>
       <div className="sm:col-span-2">
         <label className={`${labelCls} mb-2`}>Society Amenities</label>
-        <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
+        <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto" data-lenis-prevent>
           {["Maintenance Staff","Air Conditioned","Park","Piped Gas","Power Back Up","Club House","Gymnasium","Intercom Facility","Internet/Wi-Fi Connectivity","Jogging and Strolling Track","Lift","Reserved Parking","Security","Swimming Pool","Waste Disposal"].map(a => chipBtn("societyAmenities", a, a))}
         </div>
       </div>

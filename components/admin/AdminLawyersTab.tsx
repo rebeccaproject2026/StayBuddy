@@ -282,7 +282,7 @@ function LawyerDetailModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white"}`}>
+      <div className={`relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white"}`} data-lenis-prevent>
         {/* Header */}
         <div className={`sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
           <div className="flex items-center gap-3">

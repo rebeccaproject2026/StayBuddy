@@ -77,6 +77,7 @@ export default function AdminModals({
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedProperty(null)}>
             <div
               className={`w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}
+              data-lenis-prevent
               onClick={e => e.stopPropagation()}
             >
               <div className={`flex items-center justify-between p-5 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>

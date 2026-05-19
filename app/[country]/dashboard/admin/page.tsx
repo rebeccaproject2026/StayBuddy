@@ -545,7 +545,7 @@ export default function AdminDashboard() {
             language={language}
           />
 
-          <div className="flex-1 overflow-y-auto pb-16 lg:pb-0 min-w-0 p-3 sm:p-5 lg:p-8">
+          <div className="flex-1 overflow-y-auto pb-16 lg:pb-0 min-w-0 p-3 sm:p-5 lg:p-8" data-lenis-prevent>
             {activeTab === "analytics" && (
               <>
                 <AdminStatsCards isDark={isDark} stats={stats} tc={tc} />

@@ -16,7 +16,7 @@ export default function OwnerModals({
       {selectedInquiry && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50" onClick={() => setSelectedInquiry(null)} />
-          <div className={`relative rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto ${isDark ? "bg-gray-900" : "bg-white"}`}>
+          <div className={`relative rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto ${isDark ? "bg-gray-900" : "bg-white"}`} data-lenis-prevent>
             {/* Header */}
             <div className={`flex items-center justify-between p-5 border-b sticky top-0 rounded-t-xl z-10 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}>
               <div>

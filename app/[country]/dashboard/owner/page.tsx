@@ -498,7 +498,7 @@ export default function OwnerDashboard() {
         />
 
         {/* Main Content */}
-        <div className={`flex-1 min-w-0 pb-16 lg:pb-0 ${activeTab === "messages" ? "overflow-hidden" : "overflow-y-auto"}`}>
+        <div className={`flex-1 min-w-0 pb-16 lg:pb-0 ${activeTab === "messages" ? "overflow-hidden" : "overflow-y-auto"}`} data-lenis-prevent>
           <div className={activeTab === "messages" ? "p-3 sm:p-5 lg:p-6 h-full flex flex-col" : "p-3 sm:p-5 lg:p-8"}>
 
             {activeTab === "listings" && (

@@ -160,7 +160,7 @@ export default function ChatWindow({
       </div>
 
       {/* Messages — takes remaining space, scrolls internally */}
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3" data-lenis-prevent>
         {/* Retention notice */}
         {!loading && (
           <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs ${isDark ? 'bg-gray-800/60 text-gray-400' : 'bg-amber-50 text-amber-700 border border-amber-100'}`}>

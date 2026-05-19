@@ -487,7 +487,7 @@ export default function TenantDashboard() {
       <div className="flex flex-1 overflow-hidden">
         {/* Desktop Sidebar */}
         <div className="hidden lg:block w-64 xl:w-72 flex-shrink-0">
-          <div className={`p-4 h-full overflow-y-auto flex flex-col border-r ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+          <div className={`p-4 h-full overflow-y-auto flex flex-col border-r ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`} data-lenis-prevent>
             <nav className="space-y-1">
               {navItems.map(({ key, icon: Icon, label, badge }: any) => (
                 <button
@@ -559,7 +559,7 @@ export default function TenantDashboard() {
         </div>
 
         {/* Main Content */}
-        <div className={`flex-1 min-w-0 pb-16 lg:pb-0 ${activeTab === 'messages' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+        <div className={`flex-1 min-w-0 pb-16 lg:pb-0 ${activeTab === 'messages' ? 'overflow-hidden' : 'overflow-y-auto'}`} data-lenis-prevent>
           <div className={activeTab === 'messages' ? 'p-3 sm:p-5 lg:p-6 h-full flex flex-col' : 'p-3 sm:p-5 lg:p-8'}>
             {/* Saved Properties */}
             {activeTab === "saved" && (
@@ -710,7 +710,7 @@ export default function TenantDashboard() {
                   <div className={`px-4 py-3 border-b font-semibold text-sm ${isDark ? "border-gray-800 text-white" : "border-gray-100 text-gray-900"}`}>
                     {language === 'fr' ? 'Conversations' : 'Conversations'}
                   </div>
-                  <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
+                  <div className="flex-1 overflow-y-auto divide-y divide-gray-100" data-lenis-prevent>
                     {requestsLoading ? (
                       <div className="p-4 space-y-3">
                         {[...Array(3)].map((_, i) => (

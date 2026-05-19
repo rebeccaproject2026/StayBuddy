@@ -1001,7 +1001,7 @@ export default function PostPropertyPage() {
                         </div>
                       )}
                       {showSuggestions && city && !selectedCity && filteredCities.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto z-10">
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto z-10" data-lenis-prevent>
                           {filteredCities.map((cityOption, index) => (
                             <button
                               key={index}

@@ -56,6 +56,7 @@ export default function AdminPropertyModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm" onClick={() => setViewingRequest(null)}>
       <div
         className={`w-full max-w-3xl max-h-[95vh] overflow-y-auto rounded-xl shadow-2xl border flex flex-col ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}
+        data-lenis-prevent
         onClick={e => e.stopPropagation()}
       >
         {/* Sticky header */}
