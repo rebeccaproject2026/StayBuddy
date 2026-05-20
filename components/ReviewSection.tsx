@@ -264,6 +264,7 @@ export default function ReviewSection({ propertyId, language = "en", country = "
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               className="bg-white rounded-2xl w-full max-w-lg p-6 sm:p-8 shadow-2xl"
+              data-lenis-prevent
             >
               <h3 className="text-xl font-bold text-gray-900 mb-6">{tr.writeReview}</h3>
 

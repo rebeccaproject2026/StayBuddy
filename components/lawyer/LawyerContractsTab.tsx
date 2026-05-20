@@ -800,7 +800,7 @@ export default function LawyerContractsTab({ isDark, acceptedOwners }: Props) {
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowCreateModal(false)} />
-          <div className={`relative w-full max-w-md rounded-2xl border p-6 shadow-2xl ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}>
+          <div className={`relative w-full max-w-md rounded-2xl border p-6 shadow-2xl ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`} data-lenis-prevent>
             <h3 className={`text-lg font-bold mb-4 ${isDark ? "text-white" : "text-gray-900"}`}>New Contract</h3>
             <p className={`text-sm mb-4 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
               Select an owner you have an accepted connection with

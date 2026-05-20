@@ -23,6 +23,10 @@ export default function ProfileSection({ user, tc, language, isDark = false }: P
   const [showNext, setShowNext] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
+  // Photo upload state
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoMsg, setPhotoMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
   const handleSaveProfile = async () => {
     if (!form.fullName.trim()) {
       setSaveMsg({ type: "error", text: language === "fr" ? "Le nom est requis." : "Full name is required." });
@@ -100,6 +104,75 @@ export default function ProfileSection({ user, tc, language, isDark = false }: P
     }
   };
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setPhotoMsg({ type: "error", text: language === "fr" ? "Veuillez sélectionner une image." : "Please select an image file." });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoMsg({ type: "error", text: language === "fr" ? "L'image doit faire moins de 5 Mo." : "Image must be less than 5MB." });
+      return;
+    }
+
+    setUploadingPhoto(true);
+    setPhotoMsg(null);
+
+    try {
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          const base64String = reader.result as string;
+          
+          const isNextAuth = token === "nextauth";
+          const authToken = isNextAuth ? null : (token || getToken());
+          
+          const res = await fetch("/api/auth/profile-photo-direct", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+              ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+            },
+            body: JSON.stringify({ image: base64String }),
+          });
+
+          const data = await res.json();
+          
+          if (data.success) {
+            updateUser({ profileImage: data.user.profileImage });
+            setPhotoMsg({ type: "success", text: language === "fr" ? "Photo mise à jour." : "Photo updated successfully." });
+            setTimeout(() => setPhotoMsg(null), 3000);
+          } else {
+            console.error('Upload failed:', data);
+            const errorMsg = typeof data.message === 'string' ? data.message : 'Failed to upload photo.';
+            setPhotoMsg({ type: "error", text: errorMsg });
+          }
+        } catch (uploadError) {
+          console.error('Upload error:', uploadError);
+          setPhotoMsg({ type: "error", text: "Failed to upload photo." });
+        } finally {
+          setUploadingPhoto(false);
+        }
+      };
+      reader.onerror = () => {
+        setPhotoMsg({ type: "error", text: "Failed to read file." });
+        setUploadingPhoto(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Photo upload error:', error);
+      setPhotoMsg({ type: "error", text: "Something went wrong." });
+      setUploadingPhoto(false);
+    }
+  };
+
   const countryLabel = user?.country === "fr" ? "France" : user?.country === "in" ? "India" : user?.country || "—";
   const roleLabel = user?.role === "landlord" ? (language === "fr" ? "Propriétaire" : "Owner") : user?.role || "—";
   const initials = savedName?.charAt(0)?.toUpperCase() || "U";
@@ -110,17 +183,37 @@ export default function ProfileSection({ user, tc, language, isDark = false }: P
 
       {/* Avatar + summary card */}
       <div className={`rounded-xl p-5 flex items-center gap-4 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
-        <div className="w-14 h-14 rounded-full flex-shrink-0 shadow-md overflow-hidden">
-          {user?.profileImage ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={user.profileImage} alt={savedName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-              <span className="text-white font-bold text-xl">{initials}</span>
-            </div>
-          )}
+        <div className="relative group">
+          <div className="w-14 h-14 rounded-full flex-shrink-0 shadow-md overflow-hidden">
+            {user?.profileImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={user.profileImage} alt={savedName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+                <span className="text-white font-bold text-xl">{initials}</span>
+              </div>
+            )}
+          </div>
+          {/* Upload overlay */}
+          <label className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoUpload}
+              disabled={uploadingPhoto}
+              className="hidden"
+            />
+            {uploadingPhoto ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            )}
+          </label>
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className={`text-base font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{savedName || "—"}</p>
           <p className="text-sm text-gray-500 truncate">{user?.email}</p>
           <div className="flex flex-wrap gap-1.5 mt-1.5">
@@ -132,6 +225,17 @@ export default function ProfileSection({ user, tc, language, isDark = false }: P
           </div>
         </div>
       </div>
+
+      {/* Photo upload message */}
+      {photoMsg && (
+        <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium ${
+          photoMsg.type === "success"
+            ? "bg-green-50 text-green-700 border border-green-200"
+            : "bg-red-50 text-red-700 border border-red-200"
+        }`}>
+          {photoMsg.type === "success" ? "✓" : "✕"} {photoMsg.text}
+        </div>
+      )}
 
       {/* Personal info */}
       <div className={`rounded-xl p-5 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>

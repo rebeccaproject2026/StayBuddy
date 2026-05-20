@@ -14,15 +14,6 @@ import LawyerMobileNav from "@/components/lawyer/LawyerMobileNav";
 import LawyerOwnersTab from "@/components/lawyer/LawyerOwnersTab";
 import LawyerContractsTab from "@/components/lawyer/LawyerContractsTab";
 
-// ── Dummy stats ───────────────────────────────────────────────────────────────
-const DUMMY_STATS = [
-  { label: "Total Contracts",       value: 24, icon: FileText,      colorDark: "text-blue-400",   bgDark: "bg-blue-500/10",   borderDark: "border-blue-500/20",   colorLight: "text-blue-600",   bgLight: "bg-blue-50",   borderLight: "border-blue-200" },
-  { label: "Pending Contracts",     value: 6,  icon: Clock,         colorDark: "text-yellow-400", bgDark: "bg-yellow-500/10", borderDark: "border-yellow-500/20", colorLight: "text-yellow-600", bgLight: "bg-yellow-50", borderLight: "border-yellow-200" },
-  { label: "Approved Contracts",    value: 14, icon: CheckCircle,   colorDark: "text-green-400",  bgDark: "bg-green-500/10",  borderDark: "border-green-500/20",  colorLight: "text-green-600",  bgLight: "bg-green-50",  borderLight: "border-green-200" },
-  { label: "Rejected Contracts",    value: 3,  icon: XCircle,       colorDark: "text-red-400",    bgDark: "bg-red-500/10",    borderDark: "border-red-500/20",    colorLight: "text-red-600",    bgLight: "bg-red-50",    borderLight: "border-red-200" },
-  { label: "Expired (Last 7 Days)", value: 1,  icon: AlertTriangle, colorDark: "text-orange-400", bgDark: "bg-orange-500/10", borderDark: "border-orange-500/20", colorLight: "text-orange-600", bgLight: "bg-orange-50", borderLight: "border-orange-200" },
-];
-
 export default function LawyerDashboard() {
   const { language } = useLanguage();
   const { user, isLoading, isAuthenticated, logout } = useAuth();
@@ -40,6 +31,16 @@ export default function LawyerDashboard() {
 
   // Accepted owners (for contract creation)
   const [acceptedOwners, setAcceptedOwners] = useState<any[]>([]);
+
+  // Stats state
+  const [stats, setStats] = useState({
+    totalContracts: 0,
+    pendingContracts: 0,
+    approvedContracts: 0,
+    rejectedContracts: 0,
+    expiredContracts: 0,
+  });
+  const [statsLoading, setStatsLoading] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("lawyer_theme");
@@ -80,6 +81,24 @@ export default function LawyerDashboard() {
     }).catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
+
+  // Fetch stats when overview tab is active
+  useEffect(() => {
+    if (activeTab !== "overview" || !isAuthenticated) return;
+    const token = getToken();
+    setStatsLoading(true);
+    fetch("/api/lawyer/stats", {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) {
+          setStats(data.stats);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setStatsLoading(false));
+  }, [activeTab, isAuthenticated]);
 
   const toggleTheme = () => {
     const next = !isDark;
@@ -184,26 +203,48 @@ export default function LawyerDashboard() {
 
                 {/* Stats grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                  {DUMMY_STATS.map((stat, i) => {
-                    const Icon = stat.icon;
-                    return (
-                      <motion.div
-                        key={stat.label}
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.35, delay: i * 0.06 }}
-                        className={`rounded-2xl border p-5 flex flex-col gap-4 ${isDark ? `${stat.bgDark} ${stat.borderDark}` : `${stat.bgLight} ${stat.borderLight}`}`}
+                  {statsLoading ? (
+                    // Loading skeleton
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className={`rounded-2xl border p-5 flex flex-col gap-4 animate-pulse ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}
                       >
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? stat.bgDark : stat.bgLight}`}>
-                          <Icon className={`w-5 h-5 ${isDark ? stat.colorDark : stat.colorLight}`} />
-                        </div>
+                        <div className={`w-10 h-10 rounded-xl ${isDark ? "bg-gray-800" : "bg-gray-200"}`} />
                         <div>
-                          <p className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stat.value}</p>
-                          <p className={`text-xs font-medium mt-1 ${isDark ? stat.colorDark : stat.colorLight}`}>{stat.label}</p>
+                          <div className={`h-8 w-16 rounded mb-2 ${isDark ? "bg-gray-800" : "bg-gray-200"}`} />
+                          <div className={`h-4 w-24 rounded ${isDark ? "bg-gray-800" : "bg-gray-200"}`} />
                         </div>
-                      </motion.div>
-                    );
-                  })}
+                      </div>
+                    ))
+                  ) : (
+                    [
+                      { label: "Total Contracts", value: stats.totalContracts, icon: FileText, colorDark: "text-blue-400", bgDark: "bg-blue-500/10", borderDark: "border-blue-500/20", colorLight: "text-blue-600", bgLight: "bg-blue-50", borderLight: "border-blue-200" },
+                      { label: "Pending Contracts", value: stats.pendingContracts, icon: Clock, colorDark: "text-yellow-400", bgDark: "bg-yellow-500/10", borderDark: "border-yellow-500/20", colorLight: "text-yellow-600", bgLight: "bg-yellow-50", borderLight: "border-yellow-200" },
+                      { label: "Approved Contracts", value: stats.approvedContracts, icon: CheckCircle, colorDark: "text-green-400", bgDark: "bg-green-500/10", borderDark: "border-green-500/20", colorLight: "text-green-600", bgLight: "bg-green-50", borderLight: "border-green-200" },
+                      { label: "Rejected Contracts", value: stats.rejectedContracts, icon: XCircle, colorDark: "text-red-400", bgDark: "bg-red-500/10", borderDark: "border-red-500/20", colorLight: "text-red-600", bgLight: "bg-red-50", borderLight: "border-red-200" },
+                      { label: "Expired (Last 7 Days)", value: stats.expiredContracts, icon: AlertTriangle, colorDark: "text-orange-400", bgDark: "bg-orange-500/10", borderDark: "border-orange-500/20", colorLight: "text-orange-600", bgLight: "bg-orange-50", borderLight: "border-orange-200" },
+                    ].map((stat, i) => {
+                      const Icon = stat.icon;
+                      return (
+                        <motion.div
+                          key={stat.label}
+                          initial={{ opacity: 0, y: 16 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.35, delay: i * 0.06 }}
+                          className={`rounded-2xl border p-5 flex flex-col gap-4 ${isDark ? `${stat.bgDark} ${stat.borderDark}` : `${stat.bgLight} ${stat.borderLight}`}`}
+                        >
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? stat.bgDark : stat.bgLight}`}>
+                            <Icon className={`w-5 h-5 ${isDark ? stat.colorDark : stat.colorLight}`} />
+                          </div>
+                          <div>
+                            <p className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stat.value}</p>
+                            <p className={`text-xs font-medium mt-1 ${isDark ? stat.colorDark : stat.colorLight}`}>{stat.label}</p>
+                          </div>
+                        </motion.div>
+                      );
+                    })
+                  )}
                 </div>
 
                 {/* Coming soon */}

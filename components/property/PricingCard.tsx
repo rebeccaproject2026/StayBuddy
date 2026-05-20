@@ -85,9 +85,34 @@ export default function PricingCard({
   const isPGWithRooms = property.propertyType === "PG" && property.roomDetails && Object.keys(property.roomDetails).length > 0;
   const isFrTenant = property.propertyType === "Tenant" && property.country === "fr" && property.tenantRooms?.length > 0;
   const hasPhone = !!(property.ownerPhone || property.landlord?.phone);
+  const ownerName = property.ownerName || property.landlord?.name || "Property Owner";
+  const ownerImage = property.ownerImage || property.landlord?.image;
 
   return (
     <div className={`bg-white rounded-xl shadow-lg ${isMobile ? "p-4 sm:p-5 mb-2" : "p-5 md:p-6 mb-6"}`}>
+      {/* Owner Information */}
+      {!isOwner && (property.ownerName || property.ownerImage) && (
+        <div className="mb-5 pb-5 border-b border-gray-200">
+          <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-3">
+            {language === "fr" ? "Propriétaire" : "Property Owner"}
+          </p>
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white text-lg font-bold flex-shrink-0 overflow-hidden">
+              {ownerImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={ownerImage} alt={ownerName} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+              ) : (
+                ownerName.charAt(0).toUpperCase()
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-900 truncate">{ownerName}</p>
+              <p className="text-xs text-gray-500">{language === "fr" ? "Propriétaire vérifié" : "Verified Owner"}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Pricing */}
       {isPGWithRooms ? (
         <RoomTypePricing property={property} currencySymbol={currencySymbol} language={language} />

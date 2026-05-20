@@ -17,6 +17,12 @@ const nextConfig = {
     ],
   },
   transpilePackages: ['framer-motion'],
+  // Increase body size limit for image uploads
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+  },
   // Prevent Next.js from trying to bundle the standalone Socket.IO server
   webpack: (config, { isServer }) => {
     config.watchOptions = {

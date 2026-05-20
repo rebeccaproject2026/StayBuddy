@@ -203,7 +203,7 @@ export default function AdminModals({
       {/* Reject Property Modal */}
       {rejectModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => !rejectSubmitting && setRejectModal(null)}>
-          <div className={`w-full max-w-md rounded-xl shadow-2xl border overflow-hidden ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`} onClick={e => e.stopPropagation()}>
+          <div className={`w-full max-w-md rounded-xl shadow-2xl border overflow-hidden ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`} data-lenis-prevent onClick={e => e.stopPropagation()}>
             <div className={`flex items-center justify-between px-6 py-5 border-b ${isDark ? "border-gray-800" : "border-gray-100"}`}>
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-red-500/15 flex items-center justify-center">
@@ -256,7 +256,7 @@ export default function AdminModals({
       {/* Block User Modal */}
       {blockModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => !blockSubmitting && setBlockModal(null)}>
-          <div className={`w-full max-w-md rounded-xl shadow-2xl border overflow-hidden ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`} onClick={e => e.stopPropagation()}>
+          <div className={`w-full max-w-md rounded-xl shadow-2xl border overflow-hidden ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`} data-lenis-prevent onClick={e => e.stopPropagation()}>
             <div className={`flex items-center justify-between px-6 py-5 border-b ${isDark ? "border-gray-800" : "border-gray-100"}`}>
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-red-500/15 flex items-center justify-center">
@@ -327,7 +327,7 @@ export default function AdminModals({
       {/* Delete Listing Modal */}
       {deleteModal && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className={`w-full max-w-md rounded-xl shadow-2xl border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}>
+          <div className={`w-full max-w-md rounded-xl shadow-2xl border ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`} data-lenis-prevent>
             <div className={`flex items-center justify-between px-6 py-4 border-b ${isDark ? "border-gray-700" : "border-gray-100"}`}>
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-red-500/10 flex items-center justify-center">

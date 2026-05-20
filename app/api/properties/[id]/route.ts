@@ -25,15 +25,17 @@ export async function GET(
       return NextResponse.json({ error: 'Property not found' }, { status: 404 });
     }
 
-    // Populate creator's phone so the detail page can show "Call Owner"
+    // Populate creator's details (phone, name, profile image) for the detail page
     const User = (await import('@/models/User')).default;
-    const creator = await User.findById((property as any).createdBy).select('phoneNumber').lean();
-    const propertyWithPhone = {
+    const creator = await User.findById((property as any).createdBy).select('phoneNumber fullName profileImage').lean();
+    const propertyWithOwner = {
       ...property,
       ownerPhone: (creator as any)?.phoneNumber || null,
+      ownerName: (creator as any)?.fullName || null,
+      ownerImage: (creator as any)?.profileImage || null,
     };
 
-    return NextResponse.json({ success: true, property: propertyWithPhone });
+    return NextResponse.json({ success: true, property: propertyWithOwner });
   } catch (error) {
     console.error('[GET /api/properties/[id]]', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

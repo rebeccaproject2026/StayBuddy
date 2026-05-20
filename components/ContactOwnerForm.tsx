@@ -227,7 +227,7 @@ export default function ContactOwnerForm({ isOpen, onClose, property, language, 
             </div>
 
             {/* Scrollable Content */}
-            <div style={{ overflowY: 'auto', flex: 1 }}>
+            <div style={{ overflowY: 'auto', flex: 1 }} data-lenis-prevent>
               {/* Property Info */}
               <div className="p-6 bg-gray-50 border-b border-gray-200">
                 <h3 className="font-semibold text-gray-900 mb-1">

@@ -19,7 +19,7 @@ export default function ShareModal({ t, copySuccess, onClose, onCopy, onWhatsApp
       style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 999999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}
       onClick={onClose}
     >
-      <div style={{ backgroundColor: "white", borderRadius: "16px", maxWidth: "450px", width: "100%", position: "relative" }} onClick={e => e.stopPropagation()}>
+      <div style={{ backgroundColor: "white", borderRadius: "16px", maxWidth: "450px", width: "100%", position: "relative" }} data-lenis-prevent onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Share2 className="w-6 h-6 text-primary" />{t.shareProperty}
