@@ -2,6 +2,8 @@
 
 import { MessageSquare } from "lucide-react";
 import ChatWindow from "@/components/ChatWindow";
+import { useSocketContext } from "@/contexts/SocketContext";
+import { useMemo } from "react";
 
 interface OwnerMessagesTabProps {
   isDark: boolean;
@@ -24,6 +26,21 @@ export default function OwnerMessagesTab({
   socketMarkSeen, resetUnread,
   user, ownerToken, unreadByRequest,
 }: OwnerMessagesTabProps) {
+  const { onlineUsers } = useSocketContext();
+
+  // Sort conversations: online users first, then offline
+  const sortedRequests = useMemo(() => {
+    return [...contactRequests].sort((a, b) => {
+      const aUserId = a.renter?._id?.toString() || a.renter?.toString();
+      const bUserId = b.renter?._id?.toString() || b.renter?.toString();
+      const aOnline = onlineUsers.has(aUserId);
+      const bOnline = onlineUsers.has(bUserId);
+      
+      if (aOnline && !bOnline) return -1;
+      if (!aOnline && bOnline) return 1;
+      return 0;
+    });
+  }, [contactRequests, onlineUsers]);
   return (
     <div className="flex gap-4 overflow-hidden" style={{ height: "calc(100vh - 130px)" }}>
       {/* Conversation list */}
@@ -46,27 +63,45 @@ export default function OwnerMessagesTab({
               </p>
             </div>
           ) : (
-            contactRequests.map((req: any) => (
-              <button
-                key={req._id}
-                onClick={() => { setActiveChatRequestId(req._id); socketMarkSeen(req._id); }}
-                className={`w-full text-left px-4 py-3 transition-colors ${
-                  activeChatRequestId === req._id
-                    ? isDark ? "bg-primary/20" : "bg-primary/10"
-                    : isDark ? "hover:bg-gray-800" : "hover:bg-gray-50"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{req.fullName}</p>
-                  {(unreadByRequest[req._id] || 0) > 0 && (
-                    <span className="flex-shrink-0 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
-                      {unreadByRequest[req._id] > 9 ? "9+" : unreadByRequest[req._id]}
-                    </span>
-                  )}
-                </div>
-                <p className={`text-xs truncate mt-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>{req.propertyTitle}</p>
-              </button>
-            ))
+            sortedRequests.map((req: any) => {
+              const userId = req.renter?._id?.toString() || req.renter?.toString();
+              const isOnline = onlineUsers.has(userId);
+              
+              return (
+                <button
+                  key={req._id}
+                  onClick={() => { setActiveChatRequestId(req._id); socketMarkSeen(req._id); }}
+                  className={`w-full text-left px-4 py-3 transition-colors ${
+                    activeChatRequestId === req._id
+                      ? isDark ? "bg-primary/20" : "bg-primary/10"
+                      : isDark ? "hover:bg-gray-800" : "hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    {/* Online/Offline indicator */}
+                    <div className="relative flex-shrink-0">
+                      <div className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`} />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
+                          {req.fullName}
+                        </p>
+                        {(unreadByRequest[req._id] || 0) > 0 && (
+                          <span className="flex-shrink-0 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                            {unreadByRequest[req._id] > 9 ? "9+" : unreadByRequest[req._id]}
+                          </span>
+                        )}
+                      </div>
+                      <p className={`text-xs truncate mt-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                        {req.propertyTitle}
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              );
+            })
           )}
         </div>
       </div>
@@ -76,10 +111,12 @@ export default function OwnerMessagesTab({
         {activeChatRequestId ? (
           (() => {
             const req = contactRequests.find((r: any) => r._id === activeChatRequestId);
+            const otherUserId = req?.renter?._id?.toString() || req?.renter?.toString();
             return (
               <ChatWindow
                 requestId={activeChatRequestId}
                 currentUserId={user!.id}
+                otherUserId={otherUserId}
                 otherUserName={req?.renter?.fullName || req?.fullName || "Tenant"}
                 propertyTitle={req?.propertyTitle || ""}
                 token={ownerToken}
@@ -103,10 +140,12 @@ export default function OwnerMessagesTab({
         <div className="lg:hidden fixed inset-0 z-50 p-4" style={{ background: isDark ? "#030712" : "#f9fafb" }}>
           {(() => {
             const req = contactRequests.find((r: any) => r._id === activeChatRequestId);
+            const otherUserId = req?.renter?._id?.toString() || req?.renter?.toString();
             return (
               <ChatWindow
                 requestId={activeChatRequestId}
                 currentUserId={user!.id}
+                otherUserId={otherUserId}
                 otherUserName={req?.renter?.fullName || req?.fullName || "Tenant"}
                 propertyTitle={req?.propertyTitle || ""}
                 token={ownerToken}

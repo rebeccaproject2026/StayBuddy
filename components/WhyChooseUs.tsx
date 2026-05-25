@@ -1,7 +1,7 @@
 'use client';
 
 import { useLanguage } from '@/contexts/LanguageContext';
-import { CheckCircle, DollarSign, Home, Calendar } from 'lucide-react';
+import { DollarSign, Home, ShieldCheck, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useInView } from 'framer-motion';
 import { useRef } from 'react';
@@ -9,86 +9,231 @@ import { useRef } from 'react';
 const WhyChooseUs = () => {
   const { language } = useLanguage();
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-80px' });
+  const isInView = useInView(ref, { once: true, margin: '-50px' });
 
   const features = {
     en: [
-      { icon: CheckCircle, title: 'Verified Listings', description: 'All property listings are thoroughly vetted and verified to ensure accuracy and reliability', color: 'bg-emerald-100 text-emerald-600' },
-      { icon: Home, title: 'Flexible Options', description: 'Wide range of property types, from budget-friendly PG accommodations to luxurious flats', color: 'bg-blue-100 text-blue-600' },
-      { icon: DollarSign, title: 'Trusted Landlords', description: 'Feedback from landlords about how the platform has streamlined their rental process', color: 'bg-purple-100 text-purple-600' },
-      { icon: Calendar, title: 'Easy Booking', description: 'Simple booking process with the ability to schedule property visits at your convenience', color: 'bg-pink-100 text-pink-600' },
+      { 
+        icon: ShieldCheck, 
+        badge: 'TRUSTED & SECURE',
+        title: 'VERIFIED LISTINGS', 
+        description: 'Every property is rigorously inspected and verified to guarantee your safety and comfort.',
+        iconColor: 'text-emerald-600',
+        iconBorder: 'border-emerald-200',
+        iconBg: 'bg-emerald-50',
+        iconShadow: 'shadow-[0_4px_15px_rgba(16,185,129,0.15)]',
+        badgeBg: 'bg-emerald-50',
+        badgeText: 'text-emerald-700',
+        badgeBorder: 'border-emerald-200'
+      },
+      { 
+        icon: Home, 
+        badge: 'PREMIUM SELECTION',
+        title: 'DIVERSE OPTIONS', 
+        description: 'From cozy budget stays to premium luxury apartments, find the perfect match for your needs.',
+        iconColor: 'text-blue-600',
+        iconBorder: 'border-blue-200',
+        iconBg: 'bg-blue-50',
+        iconShadow: 'shadow-[0_4px_15px_rgba(37,99,235,0.15)]',
+        badgeBg: 'bg-blue-50',
+        badgeText: 'text-blue-700',
+        badgeBorder: 'border-blue-200'
+      },
+      { 
+        icon: DollarSign, 
+        badge: 'NO HIDDEN FEES',
+        title: 'TRANSPARENT PRICING', 
+        description: 'No hidden fees. What you see is what you pay, ensuring a smooth and honest transaction.',
+        iconColor: 'text-purple-600',
+        iconBorder: 'border-purple-200',
+        iconBg: 'bg-purple-50',
+        iconShadow: 'shadow-[0_4px_15px_rgba(147,51,234,0.15)]',
+        badgeBg: 'bg-purple-50',
+        badgeText: 'text-purple-700',
+        badgeBorder: 'border-purple-200'
+      },
+      { 
+        icon: MapPin, 
+        badge: 'EASY ACCESS',
+        title: 'PRIME LOCATIONS', 
+        description: 'Properties situated in top-rated neighborhoods with easy access to all essential amenities.',
+        iconColor: 'text-rose-600',
+        iconBorder: 'border-rose-200',
+        iconBg: 'bg-rose-50',
+        iconShadow: 'shadow-[0_4px_15px_rgba(225,29,72,0.15)]',
+        badgeBg: 'bg-rose-50',
+        badgeText: 'text-rose-700',
+        badgeBorder: 'border-rose-200'
+      },
     ],
     fr: [
-      { icon: CheckCircle, title: 'Annonces Vérifiées', description: 'Toutes les annonces immobilières sont soigneusement vérifiées pour garantir leur exactitude et leur fiabilité', color: 'bg-emerald-100 text-emerald-600' },
-      { icon: Home, title: 'Options Flexibles', description: 'Large gamme de types de propriétés, des hébergements PG économiques aux appartements luxueux', color: 'bg-blue-100 text-blue-600' },
-      { icon: DollarSign, title: 'Propriétaires de Confiance', description: 'Retours des propriétaires sur la façon dont la plateforme a rationalisé leur processus de location', color: 'bg-purple-100 text-purple-600' },
-      { icon: Calendar, title: 'Réservation Facile', description: 'Processus de réservation simple avec la possibilité de planifier des visites de propriété à votre convenance', color: 'bg-pink-100 text-pink-600' },
+      { 
+        icon: ShieldCheck, 
+        badge: 'FIABLE ET SÉCURISÉ',
+        title: 'ANNONCES VÉRIFIÉES', 
+        description: 'Chaque propriété est rigoureusement inspectée et vérifiée pour garantir votre sécurité et votre confort.',
+        iconColor: 'text-emerald-600',
+        iconBorder: 'border-emerald-200',
+        iconBg: 'bg-emerald-50',
+        iconShadow: 'shadow-[0_4px_15px_rgba(16,185,129,0.15)]',
+        badgeBg: 'bg-emerald-50',
+        badgeText: 'text-emerald-700',
+        badgeBorder: 'border-emerald-200'
+      },
+      { 
+        icon: Home, 
+        badge: 'SÉLECTION PREMIUM',
+        title: 'OPTIONS DIVERSES', 
+        description: 'Des séjours économiques confortables aux appartements de luxe haut de gamme, trouvez ce qu\'il vous faut.',
+        iconColor: 'text-blue-600',
+        iconBorder: 'border-blue-200',
+        iconBg: 'bg-blue-50',
+        iconShadow: 'shadow-[0_4px_15px_rgba(37,99,235,0.15)]',
+        badgeBg: 'bg-blue-50',
+        badgeText: 'text-blue-700',
+        badgeBorder: 'border-blue-200'
+      },
+      { 
+        icon: DollarSign, 
+        badge: 'SANS FRAIS CACHÉS',
+        title: 'PRIX TRANSPARENTS', 
+        description: 'Aucun frais caché. Ce que vous voyez est ce que vous payez, assurant une transaction fluide.',
+        iconColor: 'text-purple-600',
+        iconBorder: 'border-purple-200',
+        iconBg: 'bg-purple-50',
+        iconShadow: 'shadow-[0_4px_15px_rgba(147,51,234,0.15)]',
+        badgeBg: 'bg-purple-50',
+        badgeText: 'text-purple-700',
+        badgeBorder: 'border-purple-200'
+      },
+      { 
+        icon: MapPin, 
+        badge: 'ACCÈS FACILE',
+        title: 'EMPLACEMENTS DE CHOIX', 
+        description: 'Propriétés situées dans les meilleurs quartiers avec un accès facile à toutes les commodités essentielles.',
+        iconColor: 'text-rose-600',
+        iconBorder: 'border-rose-200',
+        iconBg: 'bg-rose-50',
+        iconShadow: 'shadow-[0_4px_15px_rgba(225,29,72,0.15)]',
+        badgeBg: 'bg-rose-50',
+        badgeText: 'text-rose-700',
+        badgeBorder: 'border-rose-200'
+      },
     ],
   };
 
   const content = {
-    en: { heading: 'Why Choose Us', subheading: 'Connecting you to your next home, easily' },
-    fr: { heading: 'Pourquoi Nous Choisir', subheading: 'Vous connecter à votre prochaine maison, facilement' },
+    en: { 
+      heading: 'Why Choose StayBuddy', 
+      subheading: 'We redefine the way you find your perfect living space with unmatched reliability and ease.',
+      badge: 'Our Advantage'
+    },
+    fr: { 
+      heading: 'Pourquoi Choisir StayBuddy', 
+      subheading: 'Nous redéfinissons la façon dont vous trouvez votre espace de vie idéal avec une fiabilité inégalée.',
+      badge: 'Notre Avantage'
+    },
   };
 
   const currentFeatures = features[language as keyof typeof features] || features.en;
   const currentContent = content[language as keyof typeof content] || content.en;
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 15
+      }
+    }
+  };
+
   return (
-    <section className="py-6 sm:py-8 lg:py-12 px-3 sm:px-4 bg-gradient-to-b from-gray-50 to-white" ref={ref}>
-      <div className="max-w-7xl mx-auto">
+    <section className="py-16 sm:py-24 relative overflow-hidden bg-slate-50" ref={ref}>
+      {/* Background Decorative Elements */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] rounded-full bg-blue-100/40 blur-3xl" />
+        <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] rounded-full bg-purple-100/40 blur-3xl" />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
         {/* Header */}
         <motion.div
-          className="text-center mb-8 sm:mb-10 lg:mb-12"
-          initial={{ opacity: 0, y: 30 }}
+          className="text-center max-w-3xl mx-auto mb-16 sm:mb-20"
+          initial={{ opacity: 0, y: -20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-2 sm:mb-3 px-2">
+          <motion.span 
+            className="inline-block py-1.5 px-4 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold tracking-wide uppercase mb-4"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={isInView ? { opacity: 1, scale: 1 } : {}}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            {currentContent.badge}
+          </motion.span>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 mb-6 tracking-tight">
             {currentContent.heading}
           </h2>
-          <p className="text-gray-600 text-base sm:text-lg px-4 sm:px-0">
+          <p className="text-lg sm:text-xl text-slate-600 leading-relaxed">
             {currentContent.subheading}
           </p>
         </motion.div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8"
+          variants={containerVariants}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+        >
           {currentFeatures.map((feature, index) => {
             const Icon = feature.icon;
             return (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 40 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.5, delay: index * 0.12, ease: 'easeOut' }}
-                whileHover={{ y: -6, boxShadow: '0 20px 40px rgba(0,0,0,0.10)' }}
-                className="group relative bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 cursor-default"
+                variants={itemVariants}
+                whileHover={{ y: -8, transition: { duration: 0.3 } }}
+                className="group relative bg-white rounded-2xl p-8 flex flex-col items-center text-center shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] transition-all duration-300 border border-slate-100 overflow-hidden"
               >
-                {/* Icon */}
-                <div className="mb-3 sm:mb-4">
-                  <motion.div
-                    whileHover={{ scale: 1.15, rotate: 5 }}
-                    transition={{ type: 'spring', stiffness: 300 }}
-                    className={`w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 ${feature.color} rounded-full flex items-center justify-center`}
-                  >
-                    <Icon className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8" />
-                  </motion.div>
+                {/* Icon Container - matching the reference image's neon glow box */}
+                <div className={`mb-8 w-16 h-16 rounded-2xl border ${feature.iconBorder} ${feature.iconBg} flex items-center justify-center ${feature.iconShadow} transition-transform duration-300 group-hover:scale-110`}>
+                  <Icon className={`w-8 h-8 ${feature.iconColor}`} strokeWidth={1.5} />
                 </div>
 
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2 sm:mb-3">
+                {/* Pill Badge */}
+                <div className={`mb-5 px-4 py-1.5 rounded-full border ${feature.badgeBorder} ${feature.badgeBg}`}>
+                  <span className={`text-[10px] sm:text-xs font-bold tracking-wider uppercase ${feature.badgeText}`}>
+                    {feature.badge}
+                  </span>
+                </div>
+
+                {/* Title */}
+                <h3 className="text-lg sm:text-xl font-black text-slate-900 mb-4 tracking-wide group-hover:text-blue-600 transition-colors duration-300">
                   {feature.title}
                 </h3>
-                <p className="text-gray-600 leading-relaxed text-sm sm:text-sm lg:text-base">
+
+                {/* Description */}
+                <p className="text-slate-600 leading-relaxed text-sm">
                   {feature.description}
                 </p>
-
-                {/* Hover gradient overlay */}
-                <div className="absolute inset-0 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/5 transition-all duration-300 pointer-events-none" />
               </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

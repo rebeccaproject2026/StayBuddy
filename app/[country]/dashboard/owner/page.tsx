@@ -75,10 +75,17 @@ export default function OwnerDashboard() {
 
   // ── Chat / socket state ─────────────────────────────────────────────────────
   const ownerToken = getToken();
-  const { totalUnread: chatUnread, unreadByRequest, markSeen: socketMarkSeen, clearAll: resetUnread, onNotification, contractUnread, clearContractUnread } = useSocketContext();
+  const { totalUnread: chatUnread, unreadByRequest, markSeen: socketMarkSeen, clearAll: resetUnread, onNotification, contractUnread, clearContractUnread, onlineUsers } = useSocketContext();
   const [activeChatRequestId, setActiveChatRequestId] = useState<string | null>(null);
   const activeTabRef = useRef(activeTab);
   useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
+
+  // Close active chat when switching away from messages tab
+  useEffect(() => {
+    if (activeTab !== 'messages') {
+      setActiveChatRequestId(null);
+    }
+  }, [activeTab]);
 
   // ── Lawyer requests state ───────────────────────────────────────────────────
   const [lawyerRequests, setLawyerRequests] = useState<any[]>([]);

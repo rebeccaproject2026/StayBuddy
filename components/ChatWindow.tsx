@@ -8,6 +8,7 @@ import { getToken } from '@/lib/token-storage';
 interface ChatWindowProps {
   requestId: string;
   currentUserId: string;
+  otherUserId?: string; // Add this to track the other user's ID
   otherUserName: string;
   propertyTitle: string;
   token: string | null;
@@ -19,6 +20,7 @@ interface ChatWindowProps {
 export default function ChatWindow({
   requestId,
   currentUserId,
+  otherUserId,
   otherUserName,
   propertyTitle,
   token,
@@ -30,10 +32,15 @@ export default function ChatWindow({
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { connected, joinRoom, sendMessage, markSeen, onMessage, onSeen } = useSocketContext();
+  const { connected, joinRoom, leaveRoom, sendMessage, markSeen, onMessage, onSeen, onTyping, emitTypingStart, emitTypingStop, onlineUsers } = useSocketContext();
+  
+  // Check if the other user is online
+  const isOtherUserOnline = otherUserId ? onlineUsers.has(otherUserId) : false;
 
   // Fetch history
   useEffect(() => {
@@ -52,14 +59,18 @@ export default function ChatWindow({
       .finally(() => setLoading(false));
   }, [requestId, token]);
 
-  // Join socket room
+  // Join/leave socket room
   useEffect(() => {
     if (connected && requestId) {
       joinRoom(requestId);
       markSeen(requestId);
-      onUnreadChange?.(0);
+      // Don't call onUnreadChange here - markSeen already handles clearing this specific conversation's unread count
+      
+      return () => {
+        leaveRoom(requestId);
+      };
     }
-  }, [connected, requestId, joinRoom, markSeen, onUnreadChange]);
+  }, [connected, requestId, joinRoom, leaveRoom, markSeen]);
 
   // Listen for new messages
   useEffect(() => {
@@ -71,22 +82,36 @@ export default function ChatWindow({
       });
       if (msg.sender !== currentUserId) {
         markSeen(requestId);
-        onUnreadChange?.(0);
+        // Don't call onUnreadChange here - markSeen already handles clearing this specific conversation's unread count
       }
     });
     return off;
-  }, [onMessage, requestId, currentUserId, markSeen, onUnreadChange]);
+  }, [onMessage, requestId, currentUserId, markSeen]);
 
   // Listen for seen events
   useEffect(() => {
-    const off = onSeen(({ requestId: rid }) => {
+    const off = onSeen(({ requestId: rid, seenBy }) => {
       if (rid !== requestId) return;
       setMessages(prev =>
-        prev.map(m => m.sender === currentUserId ? { ...m, seenByReceiver: true } : m)
+        prev.map(m => {
+          if (m.sender === currentUserId) {
+            return { ...m, seenByReceiver: true };
+          }
+          return m;
+        })
       );
     });
     return off;
   }, [onSeen, requestId, currentUserId]);
+
+  // Listen for typing events
+  useEffect(() => {
+    const off = onTyping(({ requestId: rid, userId, typing }) => {
+      if (rid !== requestId || userId === currentUserId) return;
+      setIsOtherUserTyping(typing);
+    });
+    return off;
+  }, [onTyping, requestId, currentUserId]);
 
   // Auto-scroll
   useEffect(() => {
@@ -100,9 +125,11 @@ export default function ChatWindow({
     setInput('');
 
     if (connected) {
+      // When using socket, the message will be added via the new_message event
+      // So we don't add it here to avoid duplicates
       sendMessage(requestId, text);
     } else {
-      // REST fallback
+      // REST fallback - add message manually since no socket event
       const authToken = token && token !== 'nextauth' ? token : getToken();
       try {
         const res = await fetch(`/api/messages/${requestId}`, {
@@ -131,6 +158,43 @@ export default function ChatWindow({
     }
   };
 
+  // Handle typing indicator
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+    
+    // Emit typing start
+    if (connected && e.target.value.trim()) {
+      emitTypingStart(requestId);
+      
+      // Clear existing timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      
+      // Set timeout to emit typing stop after 2 seconds of inactivity
+      typingTimeoutRef.current = setTimeout(() => {
+        emitTypingStop(requestId);
+      }, 2000);
+    } else if (connected && !e.target.value.trim()) {
+      emitTypingStop(requestId);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    }
+  };
+
+  // Cleanup typing timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      if (connected) {
+        emitTypingStop(requestId);
+      }
+    };
+  }, [connected, requestId, emitTypingStop]);
+
   const base = isDark
     ? { bg: 'bg-gray-900', border: 'border-gray-700', text: 'text-white', sub: 'text-gray-400', input: 'bg-gray-800 border-gray-700 text-white placeholder-gray-500', header: 'bg-gray-800 border-gray-700' }
     : { bg: 'bg-white', border: 'border-gray-200', text: 'text-gray-900', sub: 'text-gray-500', input: 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400', header: 'bg-gray-50 border-gray-200' };
@@ -147,9 +211,9 @@ export default function ChatWindow({
           <p className={`text-xs truncate ${base.sub}`}>{propertyTitle}</p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <span className={`flex items-center gap-1 text-xs ${connected ? 'text-green-500' : 'text-gray-400'}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-green-500' : 'bg-gray-400'}`} />
-            {connected ? 'Live' : 'Offline'}
+          <span className={`flex items-center gap-1.5 text-xs font-medium ${isOtherUserOnline ? 'text-green-500' : 'text-red-500'}`}>
+            <span className={`w-2 h-2 rounded-full ${isOtherUserOnline ? 'bg-green-500' : 'bg-red-500'}`} />
+            {isOtherUserOnline ? 'Online' : 'Offline'}
           </span>
           {onClose && (
             <button onClick={onClose} className={`p-1 rounded-lg transition-colors ${isDark ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-500'}`}>
@@ -190,12 +254,15 @@ export default function ChatWindow({
                     : 'bg-gray-100 text-gray-800 rounded-bl-sm'
                 }`}>
                   <p>{msg.text}</p>
-                  <div className={`flex items-center gap-1 mt-1 ${isMine ? 'justify-end' : 'justify-start'}`}>
-                    <span className={`text-[10px] ${isMine ? 'text-white/60' : base.sub}`}>
+                  <div className={`flex items-center gap-1.5 mt-1 ${isMine ? 'justify-end' : 'justify-start'}`}>
+                    <span className={`text-[10px] ${isMine ? 'text-white/70' : base.sub}`}>
                       {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                     {isMine && (
-                      <span className={`text-[10px] ${msg.seenByReceiver ? 'text-green-400' : 'text-white/50'}`}>
+                      <span 
+                        className={`text-xs font-bold ${msg.seenByReceiver ? 'text-blue-300' : 'text-white/60'}`} 
+                        title={msg.seenByReceiver ? 'Seen' : 'Sent'}
+                      >
                         {msg.seenByReceiver ? '✓✓' : '✓'}
                       </span>
                     )}
@@ -204,6 +271,19 @@ export default function ChatWindow({
               </div>
             );
           })
+        )}
+        {isOtherUserTyping && (
+          <div className="flex justify-start animate-fade-in">
+            <div className={`px-4 py-3 rounded-2xl rounded-bl-sm ${
+              isDark ? 'bg-gray-800' : 'bg-gray-100'
+            }`}>
+              <div className="flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${isDark ? 'bg-gray-500' : 'bg-gray-500'} animate-bounce`} style={{ animationDelay: '0ms', animationDuration: '1s' }} />
+                <span className={`w-2 h-2 rounded-full ${isDark ? 'bg-gray-500' : 'bg-gray-500'} animate-bounce`} style={{ animationDelay: '200ms', animationDuration: '1s' }} />
+                <span className={`w-2 h-2 rounded-full ${isDark ? 'bg-gray-500' : 'bg-gray-500'} animate-bounce`} style={{ animationDelay: '400ms', animationDuration: '1s' }} />
+              </div>
+            </div>
+          </div>
         )}
         <div ref={bottomRef} />
       </div>
@@ -215,7 +295,7 @@ export default function ChatWindow({
             ref={inputRef}
             type="text"
             value={input}
-            onChange={e => setInput(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
             maxLength={2000}

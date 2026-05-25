@@ -441,15 +441,12 @@ export default function Navbar() {
                               { href: getProfileLink(), icon: <Settings className="w-4 h-4" />, label: "Profile Settings", badge: 0 },
                             ].map((item, i) => (
                               <motion.div key={item.href} custom={i} variants={dropdownItemVariants} initial="hidden" animate="visible">
-                                <motion.button
-                                  onClick={(e) => {
-                                    setIsProfileMenuOpen(false);
-                                    handleNavClick(e, item.href);
-                                  }}
-                                  whileHover={{ x: 3 }}
-                                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-primary-light hover:text-primary transition-colors duration-200"
-                                >
+                                <Link href={item.href} prefetch={true} onClick={() => setIsProfileMenuOpen(false)} className="block w-full">
+                                  <motion.div
+                                    whileHover={{ x: 3 }}
+                                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-primary-light hover:text-primary transition-colors duration-200"
+                                  >
                                   {item.icon}
                                   <span className="font-medium text-sm flex-1 text-left">{item.label}</span>
                                   {item.badge > 0 && (
@@ -463,7 +460,8 @@ export default function Navbar() {
                                       {item.badge > 99 ? "99+" : item.badge}
                                     </motion.span>
                                   )}
-                                </motion.button>
+                                  </motion.div>
+                                </Link>
                               </motion.div>
                             ))}
                             <motion.div custom={2} variants={dropdownItemVariants} initial="hidden" animate="visible">
@@ -484,7 +482,7 @@ export default function Navbar() {
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <Link href={`/login`}>
+                    <Link href={`/login`} prefetch={true}>
                       <motion.span
                         whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}
                         transition={{ type: "spring", stiffness: 400, damping: 20 }}
@@ -493,7 +491,7 @@ export default function Navbar() {
                         {t("nav.login")}
                       </motion.span>
                     </Link>
-                    <Link href={`/signup`}>
+                    <Link href={`/signup`} prefetch={true}>
                       <motion.span
                         whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}
                         transition={{ type: "spring", stiffness: 400, damping: 20 }}
@@ -597,7 +595,7 @@ export default function Navbar() {
                     )}
 
                     {/* Dashboard */}
-                    <button onClick={(e) => { setIsMobileMenuOpen(false); handleNavClick(e, getDashboardLink()); }} className="w-full text-left">
+                    <Link href={getDashboardLink()} prefetch={true} onClick={() => setIsMobileMenuOpen(false)} className="w-full block">
                       <div className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-700 hover:bg-primary-light hover:text-primary transition-colors">
                         <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
                         <span className="font-medium text-sm flex-1">{dashboardLabel}</span>
@@ -607,15 +605,15 @@ export default function Navbar() {
                           </span>
                         )}
                       </div>
-                    </button>
+                    </Link>
 
                     {/* Profile */}
-                    <button onClick={(e) => { setIsMobileMenuOpen(false); handleNavClick(e, getProfileLink()); }} className="w-full text-left">
+                    <Link href={getProfileLink()} prefetch={true} onClick={() => setIsMobileMenuOpen(false)} className="w-full block">
                       <div className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-700 hover:bg-primary-light hover:text-primary transition-colors">
                         <Settings className="w-5 h-5 flex-shrink-0" />
                         <span className="font-medium text-sm">Profile Settings</span>
                       </div>
-                    </button>
+                    </Link>
 
                     {/* Logout */}
                     <button
@@ -628,12 +626,12 @@ export default function Navbar() {
                   </div>
                 ) : (
                   <div className="flex flex-col gap-2 px-3 pt-1 pb-2">
-                    <Link href={`/login`} onClick={() => setIsMobileMenuOpen(false)} className="w-full">
+                    <Link href={`/login`} onClick={() => setIsMobileMenuOpen(false)} className="w-full" prefetch={true}>
                       <div className="w-full text-center px-4 py-3 rounded-xl border-2 border-primary text-primary font-semibold text-sm hover:bg-primary-light transition-colors">
                         {t("nav.login")}
                       </div>
                     </Link>
-                    <Link href={`/signup`} onClick={() => setIsMobileMenuOpen(false)} className="w-full">
+                    <Link href={`/signup`} onClick={() => setIsMobileMenuOpen(false)} className="w-full" prefetch={true}>
                       <div className="w-full text-center px-4 py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary-dark transition-colors shadow-md">
                         {t("nav.signup")}
                       </div>

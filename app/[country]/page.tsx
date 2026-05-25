@@ -14,6 +14,7 @@ const WhyChooseUs      = dynamic(() => import("@/components/WhyChooseUs"),      
 const RentingExperience= dynamic(() => import("@/components/RentingExperience"),{ ssr: false });
 const OwnerSection     = dynamic(() => import("@/components/OwnerSection"),     { ssr: false });
 const CallToActionCards= dynamic(() => import("@/components/CallToActionCards"),{ ssr: false });
+const Testimonials     = dynamic(() => import("@/components/Testimonials"),     { ssr: false });
 const SubscribeSection = dynamic(() => import("@/components/SubscribeSection"), { ssr: false });
 
 export default function HomePage() {
@@ -99,6 +100,9 @@ export default function HomePage() {
 
       {/* Call to Action Cards */}
       <CallToActionCards />
+
+      {/* Testimonials */}
+      <Testimonials />
 
       {/* Subscribe Section */}
       <SubscribeSection />

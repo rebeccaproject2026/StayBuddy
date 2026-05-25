@@ -146,10 +146,17 @@ export default function TenantDashboard() {
   const currencySymbol = t("currency.symbol");
 
   // Chat state — shared socket context
-  const { totalUnread: unreadCount, unreadByRequest, markSeen: socketMarkSeen, clearAll: resetUnread, onNotification, contractUnread, clearContractUnread } = useSocketContext();
+  const { totalUnread: unreadCount, unreadByRequest, markSeen: socketMarkSeen, clearAll: resetUnread, onNotification, contractUnread, clearContractUnread, onlineUsers } = useSocketContext();
   const [activeChatRequestId, setActiveChatRequestId] = useState<string | null>(null);
   const activeTabRef = useRef(activeTab);
   useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
+
+  // Close active chat when switching away from messages tab
+  useEffect(() => {
+    if (activeTab !== 'messages') {
+      setActiveChatRequestId(null);
+    }
+  }, [activeTab]);
 
   // Live contract badge count
   const [baseContractCount, setBaseContractCount] = useState(0);
@@ -703,109 +710,151 @@ export default function TenantDashboard() {
             )}
 
             {/* Messages */}
-            {activeTab === "messages" && (
-              <div className="flex gap-4 overflow-hidden" style={{ height: 'calc(100vh - 130px)' }}>
-                {/* Conversation list */}
-                <div className={`w-full lg:w-72 xl:w-80 flex-shrink-0 rounded-xl border overflow-hidden flex flex-col ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
-                  <div className={`px-4 py-3 border-b font-semibold text-sm ${isDark ? "border-gray-800 text-white" : "border-gray-100 text-gray-900"}`}>
-                    {language === 'fr' ? 'Conversations' : 'Conversations'}
+            {activeTab === "messages" && (() => {
+              console.log('[TenantDashboard Messages] Online users:', Array.from(onlineUsers));
+              console.log('[TenantDashboard Messages] My requests:', myRequests.map(r => ({
+                id: r._id,
+                ownerId: r.owner?._id?.toString() || r.owner?.toString(),
+                ownerName: r.owner?.fullName
+              })));
+              
+              // Sort conversations: online users first, then offline
+              const sortedRequests = [...myRequests].sort((a, b) => {
+                const aUserId = a.owner?._id?.toString() || a.owner?.toString();
+                const bUserId = b.owner?._id?.toString() || b.owner?.toString();
+                const aOnline = onlineUsers.has(aUserId);
+                const bOnline = onlineUsers.has(bUserId);
+                
+                console.log(`[Sort] ${a.propertyTitle}: userId=${aUserId}, online=${aOnline}`);
+                console.log(`[Sort] ${b.propertyTitle}: userId=${bUserId}, online=${bOnline}`);
+                
+                if (aOnline && !bOnline) return -1;
+                if (!aOnline && bOnline) return 1;
+                return 0;
+              });
+
+              return (
+                <div className="flex gap-4 overflow-hidden" style={{ height: 'calc(100vh - 130px)' }}>
+                  {/* Conversation list */}
+                  <div className={`w-full lg:w-72 xl:w-80 flex-shrink-0 rounded-xl border overflow-hidden flex flex-col ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                    <div className={`px-4 py-3 border-b font-semibold text-sm ${isDark ? "border-gray-800 text-white" : "border-gray-100 text-gray-900"}`}>
+                      {language === 'fr' ? 'Conversations' : 'Conversations'}
+                    </div>
+                    <div className="flex-1 overflow-y-auto divide-y divide-gray-100" data-lenis-prevent>
+                      {requestsLoading ? (
+                        <div className="p-4 space-y-3">
+                          {[...Array(3)].map((_, i) => (
+                            <div key={i} className={`h-14 rounded-xl animate-pulse ${isDark ? "bg-gray-800" : "bg-gray-100"}`} />
+                          ))}
+                        </div>
+                      ) : myRequests.length === 0 ? (
+                        <div className="p-8 text-center">
+                          <MessageSquare className={`w-8 h-8 mx-auto mb-2 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
+                          <p className={`text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                            {language === 'fr' ? 'Aucune conversation' : 'No conversations yet'}
+                          </p>
+                        </div>
+                      ) : (
+                        sortedRequests.map((req: any) => {
+                          const userId = req.owner?._id?.toString() || req.owner?.toString();
+                          const isOnline = onlineUsers.has(userId);
+                          
+                          return (
+                            <button
+                              key={req._id}
+                              onClick={() => {
+                                setActiveChatRequestId(req._id);
+                                socketMarkSeen(req._id);
+                              }}
+                              className={`w-full text-left px-4 py-3 transition-colors ${
+                                activeChatRequestId === req._id
+                                  ? isDark ? "bg-primary/20" : "bg-primary/10"
+                                  : isDark ? "hover:bg-gray-800" : "hover:bg-gray-50"
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                {/* Online/Offline indicator */}
+                                <div className="relative flex-shrink-0">
+                                  <div className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`} />
+                                </div>
+                                
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
+                                      {req.propertyTitle}
+                                    </p>
+                                    {(unreadByRequest[req._id] || 0) > 0 && (
+                                      <span className="flex-shrink-0 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                                        {unreadByRequest[req._id] > 9 ? '9+' : unreadByRequest[req._id]}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className={`text-xs truncate mt-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                                    {req.owner?.fullName || (language === 'fr' ? 'Propriétaire' : 'Owner')}
+                                  </p>
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1 overflow-y-auto divide-y divide-gray-100" data-lenis-prevent>
-                    {requestsLoading ? (
-                      <div className="p-4 space-y-3">
-                        {[...Array(3)].map((_, i) => (
-                          <div key={i} className={`h-14 rounded-xl animate-pulse ${isDark ? "bg-gray-800" : "bg-gray-100"}`} />
-                        ))}
-                      </div>
-                    ) : myRequests.length === 0 ? (
-                      <div className="p-8 text-center">
-                        <MessageSquare className={`w-8 h-8 mx-auto mb-2 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
+
+                  {/* Chat window */}
+                  <div className="flex-1 min-w-0 min-h-0 hidden lg:flex flex-col">
+                    {activeChatRequestId ? (
+                      (() => {
+                        const req = myRequests.find((r: any) => r._id === activeChatRequestId);
+                        const otherUserId = req?.owner?._id?.toString() || req?.owner?.toString();
+                        return (
+                          <ChatWindow
+                            requestId={activeChatRequestId}
+                            currentUserId={user!.id}
+                            otherUserId={otherUserId}
+                            otherUserName={req?.owner?.fullName || 'Owner'}
+                            propertyTitle={req?.propertyTitle || ''}
+                            token={token}
+                            isDark={isDark}
+                            onUnreadChange={resetUnread}
+                          />
+                        );
+                      })()
+                    ) : (
+                      <div className={`h-full rounded-xl border flex flex-col items-center justify-center gap-3 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+                        <MessageSquare className={`w-12 h-12 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
                         <p className={`text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>
-                          {language === 'fr' ? 'Aucune conversation' : 'No conversations yet'}
+                          {language === 'fr' ? 'Sélectionnez une conversation' : 'Select a conversation to start chatting'}
                         </p>
                       </div>
-                    ) : (
-                      myRequests.map((req: any) => (
-                        <button
-                          key={req._id}
-                          onClick={() => {
-                            setActiveChatRequestId(req._id);
-                            socketMarkSeen(req._id);
-                          }}
-                          className={`w-full text-left px-4 py-3 transition-colors ${
-                            activeChatRequestId === req._id
-                              ? isDark ? "bg-primary/20" : "bg-primary/10"
-                              : isDark ? "hover:bg-gray-800" : "hover:bg-gray-50"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
-                              {req.propertyTitle}
-                            </p>
-                            {(unreadByRequest[req._id] || 0) > 0 && (
-                              <span className="flex-shrink-0 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
-                                {unreadByRequest[req._id] > 9 ? '9+' : unreadByRequest[req._id]}
-                              </span>
-                            )}
-                          </div>
-                          <p className={`text-xs truncate mt-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                            {req.owner?.fullName || (language === 'fr' ? 'Propriétaire' : 'Owner')}
-                          </p>
-                        </button>
-                      ))
                     )}
                   </div>
-                </div>
 
-                {/* Chat window */}
-                <div className="flex-1 min-w-0 min-h-0 hidden lg:flex flex-col">
-                  {activeChatRequestId ? (
-                    (() => {
-                      const req = myRequests.find((r: any) => r._id === activeChatRequestId);
-                      return (
-                        <ChatWindow
-                          requestId={activeChatRequestId}
-                          currentUserId={user!.id}
-                          otherUserName={req?.owner?.fullName || 'Owner'}
-                          propertyTitle={req?.propertyTitle || ''}
-                          token={token}
-                          isDark={isDark}
-                          onUnreadChange={resetUnread}
-                        />
-                      );
-                    })()
-                  ) : (
-                    <div className={`h-full rounded-xl border flex flex-col items-center justify-center gap-3 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
-                      <MessageSquare className={`w-12 h-12 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
-                      <p className={`text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>
-                        {language === 'fr' ? 'Sélectionnez une conversation' : 'Select a conversation to start chatting'}
-                      </p>
+                  {/* Mobile: full-screen chat overlay */}
+                  {activeChatRequestId && (
+                    <div className="lg:hidden fixed inset-0 z-50 p-4" style={{ background: isDark ? '#030712' : '#f9fafb' }}>
+                      {(() => {
+                        const req = myRequests.find((r: any) => r._id === activeChatRequestId);
+                        const otherUserId = req?.owner?._id?.toString() || req?.owner?.toString();
+                        return (
+                          <ChatWindow
+                            requestId={activeChatRequestId}
+                            currentUserId={user!.id}
+                            otherUserId={otherUserId}
+                            otherUserName={req?.owner?.fullName || 'Owner'}
+                            propertyTitle={req?.propertyTitle || ''}
+                            token={token}
+                            isDark={isDark}
+                            onClose={() => setActiveChatRequestId(null)}
+                            onUnreadChange={resetUnread}
+                          />
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
-
-                {/* Mobile: full-screen chat overlay */}
-                {activeChatRequestId && (
-                  <div className="lg:hidden fixed inset-0 z-50 p-4" style={{ background: isDark ? '#030712' : '#f9fafb' }}>
-                    {(() => {
-                      const req = myRequests.find((r: any) => r._id === activeChatRequestId);
-                      return (
-                        <ChatWindow
-                          requestId={activeChatRequestId}
-                          currentUserId={user!.id}
-                          otherUserName={req?.owner?.fullName || 'Owner'}
-                          propertyTitle={req?.propertyTitle || ''}
-                          token={token}
-                          isDark={isDark}
-                          onClose={() => setActiveChatRequestId(null)}
-                          onUnreadChange={resetUnread}
-                        />
-                      );
-                    })()}
-                  </div>
-                )}
-              </div>
-            )}
+              );
+            })()}
 
             {/* Profile */}
             {activeTab === "profile" && (

@@ -177,7 +177,7 @@ export default function PropertyCard({
 
   return (
     <>
-      <Link href={`/property/${id}`} className="block">
+      <Link href={`/property/${id}`} className="block" prefetch={true}>
       <div
         className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer"
       >

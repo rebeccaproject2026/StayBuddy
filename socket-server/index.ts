@@ -82,27 +82,68 @@ io.on('connection', async (socket: AuthSocket) => {
   // Register user as online
   if (!onlineUsers.has(userId)) onlineUsers.set(userId, new Set());
   onlineUsers.get(userId)!.add(socket.id);
+  console.log(`[socket-server] User ${userId} is now online. Total online users:`, onlineUsers.size);
 
   // Join personal room for targeted notifications
   socket.join(`user:${userId}`);
+  console.log(`[socket-server] User ${userId} joined personal room: user:${userId}`);
+
+  // Broadcast user online status to all connected clients
+  io.emit('user_status', { userId, status: 'online' });
+  console.log(`[socket-server] Broadcasted online status for ${userId}`);
+
+  // Test connection handler
+  socket.on('test_connection', (data: any) => {
+    console.log('[test_connection] Received from', userId, ':', data);
+    socket.emit('test_response', { message: 'Hello from server', userId });
+  });
+
+  // ── Get online users ─────────────────────────────────────────────────────────
+  socket.on('get_online_users', () => {
+    const onlineUserIds = Array.from(onlineUsers.keys());
+    console.log(`[socket-server] Sending online users to ${userId}:`, onlineUserIds);
+    socket.emit('online_users', onlineUserIds);
+  });
 
   // ── Join a chat room ─────────────────────────────────────────────────────────
   socket.on('join_room', async (requestId: string) => {
     try {
       await connectDB();
+      console.log('[join_room] User', userId, 'attempting to join room:', requestId);
       const cr = await ContactRequestModel.findById(requestId).lean() as any;
-      if (!cr) return socket.emit('error', 'Contact request not found');
+      if (!cr) {
+        console.log('[join_room] Contact request not found:', requestId);
+        return socket.emit('error', 'Contact request not found');
+      }
 
       const isParticipant =
         cr.renter.toString() === userId ||
         cr.owner.toString() === userId;
-      if (!isParticipant) return socket.emit('error', 'Forbidden');
+      if (!isParticipant) {
+        console.log('[join_room] User not a participant');
+        return socket.emit('error', 'Forbidden');
+      }
+
+      // Leave other chat rooms first
+      for (const room of socket.rooms) {
+        if (room.startsWith('chat:') && room !== `chat:${requestId}`) {
+          socket.leave(room);
+          console.log(`[join_room] Socket ${socket.id} auto-left previous chat room: ${room}`);
+        }
+      }
 
       socket.join(`chat:${requestId}`);
+      console.log('[join_room] User', userId, 'successfully joined room chat:' + requestId);
       socket.emit('joined_room', requestId);
     } catch (err) {
       console.error('[join_room]', err);
     }
+  });
+
+  // ── Leave a chat room ────────────────────────────────────────────────────────
+  socket.on('leave_room', (requestId: string) => {
+    socket.leave(`chat:${requestId}`);
+    console.log('[leave_room] User', userId, 'explicitly left room chat:' + requestId);
   });
 
   // ── Send a message ───────────────────────────────────────────────────────────
@@ -144,13 +185,34 @@ io.on('connection', async (socket: AuthSocket) => {
       // Broadcast to everyone in the chat room
       io.to(`chat:${requestId}`).emit('new_message', msgObj);
 
-      // Real-time notification to receiver's personal room
-      io.to(`user:${receiverId}`).emit('notification', {
-        type: 'new_message',
-        requestId,
-        senderId: userId,
-        preview: text.trim().slice(0, 80),
+      // Check if receiver is in the chat room
+      const receiverSockets = await io.in(`chat:${requestId}`).fetchSockets();
+      const receiverInRoom = receiverSockets.some(s => {
+        const authSocket = s as any;
+        return authSocket.userId === receiverId;
       });
+
+      console.log('[send_message] Receiver in room?', receiverInRoom, 'receiverId:', receiverId, 'requestId:', requestId);
+      console.log('[send_message] Sockets in room:', receiverSockets.map((s: any) => s.userId));
+
+      // Only send notification if receiver is NOT in the chat room
+      if (!receiverInRoom) {
+        console.log('[send_message] Sending notification to user:' + receiverId);
+        const notificationPayload = {
+          type: 'new_message',
+          requestId,
+          senderId: userId,
+          preview: text.trim().slice(0, 80),
+        };
+        console.log('[send_message] Notification payload:', notificationPayload);
+        io.to(`user:${receiverId}`).emit('notification', notificationPayload);
+        
+        // Also check if receiver is connected at all
+        const receiverOnline = onlineUsers.has(receiverId);
+        console.log('[send_message] Receiver online?', receiverOnline);
+      } else {
+        console.log('[send_message] Skipping notification - receiver is in the chat room');
+      }
 
       // Email notification (throttled, fire-and-forget)
       if (shouldSendEmail(userId, receiverId)) {
@@ -193,6 +255,63 @@ io.on('connection', async (socket: AuthSocket) => {
       io.to(`chat:${requestId}`).emit('messages_seen', { requestId, seenBy: userId });
     } catch (err) {
       console.error('[mark_seen]', err);
+    }
+  });
+
+  // ── Typing indicator ─────────────────────────────────────────────────────────
+  socket.on('typing_start', async (payload: { requestId: string }) => {
+    try {
+      await connectDB();
+      const { requestId } = payload;
+      console.log('[typing_start] Received from userId:', userId, 'requestId:', requestId);
+      
+      const cr = await ContactRequestModel.findById(requestId).lean() as any;
+      if (!cr) {
+        console.log('[typing_start] Contact request not found:', requestId);
+        return;
+      }
+
+      const isParticipant =
+        cr.renter.toString() === userId ||
+        cr.owner.toString() === userId;
+      if (!isParticipant) {
+        console.log('[typing_start] User not a participant');
+        return;
+      }
+
+      console.log('[typing_start] Broadcasting to room chat:' + requestId);
+      // Broadcast typing to others in the room (excluding sender)
+      socket.to(`chat:${requestId}`).emit('user_typing', { requestId, userId, typing: true });
+    } catch (err) {
+      console.error('[typing_start]', err);
+    }
+  });
+
+  socket.on('typing_stop', async (payload: { requestId: string }) => {
+    try {
+      await connectDB();
+      const { requestId } = payload;
+      console.log('[typing_stop] Received from userId:', userId, 'requestId:', requestId);
+      
+      const cr = await ContactRequestModel.findById(requestId).lean() as any;
+      if (!cr) {
+        console.log('[typing_stop] Contact request not found:', requestId);
+        return;
+      }
+
+      const isParticipant =
+        cr.renter.toString() === userId ||
+        cr.owner.toString() === userId;
+      if (!isParticipant) {
+        console.log('[typing_stop] User not a participant');
+        return;
+      }
+
+      console.log('[typing_stop] Broadcasting to room chat:' + requestId);
+      // Broadcast typing stopped to others in the room
+      socket.to(`chat:${requestId}`).emit('user_typing', { requestId, userId, typing: false });
+    } catch (err) {
+      console.error('[typing_stop]', err);
     }
   });
 
@@ -281,7 +400,13 @@ io.on('connection', async (socket: AuthSocket) => {
     const sockets = onlineUsers.get(userId);
     if (sockets) {
       sockets.delete(socket.id);
-      if (sockets.size === 0) onlineUsers.delete(userId);
+      if (sockets.size === 0) {
+        onlineUsers.delete(userId);
+        console.log(`[socket-server] User ${userId} is now offline. Total online users:`, onlineUsers.size);
+        // Broadcast user offline status to all connected clients
+        io.emit('user_status', { userId, status: 'offline' });
+        console.log(`[socket-server] Broadcasted offline status for ${userId}`);
+      }
     }
     console.log(`[socket-server] disconnected: ${userId}`);
   });

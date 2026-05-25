@@ -144,11 +144,10 @@ const RentingExperience = () => {
                     transition={{ duration: 0.4, delay: 0.2 + i * 0.07 }}
                     onMouseEnter={() => setActiveStep(i)}
                     onMouseLeave={() => setActiveStep(null)}
-                    className={`relative rounded-xl p-3 sm:p-4 cursor-default transition-all duration-300 border ${
-                      isActive
+                    className={`relative rounded-xl p-3 sm:p-4 cursor-default transition-all duration-300 border ${isActive
                         ? 'border-primary/30 bg-primary/5 shadow-md'
                         : 'border-gray-100 bg-gray-50 hover:border-gray-200'
-                    }`}
+                      }`}
                   >
                     <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${step.color} flex items-center justify-center mb-2 sm:mb-3 shadow-sm transition-transform duration-300 ${isActive ? 'scale-110' : ''}`}>
                       <Icon className="w-4 h-4 text-white" />
