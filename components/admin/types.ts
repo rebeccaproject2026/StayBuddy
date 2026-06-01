@@ -57,13 +57,6 @@ export interface AdminProperty {
   verificationImages?: string[];
   roomDetails?: Record<string, { totalBeds?: number; availableBeds?: number; totalRooms?: number; availableRooms?: number; monthlyRent: number; securityDeposit?: number; facilities?: string[] }>;
   roomImages?: Array<{ id: string; name: string; status?: string; image?: string }>;
-  kitchenImages?: string[];
-  washroomImages?: string[];
-  commonAreaImages?: string[];
-  tenantRoomImages?: Array<{ id: string; name: string; image?: string }>;
-  tenantKitchenImages?: string[];
-  tenantWashroomImages?: string[];
-  tenantCommonAreaImages?: string[];
   tenantRooms?: Array<{ id: string; name: string; status: string; rent: string; maxPersons?: string; currentPersons?: string }>;
   bhk?: string;
   latitude?: string;

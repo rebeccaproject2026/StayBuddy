@@ -103,7 +103,7 @@ export default function OwnerContactsTab({
                       )}
                     </div>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-3 mb-3">
-                      <p className={`text-xs sm:text-sm truncate flex-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>{req.property?.pgName || req.property?.societyName || req.propertyTitle || "—"}</p>
+                      <p className={`text-xs sm:text-sm truncate flex-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>{req.propertyTitle || "—"}</p>
                       <p className={`text-xs flex-shrink-0 ${isDark ? "text-gray-500" : "text-gray-400"}`}>
                         {new Date(req.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}{" · "}
                         {new Date(req.createdAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
@@ -111,7 +111,7 @@ export default function OwnerContactsTab({
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {req.phone && (
-                        <a href={`https://wa.me/${req.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${req.fullName}, regarding your inquiry for "${req.property?.pgName || req.property?.societyName || req.propertyTitle}".`)}`}
+                        <a href={`https://wa.me/${req.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${req.fullName}, regarding your inquiry for "${req.propertyTitle}".`)}`}
                           target="_blank" rel="noopener noreferrer"
                           className="flex items-center gap-1.5 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-xs font-medium">
                           <MessageSquare className="w-3.5 h-3.5" />WhatsApp
