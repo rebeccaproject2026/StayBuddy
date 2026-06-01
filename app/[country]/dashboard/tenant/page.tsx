@@ -29,6 +29,7 @@ import {
   Sun,
   Moon,
   FileText,
+  ClipboardList,
 } from "lucide-react";
 
 function RequestCard({
@@ -57,7 +58,7 @@ function RequestCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm font-semibold truncate text-gray-800">
-              {req.propertyTitle}
+              {req.property?.pgName || req.property?.societyName || req.propertyTitle}
             </p>
             <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${sc.bg} ${sc.text}`}>
               {statusLabel}
@@ -456,7 +457,7 @@ export default function TenantDashboard() {
 
   const navItems = [
     { key: "saved",     icon: Heart,         label: tc.savedProperties },
-    { key: "requests",  icon: MessageSquare, label: tc.myRequests },
+    { key: "requests",  icon: ClipboardList, label: tc.myRequests },
     { key: "messages",  icon: MessageSquare, label: language === 'fr' ? 'Messages' : 'Messages', badge: unreadCount },
     { key: "contracts", icon: FileText,      label: language === 'fr' ? 'Contrats' : 'Contracts', badge: tenantContractBadge },
     { key: "profile",   icon: User,          label: tc.profile },
@@ -781,7 +782,7 @@ export default function TenantDashboard() {
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center justify-between gap-2">
                                     <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
-                                      {req.propertyTitle}
+                                      {req.property?.pgName || req.property?.societyName || req.propertyTitle}
                                     </p>
                                     {(unreadByRequest[req._id] || 0) > 0 && (
                                       <span className="flex-shrink-0 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">

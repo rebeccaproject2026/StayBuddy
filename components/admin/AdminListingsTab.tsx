@@ -1,6 +1,13 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import Image from "next/image";
+import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
+import {
+  MaterialReactTable,
+  useMaterialReactTable,
+  type MRT_ColumnDef,
+} from "material-react-table";
 import {
   Filter,
   Loader2,
@@ -11,8 +18,9 @@ import {
   Eye,
   Trash2,
   ShieldCheck,
-  ChevronLeft,
-  ChevronRight,
+  ArrowLeft,
+  Users,
+  X,
 } from "lucide-react";
 import { AdminProperty, PropertyOwner, AdminContent } from "./types";
 
@@ -31,7 +39,9 @@ interface AdminListingsTabProps {
   PAGE_SIZE: number;
   currencySymbol: string;
   setSelectedProperty: (p: AdminProperty | null) => void;
-  setDeleteModal: (v: { id: string; title: string; ownerEmail?: string; ownerName?: string } | null) => void;
+  setDeleteModal: (
+    v: { id: string; title: string; ownerEmail?: string; ownerName?: string } | null
+  ) => void;
   setDeleteReason: (v: string) => void;
 }
 
@@ -41,18 +51,392 @@ export default function AdminListingsTab({
   currentCountry,
   listingFilter,
   setListingFilter,
-  listingPage,
-  setListingPage,
   propertiesLoading,
   filteredListings,
-  pagedListings,
-  totalListingPages,
-  PAGE_SIZE,
   currencySymbol,
   setSelectedProperty,
   setDeleteModal,
   setDeleteReason,
 }: AdminListingsTabProps) {
+  
+  const [localSelectedProperty, setLocalSelectedProperty] = useState<AdminProperty | null>(null);
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
+  
+  const columns = useMemo<MRT_ColumnDef<AdminProperty>[]>(
+    () => [
+      {
+        accessorKey: "title",
+        header: "Property",
+        Cell: ({ row }) => {
+          const property = row.original;
+          const img = property.images?.[0] || "/owner.png";
+          return (
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200">
+                <Image src={img} alt={property.title || "Property"} fill className="object-cover" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className={`px-1.5 py-0.5 rounded text-xs font-semibold text-white ${property.propertyType === "PG" ? "bg-blue-600" : "bg-green-600"}`}>
+                    {property.propertyType}
+                  </span>
+                  {property.isVerified && (
+                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-emerald-600 text-white text-xs font-semibold rounded">
+                      <ShieldCheck className="w-2.5 h-2.5" /> Verified
+                    </span>
+                  )}
+                </div>
+                <p className={`font-semibold truncate max-w-[160px] mt-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>
+                  {property.propertyType === "PG" ? property.pgName : property.societyName}
+                </p>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        id: "owner",
+        header: "Owner",
+        accessorFn: (row) => {
+          const owner = typeof row.createdBy === 'object' ? row.createdBy as PropertyOwner : null;
+          return owner?.fullName || "—";
+        },
+        Cell: ({ cell }) => (
+          <div className="flex items-center gap-1.5 max-w-[140px]">
+            <span className={`truncate text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+              {cell.getValue<string>()}
+            </span>
+          </div>
+        ),
+      },
+      {
+        id: "location",
+        header: "Location",
+        accessorFn: (row) => [row.areaName, row.location].filter(Boolean).join(", "),
+        Cell: ({ cell }) => (
+          <div className="flex items-center gap-1 max-w-[160px]">
+            <MapPin className="w-3.5 h-3.5 flex-shrink-0 text-gray-500" />
+            <span className={`truncate text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}>{cell.getValue<string>()}</span>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "price",
+        header: "Price",
+        Cell: ({ cell }) => (
+          <span className="font-bold text-primary text-sm">{currencySymbol}{Number(cell.getValue()).toLocaleString()}</span>
+        ),
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        Cell: ({ row }) => {
+          const property = row.original;
+          return (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setLocalSelectedProperty(property);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-colors text-xs font-medium"
+            >
+              <Eye className="w-3.5 h-3.5" /> View Details
+            </button>
+          );
+        },
+      },
+    ],
+    [isDark, currencySymbol, setSelectedProperty]
+  );
+
+  const tableTheme = useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode: isDark ? "dark" : "light",
+          background: {
+            default: isDark ? "#111827" : "#ffffff", // tailwind gray-900 / white
+            paper: isDark ? "#1f2937" : "#ffffff", // tailwind gray-800 / white
+          },
+          primary: {
+            main: "#0ea5e9", // typical staybuddy primary blue
+          },
+        },
+        typography: {
+          fontFamily: "inherit",
+        },
+        components: {
+          MuiPaper: {
+            styleOverrides: {
+              root: {
+                backgroundImage: "none",
+              },
+            },
+          },
+          MuiTableCell: {
+            styleOverrides: {
+              root: {
+                borderColor: isDark ? "#374151" : "#e5e7eb", // tailwind gray-700 / gray-200
+                padding: "12px 16px",
+              },
+              head: {
+                fontWeight: 600,
+              },
+            },
+          },
+        },
+      }),
+    [isDark]
+  );
+
+  const table = useMaterialReactTable({
+    columns,
+    data: filteredListings,
+    enablePagination: true,
+    enableSorting: true,
+    enableColumnFilters: true,
+    enableGlobalFilter: true,
+    enableDensityToggle: false,
+    renderDetailPanel: ({ row }) => {
+      const property = row.original;
+      const owner = typeof property.createdBy === 'object' ? property.createdBy as PropertyOwner : null;
+      return (
+        <div className={`p-4 grid grid-cols-1 md:grid-cols-2 gap-4 ${isDark ? 'text-gray-300 bg-gray-800/50' : 'text-gray-700 bg-gray-50'}`}>
+          <div className="space-y-2">
+            <p className="text-sm"><strong>Owner:</strong> {owner?.fullName || "—"}</p>
+            <div className="text-sm flex flex-col gap-1">
+              <strong>Contact:</strong>
+              {owner?.email && <span className="inline-flex items-center gap-1.5"><Mail className="w-3.5 h-3.5"/> {owner.email}</span>}
+              {owner?.phoneNumber && <span className="inline-flex items-center gap-1.5"><Phone className="w-3.5 h-3.5"/> {owner.phoneNumber}</span>}
+            </div>
+            <p className="text-sm"><strong>Date Added:</strong> {new Date(property.createdAt).toLocaleDateString()}</p>
+          </div>
+          <div className="flex flex-col md:items-end justify-center gap-2">
+            <button
+              onClick={() => {
+                setDeleteModal({ id: property._id, title: property.title, ownerEmail: owner?.email, ownerName: owner?.fullName });
+                setDeleteReason("");
+              }}
+              className={`flex items-center justify-center gap-1.5 px-4 py-2 border rounded-lg transition-colors text-sm font-medium w-full md:w-48 ${isDark ? "border-red-500/50 text-red-400 hover:bg-red-500/10" : "border-red-300 text-red-500 hover:bg-red-50"}`}
+            >
+              <Trash2 className="w-4 h-4" /> Delete Property
+            </button>
+          </div>
+        </div>
+      );
+    },
+    initialState: {
+      pagination: { pageSize: 10, pageIndex: 0 },
+      density: "compact",
+    },
+    muiTablePaperProps: {
+      elevation: 0,
+      sx: {
+        borderRadius: "12px",
+        border: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
+        backgroundColor: isDark ? "#111827" : "#ffffff",
+      },
+    },
+    muiTableHeadCellProps: {
+      sx: {
+        backgroundColor: isDark ? "#1f2937" : "#f9fafb", // tailwind gray-800 / gray-50
+        color: isDark ? "#e5e7eb" : "#374151",
+      },
+    },
+    muiTableBodyRowProps: {
+      sx: {
+        backgroundColor: isDark ? "#111827" : "#ffffff",
+        '&:hover': {
+          backgroundColor: isDark ? "#1f2937" : "#f9fafb",
+        },
+      },
+    },
+    muiTableBodyCellProps: {
+      sx: {
+        color: isDark ? "#e5e7eb" : "#111827",
+        borderBottom: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
+      },
+    },
+    muiTopToolbarProps: {
+      sx: {
+        backgroundColor: isDark ? "#111827" : "#ffffff",
+      },
+    },
+    muiBottomToolbarProps: {
+      sx: {
+        backgroundColor: isDark ? "#111827" : "#ffffff",
+      },
+    },
+  });
+
+  if (localSelectedProperty) {
+    const prop = localSelectedProperty;
+    const owner = typeof prop.createdBy === "object" ? prop.createdBy as PropertyOwner : null;
+    
+    const allImages: { url: string; label: string }[] = [
+      ...(prop.roomImages || []).filter(ri => ri.image).map(ri => ({ url: ri.image!, label: ri.name || 'Room' })),
+      ...(prop.kitchenImages || []).map(img => ({ url: img, label: 'Kitchen' })),
+      ...(prop.washroomImages || []).map(img => ({ url: img, label: 'Washroom' })),
+      ...(prop.commonAreaImages || []).map(img => ({ url: img, label: 'Common Area' })),
+      ...(prop.tenantRoomImages || []).filter(ri => ri.image).map(ri => ({ url: ri.image!, label: ri.name || 'Room' })),
+      ...(prop.tenantKitchenImages || []).map(img => ({ url: img, label: 'Kitchen' })),
+      ...(prop.tenantWashroomImages || []).map(img => ({ url: img, label: 'Washroom' })),
+      ...(prop.tenantCommonAreaImages || []).map(img => ({ url: img, label: 'Common Area' }))
+    ];
+
+    return (
+      <div className="space-y-4 mb-6">
+        <button
+          onClick={() => setLocalSelectedProperty(null)}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${isDark ? "bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-700" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"}`}
+        >
+          <ArrowLeft className="w-4 h-4" /> Back to Listings
+        </button>
+
+        <div className={`w-full rounded-xl border p-6 space-y-6 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h2 className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{prop.title}</h2>
+              {prop.isVerified && (
+                <span className="flex items-center gap-1 px-2 py-0.5 bg-green-600 text-white text-xs font-semibold rounded-full">
+                  <ShieldCheck className="w-3 h-3" /> Verified
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Images Gallery */}
+          {allImages.length > 0 && (
+            <div className={`p-4 rounded-xl border ${isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
+              <p className={`text-xs font-semibold uppercase tracking-wide mb-3 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Property Images</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {allImages.map((img, idx) => (
+                  <button
+                    key={`img-${idx}`}
+                    type="button"
+                    onClick={() => setViewingImage(img.url)}
+                    className="relative h-32 w-full rounded-lg overflow-hidden bg-gray-200 block cursor-pointer border border-gray-300 dark:border-gray-600 group"
+                    title={`Click to view ${img.label}`}
+                  >
+                    <Image src={img.url} alt={`${img.label} ${idx + 1}`} fill className="object-cover group-hover:opacity-80 transition-opacity" />
+                    <div className="absolute bottom-0 inset-x-0 bg-black/60 p-1.5 backdrop-blur-sm z-10">
+                      <p className="text-xs font-medium text-white truncate text-center">{img.label}</p>
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-lg z-20">
+                      <Eye className="w-6 h-6 text-white" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {[
+              { label: "Type", value: prop.propertyType },
+              { label: "Category", value: prop.category || "—" },
+              { label: "Price", value: `${currencySymbol}${prop.price.toLocaleString()}/mo` },
+              { label: "Rooms", value: prop.rooms },
+              { label: "Posted by", value: prop.posterType || "—" },
+              { label: "Listed on", value: new Date(prop.createdAt).toLocaleDateString() },
+            ].map(({ label, value }) => (
+              <div key={label} className={`p-4 rounded-xl border ${isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
+                <p className={`text-xs mb-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>{label}</p>
+                <p className={`font-semibold text-sm ${isDark ? "text-white" : "text-gray-900"}`}>{String(value)}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className={`p-4 rounded-xl border ${isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
+            <p className={`text-xs font-semibold uppercase tracking-wide mb-2 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Address</p>
+            <p className={`text-sm ${isDark ? "text-gray-200" : "text-gray-700"}`}>
+              {[prop.fullAddress, prop.areaName, prop.location, prop.state, prop.pincode].filter(Boolean).join(", ")}
+            </p>
+            {prop.landmark && (
+              <p className={`text-xs mt-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Landmark: {prop.landmark}</p>
+            )}
+          </div>
+
+          {owner && (
+            <div className={`p-4 rounded-xl border ${isDark ? "bg-gray-800 border-gray-700" : "bg-blue-50 border-blue-100"}`}>
+              <p className={`text-xs font-semibold uppercase tracking-wide mb-3 ${isDark ? "text-gray-400" : "text-blue-600"}`}>Owner Information</p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Users className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-blue-500"}`} />
+                  <span className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>{owner.fullName}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Mail className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-blue-500"}`} />
+                  <span className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>{owner.email}</span>
+                </div>
+                {owner.phoneNumber && (
+                  <div className="flex items-center gap-2">
+                    <Phone className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-blue-500"}`} />
+                    <span className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>{owner.phoneNumber}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {prop.pgDescription && (
+            <div className={`p-4 rounded-xl border ${isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
+              <p className={`text-xs font-semibold uppercase tracking-wide mb-2 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Description</p>
+              <p className={`text-sm leading-relaxed ${isDark ? "text-gray-300" : "text-gray-700"}`}>{prop.pgDescription}</p>
+            </div>
+          )}
+
+          <div className={`p-4 rounded-xl border ${isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
+            <div className="flex items-center gap-2 mb-3">
+              <ShieldCheck className={`w-4 h-4 ${prop.isVerified ? "text-emerald-500" : isDark ? "text-gray-400" : "text-gray-400"}`} />
+              <p className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-500"}`}>Verification Documents</p>
+            </div>
+            {(prop.verificationImages?.length ?? 0) > 0 ? (
+              <div className="flex flex-wrap gap-3">
+                {prop.verificationImages!.map((url, i) => (
+                  <button key={i} type="button" onClick={() => setViewingImage(url)}
+                    className="group relative h-24 w-32 rounded-lg overflow-hidden bg-gray-200 block cursor-pointer border border-gray-300" title="Click to view document">
+                    <Image src={url} alt={`Document ${i + 1}`} fill className="object-cover group-hover:opacity-75 transition-opacity" />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-lg">
+                      <Eye className="w-5 h-5 text-white" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className={`text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>No verification documents uploaded.</p>
+            )}
+          </div>
+          
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-800">
+            <button
+              onClick={() => {
+                setDeleteModal({ id: prop._id, title: prop.title, ownerEmail: owner?.email, ownerName: owner?.fullName });
+                setDeleteReason("");
+              }}
+              className="flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors text-sm font-medium"
+            >
+              <Trash2 className="w-4 h-4" /> Delete Property
+            </button>
+          </div>
+        </div>
+
+        {/* Fullscreen Image Lightbox */}
+        {viewingImage && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-sm" onClick={() => setViewingImage(null)}>
+            <button onClick={() => setViewingImage(null)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors z-50">
+              <X className="w-6 h-6" />
+            </button>
+            <div className="relative max-w-5xl max-h-[90vh] w-full h-full flex items-center justify-center p-4" onClick={e => e.stopPropagation()}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={viewingImage} alt="Fullscreen property image" className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl" />
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 mb-6">
       {/* Header */}
@@ -62,7 +446,7 @@ export default function AdminListingsTab({
           <Filter className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
           <select
             value={listingFilter}
-            onChange={(e) => { setListingFilter(e.target.value); setListingPage(() => 1); }}
+            onChange={(e) => setListingFilter(e.target.value)}
             className={`px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? "bg-gray-800 border-gray-700 text-gray-200" : "bg-white border-gray-300 text-gray-700"}`}
           >
             <option value="all">{tc.all}</option>
@@ -81,153 +465,27 @@ export default function AdminListingsTab({
           <Loader2 className={`w-8 h-8 animate-spin ${isDark ? "text-gray-400" : "text-gray-500"}`} />
         </div>
       ) : filteredListings.length > 0 ? (
-        <>
-          {/* Table */}
-          <div className={`rounded-xl border overflow-hidden ${isDark ? "border-gray-800" : "border-gray-200"}`}>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className={`border-b ${isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
-                    <th className={`px-4 py-3 text-left font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>#</th>
-                    <th className={`px-4 py-3 text-left font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Property</th>
-                    <th className={`px-4 py-3 text-left font-semibold hidden md:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Location</th>
-                    <th className={`px-4 py-3 text-left font-semibold hidden lg:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Owner</th>
-                    <th className={`px-4 py-3 text-left font-semibold hidden lg:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Contact</th>
-                    <th className={`px-4 py-3 text-right font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Price</th>
-                    <th className={`px-4 py-3 text-left font-semibold hidden sm:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>Date</th>
-                    <th className={`px-4 py-3 text-center font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody className={`divide-y ${isDark ? "divide-gray-800" : "divide-gray-100"}`}>
-                  {pagedListings.map((property, idx) => {
-                    const owner = typeof property.createdBy === "object" ? property.createdBy as PropertyOwner : null;
-                    const img = property.images?.[0] || "/owner.png";
-                    const rowNum = (listingPage - 1) * PAGE_SIZE + idx + 1;
-                    return (
-                      <tr key={property._id} className={`transition-colors ${isDark ? "bg-gray-900 hover:bg-gray-800" : "bg-white hover:bg-gray-50"}`}>
-                        <td className={`px-4 py-3 text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>{rowNum}</td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200">
-                              <Image src={img} alt={property.title} fill className="object-cover" />
-                            </div>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className={`px-1.5 py-0.5 rounded text-xs font-semibold text-white ${property.propertyType === "PG" ? "bg-blue-600" : "bg-green-600"}`}>
-                                  {property.propertyType}
-                                </span>
-                                {property.isVerified && (
-                                  <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-emerald-600 text-white text-xs font-semibold rounded">
-                                    <ShieldCheck className="w-2.5 h-2.5" /> Verified
-                                  </span>
-                                )}
-                              </div>
-                              <p className={`font-semibold truncate max-w-[160px] mt-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>{property.propertyType === "PG" ? property.pgName : property.societyName}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className={`px-4 py-3 hidden md:table-cell ${isDark ? "text-gray-400" : "text-gray-600"}`}>
-                          <div className="flex items-center gap-1 max-w-[160px]">
-                            <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                            <span className="truncate text-xs">{[property.areaName, property.location].filter(Boolean).join(", ")}</span>
-                          </div>
-                        </td>
-                        <td className={`px-4 py-3 hidden lg:table-cell ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-                          <span className="font-medium text-xs">{owner?.fullName || "—"}</span>
-                        </td>
-                        <td className={`px-4 py-3 hidden lg:table-cell ${isDark ? "text-gray-400" : "text-gray-600"}`}>
-                          <div className="space-y-0.5">
-                            {owner?.email && <div className="flex items-center gap-1 text-xs"><Mail className="w-3 h-3" />{owner.email}</div>}
-                            {owner?.phoneNumber && <div className="flex items-center gap-1 text-xs"><Phone className="w-3 h-3" />{owner.phoneNumber}</div>}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <span className="font-bold text-primary text-sm">{currencySymbol}{property.price.toLocaleString()}</span>
-                        </td>
-                        <td className={`px-4 py-3 hidden sm:table-cell text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                          {new Date(property.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center justify-center gap-1.5">
-                            <button
-                              onClick={() => setSelectedProperty(property)}
-                              className="flex items-center gap-1 px-2.5 py-1.5 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-colors text-xs font-medium"
-                            >
-                              <Eye className="w-3.5 h-3.5" /> View
-                            </button>
-                            <button
-                              onClick={() => {
-                                const owner = typeof property.createdBy === 'object' ? property.createdBy as PropertyOwner : null;
-                                setDeleteModal({ id: property._id, title: property.title, ownerEmail: owner?.email, ownerName: owner?.fullName });
-                                setDeleteReason("");
-                              }}
-                              className={`flex items-center gap-1 px-2.5 py-1.5 border rounded-lg transition-colors text-xs font-medium ${isDark ? "border-red-500/50 text-red-400 hover:bg-red-500/10" : "border-red-300 text-red-500 hover:bg-red-50"}`}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" /> Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Pagination */}
-          {totalListingPages > 1 && (
-            <div className="flex items-center justify-between pt-2">
-              <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                Showing {(listingPage - 1) * PAGE_SIZE + 1}–{Math.min(listingPage * PAGE_SIZE, filteredListings.length)} of {filteredListings.length}
-              </p>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setListingPage(p => Math.max(1, p - 1))}
-                  disabled={listingPage === 1}
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40 ${isDark ? "border border-gray-700 text-gray-300 hover:bg-gray-700" : "border border-gray-300 text-gray-600 hover:bg-gray-100"}`}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                {Array.from({ length: totalListingPages }, (_, i) => i + 1)
-                  .filter(p => p === 1 || p === totalListingPages || Math.abs(p - listingPage) <= 1)
-                  .reduce<(number | "...")[]>((acc, p, i, arr) => {
-                    if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push("...");
-                    acc.push(p);
-                    return acc;
-                  }, [])
-                  .map((item, i) =>
-                    item === "..." ? (
-                      <span key={`ellipsis-${i}`} className={`w-8 h-8 flex items-center justify-center text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>…</span>
-                    ) : (
-                      <button
-                        key={item}
-                        onClick={() => setListingPage(() => item as number)}
-                        className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                          listingPage === item
-                            ? "bg-primary text-white"
-                            : isDark ? "border border-gray-700 text-gray-300 hover:bg-gray-700" : "border border-gray-300 text-gray-600 hover:bg-gray-100"
-                        }`}
-                      >
-                        {item}
-                      </button>
-                    )
-                  )}
-                <button
-                  onClick={() => setListingPage(p => Math.min(totalListingPages, p + 1))}
-                  disabled={listingPage === totalListingPages}
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40 ${isDark ? "border border-gray-700 text-gray-300 hover:bg-gray-700" : "border border-gray-300 text-gray-600 hover:bg-gray-100"}`}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
-        </>
+        <ThemeProvider theme={tableTheme}>
+          <CssBaseline />
+          <MaterialReactTable table={table} />
+        </ThemeProvider>
       ) : (
         <div className={`rounded-xl p-12 text-center border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
           <Building2 className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
           <p className={isDark ? "text-gray-500" : "text-gray-500"}>{tc.noListings}</p>
+        </div>
+      )}
+
+      {/* Fullscreen Image Lightbox */}
+      {viewingImage && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-sm" onClick={() => setViewingImage(null)}>
+          <button onClick={() => setViewingImage(null)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors z-50">
+            <X className="w-6 h-6" />
+          </button>
+          <div className="relative max-w-5xl max-h-[90vh] w-full h-full flex items-center justify-center p-4" onClick={e => e.stopPropagation()}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={viewingImage} alt="Fullscreen property image" className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl" />
+          </div>
         </div>
       )}
     </div>

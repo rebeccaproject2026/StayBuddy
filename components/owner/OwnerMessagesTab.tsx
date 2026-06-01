@@ -95,7 +95,7 @@ export default function OwnerMessagesTab({
                         )}
                       </div>
                       <p className={`text-xs truncate mt-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                        {req.propertyTitle}
+                        {req.property?.pgName || req.property?.societyName || req.propertyTitle}
                       </p>
                     </div>
                   </div>
@@ -118,7 +118,7 @@ export default function OwnerMessagesTab({
                 currentUserId={user!.id}
                 otherUserId={otherUserId}
                 otherUserName={req?.renter?.fullName || req?.fullName || "Tenant"}
-                propertyTitle={req?.propertyTitle || ""}
+                propertyTitle={req?.property?.pgName || req?.property?.societyName || req?.propertyTitle || ""}
                 token={ownerToken}
                 isDark={isDark}
                 onUnreadChange={resetUnread}
@@ -147,7 +147,7 @@ export default function OwnerMessagesTab({
                 currentUserId={user!.id}
                 otherUserId={otherUserId}
                 otherUserName={req?.renter?.fullName || req?.fullName || "Tenant"}
-                propertyTitle={req?.propertyTitle || ""}
+                propertyTitle={req?.property?.pgName || req?.property?.societyName || req?.propertyTitle || ""}
                 token={ownerToken}
                 isDark={isDark}
                 onClose={() => setActiveChatRequestId(null)}

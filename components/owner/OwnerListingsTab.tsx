@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
-import { Home, Edit, Trash2, MapPin, Plus, Grid3x3, List, Eye, ArrowLeft } from "lucide-react";
+import { Home, Edit, Trash2, MapPin, Plus, Grid3x3, List, Eye, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import OwnerListingCard from "./OwnerListingCard";
 import TableRentCell from "./TableRentCell";
 import EditListingPanel from "./EditListingPanel";
@@ -196,6 +197,31 @@ function ListingDetailView({
   openEdit: (l: any) => void; setDeleteConfirmId: (id: string | null) => void;
   user: any;
 }) {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const allImages: { url: string; label: string }[] = [];
+  if (selectedListing.images) {
+    selectedListing.images.forEach((url: string) => allImages.push({ url, label: "Main" }));
+  }
+  ['kitchenImages', 'tenantKitchenImages'].forEach(key => {
+    if (selectedListing[key]) {
+      selectedListing[key].forEach((url: string) => allImages.push({ url, label: "Kitchen" }));
+    }
+  });
+  ['washroomImages', 'tenantWashroomImages'].forEach(key => {
+    if (selectedListing[key]) {
+      selectedListing[key].forEach((url: string) => allImages.push({ url, label: "Washroom" }));
+    }
+  });
+  ['commonAreaImages', 'tenantCommonAreaImages'].forEach(key => {
+    if (selectedListing[key]) {
+      selectedListing[key].forEach((url: string) => allImages.push({ url, label: "Common Area" }));
+    }
+  });
+
+  const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+  const prevImage = () => setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+
   return (
     <div className={`rounded-xl shadow-md overflow-hidden ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white"}`}>
       {/* Header */}
@@ -212,9 +238,43 @@ function ListingDetailView({
         </span>
       </div>
 
-      {selectedListing.images?.[0] && (
-        <div className="relative h-56 sm:h-72">
-          <Image src={selectedListing.images[0]} alt={selectedListing.title} fill className="object-cover" />
+      {allImages.length > 0 && (
+        <div className="relative h-56 sm:h-80 group">
+          <Image src={allImages[currentImageIndex].url} alt={selectedListing.title} fill className="object-cover" />
+          
+          <div className="absolute top-3 left-3 px-3 py-1 bg-black/60 backdrop-blur-sm text-white text-xs font-semibold rounded-full">
+            {allImages[currentImageIndex].label}
+          </div>
+
+          {allImages.length > 1 && (
+            <>
+              {/* Overlay gradient for better button visibility */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
+              
+              <button
+                onClick={prevImage}
+                className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/80 hover:bg-white text-gray-800 shadow-md transition-all opacity-0 group-hover:opacity-100"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                onClick={nextImage}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/80 hover:bg-white text-gray-800 shadow-md transition-all opacity-0 group-hover:opacity-100"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+              
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-sm flex-wrap max-w-full justify-center">
+                {allImages.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentImageIndex(idx)}
+                    className={`transition-all rounded-full ${idx === currentImageIndex ? "w-4 h-1.5 bg-white" : "w-1.5 h-1.5 bg-white/50 hover:bg-white/80"}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
 
