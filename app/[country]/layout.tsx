@@ -1,16 +1,37 @@
+"use client";
+
+import { usePathname, useParams } from "next/navigation";
 import { Inter } from "next/font/google";
 import "../globals.css";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { Providers } from "@/components/Providers";
 import { Toaster } from "react-hot-toast";
-import LayoutClient from "@/components/LayoutClient";
+import NextLink from "next/link";
+import SmoothScroll from "@/components/SmoothScroll";
 
 const inter = Inter({ subsets: ["latin"] });
+
+// Invisible links that trigger Next.js route prefetching on mount
+function PrefetchRoutes() {
+  const params = useParams();
+  const country = (params?.country as string) || 'in';
+  return (
+    <div style={{ display: 'none' }} aria-hidden="true">
+      <NextLink href={`/${country}/login`} prefetch={true} tabIndex={-1}>{''}</NextLink>
+      <NextLink href={`/${country}/signup`} prefetch={true} tabIndex={-1}>{''}</NextLink>
+    </div>
+  );
+}
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const isDashboard = pathname?.includes("/dashboard") || pathname?.includes("/control");
+
   return (
     <html lang="en">
       <head>
@@ -22,10 +43,13 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} overflow-x-hidden`}>
         <Providers>
-          <LayoutClient>
-            {children}
-          </LayoutClient>
-          <Toaster position="top-center" />
+          <SmoothScroll>
+            <PrefetchRoutes />
+            {!isDashboard && <Navbar />}
+            <main className={!isDashboard ? "pt-16 sm:pt-20" : ""}>{children}</main>
+            {!isDashboard && <Footer />}
+            <Toaster position="top-center" />
+          </SmoothScroll>
         </Providers>
       </body>
     </html>

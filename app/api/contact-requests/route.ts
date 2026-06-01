@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
 
     const requests = await ContactRequest.find(filter)
       .sort({ createdAt: -1 })
-      .populate('property', 'title location images pgName societyName')
+      .populate('property', 'title location images')
       .populate('renter', 'fullName email phoneNumber')
       .populate('owner', 'fullName')
       .lean();
