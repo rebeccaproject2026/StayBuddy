@@ -2,7 +2,6 @@
 
 import { usePathname, useParams } from "next/navigation";
 import { Inter } from "next/font/google";
-// @ts-expect-error Missing type declaration for global CSS import
 import "../globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
